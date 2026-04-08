@@ -3,14 +3,13 @@
 <head>
   <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Step 1 — Choose Zone · <%= event.name %></title>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&family=Poppins:wght@300;400;500;600;700&family=Space+Mono&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&family=Space+Mono&display=swap" rel="stylesheet"/>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet"/>
   <style>
     *{box-sizing:border-box;margin:0;padding:0;}
     :root{--accent:#6A0DAD;--accent2:#9D4EDD;--bg:#0B0B0F;--surface:#14141C;--border:rgba(255,255,255,0.08);--text:#fff;--muted:#B3B3B3;}
     body{background:var(--bg);color:var(--text);font-family:'Poppins',sans-serif;min-height:100vh;display:flex;flex-direction:column;}
 
-    /* STEP BAR */
     .step-bar{background:#0e0e18;border-bottom:1px solid var(--border);padding:0 0.75rem;height:44px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;gap:0.5rem;}
     .step-back{display:flex;align-items:center;gap:0.4rem;color:var(--muted);text-decoration:none;font-size:0.78rem;transition:color 0.2s;white-space:nowrap;}
     .step-back:hover{color:#fff;}
@@ -24,10 +23,8 @@
     .step-line{width:24px;height:1px;background:#333;margin:0 0.25rem;flex-shrink:0;}
     .event-lbl{font-family:'Space Mono',monospace;font-size:0.6rem;color:#444;letter-spacing:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px;}
 
-    /* LAYOUT */
     .layout{display:flex;flex:1;overflow:hidden;height:calc(100vh - 44px);}
 
-    /* MAP */
     .map-area{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--bg);min-width:0;}
     .map-tabs{display:flex;border-bottom:1px solid var(--border);background:#0e0e18;flex-shrink:0;}
     .map-tab{padding:0.5rem 1rem;font-size:0.7rem;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;color:#555;transition:all 0.2s;display:flex;align-items:center;gap:0.3rem;}
@@ -44,14 +41,12 @@
     .preview-wrap.show{display:flex;}
     .preview-wrap img{max-width:100%;border-radius:12px;border:1px solid var(--border);}
 
-    /* SIDEBAR */
     .sidebar{width:295px;background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden;}
     .sb-head{padding:1rem 1.2rem 0.8rem;border-bottom:1px solid var(--border);}
-    .sb-title{font-family:'Montserrat',sans-serif;font-size:0.85rem;font-weight:800;letter-spacing:2px;color:#fff;margin-bottom:0.12rem;}
+    .sb-title{font-family:'Poppins',sans-serif;font-size:0.85rem;font-weight:800;letter-spacing:2px;color:#fff;margin-bottom:0.12rem;}
     .sb-sub{font-size:0.65rem;color:#555;}
     .zone-list{flex:1;overflow-y:auto;padding:0.65rem;}
 
-    /* Zone cards */
     .zc{background:var(--bg);border:1.5px solid rgba(255,255,255,0.05);border-radius:10px;padding:0.7rem 0.85rem;margin-bottom:0.45rem;cursor:pointer;transition:border-color 0.18s,transform 0.1s;display:flex;align-items:center;gap:0.7rem;position:relative;overflow:hidden;}
     .zc::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--zc);border-radius:2px 0 0 2px;}
     .zc:hover:not(.so){border-color:rgba(255,255,255,0.12);transform:translateX(2px);}
@@ -61,7 +56,7 @@
     .zc-ico{width:36px;height:36px;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
     .zc-ico svg{width:32px;height:32px;}
     .zc-info{flex:1;min-width:0;}
-    .zc-name{font-family:'Montserrat',sans-serif;font-weight:700;font-size:0.8rem;color:#fff;margin-bottom:0.06rem;}
+    .zc-name{font-family:'Poppins',sans-serif;font-weight:700;font-size:0.8rem;color:#fff;margin-bottom:0.06rem;}
     .zc-cat{font-size:0.62rem;font-weight:700;letter-spacing:0.5px;margin-bottom:0.06rem;}
     .zc-price{font-family:'Space Mono',monospace;font-size:0.65rem;color:var(--muted);}
     .zc-avail{font-size:0.62rem;margin-top:0.18rem;display:flex;align-items:center;gap:0.28rem;font-weight:600;}
@@ -73,40 +68,25 @@
     .zc-ck{position:absolute;top:0.42rem;right:0.65rem;font-size:0.7rem;font-weight:800;display:none;}
     .zc.sel .zc-ck{display:block;}
 
-    /* Canvas tooltip */
-    .cv-tip{
-      position:absolute;
-      background:rgba(8,8,16,0.96);
-      backdrop-filter:blur(8px);
-      border:1.5px solid var(--tip-c,#6A0DAD);
-      border-radius:9px;
-      padding:0.55rem 0.75rem;
-      pointer-events:none;
-      white-space:nowrap;
-      display:none;
-      z-index:20;
-      box-shadow:0 4px 20px rgba(0,0,0,0.5), 0 0 12px var(--tip-glow,rgba(106,13,173,0.2));
-      min-width:140px;
-    }
-    .tip-zone{font-family:'Montserrat',sans-serif;font-weight:800;font-size:0.75rem;color:#fff;margin-bottom:0.22rem;letter-spacing:0.5px;}
+    .cv-tip{position:absolute;background:rgba(8,8,16,0.96);backdrop-filter:blur(8px);border:1.5px solid var(--tip-c,#6A0DAD);border-radius:9px;padding:0.55rem 0.75rem;pointer-events:none;white-space:nowrap;display:none;z-index:20;box-shadow:0 4px 20px rgba(0,0,0,0.5),0 0 12px var(--tip-glow,rgba(106,13,173,0.2));min-width:140px;}
+    .tip-zone{font-family:'Poppins',sans-serif;font-weight:800;font-size:0.75rem;color:#fff;margin-bottom:0.22rem;letter-spacing:0.5px;}
     .tip-cat{font-family:'Space Mono',monospace;font-size:0.52rem;letter-spacing:1.5px;color:var(--tip-c,#9D4EDD);margin-bottom:0.3rem;}
     .tip-row{display:flex;align-items:center;justify-content:space-between;gap:0.8rem;}
     .tip-price{font-family:'Space Mono',monospace;font-size:0.68rem;color:#fff;font-weight:700;}
     .tip-avail{font-family:'Space Mono',monospace;font-size:0.62rem;font-weight:700;padding:0.12rem 0.45rem;border-radius:4px;display:flex;align-items:center;gap:0.25rem;}
-    .tip-avail.ok  {background:rgba(0,255,136,0.1);color:#00FF88;border:1px solid rgba(0,255,136,0.25);}
+    .tip-avail.ok{background:rgba(0,255,136,0.1);color:#00FF88;border:1px solid rgba(0,255,136,0.25);}
     .tip-avail.warn{background:rgba(245,200,66,0.1);color:#f5c842;border:1px solid rgba(245,200,66,0.3);}
     .tip-avail.crit{background:rgba(255,68,68,0.12);color:#FF4444;border:1px solid rgba(255,68,68,0.3);}
     .tip-avail.sold{background:rgba(255,68,68,0.15);color:#FF4444;border:1px solid rgba(255,68,68,0.4);font-size:0.6rem;letter-spacing:1px;}
     .tip-bar{height:3px;background:rgba(255,255,255,0.07);border-radius:2px;margin-top:0.38rem;overflow:hidden;}
     .tip-bar-fill{height:100%;border-radius:2px;transition:width 0.2s;}
 
-    /* Footer */
     .sb-footer{padding:0.75rem 1.2rem;border-top:1px solid rgba(255,255,255,0.05);}
     .sf-row{display:flex;justify-content:space-between;font-size:0.72rem;color:var(--muted);margin-bottom:0.22rem;align-items:center;}
     .sf-row span:last-child{font-weight:600;color:#fff;}
     .sf-total{display:flex;justify-content:space-between;padding-top:0.42rem;border-top:1px solid rgba(255,255,255,0.05);margin-bottom:0.8rem;align-items:center;}
     .sf-tlbl{font-size:0.72rem;color:var(--muted);}
-    .sf-tval{font-family:'Montserrat',sans-serif;font-weight:800;font-size:1.18rem;color:var(--accent2);}
+    .sf-tval{font-family:'Poppins',sans-serif;font-weight:800;font-size:1.18rem;color:var(--accent2);}
     .btn-next{width:100%;padding:0.78rem;background:var(--accent);color:#fff;border:none;border-radius:9px;font-family:'Poppins',sans-serif;font-weight:700;font-size:0.86rem;cursor:pointer;transition:box-shadow 0.2s,transform 0.12s;display:flex;align-items:center;justify-content:center;gap:0.4rem;box-shadow:0 0 20px rgba(106,13,173,0.18);}
     .btn-next:hover:not(:disabled){box-shadow:0 0 40px rgba(106,13,173,0.48);transform:translateY(-1px);}
     .btn-next:disabled{opacity:0.32;cursor:not-allowed;box-shadow:none;transform:none;}
@@ -114,7 +94,6 @@
     .trust-item{display:flex;align-items:center;gap:0.22rem;font-size:0.57rem;color:#333;}
     .trust-item i{color:#00FF88;font-size:0.6rem;}
 
-    /* Avail badge in header legend */
     .leg-avail{font-size:0.58rem;font-family:'Space Mono',monospace;}
     .leg-avail.warn{color:#f5c842;}
     .leg-avail.crit{color:#FF4444;font-weight:700;}
@@ -140,7 +119,6 @@
 </head>
 <body>
 
-<!-- STEP BAR -->
 <div class="step-bar">
   <a href="/event/<%= event._id %>" class="step-back"><i class="bi bi-arrow-left"></i> Back</a>
   <div class="steps">
@@ -156,18 +134,17 @@
 </div>
 
 <div class="layout">
-  <!-- MAP -->
   <div class="map-area">
     <% if(seatMap.previewImage){ %>
     <div class="map-tabs">
       <div class="map-tab active" id="tab-live" onclick="switchTab('live')"><i class="bi bi-grid-3x3-gap"></i> Interactive</div>
-      <div class="map-tab" id="tab-preview" onclick="switchTab('preview')"><i class="bi bi-image"></i> Preview Image</div>
+      <!-- <div class="map-tab" id="tab-preview" onclick="switchTab('preview')"><i class="bi bi-image"></i> Preview Image</div> -->
     </div>
     <% } %>
     <div class="map-legend">
       <span class="leg-lbl">Legend</span>
       <% event.ticketTypes.filter(t=>t.isActive).forEach(t=>{
-           const cc={platinum:'#9D4EDD',gold:'#f5c842',silver:'#c0c8d8',fanfit:'#00FF88',family:'#FF6B6B'}[t.category]||'#6A0DAD';
+           const cc = t.color || {platinum:'#9D4EDD',gold:'#f5c842',silver:'#c0c8d8',fanfit:'#00FF88',family:'#FF6B6B'}[t.category] || '#6A0DAD';
            const avail = t.totalSeats - t.bookedSeats;
            const catSoldOut = t.bookedSeats >= t.totalSeats && t.totalSeats > 0;
            const availCls = catSoldOut ? 'crit' : (avail<=3&&t.totalSeats>0 ? 'crit' : (avail<=10&&t.totalSeats>0 ? 'warn' : '')); %>
@@ -181,8 +158,13 @@
           <% if(avail<=10&&t.totalSeats>0){ %>
             <span class="leg-avail <%=availCls%>">&#9888; <%=avail%> left</span>
           <% } %>
-          <% if(t.comboOfferMinQty>0&&t.comboOfferDiscount>0){ %>
-            <span style="color:#f5c842;font-size:0.53rem;">&#9889;<%=t.comboOfferMinQty%>+&#8594;&#8377;<%=t.comboOfferDiscount%>off</span>
+          <%
+          const _tiers_sp = (t.discountTiers && t.discountTiers.length > 0)
+            ? t.discountTiers.filter(d=>d.minQty>0&&d.discount>0).sort((a,b)=>a.minQty-b.minQty)
+            : (t.comboOfferMinQty>0&&t.comboOfferDiscount>0 ? [{minQty:t.comboOfferMinQty,discount:t.comboOfferDiscount}] : []);
+          %>
+          <% if(!catSoldOut && _tiers_sp.length > 0){ %>
+            <span style="color:#f5c842;font-size:0.54rem;font-family:'Space Mono',monospace;">&#9889; <%= _tiers_sp.map(function(d){ return 'Buy '+d.minQty+'+ \u2192 \u20b9'+d.discount+' off'; }).join(' \u00b7 ') %></span>
           <% } %>
         <% } %>
       </div>
@@ -205,16 +187,12 @@
     </div>
   </div>
 
-  <!-- SIDEBAR -->
   <div class="sidebar">
     <div class="sb-head">
       <div class="sb-title">PICK YOUR ZONE</div>
       <div class="sb-sub">Tap the map or click a zone below</div>
     </div>
     <div class="zone-list" id="zoneList"></div>
-
-
-
     <div class="sb-footer">
       <div class="sf-row"><span>Zone</span><span id="sfZone">&#8212;</span></div>
       <div class="sf-row"><span>Price / ticket</span><span id="sfPrice">&#8212;</span></div>
@@ -224,309 +202,321 @@
         <div class="sf-tlbl">Total</div>
         <div class="sf-tval" id="sfTotal">&#8377;<%= event.convenienceFee||0 %></div>
       </div>
-      <button class="btn-next" id="btnNext" disabled onclick="goNext()">
-        <span>Next — Attendee Details</span><i class="bi bi-arrow-right"></i>
-      </button>
+      // <button class="btn-next" id="btnNext" disabled onclick="goNext()">
+      //   <span>Next — Attendee Details</span><i class="bi bi-arrow-right"></i>
+      // </button>
       <div class="trust-row">
         <div class="trust-item"><i class="bi bi-shield-check-fill"></i> Secure</div>
         <div class="trust-item"><i class="bi bi-qr-code"></i> Instant QR</div>
-        <div class="trust-item"><i class="bi bi-arrow-counterclockwise"></i> Refundable</div>
+          <div class="trust-item"><i class="bi bi-x-circle-fill"></i> Non-Refundable</div>
+
       </div>
     </div>
   </div>
 </div>
 
 <script>
-const EVENT_ID = '<%= event._id %>';
-const CONV_FEE = <%= event.convenienceFee||0 %>;
-const SEAT_MAP = <%- JSON.stringify(seatMap) %>;
-const TT       = <%- JSON.stringify(event.ticketTypes) %>;
-// Build color map from ticket types first (admin may have set custom prices/names)
-// Then fallback to standard palette
+const EVENT_ID   = '<%= event._id %>';
+const CONV_FEE   = <%= event.convenienceFee||0 %>;
+const SEAT_MAP   = <%- JSON.stringify(seatMap) %>;
+const TT         = <%- JSON.stringify(event.ticketTypes) %>;
+const TICKET_TYPES = TT;
+
+// ✅ FIX: Build color map from ticket types first (same logic as admin seatmap)
+// t.color is set by admin in the event form — use that as primary source
 const CAT_C_BASE = {
   platinum:'#9D4EDD', gold:'#f5c842', silver:'#c0c8d8',
   fanfit:'#00FF88',   family:'#FF6B6B', vip:'#FF4088',
   standard:'#a0a0a0', general:'#a0a0a0', diamond:'#00C8F8',
   premium:'#FF8C00',  bronze:'#cd7f32',  solo:'#9D4EDD'
 };
-// Build dynamic color map from zone colorOverride or category fallback
+
+// Primary: read color from ticket type definition (admin sets this in event form)
 const CAT_C = Object.fromEntries(
-  (SEAT_MAP.sections||[]).map(s=>[s.category, s.colorOverride||CAT_C_BASE[s.category]||'#6A0DAD'])
+  TT.map(t => [t.category, t.color || CAT_C_BASE[t.category] || '#6A0DAD'])
 );
-// also merge base so any category not in sections still works
-Object.keys(CAT_C_BASE).forEach(k=>{ if(!CAT_C[k]) CAT_C[k]=CAT_C_BASE[k]; });
-const PM       = Object.fromEntries(TT.map(t=>[t.category,t.price]));
+
+// Secondary: allow per-zone color override saved by admin seatmap (s.color field)
+(SEAT_MAP.sections||[]).forEach(s => {
+  if (s.color) CAT_C[s.category] = s.color;
+});
+
+// Fallback: fill in any remaining categories from base palette
+Object.keys(CAT_C_BASE).forEach(k => { if (!CAT_C[k]) CAT_C[k] = CAT_C_BASE[k]; });
+
+const PM = Object.fromEntries(TT.map(t => [t.category, t.price]));
 
 const canvas = document.getElementById('vc');
 const ctx    = canvas.getContext('2d');
 
 function d2r(d){ return d*Math.PI/180; }
 
+// ✅ FIX: zones now use s.color (what admin seatmap saves) not s.colorOverride
 const zones = (SEAT_MAP.sections||[]).map(s=>({
-  name:s.name, category:s.category,
-  shape:s.zoneShape||'rect',
-  x:s.x??80, y:s.y??200,
-  w:s.zoneW>0?s.zoneW:200, h:s.zoneH>0?s.zoneH:100,
-  rot:s.zoneRot!=null?Number(s.zoneRot):0,
-  totalSeats:s.totalSeats||0, bookedSeats:s.bookedSeats||0,
-  colorOverride:s.colorOverride||'',
+  name:       s.name,
+  category:   s.category,
+  shape:      s.zoneShape || 'rect',
+  x:          s.x  ?? 80,
+  y:          s.y  ?? 200,
+  w:          s.zoneW > 0 ? s.zoneW : 200,
+  h:          s.zoneH > 0 ? s.zoneH : 100,
+  rot:        s.zoneRot != null ? Number(s.zoneRot) : 0,
+  totalSeats: s.totalSeats  || 0,
+  bookedSeats:s.bookedSeats || 0,
+  color:      s.color || s.colorOverride || '', // ✅ FIX: s.color is what admin saves
 }));
 
-let selIdx=null, litCat=null, qty=1;
-const MAXQ=10;
+let selIdx = null, litCat = null, qty = 1;
+const MAXQ = 10;
 
-// ── Availability helpers ──
-function avail(z){ return (z.totalSeats||0)-(z.bookedSeats||0); }
-function isSO(z) { return z.totalSeats>0 && avail(z)<=0; }
-function maxQty(z){ return z.totalSeats>0 ? Math.min(MAXQ,avail(z)) : MAXQ; }
+function avail(z)  { return (z.totalSeats||0) - (z.bookedSeats||0); }
+function isSO(z)   { return z.totalSeats > 0 && avail(z) <= 0; }
+function maxQty(z) { return z.totalSeats > 0 ? Math.min(MAXQ, avail(z)) : MAXQ; }
 function avClass(z){
   if(isSO(z)) return 'crit';
   if(!z.totalSeats) return 'ok';
-  const a=avail(z);
-  return a<=3?'crit': a<=10?'warn':'ok';
+  const a = avail(z);
+  return a<=3 ? 'crit' : a<=10 ? 'warn' : 'ok';
 }
 function avText(z){
   if(isSO(z)) return 'SOLD OUT';
   if(!z.totalSeats) return '';
-  const a=avail(z);
+  const a = avail(z);
   if(a<=3)  return `\u26a0\ufe0f Only ${a} ticket${a===1?'':'s'} left \u2014 book now!`;
   if(a<=10) return `\u26a0 Only ${a} tickets remaining`;
-  return `${a} of ${z.totalSeats} available`;
+  return '';
 }
 function avShort(z){
   if(isSO(z)) return 'SOLD OUT';
   if(!z.totalSeats) return '';
-  const a=avail(z);
+  const a = avail(z);
   if(a<=3)  return `\u26a0 ${a} left`;
   if(a<=10) return `${a} remaining`;
-  return `${a} available`;
+  return '';
 }
-function barPct(z){
-  if(!z.totalSeats) return 100;
-  return Math.round((avail(z)/z.totalSeats)*100);
-}
-function barColor(z){
-  const a=avail(z);
-  if(isSO(z)) return '#FF4444';
-  if(a<=3)    return '#FF4444';
-  if(a<=10)   return '#f5c842';
-  return '#00FF88';
-}
+function barPct(z)  { if(!z.totalSeats) return 100; return Math.round((avail(z)/z.totalSeats)*100); }
+function barColor(z){ const a=avail(z); if(isSO(z)||a<=3) return '#FF4444'; if(a<=10) return '#f5c842'; return '#00FF88'; }
+
+// ✅ FIX: helper to get resolved color — ticket type color first, then zone override, then palette
+function getColor(z){ return z.color || CAT_C[z.category] || '#6A0DAD'; }
 
 function switchTab(t){
   document.querySelectorAll('.map-tab').forEach(e=>e.classList.remove('active'));
   document.getElementById('tab-'+t)?.classList.add('active');
-  document.getElementById('liveView').style.display=t==='live'?'flex':'none';
-  document.getElementById('previewView').classList.toggle('show',t==='preview');
+  document.getElementById('liveView').style.display = t==='live' ? 'flex' : 'none';
+  document.getElementById('previewView').classList.toggle('show', t==='preview');
 }
 
-/* ── CANVAS DRAW ── */
+// ── CANVAS DRAW ──
 function draw(){
   ctx.clearRect(0,0,canvas.width,canvas.height);
   drawGrid(); drawStage(SEAT_MAP.stage);
-  zones.forEach((z,i)=>drawZone(z,i===selIdx,litCat===z.category&&i!==selIdx));
+  zones.forEach((z,i) => drawZone(z, i===selIdx, litCat===z.category && i!==selIdx));
 }
 
 function drawGrid(){
-  ctx.save();ctx.strokeStyle='rgba(255,255,255,0.025)';ctx.lineWidth=1;
+  ctx.save(); ctx.strokeStyle='rgba(255,255,255,0.025)'; ctx.lineWidth=1;
   for(let x=0;x<canvas.width;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,canvas.height);ctx.stroke();}
   for(let y=0;y<canvas.height;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(canvas.width,y);ctx.stroke();}
   ctx.restore();
 }
 
 function drawStage(s){
-  if(!s)return;
+  if(!s) return;
   const x=s.x||80, y=s.y||30, w=s.width||500, h=s.height||100;
   ctx.save();
-  const sc=s.color||'#6A0DAD'; ctx.fillStyle=sc+'26'; ctx.strokeStyle=sc; ctx.lineWidth=2;
-  const shp=s.shape||'rectangle';
+  const sc = s.color||'#6A0DAD';
+  ctx.fillStyle=sc+'26'; ctx.strokeStyle=sc; ctx.lineWidth=2;
+  const shp = s.shape||'rectangle';
   if(shp==='rectangle'){
-    ctx.beginPath();ctx.roundRect(x,y,w,h,10);ctx.fill();ctx.stroke();
-  }else if(shp==='semicircle'){
-    ctx.beginPath();ctx.arc(x+w/2,y+h,w/2,Math.PI,0);ctx.closePath();ctx.fill();ctx.stroke();
-  }else if(shp==='thrust'){
-    ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+w,y);ctx.lineTo(x+w-50,y+h);
-    ctx.lineTo(x+w/2+35,y+h);ctx.lineTo(x+w/2+35,y+h+50);
-    ctx.lineTo(x+w/2-35,y+h+50);ctx.lineTo(x+w/2-35,y+h);
-    ctx.lineTo(x+50,y+h);ctx.closePath();ctx.fill();ctx.stroke();
-  }else if(shp==='intheround'){
-    ctx.beginPath();ctx.arc(x+w/2,y+h/2,Math.min(w,h)*0.45,0,Math.PI*2);ctx.fill();ctx.stroke();
-  }else{
-    ctx.beginPath();ctx.roundRect(x,y,w,h,10);ctx.fill();ctx.stroke();
+    ctx.beginPath(); ctx.roundRect(x,y,w,h,10); ctx.fill(); ctx.stroke();
+  } else if(shp==='semicircle'){
+    ctx.beginPath(); ctx.arc(x+w/2,y+h,w/2,Math.PI,0); ctx.closePath(); ctx.fill(); ctx.stroke();
+  } else if(shp==='thrust'){
+    ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x+w,y); ctx.lineTo(x+w-50,y+h);
+    ctx.lineTo(x+w/2+35,y+h); ctx.lineTo(x+w/2+35,y+h+50);
+    ctx.lineTo(x+w/2-35,y+h+50); ctx.lineTo(x+w/2-35,y+h);
+    ctx.lineTo(x+50,y+h); ctx.closePath(); ctx.fill(); ctx.stroke();
+  } else if(shp==='intheround'){
+    ctx.beginPath(); ctx.arc(x+w/2,y+h/2,Math.min(w,h)*0.45,0,Math.PI*2); ctx.fill(); ctx.stroke();
+  } else {
+    ctx.beginPath(); ctx.roundRect(x,y,w,h,10); ctx.fill(); ctx.stroke();
   }
-  ctx.fillStyle=sc||'#bf80ff';
+  ctx.fillStyle = sc||'#bf80ff';
   ctx.font='bold 14px "Space Mono",monospace';
   ctx.textAlign='center'; ctx.textBaseline='middle';
   ctx.fillText(s.label||'STAGE', x+w/2, y+h/2);
   ctx.restore();
 }
 
-function drawZone(z,isSel,isLit){
-  const {x,y,w,h,name,category,shape,totalSeats,bookedSeats}=z;
-  const rot=d2r(z.rot||0), color=z.colorOverride||CAT_C[category]||'#6A0DAD', price=PM[category]||0;
+function drawZone(z, isSel, isLit){
+  const {x,y,w,h,name,category,shape} = z;
+  const rot   = d2r(z.rot||0);
+  // ✅ FIX: use getColor() which resolves ticket-type color first
+  const color = getColor(z);
+  const price = PM[category] || 0;
   const cx=x+w/2, cy=y+h/2;
   const a=avail(z), SO=isSO(z);
 
   ctx.save();
   ctx.translate(cx,cy); ctx.rotate(rot);
 
-  if(isSel){ctx.shadowColor=color;ctx.shadowBlur=30;}
-  else if(isLit){ctx.shadowColor=color;ctx.shadowBlur=16;}
+  if(isSel)      { ctx.shadowColor=color; ctx.shadowBlur=30; }
+  else if(isLit) { ctx.shadowColor=color; ctx.shadowBlur=16; }
 
-  ctx.fillStyle  = SO?'rgba(50,50,60,0.32)':(isSel?color+'55':(isLit?color+'38':color+'1A'));
-  ctx.strokeStyle= SO?'rgba(100,100,110,0.38)':(isSel?color:(isLit?color:color+'55'));
-  ctx.lineWidth  = isSel?3:(isLit?2:1.5);
+  ctx.fillStyle   = SO?'rgba(50,50,60,0.32)':(isSel?color+'55':(isLit?color+'38':color+'1A'));
+  ctx.strokeStyle = SO?'rgba(100,100,110,0.38)':(isSel?color:(isLit?color:color+'55'));
+  ctx.lineWidth   = isSel?3:(isLit?2:1.5);
 
   ctx.beginPath();
-  if(shape==='round') ctx.ellipse(0,0,w/2,h/2,0,0,Math.PI*2);
-  else if(shape==='triangle'){ctx.moveTo(0,-h/2);ctx.lineTo(w/2,h/2);ctx.lineTo(-w/2,h/2);ctx.closePath();}
-  else ctx.roundRect(-w/2,-h/2,w,h,10);
+  if(shape==='round')     ctx.ellipse(0,0,w/2,h/2,0,0,Math.PI*2);
+  else if(shape==='triangle'){ ctx.moveTo(0,-h/2); ctx.lineTo(w/2,h/2); ctx.lineTo(-w/2,h/2); ctx.closePath(); }
+  else                    ctx.roundRect(-w/2,-h/2,w,h,10);
   ctx.fill(); ctx.shadowBlur=0; ctx.stroke();
 
-  // Name
-  const fs=Math.max(9,Math.min(14,w/(name.length*0.78)));
-  const lY=shape==='triangle'?(h*0.12):-10;  // triangle: text in center of mass (lower area)
-  ctx.fillStyle=SO?'#444':'#fff';
-  ctx.font=`bold ${fs}px "Montserrat",sans-serif`;
+  const fs = Math.max(9, Math.min(14, w/(name.length*0.78)));
+  const lY = shape==='triangle' ? (h*0.12) : -10;
+  ctx.fillStyle='#fff'; ctx.font=`bold ${fs}px "Poppins",sans-serif`;
   ctx.textAlign='center'; ctx.textBaseline='middle';
-  ctx.fillText(name,0,lY);
+  ctx.fillText(name, 0, lY);
 
-  // Category
-  ctx.fillStyle=SO?'#444':color;
+  ctx.fillStyle = SO?'#444':color;
   ctx.font='600 9.5px "Poppins",sans-serif';
-  ctx.fillText(category.toUpperCase(),0,lY+13);
+  ctx.fillText(category.toUpperCase(), 0, lY+13);
 
-  // Price
-  ctx.fillStyle=SO?'#333':'rgba(255,255,255,0.75)';
+  ctx.fillStyle = SO?'#333':'rgba(255,255,255,0.75)';
   ctx.font='bold 11px "Space Mono",monospace';
-  ctx.fillText('\u20b9'+price.toLocaleString('en-IN'),0,lY+26);
+  ctx.fillText('\u20b9'+price.toLocaleString('en-IN'), 0, lY+26);
 
-  // Availability: only show SOLD OUT on canvas (counts shown in legend + sidebar)
   if(SO){
     ctx.fillStyle='rgba(255,68,68,0.85)';
     ctx.font='bold 9px "Space Mono",monospace';
-    ctx.textAlign='center'; ctx.textBaseline='middle';
-    ctx.fillText('SOLD OUT',0,lY+39);
+    ctx.fillText('SOLD OUT', 0, lY+39);
   }
 
-  // Checkmark when selected
   if(isSel){
     ctx.rotate(-rot);
     ctx.fillStyle=color; ctx.strokeStyle='#0f0f18'; ctx.lineWidth=2;
-    ctx.beginPath();ctx.arc(w/2-12,-h/2+12,11,0,Math.PI*2);ctx.fill();ctx.stroke();
-    ctx.fillStyle='#fff';ctx.font='bold 13px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
-    ctx.fillText('\u2713',w/2-12,-h/2+13);
+    ctx.beginPath(); ctx.arc(w/2-12,-h/2+12,11,0,Math.PI*2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle='#fff'; ctx.font='bold 13px sans-serif';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('\u2713', w/2-12, -h/2+13);
   }
   ctx.restore();
 }
 
-/* ── HIT TEST ── */
+// ── HIT TEST ──
 function ptIn(px,py,z){
-  const cx=z.x+z.w/2,cy=z.y+z.h/2,rot=-d2r(z.rot||0);
-  const c=Math.cos(rot),s=Math.sin(rot);
-  const lx=(px-cx)*c-(py-cy)*s,ly=(px-cx)*s+(py-cy)*c;
-  const hw=z.w/2,hh=z.h/2;
+  const cx=z.x+z.w/2, cy=z.y+z.h/2, rot=-d2r(z.rot||0);
+  const c=Math.cos(rot), s=Math.sin(rot);
+  const lx=(px-cx)*c-(py-cy)*s, ly=(px-cx)*s+(py-cy)*c;
+  const hw=z.w/2, hh=z.h/2;
   if(z.shape==='round') return (lx/hw)**2+(ly/hh)**2<=1;
   if(z.shape==='triangle'){
-    function sgn(ax,ay,bx,by,qx,qy){return(ax-qx)*(by-ay)-(bx-ax)*(ay-qy);}
-    const d1=sgn(0,-hh,hw,hh,lx,ly),d2=sgn(hw,hh,-hw,hh,lx,ly),d3=sgn(-hw,hh,0,-hh,lx,ly);
+    function sgn(ax,ay,bx,by,qx,qy){ return(ax-qx)*(by-ay)-(bx-ax)*(ay-qy); }
+    const d1=sgn(0,-hh,hw,hh,lx,ly), d2=sgn(hw,hh,-hw,hh,lx,ly), d3=sgn(-hw,hh,0,-hh,lx,ly);
     return !((d1<0||d2<0||d3<0)&&(d1>0||d2>0||d3>0));
   }
   return lx>=-hw&&lx<=hw&&ly>=-hh&&ly<=hh;
 }
-function zoneAt(px,py){for(let i=zones.length-1;i>=0;i--)if(ptIn(px,py,zones[i]))return i;return -1;}
+function zoneAt(px,py){ for(let i=zones.length-1;i>=0;i--) if(ptIn(px,py,zones[i])) return i; return -1; }
 
 canvas.addEventListener('click',e=>{
-  const r=canvas.getBoundingClientRect(),sx=canvas.width/r.width;
-  const px=(e.clientX-r.left)*sx,py=(e.clientY-r.top)*sx;
+  const r=canvas.getBoundingClientRect(), sx=canvas.width/r.width;
+  const px=(e.clientX-r.left)*sx, py=(e.clientY-r.top)*sx;
   const hit=zoneAt(px,py);
   if(hit!==-1){
     const z=zones[hit];
-    if(isSO(z))return;
-    selIdx=(selIdx===hit)?null:hit;
-    if(selIdx!==null)litCat=null;
-    qty=1;
-  }else selIdx=null;
+    if(isSO(z)) return;
+    selIdx=hit; litCat=null; qty=1;
+    refresh();
+    setTimeout(()=>goNext(), 320);
+  } else { selIdx=null; }
   refresh();
 });
 
 canvas.addEventListener('mousemove',e=>{
-  const r=canvas.getBoundingClientRect(),sx=canvas.width/r.width;
-  const px=(e.clientX-r.left)*sx,py=(e.clientY-r.top)*sx;
+  const r=canvas.getBoundingClientRect(), sx=canvas.width/r.width;
+  const px=(e.clientX-r.left)*sx, py=(e.clientY-r.top)*sx;
   const zi=zoneAt(px,py);
   const tip=document.getElementById('cvTip');
   if(zi!==-1){
-    const z=zones[zi];
-    const SO=isSO(z);
-    canvas.style.cursor=SO?'not-allowed':'pointer';
-
-    // Build tooltip content
-    const a=avail(z), p=PM[z.category]||0, col=z.colorOverride||CAT_C[z.category]||'#6A0DAD';
+    const z=zones[zi]; const SO=isSO(z);
+    canvas.style.cursor = SO?'not-allowed':'pointer';
+    const a=avail(z), p=PM[z.category]||0;
+    // ✅ FIX: use getColor() for tooltip border color
+    const col = getColor(z);
     const cls = SO?'sold': a<=3?'crit': a<=10?'warn':'ok';
-    const availTxt = SO ? 'SOLD OUT'
-      : a<=3  ? '⚠ Only '+a+' left!'
-      : a<=10 ? '⚠ '+a+' remaining'
-      : a+' available';
+    const availTxt = SO?'SOLD OUT': a<=3?'⚠ Only '+a+' left!': a<=10?'⚠ '+a+' remaining':'';
     const pct = z.totalSeats>0 ? Math.round((a/z.totalSeats)*100) : 100;
-    const barCol = SO?'#FF4444': a<=3?'#FF4444': a<=10?'#f5c842':'#00FF88';
+    const barCol = SO||a<=3?'#FF4444': a<=10?'#f5c842':'#00FF88';
     const glowCol = SO||a<=3?'rgba(255,68,68,0.18)': a<=10?'rgba(245,200,66,0.15)':'rgba(0,255,136,0.12)';
-
-    document.getElementById('tipZone').textContent = z.name;
-    document.getElementById('tipCat').textContent  = z.category.toUpperCase()+' ZONE';
-    document.getElementById('tipPrice').textContent= '₹'+p.toLocaleString('en-IN')+' / ticket';
+    document.getElementById('tipZone').textContent  = z.name;
+    document.getElementById('tipCat').textContent   = z.category.toUpperCase()+' ZONE';
+    document.getElementById('tipPrice').textContent = '₹'+p.toLocaleString('en-IN')+' / ticket';
     const av=document.getElementById('tipAvail');
-    av.className='tip-avail '+cls;
-    av.textContent=availTxt;
+    av.className='tip-avail '+cls; av.textContent=availTxt;
     document.getElementById('tipBarFill').style.cssText='width:'+pct+'%;background:'+barCol+';';
-    tip.style.setProperty('--tip-c', SO||a<=3?'#FF4444': a<=10?'#f5c842': col);
+    tip.style.setProperty('--tip-c', SO||a<=3?'#FF4444': a<=10?'#f5c842':col);
     tip.style.setProperty('--tip-glow', glowCol);
-
-    // Position: keep inside canvas bounds
     const tw=tip.offsetWidth||160, th=tip.offsetHeight||80;
     let tx=e.clientX-r.left+16, ty=e.clientY-r.top-th-8;
-    if(tx+tw > r.width-8)  tx=e.clientX-r.left-tw-8;
-    if(ty < 4)             ty=e.clientY-r.top+18;
-    tip.style.left=tx+'px'; tip.style.top=ty+'px';
-    tip.style.display='block';
+    if(tx+tw>r.width-8) tx=e.clientX-r.left-tw-8;
+    if(ty<4)             ty=e.clientY-r.top+18;
+    tip.style.left=tx+'px'; tip.style.top=ty+'px'; tip.style.display='block';
   } else {
     canvas.style.cursor='default';
     tip.style.display='none';
   }
 });
-canvas.addEventListener('mouseleave',()=>{document.getElementById('cvTip').style.display='none';});
+canvas.addEventListener('mouseleave',()=>{ document.getElementById('cvTip').style.display='none'; });
 
 function highlightCat(cat){
-  litCat=(litCat===cat)?null:cat;
-  if(litCat)selIdx=null;
+  litCat = (litCat===cat) ? null : cat;
+  if(litCat) selIdx=null;
   qty=1; syncLegend(); refresh();
 }
 function syncLegend(){
-  document.querySelectorAll('.leg-item').forEach(e=>e.classList.toggle('active',e.id==='leg-'+litCat));
+  document.querySelectorAll('.leg-item').forEach(e=>e.classList.toggle('active', e.id==='leg-'+litCat));
 }
 
-/* ── SIDEBAR CARDS ── */
+// ── SIDEBAR CARDS ──
 function renderCards(){
   const wrap=document.getElementById('zoneList');
   wrap.innerHTML=zones.map((z,i)=>{
-    const c=z.colorOverride||CAT_C[z.category]||'#6A0DAD', p=PM[z.category]||0;
-    const isSel=i===selIdx, isLit=z.category===litCat&&!isSel;
-    const SO=isSO(z), a=avail(z);
-    const pct=barPct(z), bcol=barColor(z);
-    const cls=avClass(z), short=avShort(z);
+    // ✅ FIX: use getColor() for all card colors
+    const c    = getColor(z);
+    const p    = PM[z.category] || 0;
+    const isSel= i===selIdx, isLit=z.category===litCat&&!isSel;
+    const SO   = isSO(z), a=avail(z);
+    const pct  = barPct(z), bcol=barColor(z);
+    const cls  = avClass(z), short=avShort(z);
 
     let sh='';
-    if(z.shape==='triangle') sh=`<polygon points="16,2 30,30 2,30" fill="${c}1F" stroke="${c}" stroke-width="1.6"/>`;
+    if(z.shape==='triangle')  sh=`<polygon points="16,2 30,30 2,30" fill="${c}1F" stroke="${c}" stroke-width="1.6"/>`;
     else if(z.shape==='round') sh=`<ellipse cx="16" cy="16" rx="14" ry="9" fill="${c}1F" stroke="${c}" stroke-width="1.6"/>`;
-    else sh=`<rect x="2" y="6" width="28" height="20" rx="4" fill="${c}1F" stroke="${c}" stroke-width="1.6"/>`;
+    else                       sh=`<rect x="2" y="6" width="28" height="20" rx="4" fill="${c}1F" stroke="${c}" stroke-width="1.6"/>`;
 
     const availHtml = SO
       ? `<div class="zc-avail crit"><i class="bi bi-x-circle-fill"></i> SOLD OUT</div>`
-      : (z.totalSeats>0 ? `
+      : (z.totalSeats>0 && a<=10 ? `
         <div class="zc-avail ${cls}">
           ${a<=3?'<i class="bi bi-exclamation-triangle-fill"></i>':a<=10?'<i class="bi bi-exclamation-triangle"></i>':''}
           ${short}
         </div>
         <div class="zc-avail-bar"><div class="zc-avail-bar-fill" style="width:${pct}%;background:${bcol};"></div></div>` : '');
+
+    const tt = TICKET_TYPES.find(t=>t.category===z.category);
+    const _tiers = (tt && Array.isArray(tt.discountTiers) && tt.discountTiers.length > 0)
+      ? tt.discountTiers.filter(d=>d.minQty>0&&d.discount>0).sort((a,b)=>a.minQty-b.minQty)
+      : (tt && tt.comboOfferMinQty>0 && tt.comboOfferDiscount>0
+          ? [{minQty:tt.comboOfferMinQty, discount:tt.comboOfferDiscount}]
+          : []);
+    const comboHtml = _tiers.length > 0
+      ? `<div style="margin-top:0.28rem;font-size:0.62rem;color:#f5c842;font-weight:600;font-family:'Space Mono',monospace;">
+          ⚡ ${_tiers.map(d=>`Buy ${d.minQty}+ → ₹${d.discount} off`).join(' · ')}
+         </div>`
+      : '';
 
     return `<div class="zc${isSel?' sel':''}${SO?' so':''}${isLit?' lit':''}" style="--zc:${c}" onclick="selCard(${i})">
       <div class="zc-ico"><svg viewBox="0 0 32 32">${sh}</svg></div>
@@ -535,23 +525,19 @@ function renderCards(){
         <div class="zc-cat" style="color:${c}">${z.category.toUpperCase()}</div>
         <div class="zc-price">\u20b9${p.toLocaleString('en-IN')}<span style="font-size:0.57rem;color:#444;"> / person</span></div>
         ${availHtml}
+        ${comboHtml}
       </div>
       <span class="zc-ck" style="color:${c}">\u2713</span>
     </div>`;
   }).join('');
-
-
 }
 
 function selCard(i){
-  const z=zones[i];
-  if(isSO(z))return;
-  selIdx=(selIdx===i)?null:i;
-  if(selIdx!==null)litCat=null;
-  qty=1; refresh();
+  const z=zones[i]; if(isSO(z)) return;
+  selIdx=i; litCat=null; qty=1;
+  refresh();
+  setTimeout(()=>goNext(), 320);
 }
-
-
 
 function updFooter(){
   const btn=document.getElementById('btnNext');
@@ -570,12 +556,12 @@ function updFooter(){
   btn.disabled=false;
 }
 
-function refresh(){ syncLegend();draw();renderCards();updFooter(); }
+function refresh(){ syncLegend(); draw(); renderCards(); updFooter(); }
 
 function goNext(){
-  if(selIdx===null)return;
+  if(selIdx===null) return;
   const z=zones[selIdx];
-  sessionStorage.setItem('np_sel',JSON.stringify({eventId:EVENT_ID,zone:z.name,category:z.category,price:PM[z.category]||0,qty,convFee:CONV_FEE}));
+  sessionStorage.setItem('np_sel', JSON.stringify({eventId:EVENT_ID,zone:z.name,category:z.category,price:PM[z.category]||0,qty,convFee:CONV_FEE}));
   window.location.href=`/booking/details/${EVENT_ID}?cat=${encodeURIComponent(z.category)}&qty=${qty}`;
 }
 

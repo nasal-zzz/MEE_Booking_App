@@ -41,7 +41,7 @@ const sectionSchema = new mongoose.Schema({
 // ── Stage ──
 const stageSchema = new mongoose.Schema({
   shape:  { type: String, enum: ['rectangle','semicircle','thrust','intheround'], default: 'rectangle' },
-  color:  { type: String, default: '#6A0DAD' },
+  color:  { type: String, default: '#74a2ed' },
   label:  { type: String, default: 'STAGE' },
   x:      { type: Number, default: 100 },
   y:      { type: Number, default: 30 },

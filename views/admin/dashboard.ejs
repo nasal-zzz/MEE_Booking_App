@@ -56,7 +56,11 @@
     .event-name{font-weight:600;color:#fff;margin-bottom:0.2rem;}
     .event-date{font-size:0.75rem;color:var(--muted);}
     @media(max-width:900px){.admin-layout{grid-template-columns:1fr;}.sidebar{display:none;}.stats-grid{grid-template-columns:repeat(2,1fr);}}
-  </style>
+ 
+    @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
+@keyframes spin   { to{transform:rotate(360deg);} }
+
+ </style>
 </head>
 <body>
 <div class="admin-layout">
@@ -65,7 +69,28 @@
   <main class="main">
     <div class="page-header">
       <div class="page-title">DASHBOARD</div>
-      <a href="/admin/events/new" class="btn-primary"><i class="bi bi-plus-lg"></i> New Event</a>
+      <!-- <a href="/admin/events/new" class="btn-primary"><i class="bi bi-plus-lg"></i> New Event</a> -->
+
+      <div style="display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap;">
+  <!-- Auto-refresh countdown -->
+  <div id="refreshCountdown" style="display:inline-flex;align-items:center;gap:0.4rem;font-size:0.72rem;color:var(--muted);padding:0.4rem 0.8rem;border-radius:6px;border:1px solid rgba(255,255,255,0.05);background:rgba(255,255,255,0.02);font-family:'Space Mono',monospace;letter-spacing:1px;">
+    <span style="width:6px;height:6px;border-radius:50%;background:#00FF88;animation:pulse 1.5s ease-in-out infinite;display:inline-block;"></span>
+    <span id="refreshTimer">5:00</span> auto-refresh
+  </div>
+  <!-- Manual refresh button -->
+  <button onclick="doRefresh()" id="refreshBtn"
+    style="display:inline-flex;align-items:center;gap:0.5rem;background:transparent;color:var(--muted);padding:0.65rem 1rem;border-radius:6px;border:1px solid var(--border);font-size:0.82rem;cursor:pointer;font-family:'Outfit',sans-serif;transition:all 0.15s;"
+    onmouseover="this.style.borderColor='rgba(157,78,221,0.35)';this.style.color='#fff'"
+    onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
+    <i class="bi bi-arrow-clockwise" id="refreshIcon"></i> Refresh
+  </button>
+  <!-- New Event button -->
+  <a href="/admin/events/new" style="display:inline-flex;align-items:center;gap:0.5rem;background:var(--accent);color:#fff;padding:0.7rem 1.4rem;border-radius:6px;text-decoration:none;font-weight:700;font-size:0.85rem;letter-spacing:1px;">
+    <i class="bi bi-plus-lg"></i> New Event
+  </a>
+</div>
+
+
     </div>
 
     <% if (locals.query && query && query.success) { %>
@@ -80,6 +105,129 @@
       <div class="stat-card"><div class="stat-val"><%= stats.totalUsers %></div><div class="stat-lbl">Users</div></div>
       <div class="stat-card"><div class="stat-val">₹<%= (stats.revenue/1000).toFixed(1) %>k</div><div class="stat-lbl">Revenue</div></div>
     </div>
+
+    <!-- ── Active Event Panel ── -->
+    <% if (activeEvent) {
+      const catColors = {platinum:'#9D4EDD',gold:'#f5c842',silver:'#c0c8d8',vip:'#bf80ff',general:'#a0a0a0',standard:'#a0a0a0',family:'#FF6B6B',fanfit:'#00FF88'};
+      // Build per-category attendee lists
+      const catMap = {};
+      activeEvent.ticketTypes.forEach(t => { catMap[t.category] = { name: t.name, total: t.totalSeats, booked: t.bookedSeats, price: t.price, color: catColors[t.category]||'#6A0DAD', attendees: [] }; });
+      activeEventBookings.forEach(b => {
+        if (catMap[b.ticketType]) {
+          b.tickets.forEach(tk => {
+            catMap[b.ticketType].attendees.push({ name: tk.attendee?.name||'—', age: tk.attendee?.age||'—', gender: tk.attendee?.gender||'—', phone: b.contactPhone||b.user?.phone||'—', bookingRef: b.bookingRef });
+          });
+        }
+      });
+      const catList = Object.entries(catMap);
+    %>
+    <div class="table-card" style="margin-bottom:2rem;">
+      <div class="table-header" style="flex-wrap:wrap;gap:0.8rem;">
+        <div>
+          <div class="table-title" style="font-size:1rem;">🎯 ACTIVE EVENT</div>
+          <div style="font-size:0.82rem;color:var(--muted);margin-top:0.2rem;"><%= activeEvent.name %> · <%= new Date(activeEvent.date).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}) %> · <%= activeEvent.venue %></div>
+        </div>
+        <div style="display:flex;gap:1.2rem;flex-wrap:wrap;">
+          <div style="text-align:center;">
+            <div style="font-family:'Poppins',sans-serif;font-size:1.4rem;color:var(--accent);">₹<%= (activeEventRevenue/1000).toFixed(1) %>k</div>
+            <div style="font-size:0.7rem;color:var(--muted);">EVENT REVENUE</div>
+          </div>
+          <div style="text-align:center;">
+            <div style="font-family:'Poppins',sans-serif;font-size:1.4rem;color:#00FF88;"><%= activeEventBookings.reduce((s,b)=>s+b.quantity,0) %></div>
+            <div style="font-size:0.7rem;color:var(--muted);">TICKETS SOLD</div>
+          </div>
+          <div style="text-align:center;">
+            <div style="font-family:'Poppins',sans-serif;font-size:1.4rem;color:#f5c842;"><%= activeEvent.ticketTypes.reduce((s,t)=>s+(t.totalSeats-t.bookedSeats),0) %></div>
+            <div style="font-size:0.7rem;color:var(--muted);">SEATS LEFT</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Category seat balance -->
+      <div style="padding:1.2rem 1.5rem;border-bottom:1px solid var(--border);">
+        <div style="font-family:'Space Mono',monospace;font-size:0.58rem;letter-spacing:2px;color:var(--muted);margin-bottom:0.8rem;">SEATS BY CATEGORY</div>
+        <div style="display:flex;flex-wrap:wrap;gap:0.8rem;">
+          <% catList.forEach(([cat, info]) => {
+            const pct = info.total > 0 ? Math.round((info.booked/info.total)*100) : 0;
+            const remaining = info.total - info.booked;
+          %>
+          <div style="background:#0B0B0F;border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:0.8rem 1.2rem;min-width:160px;flex:1;">
+            <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;">
+              <div style="width:8px;height:8px;border-radius:50%;background:<%= info.color %>;"></div>
+              <span style="font-size:0.78rem;font-weight:600;color:#fff;"><%= info.name.toUpperCase() %></span>
+              <span style="font-size:0.7rem;color:var(--muted);margin-left:auto;">₹<%= info.price %></span>
+            </div>
+            <div style="font-family:'Poppins',sans-serif;font-size:1.5rem;color:<%= info.color %>;line-height:1;"><%= remaining %></div>
+            <div style="font-size:0.68rem;color:var(--muted);margin-top:0.2rem;"><%= info.booked %> booked / <%= info.total %> total</div>
+            <div style="margin-top:0.5rem;height:3px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;">
+              <div style="height:100%;width:<%= pct %>%;background:<%= info.color %>;border-radius:2px;"></div>
+            </div>
+          </div>
+          <% }); %>
+        </div>
+      </div>
+
+      <!-- Attendee table with search/filter -->
+      <div style="padding:1.2rem 1.5rem;">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.8rem;margin-bottom:1rem;">
+          <div style="font-family:'Space Mono',monospace;font-size:0.58rem;letter-spacing:2px;color:var(--muted);">ATTENDEES</div>
+          <div style="display:flex;gap:0.6rem;flex-wrap:wrap;">
+            <input id="attSearch" type="text" placeholder="Search name / phone..." oninput="filterAttendees()"
+              style="background:#0B0B0F;border:1px solid var(--border);border-radius:6px;padding:0.4rem 0.8rem;color:#fff;font-size:0.8rem;width:200px;outline:none;">
+            <select id="attCatFilter" onchange="filterAttendees()"
+              style="background:#0B0B0F;border:1px solid var(--border);border-radius:6px;padding:0.4rem 0.8rem;color:#fff;font-size:0.8rem;outline:none;">
+              <option value="">All Categories</option>
+              <% catList.forEach(([cat, info]) => { %>
+                <option value="<%= cat %>"><%= info.name %></option>
+              <% }); %>
+            </select>
+            <select id="attGenderFilter" onchange="filterAttendees()"
+              style="background:#0B0B0F;border:1px solid var(--border);border-radius:6px;padding:0.4rem 0.8rem;color:#fff;font-size:0.8rem;outline:none;">
+              <option value="">All Genders</option>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+        </div>
+        <div class="table-scroll">
+          <table id="attTable">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Name</th>
+                <th>Age</th>
+                <th>Gender</th>
+                <th>Category</th>
+                <th>Phone</th>
+                <th>Booking Ref</th>
+              </tr>
+            </thead>
+            <tbody id="attTbody">
+              <% let rowIdx = 0; %>
+              <% catList.forEach(([cat, info]) => { %>
+                <% info.attendees.forEach(att => { rowIdx++; %>
+                <tr class="att-row" data-cat="<%= cat %>" data-gender="<%= att.gender.toLowerCase() %>" data-search="<%= (att.name+' '+att.phone).toLowerCase() %>">
+                  <td style="color:var(--muted);font-size:0.75rem;"><%= rowIdx %></td>
+                  <td style="font-weight:600;"><%= att.name %></td>
+                  <td><%= att.age %></td>
+                  <td style="text-transform:capitalize;"><%= att.gender %></td>
+                  <td><span style="background:rgba(106,13,173,0.1);border:1px solid rgba(106,13,173,0.2);color:<%= info.color %>;border-radius:10px;padding:0.15rem 0.5rem;font-size:0.7rem;font-family:'Space Mono',monospace;"><%= info.name %></span></td>
+                  <td style="font-family:'Space Mono',monospace;font-size:0.75rem;color:var(--muted);"><%= att.phone %></td>
+                  <td style="font-family:'Space Mono',monospace;font-size:0.72rem;color:var(--muted);"><%= att.bookingRef %></td>
+                </tr>
+                <% }); %>
+              <% }); %>
+              <% if (rowIdx === 0) { %>
+                <tr><td colspan="7" style="text-align:center;color:var(--muted);padding:2rem;">No attendees yet</td></tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+        <div id="attCount" style="font-size:0.75rem;color:var(--muted);margin-top:0.8rem;text-align:right;"><%= rowIdx %> attendee(s)</div>
+      </div>
+    </div>
+    <% } %>
 
     <!-- Events Table -->
     <div class="table-card">
@@ -168,6 +316,23 @@
   </main>
 </div>
 <script>
+function filterAttendees() {
+  const search = document.getElementById('attSearch')?.value.toLowerCase() || '';
+  const cat    = document.getElementById('attCatFilter')?.value || '';
+  const gender = document.getElementById('attGenderFilter')?.value || '';
+  let visible  = 0;
+  document.querySelectorAll('.att-row').forEach((row, i) => {
+    const matchSearch = !search || row.dataset.search.includes(search);
+    const matchCat    = !cat    || row.dataset.cat === cat;
+    const matchGender = !gender || row.dataset.gender === gender;
+    const show = matchSearch && matchCat && matchGender;
+    row.style.display = show ? '' : 'none';
+    if (show) { visible++; row.querySelector('td').textContent = visible; }
+  });
+  const countEl = document.getElementById('attCount');
+  if (countEl) countEl.textContent = visible + ' attendee(s)';
+}
+
   // Pass query params to EJS flash
   const urlParams = new URLSearchParams(window.location.search);
   const success = urlParams.get('success');
@@ -340,6 +505,30 @@ async function toggleTicketCat(eventId, category, el) {
   } catch(e) {}
   el.style.opacity='1';
 }
+
+// ── Refresh logic ──────────────────────────────────────
+let _refreshSecs = 300;
+const _timerEl   = document.getElementById('refreshTimer');
+const _refreshBtn = document.getElementById('refreshBtn');
+const _refreshIcon = document.getElementById('refreshIcon');
+
+function _pad(n){ return String(n).padStart(2,'0'); }
+function _tick(){
+  const m = Math.floor(_refreshSecs/60), s = _refreshSecs%60;
+  _timerEl.textContent = m+':'+_pad(s);
+  if(--_refreshSecs < 0) location.reload();
+}
+setInterval(_tick, 1000);
+_tick();
+
+function doRefresh(){
+  _refreshIcon.style.animation = 'spin 0.7s linear infinite';
+  _refreshBtn.disabled = true;
+  setTimeout(() => location.reload(), 300);
+}
+// ───────────────────────────────────────────────────────
+
+
 </script>
 
   <%- include('../partials/admin-confirm') %>

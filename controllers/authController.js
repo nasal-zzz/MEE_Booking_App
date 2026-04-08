@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const Referral = require('../models/Referral');
 const { createAndSendOTP, createAndSendEmailOTP, verifyOTP } = require('../utils/otpHelper');
 const { signToken } = require('../middleware/auth');
 
@@ -31,20 +32,20 @@ exports.getLogin = (req, res) => {
   const error   = req.session.error   || null;
   const success = req.session.success || null;
   delete req.session.error; delete req.session.success;
-  req.session.save(() => res.render('pages/login', { title: 'Login — NightPass', error, success }));
+  req.session.save(() => res.render('pages/login', { title: 'Login — MEE', error, success }));
 };
 
 exports.getSignup = (req, res) => {
   if (req.query.next) req.session.redirectAfterLogin = req.query.next;
   const error = req.session.error || null;
   delete req.session.error;
-  req.session.save(() => res.render('pages/signup', { title: 'Sign Up — NightPass', error }));
+  req.session.save(() => res.render('pages/signup', { title: 'Sign Up — MEE', error }));
 };
 
 exports.getOTP = (req, res) => {
   if (!req.session.otpPhone) return res.redirect('/auth/login');
   res.render('pages/otp', {
-    title: 'Verify OTP — NightPass',
+    title: 'Verify OTP — MEE',
     phone: req.session.otpPhone,
     mode:  req.session.otpMode || 'login',
   });
@@ -53,7 +54,7 @@ exports.getOTP = (req, res) => {
 exports.getVerifyEmail = (req, res) => {
   if (!req.session.pendingEmailVerify) return res.redirect('/');
   res.render('pages/verify-email', {
-    title: 'Verify Email — NightPass',
+    title: 'Verify Email — MEE',
     email: req.session.pendingEmailVerify.email,
   });
 };
@@ -61,11 +62,15 @@ exports.getVerifyEmail = (req, res) => {
 exports.getVerifyPhone = (req, res) => {
   // Must be logged in (session.userId set) to reach this page
   if (!req.session.userId) return res.redirect('/auth/login');
-  res.render('pages/verify-phone', { title: 'Verify Phone — NightPass' });
+  res.render('pages/verify-phone', { title: 'Verify Phone — MEE' });
 };
 
+
+'use strict';
+
 // ─────────────────────────────────────────────
-// PHONE LOGIN
+// FIX: sendLoginOTP — ensure session is fully flushed before responding
+// Replace just this function in authController.js
 // ─────────────────────────────────────────────
 
 exports.sendLoginOTP = async (req, res) => {
@@ -77,18 +82,96 @@ exports.sendLoginOTP = async (req, res) => {
     const fullPhone = '+91' + phone;
     const user = await User.findOne({ phone: fullPhone });
     if (!user)
-      return res.json({ success: false, message: 'No account found. Please sign up first.', redirect: '/auth/signup' });
+      return res.json({
+        success: false,
+        message: 'No account found. Please sign up first.',
+        redirect: '/auth/signup',
+      });
 
     const result = await createAndSendOTP(fullPhone, 'login');
-    if (!result.success) return res.json({ success: false, message: result.message || 'Failed to send OTP.' });
+    if (!result.success)
+      return res.json({ success: false, message: result.message || 'Failed to send OTP.' });
 
+    // Set session values
     req.session.otpPhone = fullPhone;
     req.session.otpMode  = 'login';
-    if (next && !req.session.redirectAfterLogin) req.session.redirectAfterLogin = next;
-    await new Promise(r => req.session.save(r));
-    return res.json({ success: true, message: 'OTP sent!', redirect: '/auth/otp' });
+    if (next && !req.session.redirectAfterLogin) {
+      req.session.redirectAfterLogin = next;
+    }
+
+    // ✅ Save session first, then respond — guarantees cookie is set before redirect
+    req.session.save((err) => {
+      if (err) {
+        console.error('Session save error in sendLoginOTP:', err);
+        return res.json({ success: false, message: 'Session error. Please try again.' });
+      }
+      return res.json({ success: true, message: 'OTP sent!', redirect: '/auth/otp' });
+    });
+
   } catch (err) {
     console.error('sendLoginOTP error:', err);
+    res.json({ success: false, message: 'Server error.' });
+  }
+};
+
+// ─────────────────────────────────────────────
+// Also fix postSignup for the same reason
+// ─────────────────────────────────────────────
+
+exports.postSignup = async (req, res) => {
+  try {
+    const { firstName, lastName, email, phone, whatsapp, gender, place, district, next } = req.body;
+
+    if (!firstName || !lastName || !phone || !gender || !place || !district)
+      return res.json({ success: false, message: 'Please fill in all required fields.' });
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+      return res.json({ success: false, message: 'Enter a valid email address.' });
+    if (!/^[6-9]\d{9}$/.test(phone))
+      return res.json({ success: false, message: 'Enter a valid 10-digit Indian mobile number.' });
+
+    const fullPhone = '+91' + phone;
+
+    if (await User.findOne({ phone: fullPhone }))
+      return res.json({
+        success: false,
+        message: 'Phone already registered. Please log in.',
+        redirect: '/auth/login',
+      });
+    if (email && await User.findOne({ email: email.trim().toLowerCase() }))
+      return res.json({ success: false, message: 'Email already registered with another account.' });
+
+    const fullWhatsapp = whatsapp && /^[6-9]\d{9}$/.test(whatsapp.trim())
+      ? '+91' + whatsapp.trim()
+      : fullPhone;
+
+    req.session.pendingUser = {
+      firstName, lastName,
+      email:    email ? email.trim().toLowerCase() : '',
+      phone:    fullPhone,
+      whatsapp: fullWhatsapp,
+      gender, place, district,
+    };
+    req.session.otpPhone = fullPhone;
+    req.session.otpMode  = 'signup';
+    if (next && !req.session.redirectAfterLogin) {
+      req.session.redirectAfterLogin = next;
+    }
+
+    const result = await createAndSendOTP(fullPhone, 'signup');
+    if (!result.success)
+      return res.json({ success: false, message: result.message || 'Failed to send OTP.' });
+
+    // ✅ Save session first, then respond
+    req.session.save((err) => {
+      if (err) {
+        console.error('Session save error in postSignup:', err);
+        return res.json({ success: false, message: 'Session error. Please try again.' });
+      }
+      return res.json({ success: true, redirect: '/auth/otp' });
+    });
+
+  } catch (err) {
+    console.error('postSignup error:', err);
     res.json({ success: false, message: 'Server error.' });
   }
 };
@@ -105,53 +188,66 @@ exports.resendOTP = async (req, res) => {
   }
 };
 
-// ─────────────────────────────────────────────
-// SIGNUP
-// ─────────────────────────────────────────────
+
 
 exports.postSignup = async (req, res) => {
   try {
     const { firstName, lastName, email, phone, whatsapp, gender, place, district, next } = req.body;
-
-    // Validate required fields (email is optional)
+ 
     if (!firstName || !lastName || !phone || !gender || !place || !district)
       return res.json({ success: false, message: 'Please fill in all required fields.' });
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
       return res.json({ success: false, message: 'Enter a valid email address.' });
     if (!/^[6-9]\d{9}$/.test(phone))
       return res.json({ success: false, message: 'Enter a valid 10-digit Indian mobile number.' });
-
+ 
     const fullPhone = '+91' + phone;
-
-    // Unique checks
+ 
     if (await User.findOne({ phone: fullPhone }))
-      return res.json({ success: false, message: 'Phone already registered. Please log in.', redirect: '/auth/login' });
+      return res.json({
+        success: false,
+        message: 'Phone already registered. Please log in.',
+        redirect: '/auth/login',
+      });
     if (email && await User.findOne({ email: email.trim().toLowerCase() }))
       return res.json({ success: false, message: 'Email already registered with another account.' });
-
+ 
     const fullWhatsapp = whatsapp && /^[6-9]\d{9}$/.test(whatsapp.trim())
-      ? '+91' + whatsapp.trim() : fullPhone;
-
-    // Store in session — don't create user until phone OTP verified
+      ? '+91' + whatsapp.trim()
+      : fullPhone;
+ 
     req.session.pendingUser = {
-      firstName, lastName, email: email.trim().toLowerCase(),
-      phone: fullPhone, whatsapp: fullWhatsapp,
+      firstName, lastName,
+      email:    email ? email.trim().toLowerCase() : '',
+      phone:    fullPhone,
+      whatsapp: fullWhatsapp,
       gender, place, district,
     };
     req.session.otpPhone = fullPhone;
     req.session.otpMode  = 'signup';
-    if (next && !req.session.redirectAfterLogin) req.session.redirectAfterLogin = next;
-
+    if (next && !req.session.redirectAfterLogin) {
+      req.session.redirectAfterLogin = next;
+    }
+ 
     const result = await createAndSendOTP(fullPhone, 'signup');
-    if (!result.success) return res.json({ success: false, message: result.message || 'Failed to send OTP.' });
-
-    await new Promise(r => req.session.save(r));
-    return res.json({ success: true, redirect: '/auth/otp' });
+    if (!result.success)
+      return res.json({ success: false, message: result.message || 'Failed to send OTP.' });
+ 
+    // ✅ Save session first, then respond
+    req.session.save((err) => {
+      if (err) {
+        console.error('Session save error in postSignup:', err);
+        return res.json({ success: false, message: 'Session error. Please try again.' });
+      }
+      return res.json({ success: true, redirect: '/auth/otp' });
+    });
+ 
   } catch (err) {
     console.error('postSignup error:', err);
     res.json({ success: false, message: 'Server error.' });
   }
 };
+
 
 // ─────────────────────────────────────────────
 // VERIFY PHONE OTP (signup + login)
@@ -173,17 +269,24 @@ exports.verifyOTPHandler = async (req, res) => {
       const pending = req.session.pendingUser;
       if (!pending) return res.json({ success: false, message: 'Session expired.', redirect: '/auth/signup' });
 
+      const refCode = req.session.referralCode || '';
       const user = await User.create({
-        firstName:  pending.firstName,
-        lastName:   pending.lastName,
-        email:      pending.email,
-        phone:      pending.phone,
-        whatsapp:   pending.whatsapp || '',
-        gender:     pending.gender   || '',
-        place:      pending.place    || '',
-        district:   pending.district || '',
-        isVerified: true,
+        firstName:    pending.firstName,
+        lastName:     pending.lastName,
+        email:        pending.email,
+        phone:        pending.phone,
+        whatsapp:     pending.whatsapp || '',
+        gender:       pending.gender   || '',
+        place:        pending.place    || '',
+        district:     pending.district || '',
+        isVerified:   true,
+        referralCode: refCode,
       });
+
+      // Increment referral signup counter
+      if (refCode) {
+        Referral.findOneAndUpdate({ code: refCode }, { $inc: { signups: 1 } }).catch(() => {});
+      }
 
       // Sign in immediately
       const token = signToken(user._id);

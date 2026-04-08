@@ -32,6 +32,10 @@ function _isActive(page) { return _active === page ? ' active' : ''; }
   <a href="/admin/reviews"    class="s-link<%- _isActive('reviews') %>">    <i class="bi bi-star-fill"></i>         Reviews</a>
   <a href="/admin/banners"    class="s-link<%- _isActive('banners') %>">    <i class="bi bi-image-fill"></i>        Banners</a>
   <a href="/admin/coupons"    class="s-link<%- _isActive('coupons') %>">    <i class="bi bi-tag-fill"></i>          Coupons</a>
+  <a href="/admin/referrals"  class="s-link<%- _isActive('referrals') %>">  <i class="bi bi-qr-code"></i>           Referral Links</a>
+
+  <div class="s-section">Marketing</div>
+  <a href="/admin/sponsors"   class="s-link<%- _isActive('sponsors') %>">   <i class="bi bi-building-fill"></i>     Sponsors</a>
 
   <div class="s-section">Team</div>
   <a href="/admin/staff"   class="s-link<%- _isActive('staff') %>">   <i class="bi bi-people-fill"></i>   Staff</a>

@@ -1,220 +1,336 @@
-const twilio = require('twilio');
-const fs   = require('fs');
-const path = require('path');
+'use strict';
 
-const getClient = () => {
-  const sid   = process.env.TWILIO_ACCOUNT_SID;
-  const token = process.env.TWILIO_AUTH_TOKEN;
-  if (!sid || !token || sid === 'ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx') return null;
-  return twilio(sid, token);
+const https = require('https');
+const fs    = require('fs');
+const path  = require('path');
+
+// ── Helpers ──────────────────────────────────────────────────────────────
+
+const APP_URL         = () => (process.env.APP_URL || 'http://localhost:3000').replace(/\/$/, '');
+const MSG91_AUTH_KEY  = () => process.env.MSG91_AUTH_KEY  || '';
+const MSG91_WA_SENDER = () => process.env.MSG91_WA_SENDER || '';
+
+/** Normalise any Indian phone number to 91XXXXXXXXXX */
+const normPhone = (phone) => {
+  const raw = String(phone || '').replace(/\D/g, '');
+  return raw.startsWith('91') ? raw : '91' + raw;
 };
 
-const WA_FROM = () => process.env.TWILIO_WHATSAPP_FROM || 'whatsapp:+14155238886';
-const APP_URL = () => (process.env.APP_URL || 'http://localhost:3000').replace(/\/$/, '');
-
-/**
- * Save a base64 QR code PNG to /public/qr/ and return its public URL.
- */
-const saveQRImage = (base64DataUrl, ticketId) => {
+/** Format a Date to "Mon, 27 Mar 2026" */
+const fmtDate = (date) => {
   try {
-    // Strip the data:image/png;base64, prefix
-    const base64 = base64DataUrl.replace(/^data:image\/png;base64,/, '')
-                                .replace(/^data:image\/jpeg;base64,/, '');
-    const filename = `${ticketId}.png`;
-    const filePath = path.join(__dirname, '..', 'public', 'qr', filename);
-    fs.writeFileSync(filePath, Buffer.from(base64, 'base64'));
-    return `${APP_URL()}/qr/${filename}`;
+    return new Date(date).toLocaleDateString('en-IN', {
+      weekday: 'short', day: 'numeric', month: 'short', year: 'numeric',
+    });
+  } catch (e) { return String(date); }
+};
+
+/** Save PDF buffer to public/ticket and return its public URL */
+// const saveTicketFile = (buffer, bookingRef) => {
+//   try {
+//     const dir = path.join(__dirname, '..', 'public', 'ticket');
+//     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+//     const filename = `${bookingRef}_ticket.pdf`;
+//     fs.writeFileSync(path.join(dir, filename), buffer);
+//     return `${APP_URL()}/ticket/${filename}`;
+//   } catch (e) {
+//     console.error('saveTicketFile error:', e.message);
+//     return null;
+//   }
+// };
+
+const saveTicketFile = (buffer, bookingRef) => {
+  try {
+    const dir = path.join(__dirname, '..', 'public', 'ticket');
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    const filename = `${bookingRef}_ticket.pdf`;
+    const filePath = path.join(dir, filename);
+    fs.writeFileSync(filePath, buffer);
+
+    // ✅ Auto-delete after 10 minutes (enough time for MSG91 to fetch it)
+    setTimeout(() => {
+      try {
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+          console.log(`🗑 Deleted temp ticket PDF: ${filename}`);
+        }
+      } catch (e) {
+        console.warn('PDF cleanup error:', e.message);
+      }
+    }, 5 * 60 * 1000); // 5 minutes
+
+    return `${APP_URL()}/ticket/${filename}`;
   } catch (e) {
-    console.error('QR image save failed:', e.message);
+    console.error('saveTicketFile error:', e.message);
     return null;
   }
 };
 
+
+const isConfigured = () => !!(MSG91_AUTH_KEY() && MSG91_WA_SENDER());
+
+const devLog = (label, phone, data) => {
+  console.log('\n' + '='.repeat(64));
+  console.log(`📱 [DEV MSG91 WA] ${label} → ${phone}`);
+  console.log(JSON.stringify(data, null, 2));
+  console.log('='.repeat(64) + '\n');
+};
+
 /**
- * Send booking confirmation via WhatsApp.
- * Sends 1 confirmation text message, then 1 image per ticket (QR code).
+ * Returns true when the booking is for a sitting (numbered-seat) category.
+ * Checks ticket seatNumbers — if they look like real assigned seats
+ * (not empty, not 'general', not 'standing') then it's a sitting category.
  */
-const sendWhatsAppTickets = async ({ phone, name, booking, event }) => {
-  // ── DEBUG LOGS ──
-  const sid = process.env.TWILIO_ACCOUNT_SID;
-  const tok = process.env.TWILIO_AUTH_TOKEN;
-  const waFrom = process.env.TWILIO_WHATSAPP_FROM;
-  const appUrl = process.env.APP_URL;
-  console.log('📱 WhatsApp sendTickets called');
-  console.log('   Phone:', phone);
-  console.log('   TWILIO_ACCOUNT_SID:', sid ? sid.substring(0,8) + '...' : '❌ MISSING');
-  console.log('   TWILIO_AUTH_TOKEN:', tok ? '✅ set' : '❌ MISSING');
-  console.log('   TWILIO_WHATSAPP_FROM:', waFrom || '⚠ using default sandbox');
-  console.log('   APP_URL:', appUrl || '⚠ using localhost:3000');
-  console.log('   Tickets count:', booking.tickets.length);
+const isSittingBooking = (booking) => {
+  if (!booking.tickets || booking.tickets.length === 0) return false;
+  return booking.tickets.some(t => {
+    const sn = (t.seatNumber || '').trim().toLowerCase();
+    return sn && sn !== 'general' && sn !== 'standing' && sn !== 'n/a';
+  });
+};
 
-  const client = getClient();
-  console.log('   Twilio client:', client ? '✅ created' : '❌ NOT created (check SID/token)');
+/**
+ * @param {string} to           - recipient phone (will be normalised)
+ * @param {string} templateName - MSG91 template name
+ * @param {Object} components   - key/value map matching MSG91 component keys exactly
+ */
+const sendMsg91WA = (to, templateName, components = {}) => {
+  const authKey = MSG91_AUTH_KEY();
+  const sender  = MSG91_WA_SENDER();
 
-  const to     = `whatsapp:${phone}`;
-  const from   = WA_FROM();
+  if (!authKey || !sender) {
+    return Promise.reject(new Error('MSG91_AUTH_KEY or MSG91_WA_SENDER not set'));
+  }
 
-  const ticketUrl = `${APP_URL()}/booking/ticket/${booking._id}`;
+  const builtComponents = {};
 
-  const eventDate = new Date(event.date).toLocaleDateString('en-IN', {
-    weekday: 'short', day: 'numeric', month: 'short', year: 'numeric'
+  Object.entries(components).forEach(([key, val]) => {
+    if (val === null || val === undefined) return;
+
+    if (key === 'button_1') {
+      builtComponents['button_1'] = {
+        subtype: 'url',
+        type:    'text',
+        value:   String(val),
+      };
+    } else if (key === 'header_document') {
+  builtComponents['header'] = {
+    type: 'document',
+    value: {
+      link: String(val),
+      filename: `ticket_${Date.now()}.pdf`,
+    },
+  };
+} else {
+      const paramName = key.replace(/^body_/, '');
+      builtComponents[key] = {
+        type:           'text',
+        value:          String(val),
+        parameter_name: paramName,
+      };
+    }
   });
 
-  const ticketLines = booking.tickets.map((t, i) =>
-    `  ${i + 1}. ${t.attendee.name} — ${t.ticketId}`
-  ).join('\n');
+  const payload = JSON.stringify({
+    integrated_number: sender,
+    content_type:      'template',
+    payload: {
+      messaging_product: 'whatsapp',
+      type:              'template',
+      template: {
+        name:     templateName,
+        language: { code: 'en', policy: 'deterministic' },
+        to_and_components: [
+          {
+            to:         [normPhone(to)],
+            components: builtComponents,
+          },
+        ],
+      },
+    },
+  });
 
-  // ── Confirmation text message ──
-  const confirmMsg =
-`🎟 *Booking Confirmed — MEE!*
+  console.log('   📤 MSG91 raw payload:', payload);
+console.log('📤 Full MSG91 payload being sent:');
 
-Hi ${name}! Your tickets are ready. 🎉
 
-*${event.name.toUpperCase()}*
-📅 ${eventDate}
-⏰ ${event.doorsOpen || '4:00 PM'} – ${event.endTime || '10:00 PM'}
-📍 ${event.venue}
-
-*Booking Ref:* ${booking.bookingRef}
-*Tickets:* ${booking.quantity} × ${booking.ticketType}
-*Total Paid:* ₹${booking.totalAmount.toLocaleString('en-IN')}
-
-*Your Attendees:*
-${ticketLines}
-
-🔗 *View All Tickets Online:*
-${ticketUrl}
-
-Your QR passes are attached below 👇
-⚠️ Each QR is for *one-time entry only*. Carry a valid photo ID.`;
-
-  // DEV MODE — no Twilio configured
-  if (!client) {
-    console.log('\n' + '='.repeat(60));
-    console.log('📱 [DEV] WhatsApp to:', phone);
-    console.log(confirmMsg);
-    // Still save QR files in dev so we can verify
-    booking.tickets.forEach(t => {
-      if (t.qrCode) {
-        const url = saveQRImage(t.qrCode, t.ticketId);
-        console.log(`  📸 QR saved: ${url}`);
+console.log(JSON.stringify(JSON.parse(payload), null, 2));
+  return new Promise((resolve, reject) => {
+    const req = https.request(
+      {
+        hostname: 'api.msg91.com',
+        path:     '/api/v5/whatsapp/whatsapp-outbound-message/bulk/',
+        method:   'POST',
+        headers: {
+          authkey:          authKey,
+          'Content-Type':   'application/json',
+          'Content-Length': Buffer.byteLength(payload),
+        },
+      },
+      (res) => {
+        let data = '';
+        res.on('data', c => (data += c));
+        res.on('end', () => {
+          try {
+            const json = JSON.parse(data);
+            if (json.type === 'success' || res.statusCode === 200) resolve(json);
+            else reject(new Error(`MSG91 error: ${JSON.stringify(json)}`));
+          } catch (e) {
+            reject(new Error('MSG91 parse error: ' + data.substring(0, 300)));
+          }
+        });
       }
+    );
+    req.on('error', reject);
+    req.write(payload);
+    req.end();
+  });
+};
+
+// ── Helper ─────────────────────────────────────────────────────────────────
+const buildSeatsString = (tickets) => {
+  if (!tickets || tickets.length === 0) return 'N/A';
+  return tickets
+    .map(t => t.seatNumber || t.seatId || 'General')
+    .join(', ');
+};
+
+// ── 1. Booking Confirmed ───────────────────────────────────────────────────
+const sendWhatsAppTickets = async ({ phone, name, booking, event }) => {
+  if (!phone) return { success: false };
+  console.log('📱 MSG91 WA sendWhatsAppTickets →', phone);
+
+  // Generate PDF
+  let pdfUrl = null;
+  try {
+    const { generateTicketPDF } = require('./pdfHelper');
+    const buf = await generateTicketPDF({ booking, event });
+    pdfUrl = saveTicketFile(buf, booking.bookingRef);
+    console.log("pdf generated success");
+    console.log('📎 PDF URL being sent to MSG91:', pdfUrl);
+console.log('🌐 APP_URL is:', process.env.APP_URL);
+  } catch (e) {
+    console.warn('⚠ PDF generation failed:', e.message);
+  }
+
+  // ✅ Only pass seat numbers for sitting (numbered seat) categories
+  const sitting = isSittingBooking(booking);
+  const seats   = sitting ? buildSeatsString(booking.tickets) : 'N/A';
+
+  const eventDate = fmtDate(event.date);
+  const eventTime = event.doorsOpen || '';
+  const venue     = event.venue     || '';
+  const bookingId = booking.bookingRef || String(booking._id);
+  const buttonVal = String(booking._id || booking.bookingRef);
+
+  if (!isConfigured()) {
+    devLog('Confirmed', phone, {
+      name, bookingId,
+      category:  booking.ticketType,
+      qty:       booking.quantity,
+      seats, eventDate, eventTime, venue, pdfUrl, buttonVal,
     });
-    console.log('='.repeat(60) + '\n');
     return { success: true, dev: true };
   }
 
+  const templateName = process.env.MSG91_WA_TEMPLATE_CONFIRM || '';
+  if (!templateName) {
+    console.warn('⚠ MSG91_WA_TEMPLATE_CONFIRM not set');
+    return { success: false };
+  }
+
   try {
-    // 1. Send the confirmation text first
-    await client.messages.create({ from, to, body: confirmMsg });
-    console.log(`✅ WhatsApp confirmation sent to ${phone}`);
-
-    // 2. Send each ticket as a QR image with caption
-    for (let i = 0; i < booking.tickets.length; i++) {
-      const t = booking.tickets[i];
-
-      if (!t.qrCode || !t.qrCode.startsWith('data:image')) {
-        console.warn(`⚠ No QR image for ticket ${i + 1}, skipping`);
-        continue;
-      }
-
-      // Save QR to /public/qr/ so Twilio can fetch it via URL
-      const qrUrl = saveQRImage(t.qrCode, t.ticketId);
-      if (!qrUrl) continue;
-
-      const caption = `🎫 *Ticket ${i + 1} of ${booking.quantity}*\n👤 ${t.attendee.name}\n🆔 ${t.ticketId}\n\nScan this QR at the venue entrance.`;
-
-      await client.messages.create({
-        from,
-        to,
-        body:     caption,
-        mediaUrl: [qrUrl],   // Twilio fetches this URL to send as WhatsApp image
-      });
-
-      console.log(`✅ QR image sent for ticket ${i + 1}: ${qrUrl}`);
-
-      // Small delay between messages to avoid rate limiting
-      if (i < booking.tickets.length - 1) {
-        await new Promise(r => setTimeout(r, 1000));
-      }
-    }
-
+    await sendMsg91WA(phone, templateName, {
+      body_name:          name,
+      body_booking_id:    bookingId,
+      body_category_name: booking.ticketType || '',
+      body_ticket_count:  String(booking.quantity),
+      body_seats:         seats,
+      body_event_date:    eventDate,
+      body_event_time:    eventTime,
+      body_event_venue:   venue,
+      button_1:           buttonVal,
+      header_document:    pdfUrl,
+    });
+    console.log('   ✅ MSG91 WA confirmed sent');
     return { success: true };
   } catch (err) {
-    console.error('❌ WhatsApp send error:', err.message);
+    console.error('   ❌ MSG91 WA confirmed error:', err.message);
     return { success: false, error: err.message };
   }
 };
 
+const sendWhatsAppConfirmation = sendWhatsAppTickets;
 
-// ── WhatsApp: Pending payment reminder ──
+// ── 2. Payment Pending ───────────────────────────────────────────────────
 const sendWhatsAppPending = async ({ phone, name, booking, event }) => {
-  try {
-    const appUrl = process.env.APP_URL || '';
-    const msg =
-      `⏳ *Booking Pending — MEE*\n\n` +
-      `Hi ${name}! Your booking for *${event.name || 'the event'}* is pending payment.\n\n` +
-      `📋 Ref: *${booking.bookingRef}*\n` +
-      `🎟️ ${booking.quantity} × ${booking.ticketType}\n` +
-      `💰 ₹${(booking.totalAmount||0).toLocaleString('en-IN')}\n\n` +
-      `Complete your payment here:\n${appUrl}/booking/retry-payment/${booking._id}\n\n` +
-      `Hurry — reserved seats may expire soon!`;
+  if (!phone) return { success: false };
+  console.log('📱 MSG91 WA sendWhatsAppPending →', phone);
 
-    const rawPhone = String(phone).replace(/\D/g, '');
-    const normalised = rawPhone.startsWith('91') ? rawPhone : '91' + rawPhone;
-    const to = `whatsapp:+${normalised}`;
-    const client2 = getClient();
-    console.log('📱 [WA Pending] to:', to, '| client:', client2 ? 'ready' : 'sandbox/no-client');
-    if (client2) {
-      const result = await client2.messages.create({ from: WA_FROM(), to, body: msg });
-      console.log('✅ WA Pending sent, SID:', result.sid);
-    } else {
-      console.log(`📱 [WA Pending DEV] → ${to}:\n${msg}`);
-    }
+  const bookingId   = booking.bookingRef || String(booking._id);
+  const totalAmount = `₹${(booking.totalAmount || 0).toLocaleString('en-IN')}`;
+
+  if (!isConfigured()) {
+    devLog('Pending', phone, { name, bookingId, category: booking.ticketType, qty: booking.quantity, totalAmount });
+    return { success: true, dev: true };
+  }
+
+  const templateName = process.env.MSG91_WA_TEMPLATE_PENDING || '';
+  if (!templateName) { console.warn('⚠ MSG91_WA_TEMPLATE_PENDING not set'); return { success: false }; }
+
+  try {
+    await sendMsg91WA(phone, templateName, {
+      body_name:          name,
+      body_booking_id:    bookingId,
+      body_category_name: booking.ticketType || '',
+      body_ticket_count:  String(booking.quantity),
+      body_total_amount:  totalAmount,
+    });
+    console.log('   ✅ MSG91 WA pending sent');
     return { success: true };
-  } catch(err) {
-    // Twilio sandbox error 63016 = number not opted in. Log clearly.
-    console.error('❌ WA pending error:', err.message, '| Code:', err.code);
-    if (err.code === 63016) {
-      console.warn('ℹ️  Twilio sandbox: recipient must send "join <keyword>" to', WA_FROM(), 'first.');
-    }
+  } catch (err) {
+    console.error('   ❌ MSG91 WA pending error:', err.message);
     return { success: false, error: err.message };
   }
 };
 
-// ── WhatsApp: Failed payment notice ──
+// ── 3. Payment Failed ────────────────────────────────────────────────────
 const sendWhatsAppPaymentFailed = async ({ phone, name, booking, event }) => {
-  try {
-    const appUrl = process.env.APP_URL || '';
-    const msg =
-      `❌ *Payment Failed — MEE*\n\n` +
-      `Hi ${name}, your payment for *${event.name || 'the event'}* could not be processed.\n\n` +
-      `📋 Ref: *${booking.bookingRef}*\n` +
-      `💰 ₹${(booking.totalAmount||0).toLocaleString('en-IN')}\n\n` +
-      `*No amount has been charged.* If money was deducted, it will be refunded in 5–7 business days.\n\n` +
-      `Try again here: ${appUrl}/booking/my-bookings\n\n` +
-      `Need help? Call +91 99958 43003`;
+  if (!phone) return { success: false };
+  console.log('📱 MSG91 WA sendWhatsAppPaymentFailed →', phone);
 
-    const rawPhone = String(phone).replace(/\D/g, '');
-    const normalised = rawPhone.startsWith('91') ? rawPhone : '91' + rawPhone;
-    const to = `whatsapp:+${normalised}`;
-    const client3 = getClient();
-    console.log('📱 [WA Failed] to:', to, '| client:', client3 ? 'ready' : 'sandbox/no-client');
-    if (client3) {
-      const result = await client3.messages.create({ from: WA_FROM(), to, body: msg });
-      console.log('✅ WA Failed sent, SID:', result.sid);
-    } else {
-      console.log(`📱 [WA Failed DEV] → ${to}:\n${msg}`);
-    }
+  const bookingId   = booking.bookingRef || String(booking._id);
+  const totalAmount = `₹${(booking.totalAmount || 0).toLocaleString('en-IN')}`;
+  const buttonVal   = String(booking._id || booking.bookingRef);
+
+  if (!isConfigured()) {
+    devLog('Failed', phone, { name, bookingId, totalAmount, buttonVal });
+    return { success: true, dev: true };
+  }
+
+  const templateName = process.env.MSG91_WA_TEMPLATE_FAILED || '';
+  if (!templateName) { console.warn('⚠ MSG91_WA_TEMPLATE_FAILED not set'); return { success: false }; }
+
+  try {
+    await sendMsg91WA(phone, templateName, {
+      body_name:         name,
+      body_booking_id:   bookingId,
+      body_total_amount: totalAmount,
+      button_1:          buttonVal,
+    });
+    console.log('   ✅ MSG91 WA failed sent');
     return { success: true };
-  } catch(err) {
-    console.error('❌ WA failed error:', err.message, '| Code:', err.code);
-    if (err.code === 63016) {
-      console.warn('ℹ️  Twilio sandbox: recipient must send "join <keyword>" to', WA_FROM(), 'first.');
-    }
+  } catch (err) {
+    console.error('   ❌ MSG91 WA failed error:', err.message);
     return { success: false, error: err.message };
   }
 };
 
-const sendWhatsAppConfirmation = sendWhatsAppTickets; // alias used by bookingController
-module.exports = { sendWhatsAppTickets, sendWhatsAppConfirmation, sendWhatsAppPending, sendWhatsAppPaymentFailed };
+// ── Exports ───────────────────────────────────────────────────────────────
+
+module.exports = {
+  sendWhatsAppTickets,
+  sendWhatsAppConfirmation,
+  sendWhatsAppPending,
+  sendWhatsAppPaymentFailed,
+};

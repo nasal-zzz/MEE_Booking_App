@@ -3,31 +3,32 @@
 <head>
   <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title><%= event ? 'Edit Event' : 'New Event' %> — Admin</title>
-  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Outfit:wght@400;600;700&family=Space+Mono&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&family=Outfit:wght@400;600;700&family=Space+Mono&display=swap" rel="stylesheet"/>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/cropperjs@1.6.1/dist/cropper.min.css" rel="stylesheet"/>
   <style>
     *{box-sizing:border-box;margin:0;padding:0;}
     body{background:#0B0B0F;color:#FFFFFF;font-family:'Outfit',sans-serif;min-height:100vh;}
-    nav{padding:1rem 2rem;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,0.08);background:#14141C;position:sticky;top:0;z-index:100;}
-    .logo{font-family:'Anton',sans-serif;font-size:1.3rem;letter-spacing:3px;color:#fff;text-decoration:none;}
-    .logo span{color:#6A0DAD;}
-    .nav-links{display:flex;gap:1rem;align-items:center;}
-    .nav-links a{color:#B3B3B3;text-decoration:none;font-size:0.82rem;padding:0.4rem 0.8rem;border-radius:4px;transition:all 0.2s;}
-    .nav-links a:hover{color:#fff;background:rgba(255,255,255,0.05);}
-    .btn-danger{background:rgba(255,68,68,0.1);color:#FF4444;border:1px solid rgba(255,68,68,0.2);padding:0.4rem 1rem;border-radius:4px;text-decoration:none;font-size:0.82rem;}
-
+    /* Layout */
+    .admin-layout{display:grid;grid-template-columns:220px 1fr;min-height:100vh;}
+    .sidebar{background:#14141C;border-right:1px solid rgba(255,255,255,0.08);padding:1.5rem 1rem;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:0.3rem;z-index:10;overflow-y:auto;}
+    .s-logo{font-family:'Poppins',sans-serif;font-size:1.3rem;letter-spacing:3px;color:#fff;text-decoration:none;display:block;padding:0 0.5rem 1.2rem;border-bottom:1px solid rgba(255,255,255,0.08);margin-bottom:0.8rem;}
+    .s-logo span{color:#6A0DAD;}
+    .s-section{font-family:'Space Mono',monospace;font-size:0.52rem;letter-spacing:2px;color:#B3B3B3;text-transform:uppercase;padding:0.5rem;margin-top:0.5rem;}
+    .s-link{display:flex;align-items:center;gap:0.7rem;padding:0.7rem 0.8rem;color:#B3B3B3;text-decoration:none;border-radius:6px;font-size:0.85rem;transition:all 0.15s;border:1px solid transparent;}
+    .s-link:hover,.s-link.active{background:rgba(106,13,173,0.07);border-color:rgba(106,13,173,0.15);color:#fff;}
+    .s-link i{color:#6A0DAD;width:18px;}
+    .s-logout{margin-top:auto;display:flex;align-items:center;gap:0.7rem;padding:0.7rem 0.8rem;color:#FF4444;text-decoration:none;border-radius:6px;font-size:0.85rem;border:1px solid transparent;transition:all 0.15s;}
+    .s-logout:hover{background:rgba(255,92,92,0.08);border-color:rgba(255,92,92,0.2);}
+    .main-content{min-width:0;}
     .container{max-width:960px;margin:0 auto;padding:2.5rem 1.5rem;}
-    .page-title{font-family:'Anton',sans-serif;font-size:2rem;letter-spacing:2px;color:#fff;margin-bottom:0.4rem;}
+    .page-title{font-family:'Poppins',sans-serif;font-size:2rem;letter-spacing:2px;margin-bottom:0.4rem;}
     .page-sub{color:#B3B3B3;font-size:0.88rem;margin-bottom:2.5rem;}
-
-    /* Section cards */
     .section{background:#14141C;border:1px solid rgba(255,255,255,0.08);border-radius:12px;overflow:hidden;margin-bottom:1.5rem;}
     .section-head{padding:1rem 1.5rem;border-bottom:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;gap:0.8rem;}
-    .section-num{width:28px;height:28px;border-radius:50%;background:#6A0DAD;color:#fff;font-family:'Anton',sans-serif;font-size:0.8rem;display:flex;align-items:center;justify-content:center;}
-    .section-title{font-weight:700;font-size:1rem;color:#fff;}
+    .section-num{width:28px;height:28px;border-radius:50%;background:#6A0DAD;color:#fff;font-family:'Poppins',sans-serif;font-size:0.8rem;display:flex;align-items:center;justify-content:center;}
+    .section-title{font-weight:700;font-size:1rem;}
     .section-body{padding:1.5rem;}
-
-    /* Fields */
     .field-row{display:grid;gap:1rem;margin-bottom:1rem;}
     .field-row.cols-2{grid-template-columns:1fr 1fr;}
     .field-row.cols-3{grid-template-columns:1fr 1fr 1fr;}
@@ -37,192 +38,203 @@
     .field-input:focus{border-color:#6A0DAD;}
     textarea.field-input{resize:vertical;min-height:90px;}
     select.field-input{cursor:pointer;}
-
-    /* Banner upload areas */
-    .banner-upload{border:2px dashed rgba(255,255,255,0.12);border-radius:10px;padding:1.5rem;text-align:center;cursor:pointer;transition:border-color 0.2s;position:relative;background:#0B0B0F;}
+    .banner-upload{border:2px dashed rgba(255,255,255,0.12);border-radius:10px;padding:1.2rem;text-align:center;cursor:pointer;transition:border-color 0.2s;background:#0B0B0F;}
     .banner-upload:hover{border-color:#6A0DAD;}
-    .banner-upload input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
-    .banner-upload i{font-size:2rem;color:#B3B3B3;display:block;margin-bottom:0.5rem;}
-    .banner-upload .up-label{font-size:0.85rem;color:#B3B3B3;}
-    .banner-upload .up-sub{font-size:0.72rem;color:rgba(255,255,255,0.3);margin-top:0.2rem;}
-    .banner-preview{width:100%;max-height:160px;object-fit:cover;border-radius:8px;display:none;margin-top:0.8rem;}
-
-    /* Artists */
+    .banner-upload i{font-size:1.8rem;color:#B3B3B3;display:block;margin-bottom:0.4rem;}
+    .banner-upload .up-label{font-size:0.82rem;color:#B3B3B3;}
+    .banner-upload .up-sub{font-size:0.68rem;color:rgba(255,255,255,0.3);margin-top:0.2rem;}
+    .banner-preview-wrap{position:relative;margin-top:0.8rem;display:none;}
+    .banner-preview-wrap img{width:100%;max-height:140px;object-fit:cover;border-radius:8px;display:block;}
+    .banner-preview-wrap .crop-btn{position:absolute;top:6px;right:6px;background:rgba(0,0,0,0.75);border:1px solid rgba(255,255,255,0.2);color:#fff;padding:0.3rem 0.7rem;border-radius:6px;font-size:0.72rem;cursor:pointer;display:flex;align-items:center;gap:0.3rem;}
+    .banner-preview-wrap .crop-btn:hover{background:rgba(106,13,173,0.8);}
     .artist-list{display:flex;flex-direction:column;gap:0.8rem;}
     .artist-row{background:#0B0B0F;border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:1rem;display:grid;grid-template-columns:80px 1fr 1fr auto;gap:1rem;align-items:center;}
-    .artist-photo-wrap{position:relative;width:80px;height:80px;}
-    .artist-photo-wrap input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
-    .artist-photo-box{width:80px;height:80px;border-radius:50%;background:#14141C;border:2px dashed rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;font-size:1.5rem;overflow:hidden;cursor:pointer;}
+    .artist-photo-box{width:80px;height:80px;border-radius:50%;background:#14141C;border:2px dashed rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;font-size:1.5rem;overflow:hidden;cursor:pointer;position:relative;}
     .artist-photo-box img{width:100%;height:100%;object-fit:cover;border-radius:50%;display:none;}
+    .artist-photo-box .crop-overlay{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.6);text-align:center;font-size:0.55rem;padding:3px;display:none;color:#fff;}
+    .artist-photo-box:hover .crop-overlay{display:block;}
     .btn-add{display:flex;align-items:center;gap:0.5rem;padding:0.65rem 1.2rem;background:rgba(106,13,173,0.12);border:1px solid rgba(106,13,173,0.3);border-radius:8px;color:#9D4EDD;font-size:0.85rem;font-weight:600;cursor:pointer;transition:all 0.2s;font-family:'Outfit',sans-serif;}
     .btn-add:hover{background:rgba(106,13,173,0.2);}
     .btn-remove{background:rgba(255,68,68,0.1);border:1px solid rgba(255,68,68,0.2);border-radius:6px;padding:0.4rem 0.6rem;color:#FF4444;cursor:pointer;font-size:0.85rem;transition:all 0.2s;}
     .btn-remove:hover{background:rgba(255,68,68,0.2);}
-
-    /* Ticket categories */
-    .ticket-categories{display:flex;flex-direction:column;gap:1rem;}
-    .ticket-cat{border-radius:12px;overflow:hidden;border:1.5px solid rgba(255,255,255,0.08);}
-    .ticket-cat-head{padding:0.9rem 1.2rem;display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;}
-    .ticket-cat-head:hover{background:rgba(255,255,255,0.03);}
-    .cat-badge{font-family:'Space Mono',monospace;font-size:0.62rem;letter-spacing:2px;padding:0.2rem 0.7rem;border-radius:10px;font-weight:700;}
-    .cat-platinum .ticket-cat-head{background:rgba(157,78,221,0.08);}
-    .cat-platinum .cat-badge{background:rgba(157,78,221,0.2);color:#9D4EDD;border:1px solid rgba(157,78,221,0.3);}
-    .cat-gold .ticket-cat-head{background:rgba(245,200,66,0.08);}
-    .cat-gold .cat-badge{background:rgba(245,200,66,0.2);color:#f5c842;border:1px solid rgba(245,200,66,0.3);}
-    .cat-silver .ticket-cat-head{background:rgba(192,200,216,0.08);}
-    .cat-silver .cat-badge{background:rgba(192,200,216,0.15);color:#c0c8d8;border:1px solid rgba(192,200,216,0.3);}
-    .cat-fanfit .ticket-cat-head{background:rgba(0,255,136,0.06);}
-    .cat-fanfit .cat-badge{background:rgba(0,255,136,0.15);color:#00FF88;border:1px solid rgba(0,255,136,0.3);}
-    .cat-family .ticket-cat-head{background:rgba(255,107,107,0.08);}
-    .cat-family .cat-badge{background:rgba(255,107,107,0.15);color:#FF6B6B;border:1px solid rgba(255,107,107,0.3);}
-    .ticket-cat-body{padding:1.2rem;background:#0B0B0F;display:none;}
-    .ticket-cat-body.open{display:block;}
-    .cat-enabled-toggle{display:flex;align-items:center;gap:0.6rem;cursor:pointer;}
-    .toggle-sw{width:38px;height:20px;background:rgba(255,255,255,0.1);border-radius:10px;position:relative;transition:background 0.2s;}
+    .cat-card{border-radius:12px;overflow:hidden;border:1.5px solid rgba(255,255,255,0.08);margin-bottom:1rem;}
+    .cat-card-head{padding:0.9rem 1.2rem;display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;}
+    .cat-card-body{padding:1.2rem;background:#0B0B0F;display:none;}
+    .cat-card-body.open{display:block;}
+    .cat-badge-pill{font-family:'Space Mono',monospace;font-size:0.6rem;letter-spacing:2px;padding:0.2rem 0.7rem;border-radius:10px;font-weight:700;}
+    .toggle-sw{width:38px;height:20px;background:rgba(255,255,255,0.1);border-radius:10px;position:relative;transition:background 0.2s;cursor:pointer;flex-shrink:0;}
     .toggle-sw.on{background:#6A0DAD;}
     .toggle-sw::after{content:'';position:absolute;top:3px;left:3px;width:14px;height:14px;border-radius:50%;background:#fff;transition:left 0.2s;}
     .toggle-sw.on::after{left:21px;}
-    .combo-note{background:rgba(255,107,107,0.08);border:1px solid rgba(255,107,107,0.2);border-radius:8px;padding:0.8rem 1rem;font-size:0.82rem;color:#FF6B6B;margin-bottom:1rem;}
-
-    /* Save button */
+    .seat-preview{background:rgba(106,13,173,0.06);border:1px solid rgba(106,13,173,0.15);border-radius:8px;padding:0.7rem 1rem;font-family:'Space Mono',monospace;font-size:0.7rem;color:#9D4EDD;margin-top:0.6rem;line-height:2;word-break:break-all;}
+    .seat-sub-section{border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:1rem;margin-bottom:1rem;background:rgba(255,255,255,0.02);}
+    .crop-modal{position:fixed;inset:0;background:rgba(0,0,0,0.93);z-index:9999;display:none;flex-direction:column;align-items:center;justify-content:center;padding:1rem;}
+    .crop-modal.open{display:flex;}
+    .crop-modal-box{background:#14141C;border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:1.2rem;width:min(680px,98vw);display:flex;flex-direction:column;gap:1rem;max-height:95vh;overflow-y:auto;}
+    .crop-modal-title{font-family:'Poppins',sans-serif;font-size:1.1rem;letter-spacing:2px;}
+    .crop-wrap{position:relative;max-height:380px;overflow:hidden;border-radius:8px;background:#000;}
+    .crop-wrap img{max-width:100%;display:block;}
+    .crop-actions{display:flex;gap:0.6rem;flex-wrap:wrap;}
+    .btn-ca{padding:0.5rem 1rem;border-radius:7px;font-size:0.82rem;font-family:'Outfit',sans-serif;cursor:pointer;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:#fff;display:flex;align-items:center;gap:0.4rem;transition:all 0.15s;}
+    .btn-ca:hover{background:rgba(255,255,255,0.1);}
+    .btn-ca.confirm{background:#6A0DAD;border-color:#6A0DAD;}
+    .btn-ca.confirm:hover{background:#7B1FD4;}
+    .ratio-btn{padding:0.35rem 0.8rem;border-radius:6px;font-size:0.72rem;font-family:'Space Mono',monospace;cursor:pointer;border:1px solid rgba(255,255,255,0.12);background:transparent;color:#B3B3B3;transition:all 0.15s;}
+    .ratio-btn.active,.ratio-btn:hover{border-color:#6A0DAD;color:#9D4EDD;background:rgba(106,13,173,0.12);}
     .save-bar{background:#14141C;border-top:1px solid rgba(255,255,255,0.08);padding:1.5rem;display:flex;align-items:center;justify-content:flex-end;gap:1rem;position:sticky;bottom:0;z-index:50;}
-    .btn-save{padding:0.9rem 2.5rem;background:#6A0DAD;color:#fff;border:none;border-radius:8px;font-family:'Outfit',sans-serif;font-weight:700;font-size:0.95rem;cursor:pointer;letter-spacing:1px;transition:box-shadow 0.2s,transform 0.15s;}
-    .btn-save:hover{box-shadow:0 0 30px rgba(106,13,173,0.5);transform:translateY(-1px);}
+    .btn-save{padding:0.9rem 2.5rem;background:#6A0DAD;color:#fff;border:none;border-radius:8px;font-family:'Outfit',sans-serif;font-weight:700;font-size:0.95rem;cursor:pointer;letter-spacing:1px;}
+    .btn-save:hover{box-shadow:0 0 30px rgba(106,13,173,0.5);}
     .btn-cancel{padding:0.9rem 1.5rem;background:transparent;color:#B3B3B3;border:1px solid rgba(255,255,255,0.12);border-radius:8px;text-decoration:none;font-size:0.9rem;font-family:'Outfit',sans-serif;}
-    .toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:#14141C;border:1px solid rgba(106,13,173,0.4);border-radius:8px;padding:0.8rem 1.5rem;font-size:0.88rem;z-index:999;display:none;box-shadow:0 10px 40px rgba(0,0,0,0.5);}
+    .toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:#14141C;border:1px solid rgba(106,13,173,0.4);border-radius:8px;padding:0.8rem 1.5rem;font-size:0.88rem;z-index:9998;display:none;}
     .toast.ok{border-color:rgba(0,255,136,0.4);color:#00FF88;}
     .toast.err{border-color:rgba(255,68,68,0.4);color:#FF4444;}
-
-    @media(max-width:640px){.field-row.cols-2,.field-row.cols-3{grid-template-columns:1fr;}.artist-row{grid-template-columns:60px 1fr;grid-template-rows:auto auto;}}
+    @media(max-width:900px){.admin-layout{grid-template-columns:1fr;}.sidebar{display:none;}}
+    @media(max-width:640px){.field-row.cols-2,.field-row.cols-3{grid-template-columns:1fr;}.artist-row{grid-template-columns:60px 1fr;}}
   </style>
 </head>
 <body>
-<nav>
-  <a href="/admin" class="logo">NIGHT<span>PASS</span> <span style="font-size:0.7rem;letter-spacing:2px;color:#B3B3B3;">ADMIN</span></a>
-  <div class="nav-links">
-    <a href="/admin"><i class="bi bi-speedometer2"></i> Dashboard</a>
-    <a href="/admin/bookings"><i class="bi bi-collection"></i> Bookings</a>
-    <a href="/admin/logout" class="btn-danger"><i class="bi bi-box-arrow-right"></i> Logout</a>
-  </div>
-</nav>
-
+<div class="admin-layout">
+  <%- include('../partials/admin-sidebar', { activePage: 'new-event' }) %>
+  <div class="main-content">
 <div class="container">
   <div class="page-title"><%= event ? 'EDIT EVENT' : 'NEW EVENT' %></div>
   <div class="page-sub"><%= event ? 'Update event details below' : 'Fill in the details to create a new event' %></div>
 
-  <form id="eventForm" method="POST" action="<%= event ? '/admin/events/' + event._id : '/admin/events' %>" onsubmit="return prepareSubmit()">
+  <% if(locals.error && error){ %>
+  <div style="background:rgba(255,68,68,0.1);border:1px solid rgba(255,68,68,0.3);border-radius:8px;padding:1rem 1.2rem;margin-bottom:1.5rem;color:#FF4444;font-size:0.88rem;display:flex;align-items:center;gap:0.6rem;">
+    <i class="bi bi-exclamation-circle-fill"></i> <span><%= error %></span>
+  </div>
+  <% } %>
 
-    <!-- ① BASIC INFO -->
+  <form id="eventForm">
+
+    <!-- 1. BASIC INFO -->
     <div class="section">
       <div class="section-head"><div class="section-num">1</div><div class="section-title">Basic Information</div></div>
       <div class="section-body">
-        <div class="field-row">
-          <div class="field-group">
-            <label class="field-label">Event Name *</label>
-            <input class="field-input" name="name" required placeholder="e.g. MELATTUR PATTU NIGHT" value="<%= event ? event.name : '' %>"/>
-          </div>
-        </div>
-        <div class="field-row">
-          <div class="field-group">
-            <label class="field-label">Short Description</label>
-            <input class="field-input" name="shortDescription" placeholder="One line teaser..." value="<%= event ? event.shortDescription : '' %>"/>
-          </div>
-        </div>
-        <div class="field-row">
-          <div class="field-group">
-            <label class="field-label">About the Event</label>
-            <textarea class="field-input" name="about" placeholder="Full event description..."><%= event ? event.about : '' %></textarea>
-          </div>
-        </div>
-        <div class="field-row">
-          <div class="field-group">
-            <label class="field-label">Event Instructions <span style="font-size:0.55rem;color:#555;letter-spacing:1px;">(shown on event detail page)</span></label>
-            <textarea class="field-input" name="instructions" placeholder="e.g. No refunds after purchase. Valid ID required at entry. No outside food or drinks." style="min-height:80px;"><%= event ? event.instructions : '' %></textarea>
-          </div>
-        </div>
+        <div class="field-row"><div class="field-group">
+          <label class="field-label">Event Name *</label>
+          <input class="field-input" name="name" required placeholder="e.g. MELATTUR PATTU NIGHT" value="<%= event ? event.name : '' %>"/>
+        </div></div>
+        <div class="field-row"><div class="field-group">
+          <label class="field-label">Short Description *</label>
+          <input class="field-input" name="shortDescription" required placeholder="One line teaser shown on homepage..." value="<%= event ? event.shortDescription : '' %>"/>
+        </div></div>
+        <div class="field-row"><div class="field-group">
+          <label class="field-label">About the Event *</label>
+          <textarea class="field-input" name="about" required placeholder="Full event description..."><%= event ? event.about : '' %></textarea>
+        </div></div>
+        <div class="field-row"><div class="field-group">
+          <label class="field-label">Event Instructions * <span style="font-size:0.55rem;color:#555;">(one per line — shown as bullet points on event page)</span></label>
+          <textarea class="field-input" name="instructions" required placeholder="No refunds after purchase.&#10;Valid government ID required at entry.&#10;No outside food or drinks allowed.&#10;Gates close at 10:00 PM." style="min-height:110px;"><%= event ? event.instructions : '' %></textarea>
+        </div></div>
         <div class="field-row cols-2">
           <div class="field-group">
-            <label class="field-label">Dress Code</label>
-            <input class="field-input" name="dressCode" placeholder="All Black" value="<%= event ? event.dressCode : 'All Black' %>"/>
+            <label class="field-label">Age Limit <span style="font-size:0.55rem;color:#555;">(0 = no limit)</span></label>
+            <input class="field-input" type="number" name="ageLimit" placeholder="0" min="0" value="<%= event ? event.ageLimit : 0 %>"/>
           </div>
           <div class="field-group">
-            <label class="field-label">Convenience Fee (₹)</label>
-            <input class="field-input" type="number" name="convenienceFee" value="<%= event ? event.convenienceFee : 20 %>"/>
+            <label class="field-label">Convenience Fee (₹) <span style="font-size:0.55rem;color:#555;">(0 = no fee)</span></label>
+            <input class="field-input" type="number" name="convenienceFee" min="0" value="<%= event ? event.convenienceFee : 0 %>"/>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- ② BANNERS -->
+    <!-- 2. BANNERS -->
     <div class="section">
       <div class="section-head"><div class="section-num">2</div><div class="section-title">Banners & Media</div></div>
       <div class="section-body">
-        <div class="field-row cols-3">
-          <div class="field-group">
-            <label class="field-label">Landing Page Banner (Desktop)</label>
-            <div class="banner-upload" id="wrap-bannerDesktop">
-              <input type="file" accept="image/*" onchange="previewBanner(this,'bannerDesktop')"/>
-              <i class="bi bi-image"></i>
-              <div class="up-label">Click to upload</div>
-              <div class="up-sub">1920×600 recommended</div>
-              <img id="prev-bannerDesktop" class="banner-preview" src="<%= event && event.bannerDesktop ? event.bannerDesktop : '' %>"/>
-            </div>
-            <input type="hidden" name="bannerDesktop" id="bannerDesktop" value="<%= event ? event.bannerDesktop : '' %>"/>
-          </div>
-          <div class="field-group">
-            <label class="field-label">Landing Page Banner (Mobile)</label>
-            <div class="banner-upload" id="wrap-bannerMobile">
-              <input type="file" accept="image/*" onchange="previewBanner(this,'bannerMobile')"/>
-              <i class="bi bi-phone"></i>
-              <div class="up-label">Click to upload</div>
-              <div class="up-sub">800×600 recommended</div>
-              <img id="prev-bannerMobile" class="banner-preview" src="<%= event && event.bannerMobile ? event.bannerMobile : '' %>"/>
-            </div>
-            <input type="hidden" name="bannerMobile" id="bannerMobile" value="<%= event ? event.bannerMobile : '' %>"/>
-          </div>
-          <div class="field-group">
-            <label class="field-label">Event Detail Page Banner</label>
-            <div class="banner-upload" id="wrap-bannerDetail">
-              <input type="file" accept="image/*" onchange="previewBanner(this,'bannerDetail')"/>
-              <i class="bi bi-card-image"></i>
-              <div class="up-label">Click to upload</div>
-              <div class="up-sub">1200×400 recommended</div>
-              <img id="prev-bannerDetail" class="banner-preview" src="<%= event && event.bannerDetail ? event.bannerDetail : '' %>"/>
-            </div>
-            <input type="hidden" name="bannerDetail" id="bannerDetail" value="<%= event ? event.bannerDetail : '' %>"/>
-          </div>
+        <!-- GROUP 1: Home Page Slider -->
+        <div style="font-family:'Space Mono',monospace;font-size:0.58rem;letter-spacing:2px;color:#9D4EDD;margin-bottom:0.6rem;display:flex;align-items:center;gap:0.5rem;">
+          <i class="bi bi-house-fill"></i> HOME PAGE SLIDER <span style="color:#FF4444;">*</span>
+          <span style="color:#444;font-size:0.52rem;">— shown on homepage hero (required)</span>
         </div>
-        <div style="margin-top:0.5rem;padding-top:1rem;border-top:1px solid rgba(255,255,255,0.05);">
-          <div style="font-family:'Space Mono',monospace;font-size:0.58rem;letter-spacing:2px;color:#555;margin-bottom:0.8rem;">HOMEPAGE SLIDING BANNER POSTERS</div>
-          <div class="field-row cols-2">
-            <div class="field-group">
-              <label class="field-label">Landscape Poster <span style="font-size:0.55rem;color:#555;">(homepage slider — wide)</span></label>
-              <div class="banner-upload" id="wrap-posterLandscape">
-                <input type="file" accept="image/*" onchange="previewBanner(this,'posterLandscape')"/>
-                <i class="bi bi-image-fill"></i>
-                <div class="up-label">Click to upload</div>
-                <div class="up-sub">1200×500 recommended</div>
-                <img id="prev-posterLandscape" class="banner-preview" src="<%= event && event.posterLandscape ? event.posterLandscape : '' %>"/>
-              </div>
-              <input type="hidden" name="posterLandscape" id="posterLandscape" value="<%= event ? event.posterLandscape : '' %>"/>
+        <div class="field-row cols-2" style="margin-bottom:1rem;">
+          <% [
+            {id:'bannerDesktop', label:'Desktop View', icon:'bi-display',  hint:'1920 × 860 px — landscape',  ratio: 1920/860},
+            {id:'bannerMobile',  label:'Phone View',   icon:'bi-phone',    hint:'430 × 760 px — portrait',    ratio: 430/760},
+          ].forEach(function(b){ %>
+          <div class="field-group">
+            <label class="field-label"><%= b.label %> <span style="color:#FF4444;">*</span></label>
+            <div class="banner-upload" onclick="triggerBannerUpload('<%= b.id %>')">
+              <i class="bi <%= b.icon %>"></i>
+              <div class="up-label">Click to upload</div>
+              <div class="up-sub"><%= b.hint %></div>
             </div>
-            <div class="field-group">
-              <label class="field-label">Portrait Poster <span style="font-size:0.55rem;color:#555;">(homepage slider — tall)</span></label>
-              <div class="banner-upload" id="wrap-posterPortrait">
-                <input type="file" accept="image/*" onchange="previewBanner(this,'posterPortrait')"/>
-                <i class="bi bi-phone-fill"></i>
-                <div class="up-label">Click to upload</div>
-                <div class="up-sub">600×900 recommended</div>
-                <img id="prev-posterPortrait" class="banner-preview" src="<%= event && event.posterPortrait ? event.posterPortrait : '' %>"/>
-              </div>
-              <input type="hidden" name="posterPortrait" id="posterPortrait" value="<%= event ? event.posterPortrait : '' %>"/>
+            <input type="file" id="file-<%= b.id %>" accept="image/*" style="display:none" onchange="onBannerFile(this,'<%= b.id %>')"/>
+            <div class="banner-preview-wrap" id="prevwrap-<%= b.id %>">
+              <img id="prev-<%= b.id %>" src="<%= event && event[b.id] ? event[b.id] : '' %>" style="<%= b.id==='bannerMobile'?'max-height:200px;object-fit:contain;':'max-height:120px;' %>"/>
+              <button type="button" class="crop-btn" onclick="openCrop('<%= b.id %>')"><i class="bi bi-crop"></i> Crop</button>
             </div>
+            <input type="hidden" name="<%= b.id %>" id="<%= b.id %>" value="<%= event && event[b.id] ? event[b.id] : '' %>"/>
           </div>
+          <% }); %>
+        </div>
+
+        <!-- GROUP 2: Event Detail Page -->
+        <div style="font-family:'Space Mono',monospace;font-size:0.58rem;letter-spacing:2px;color:#9D4EDD;margin-bottom:0.6rem;display:flex;align-items:center;gap:0.5rem;">
+          <i class="bi bi-card-image"></i> EVENT DETAIL PAGE <span style="color:#FF4444;">*</span>
+          <span style="color:#444;font-size:0.52rem;">— shown on the event detail hero</span>
+        </div>
+        <div class="field-row cols-2" style="margin-bottom:1rem;">
+          <% [
+            {id:'bannerDetail',       label:'Desktop View', icon:'bi-display', hint:'1920 × 620 px — landscape', ratio: 1920/620},
+            {id:'bannerDetailMobile', label:'Phone View',   icon:'bi-phone',   hint:'430 × 340 px — landscape',  ratio: 430/340},
+          ].forEach(function(b){ %>
+          <div class="field-group">
+            <label class="field-label"><%= b.label %> <span style="color:#FF4444;">*</span></label>
+            <div class="banner-upload" onclick="triggerBannerUpload('<%= b.id %>')">
+              <i class="bi <%= b.icon %>"></i>
+              <div class="up-label">Click to upload</div>
+              <div class="up-sub"><%= b.hint %></div>
+            </div>
+            <input type="file" id="file-<%= b.id %>" accept="image/*" style="display:none" onchange="onBannerFile(this,'<%= b.id %>')"/>
+            <div class="banner-preview-wrap" id="prevwrap-<%= b.id %>">
+              <img id="prev-<%= b.id %>" src="<%= event && event[b.id] ? event[b.id] : '' %>"/>
+              <button type="button" class="crop-btn" onclick="openCrop('<%= b.id %>')"><i class="bi bi-crop"></i> Crop</button>
+            </div>
+            <input type="hidden" name="<%= b.id %>" id="<%= b.id %>" value="<%= event && event[b.id] ? event[b.id] : '' %>"/>
+          </div>
+          <% }); %>
+        </div>
+
+        <!-- GROUP 3: Single-event 2nd slide (optional) -->
+        <div style="font-family:'Space Mono',monospace;font-size:0.58rem;letter-spacing:2px;color:#555;margin-bottom:0.6rem;display:flex;align-items:center;gap:0.5rem;">
+          <i class="bi bi-collection-play"></i> SINGLE EVENT — 2ND SLIDE
+          <span style="color:#444;font-size:0.52rem;">— only used when this is the only active event, auto-slides between slide 1 and slide 2</span>
+        </div>
+        <div class="field-row cols-2" style="margin-bottom:0.8rem;">
+          <% [
+            {id:'slideDesktop', label:'Desktop View (Slide 2)', icon:'bi-display', hint:'1920 × 860 px — landscape', ratio: 1920/860},
+            {id:'slideMobile',  label:'Phone View (Slide 2)',   icon:'bi-phone',   hint:'430 × 760 px — portrait',   ratio: 430/760},
+          ].forEach(function(b){ %>
+          <div class="field-group">
+            <label class="field-label"><%= b.label %> <span style="font-size:0.65rem;color:#444;">(optional)</span></label>
+            <div class="banner-upload" onclick="triggerBannerUpload('<%= b.id %>')">
+              <i class="bi <%= b.icon %>"></i>
+              <div class="up-label">Click to upload</div>
+              <div class="up-sub"><%= b.hint %></div>
+            </div>
+            <input type="file" id="file-<%= b.id %>" accept="image/*" style="display:none" onchange="onBannerFile(this,'<%= b.id %>')"/>
+            <div class="banner-preview-wrap" id="prevwrap-<%= b.id %>">
+              <img id="prev-<%= b.id %>" src="<%= event && event[b.id] ? event[b.id] : '' %>" style="<%= b.id==='slideMobile'?'max-height:200px;object-fit:contain;':'max-height:120px;' %>"/>
+              <button type="button" class="crop-btn" onclick="openCrop('<%= b.id %>')"><i class="bi bi-crop"></i> Crop</button>
+            </div>
+            <input type="hidden" name="<%= b.id %>" id="<%= b.id %>" value="<%= event && event[b.id] ? event[b.id] : '' %>"/>
+          </div>
+          <% }); %>
+        </div>
+        <div style="background:rgba(106,13,173,0.06);border:1px solid rgba(106,13,173,0.15);border-radius:8px;padding:0.7rem 1rem;font-size:0.75rem;color:#9D4EDD;line-height:1.8;">
+          <i class="bi bi-info-circle-fill"></i>&nbsp;
+          <strong>Fields 1–2:</strong> Home page hero slider — desktop shows landscape, phone shows portrait &nbsp;·&nbsp;
+          <strong>Fields 3–4:</strong> Event detail page hero — desktop shows wide, phone shows shorter crop &nbsp;·&nbsp;
+          <strong>Fields 5–6:</strong> Optional 2nd slide — only active when this is the sole listed event
         </div>
       </div>
     </div>
 
-    <!-- ③ ARTISTS -->
+    <!-- 3. ARTISTS -->
     <div class="section">
       <div class="section-head"><div class="section-num">3</div><div class="section-title">Artists / Performers</div></div>
       <div class="section-body">
@@ -234,7 +246,7 @@
       </div>
     </div>
 
-    <!-- ④ DATE & TIME -->
+    <!-- 4. DATE & TIME -->
     <div class="section">
       <div class="section-head"><div class="section-num">4</div><div class="section-title">Date & Time</div></div>
       <div class="section-body">
@@ -255,7 +267,7 @@
       </div>
     </div>
 
-    <!-- ⑤ LOCATION -->
+    <!-- 5. LOCATION -->
     <div class="section">
       <div class="section-head"><div class="section-num">5</div><div class="section-title">Location</div></div>
       <div class="section-body">
@@ -265,129 +277,34 @@
             <input class="field-input" name="venue" required placeholder="e.g. Club Axis" value="<%= event ? event.venue : '' %>"/>
           </div>
           <div class="field-group">
-            <label class="field-label">Venue Address</label>
-            <input class="field-input" name="venueAddress" placeholder="Full address..." value="<%= event ? event.venueAddress : '' %>"/>
+            <label class="field-label">Venue Address *</label>
+            <input class="field-input" name="venueAddress" required placeholder="Full address..." value="<%= event ? event.venueAddress : '' %>"/>
           </div>
         </div>
-        <div class="field-row">
-          <div class="field-group">
-            <label class="field-label">Google Maps Link</label>
-            <input class="field-input" name="googleMapLink" type="url" placeholder="https://maps.google.com/..." value="<%= event ? event.googleMapLink : '' %>"/>
-          </div>
-        </div>
+        <div class="field-row"><div class="field-group">
+          <label class="field-label">Google Maps Link</label>
+          <input class="field-input" name="googleMapLink" type="url" placeholder="https://maps.google.com/..." value="<%= event ? event.googleMapLink : '' %>"/>
+        </div></div>
       </div>
     </div>
 
-    <!-- ⑥ TICKETS -->
+    <!-- 6. TICKET CATEGORIES -->
     <div class="section">
       <div class="section-head"><div class="section-num">6</div><div class="section-title">Ticket Categories</div></div>
       <div class="section-body">
-        <div class="ticket-categories">
-
-          <% const cats = [
-            { key: 'platinum', label: 'PLATINUM', icon: '💎' },
-            { key: 'gold',     label: 'GOLD',     icon: '🥇' },
-            { key: 'silver',   label: 'SILVER',   icon: '🥈' },
-            { key: 'fanfit',   label: 'FANFIT',   icon: '🎤' },
-            { key: 'family',   label: 'FAMILY (COMBO × 4)', icon: '👨‍👩‍👧‍👦' },
-          ]; %>
-
-          <% cats.forEach(function(cat) {
-            const existing = event && event.ticketTypes ? event.ticketTypes.find(t => t.category === cat.key) : null;
-          %>
-          <div class="ticket-cat cat-<%= cat.key %>" id="cat-<%= cat.key %>">
-            <div class="ticket-cat-head" onclick="toggleCat('<%= cat.key %>')">
-              <div style="display:flex;align-items:center;gap:0.8rem;">
-                <span style="font-size:1.3rem;"><%= cat.icon %></span>
-                <span style="font-weight:700;font-size:0.95rem;"><%= cat.label %></span>
-                <span class="cat-badge"><%= cat.key.toUpperCase() %></span>
-              </div>
-              <div style="display:flex;align-items:center;gap:1rem;">
-                <label class="cat-enabled-toggle" onclick="event.stopPropagation()">
-                  <div class="toggle-sw <%= existing && existing.isActive ? 'on' : '' %>" id="toggle-<%= cat.key %>" onclick="flipToggle('<%= cat.key %>')"></div>
-                  <span style="font-size:0.8rem;color:#B3B3B3;" id="toggle-lbl-<%= cat.key %>"><%= existing && existing.isActive ? 'Enabled' : 'Disabled' %></span>
-                </label>
-                <i class="bi bi-chevron-down" id="chevron-<%= cat.key %>" style="color:#B3B3B3;transition:transform 0.2s;"></i>
-              </div>
-            </div>
-            <div class="ticket-cat-body" id="body-<%= cat.key %>">
-              <% if (cat.key === 'family') { %>
-              <div class="combo-note">
-                <i class="bi bi-info-circle-fill"></i> <strong>Combo Ticket:</strong> When a user books Family ticket, they get 4 tickets and must fill details for all 4 attendees.
-              </div>
-              <% } %>
-              <div class="field-row cols-3">
-                <div class="field-group">
-                  <label class="field-label">Price (₹) *</label>
-                  <input class="field-input" type="number" id="<%= cat.key %>_price" placeholder="0" value="<%= existing ? existing.price : '' %>"/>
-                </div>
-                <div class="field-group">
-                  <label class="field-label">Age Limit</label>
-                  <input class="field-input" type="number" id="<%= cat.key %>_ageLimit" placeholder="18" value="<%= existing ? existing.ageLimit : 18 %>"/>
-                </div>
-                <div class="field-group">
-                  <label class="field-label">Total Seats *</label>
-                  <input class="field-input" type="number" id="<%= cat.key %>_totalSeats" placeholder="100" value="<%= existing ? existing.totalSeats : '' %>"/>
-                </div>
-              </div>
-              <div class="field-row cols-3">
-                <div class="field-group">
-                  <label class="field-label">Max Per Order <span style="font-size:0.55rem;color:#555;">(per booking)</span></label>
-                  <input class="field-input" type="number" id="<%= cat.key %>_maxPerOrder" placeholder="10" min="1" max="50" value="<%= existing ? (existing.maxPerOrder || 10) : 10 %>"/>
-                </div>
-                <div class="field-group">
-                  <label class="field-label">Ticket Type</label>
-                  <select class="field-input" id="<%= cat.key %>_ticketType">
-                    <option value="single" <%= !existing || existing.ticketType === 'single' ? 'selected' : '' %>>Single Entry</option>
-                    <option value="multiple" <%= existing && existing.ticketType === 'multiple' ? 'selected' : '' %>>Multiple Entry</option>
-                  </select>
-                </div>
-                <div class="field-group">
-                  <label class="field-label">Booked Seats (current)</label>
-                  <input class="field-input" type="number" id="<%= cat.key %>_bookedSeats" value="<%= existing ? existing.bookedSeats : 0 %>" min="0"/>
-                </div>
-              </div>
-              <div class="field-row">
-                <div class="field-group">
-                  <label class="field-label">Terms & Conditions</label>
-                  <textarea class="field-input" id="<%= cat.key %>_terms" placeholder="Entry conditions, refund policy..." style="min-height:70px;"><%= existing ? existing.terms : '' %></textarea>
-                </div>
-              </div>
-            </div>
-          </div>
-          <% }); %>
-
-        </div>
+        <div style="font-size:0.82rem;color:#B3B3B3;margin-bottom:1.2rem;">Create categories with custom names, colors, and seat configurations.</div>
+        <div id="catList"></div>
+        <button type="button" class="btn-add" onclick="addCategory()">
+          <i class="bi bi-plus-circle"></i> Add Category
+        </button>
         <input type="hidden" name="ticketTypesJson" id="ticketTypesJson" value="[]"/>
       </div>
     </div>
 
-    <!-- ⑦ SETTINGS -->
+    <!-- 7. SETTINGS -->
     <div class="section">
       <div class="section-head"><div class="section-num">7</div><div class="section-title">Settings</div></div>
       <div class="section-body">
-        <!-- Seating Type -->
-        <div class="field-row cols-2" style="margin-bottom:1.2rem;">
-          <div class="field-group">
-            <label class="field-label">Seating Type</label>
-            <select class="field-input" name="seatingType" id="seatingTypeSelect" onchange="toggleSeatFields()">
-              <option value="standing" <%= !event || event.seatingType === 'standing' ? 'selected' : '' %>>Standing (General Admission)</option>
-              <option value="sitting" <%= event && event.seatingType === 'sitting' ? 'selected' : '' %>>Sitting (Numbered Seats)</option>
-            </select>
-          </div>
-        </div>
-        <div id="seatNumberFields" style="display:none;">
-          <div class="field-row cols-2" style="margin-bottom:1.2rem;">
-            <div class="field-group">
-              <label class="field-label">Seat Number Start</label>
-              <input class="field-input" type="number" name="seatNumberStart" min="1" placeholder="1" value="<%= event ? event.seatNumberStart || 1 : 1 %>"/>
-            </div>
-            <div class="field-group">
-              <label class="field-label">Seat Number End</label>
-              <input class="field-input" type="number" name="seatNumberEnd" min="1" placeholder="500" value="<%= event ? event.seatNumberEnd || '' : '' %>"/>
-            </div>
-          </div>
-        </div>
         <div class="field-row cols-2">
           <label style="display:flex;align-items:center;gap:0.8rem;cursor:pointer;">
             <input type="checkbox" name="isActive" value="true" <%= event && event.isActive !== false ? 'checked' : '' %> style="width:18px;height:18px;accent-color:#6A0DAD;"/>
@@ -401,69 +318,188 @@
       </div>
     </div>
 
-    <!-- SAVE BAR -->
     <div class="save-bar">
       <a href="/admin" class="btn-cancel">Cancel</a>
-      <button type="submit" class="btn-save"><i class="bi bi-check-circle-fill"></i> <%= event ? 'Update Event' : 'Create Event' %></button>
+      <button type="button" class="btn-save" id="saveBtn" onclick="doSubmit()"><i class="bi bi-check-circle-fill"></i> <%= event ? 'Update Event' : 'Create Event' %></button>
     </div>
-
   </form>
 </div>
 
+<!-- CROP MODAL -->
+<div class="crop-modal" id="cropModal">
+  <div class="crop-modal-box">
+    <div style="display:flex;align-items:center;justify-content:space-between;">
+      <div class="crop-modal-title">CROP & ADJUST</div>
+      <button type="button" class="btn-ca" onclick="closeCrop()" style="padding:0.3rem 0.7rem;"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <div style="font-family:'Space Mono',monospace;font-size:0.6rem;letter-spacing:1px;color:#9D4EDD;" id="cropTargetLabel"></div>
+    <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
+      <span style="font-size:0.72rem;color:#B3B3B3;">Aspect ratio:</span>
+      <button type="button" class="ratio-btn" onclick="setRatio(1920/860,this)">16:9 <span style="font-size:0.6rem;opacity:0.6;">Desktop</span></button>
+      <button type="button" class="ratio-btn" onclick="setRatio(430/760,this)">9:16 <span style="font-size:0.6rem;opacity:0.6;">Mobile</span></button>
+      <button type="button" class="ratio-btn" onclick="setRatio(1920/620,this)">3:1 <span style="font-size:0.6rem;opacity:0.6;">Detail</span></button>
+      <button type="button" class="ratio-btn" onclick="setRatio(4/3,this)">4:3</button>
+      <button type="button" class="ratio-btn" onclick="setRatio(1,this)">1:1</button>
+      <button type="button" class="ratio-btn" onclick="setRatio(NaN,this)">Free</button>
+    </div>
+    <div class="crop-wrap"><img id="cropImg" src=""/></div>
+    <div class="crop-actions">
+      <button type="button" class="btn-ca" onclick="cropper.rotate(-90)"><i class="bi bi-arrow-counterclockwise"></i> Rotate L</button>
+      <button type="button" class="btn-ca" onclick="cropper.rotate(90)"><i class="bi bi-arrow-clockwise"></i> Rotate R</button>
+      <button type="button" class="btn-ca" onclick="flipH()"><i class="bi bi-symmetry-horizontal"></i> Flip H</button>
+      <button type="button" class="btn-ca" onclick="flipV()"><i class="bi bi-symmetry-vertical"></i> Flip V</button>
+      <button type="button" class="btn-ca" onclick="cropper.reset()"><i class="bi bi-arrow-repeat"></i> Reset</button>
+      <button type="button" class="btn-ca confirm" onclick="confirmCrop()"><i class="bi bi-check-lg"></i> Apply</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
-
+<script src="https://cdn.jsdelivr.net/npm/cropperjs@1.6.1/dist/cropper.min.js"></script>
 <script>
-// ── Existing event data for pre-population ──
 const EXISTING_ARTISTS = <%- JSON.stringify(event && event.artists ? event.artists : []) %>;
+const EXISTING_CATS    = <%- JSON.stringify(event && event.ticketTypes ? event.ticketTypes : []) %>;
+const PRESET_COLORS    = ['#6A0DAD','#f5c842','#c0c8d8','#00FF88','#FF6B6B','#00B4D8','#FF9F1C','#E63946'];
 
-// ── Banner preview ──
-function previewBanner(input, fieldId) {
-  const file = input.files[0];
-  if (!file) return;
+// ── CROP SYSTEM ──────────────────────────────────
+const rawSrc = {};
+let cropper  = null;
+let cropTarget = null;
+let flipHState = 1, flipVState = 1;
+
+function triggerBannerUpload(id) { document.getElementById('file-'+id).click(); }
+
+function onBannerFile(input, id) {
+  const file = input.files[0]; if (!file) return;
   const reader = new FileReader();
-  reader.onload = e => {
-    document.getElementById('prev-' + fieldId).src   = e.target.result;
-    document.getElementById('prev-' + fieldId).style.display = 'block';
-    document.getElementById(fieldId).value = e.target.result;
-  };
+  reader.onload = e => { rawSrc[id] = e.target.result; setPreview(id, e.target.result); openCrop(id); };
   reader.readAsDataURL(file);
 }
 
+function setPreview(id, src) {
+  document.getElementById(id).value = src;
+  const img  = document.getElementById('prev-'+id);
+  const wrap = document.getElementById('prevwrap-'+id);
+  if (img)  img.src = src;
+  if (wrap) wrap.style.display = 'block';
+}
+
+function openCrop(id) {
+  const src = rawSrc[id] || document.getElementById(id)?.value;
+  if (!src) { showToast('Upload an image first.','err'); return; }
+  cropTarget = id;
+  flipHState = 1; flipVState = 1;
+  document.getElementById('cropTargetLabel').textContent = id.replace(/([A-Z])/g,' $1').toUpperCase();
+  const img = document.getElementById('cropImg');
+  img.src = src;
+  document.getElementById('cropModal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  setTimeout(() => {
+    if (cropper) { cropper.destroy(); cropper = null; }
+    const isArtist = id.startsWith('artist_');
+    // Auto-set correct aspect ratio per banner type
+    const BANNER_RATIOS = {
+      bannerDesktop:      1920/860,
+      bannerMobile:       430/760,
+      bannerDetail:       1920/620,
+      bannerDetailMobile: 430/340,
+      slideDesktop:       1920/860,
+      slideMobile:        430/760,
+    };
+    const autoRatio = isArtist ? 1 : (BANNER_RATIOS[id] || NaN);
+    // Highlight the matching ratio button if available
+    if (!isArtist) {
+      document.querySelectorAll('.ratio-btn').forEach(b => b.classList.remove('active'));
+      const ratioLabel = {
+        'bannerDesktop':'16:9','bannerMobile':'9:16',
+        'bannerDetail':'3:1','bannerDetailMobile':'9:16',
+        'slideDesktop':'16:9','slideMobile':'9:16'
+      }[id];
+      if (ratioLabel) {
+        document.querySelectorAll('.ratio-btn').forEach(b => {
+          if (b.textContent.trim() === ratioLabel) b.classList.add('active');
+        });
+      }
+    }
+    cropper = new Cropper(img, {
+      viewMode: 1,
+      aspectRatio: autoRatio,
+      autoCropArea: 0.95,
+      background: false,
+    });
+  }, 120);
+}
+
+function closeCrop() {
+  document.getElementById('cropModal').classList.remove('open');
+  document.body.style.overflow = '';
+  if (cropper) { cropper.destroy(); cropper = null; }
+}
+
+function setRatio(r, btn) {
+  document.querySelectorAll('.ratio-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  cropper.setAspectRatio(isNaN(r) ? NaN : r);
+}
+
+function flipH() { flipHState *= -1; cropper.scaleX(flipHState); }
+function flipV() { flipVState *= -1; cropper.scaleY(flipVState); }
+
+function confirmCrop() {
+  if (!cropper || !cropTarget) return;
+  const canvas = cropper.getCroppedCanvas({ maxWidth:1920, maxHeight:1920, fillColor:'#000' });
+  const out = canvas.toDataURL('image/jpeg', 0.88);
+  if (cropTarget.startsWith('artist_')) {
+    const i = parseInt(cropTarget.split('_')[1]);
+    artists[i].photo = out;
+    rawSrc[cropTarget] = out;
+    closeCrop();
+    renderArtists();
+    showToast('Artist photo cropped ✓');
+  } else {
+    rawSrc[cropTarget] = out;
+    setPreview(cropTarget, out);
+    closeCrop();
+    showToast('Image applied ✓');
+  }
+}
+
 // Show existing banner previews
-['bannerDesktop','bannerMobile','bannerDetail','posterLandscape','posterPortrait'].forEach(id => {
+['bannerDesktop','bannerMobile','bannerDetail','bannerDetailMobile','slideDesktop','slideMobile'].forEach(id => {
   const el = document.getElementById(id);
   if (el && el.value) {
-    document.getElementById('prev-' + id).style.display = 'block';
+    rawSrc[id] = el.value;
+    document.getElementById('prevwrap-'+id).style.display = 'block';
   }
 });
 
-// ── Artist management ──
-let artists = EXISTING_ARTISTS.map(a => ({ ...a }));
+// ── ARTISTS ──────────────────────────────────────
+let artists = EXISTING_ARTISTS.map(a => ({...a}));
 
 function renderArtists() {
   const list = document.getElementById('artistList');
   list.innerHTML = '';
-  if (artists.length === 0) {
+  if (!artists.length) {
     list.innerHTML = '<div style="color:#B3B3B3;font-size:0.85rem;padding:0.5rem 0;">No artists added yet.</div>';
     return;
   }
-  artists.forEach((a, i) => {
+  artists.forEach((a,i) => {
     const row = document.createElement('div');
     row.className = 'artist-row';
+    const hasPhoto = !!a.photo;
     row.innerHTML = `
-      <div class="artist-photo-wrap">
-        <input type="file" accept="image/*" onchange="setArtistPhoto(${i}, this)"/>
-        <div class="artist-photo-box" title="Click to upload photo">
-          ${a.photo ? `<img src="${a.photo}" style="display:block;"/>` : '📷'}
-        </div>
+      <div class="artist-photo-box" onclick="handleArtistPhotoClick(${i})" title="${hasPhoto ? 'Click to crop/change' : 'Click to upload'}">
+        <input type="file" id="afile-${i}" accept="image/*" style="display:none" onchange="onArtistFile(${i},this)"/>
+        ${hasPhoto ? `<img src="${a.photo}" style="display:block;"/>` : '📷'}
+        <div class="crop-overlay">${hasPhoto ? 'Crop / Change' : 'Upload'}</div>
       </div>
       <div class="field-group">
         <label class="field-label">Artist Name</label>
-        <input class="field-input" placeholder="e.g. DJ Arjun" value="${a.name||''}" oninput="artists[${i}].name=this.value"/>
+        <input class="field-input" placeholder="e.g. DJ Arjun" value="${escHtml(a.name||'')}" oninput="artists[${i}].name=this.value"/>
       </div>
       <div class="field-group">
         <label class="field-label">Designation</label>
-        <input class="field-input" placeholder="e.g. DJ / Live Act / MC" value="${a.designation||''}" oninput="artists[${i}].designation=this.value"/>
+        <input class="field-input" placeholder="e.g. DJ / Live Act / MC" value="${escHtml(a.designation||'')}" oninput="artists[${i}].designation=this.value"/>
       </div>
       <button type="button" class="btn-remove" onclick="removeArtist(${i})"><i class="bi bi-trash"></i></button>
     `;
@@ -471,115 +507,536 @@ function renderArtists() {
   });
 }
 
-function addArtist() {
-  artists.push({ name: '', designation: '', photo: '' });
-  renderArtists();
+function handleArtistPhotoClick(i) {
+  if (artists[i].photo) { openArtistCrop(i); }
+  else { document.getElementById('afile-'+i).click(); }
 }
 
-function removeArtist(i) {
-  artists.splice(i, 1);
-  renderArtists();
-}
-
-function setArtistPhoto(i, input) {
-  const file = input.files[0];
-  if (!file) return;
+function onArtistFile(i, input) {
+  const file = input.files[0]; if (!file) return;
   const reader = new FileReader();
   reader.onload = e => {
+    rawSrc['artist_'+i] = e.target.result;
     artists[i].photo = e.target.result;
     renderArtists();
+    setTimeout(() => openArtistCrop(i), 100);
   };
   reader.readAsDataURL(file);
 }
 
-// ── Ticket category toggles ──
-const catKeys = ['platinum','gold','silver','fanfit','family'];
-const catEnabled = {};
-catKeys.forEach(k => {
-  const tog = document.getElementById('toggle-' + k);
-  catEnabled[k] = tog ? tog.classList.contains('on') : false;
-});
-
-function toggleCat(key) {
-  const body    = document.getElementById('body-' + key);
-  const chevron = document.getElementById('chevron-' + key);
-  body.classList.toggle('open');
-  chevron.style.transform = body.classList.contains('open') ? 'rotate(180deg)' : '';
+function openArtistCrop(i) {
+  cropTarget = 'artist_' + i;
+  openCrop(cropTarget);
 }
 
-function flipToggle(key) {
-  catEnabled[key] = !catEnabled[key];
-  const tog = document.getElementById('toggle-' + key);
-  const lbl = document.getElementById('toggle-lbl-' + key);
-  tog.classList.toggle('on', catEnabled[key]);
-  lbl.textContent = catEnabled[key] ? 'Enabled' : 'Disabled';
-}
+function addArtist() { artists.push({name:'',designation:'',photo:''}); renderArtists(); }
+function removeArtist(i) { artists.splice(i,1); renderArtists(); }
+function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
 
-// Open cats that have data
-catKeys.forEach(k => {
-  if (catEnabled[k]) toggleCat(k);
-});
+// ── TICKET CATEGORIES ─────────────────────────────
+let categories = EXISTING_CATS.length ? EXISTING_CATS.map((t,i) => ({
+  id:i, name:t.name||t.category||'', color:t.color||'#6A0DAD',
+  price:t.price||0, ageLimit:t.ageLimit||18, ticketType:t.ticketType||'single',
+  totalSeats:t.totalSeats||0, bookedSeats:t.bookedSeats||0, maxPerOrder:t.maxPerOrder||10,
+  terms:t.terms||'', isActive:t.isActive!==false, isCombo:t.isCombo||false, comboCount:t.comboCount||1,
+//   seatType:t.seatType||'standing', seatPrefix:t.seatPrefix||'', seatStart:t.seatStart||1,
+//   discountTiers: Array.isArray(t.discountTiers) ? t.discountTiers : (t.comboOfferMinQty > 0 ? [{minQty:t.comboOfferMinQty, discount:t.comboOfferDiscount}] : []),
+seatType:t.seatType||'standing', seatPrefix:t.seatPrefix||'', seatStart:t.seatStart||1,
+  gateNumber: t.gateNumber||'',
+  discountTiers: Array.isArray(t.discountTiers) ? t.discountTiers : (t.comboOfferMinQty > 0 ? [{minQty:t.comboOfferMinQty, discount:t.comboOfferDiscount}] : []),
+ })) : [];
 
-// ── Submit — inject JSON fields ──
-function prepareSubmit() {
-  // Artists JSON
-  document.getElementById('artistsJson').value = JSON.stringify(artists);
+let catIdCtr = categories.length;
 
-  // Ticket types JSON
-  const tickets = [];
-  catKeys.forEach(k => {
-    const price       = parseInt(document.getElementById(k + '_price')?.value) || 0;
-    const totalSeats  = parseInt(document.getElementById(k + '_totalSeats')?.value) || 0;
-    const ageLimit    = parseInt(document.getElementById(k + '_ageLimit')?.value) || 18;
-    const ticketType  = document.getElementById(k + '_ticketType')?.value || 'single';
-    const bookedSeats = parseInt(document.getElementById(k + '_bookedSeats')?.value) || 0;
-    const maxPerOrder = parseInt(document.getElementById(k + '_maxPerOrder')?.value) || 10;
-    const terms       = document.getElementById(k + '_terms')?.value || '';
-
-    if (price > 0 && totalSeats > 0) {
-      tickets.push({
-        category:    k,
-        price,
-        ageLimit,
-        ticketType,
-        totalSeats,
-        bookedSeats,
-        maxPerOrder,
-        terms,
-        isActive:    catEnabled[k],
-        isCombo:     k === 'family',
-        comboCount:  k === 'family' ? 4 : 1,
-      });
-    }
+function addCategory() {
+  const id = catIdCtr++;
+  categories.push({
+    id, name:'', color:PRESET_COLORS[categories.length % PRESET_COLORS.length],
+    price:0, ageLimit:18, ticketType:'single', totalSeats:0, bookedSeats:0,
+    maxPerOrder:10, terms:'', isActive:true, isCombo:false, comboCount:1,
+    // seatType:'standing', seatPrefix:'', seatStart:1, discountTiers:[],
+     seatType:'standing', seatPrefix:'', seatStart:1, gateNumber:'', discountTiers:[]
   });
+  renderCategories();
+  // auto-open new card
+  setTimeout(() => {
+    const body = document.getElementById('catbody-'+id);
+    const chev = document.getElementById('chev-'+id);
+    if (body) { body.classList.add('open'); if(chev) chev.style.transform='rotate(180deg)'; }
+    // scroll to it
+    document.getElementById('catcard-'+id)?.scrollIntoView({behavior:'smooth',block:'center'});
+  }, 50);
+}
 
-  if (tickets.length === 0) {
-    showToast('Add at least one ticket category with price and seats.', 'err');
-    return false;
+function removeCategory(id) {
+  categories = categories.filter(c => c.id !== id);
+  renderCategories();
+}
+
+function renderCategories() {
+  const list = document.getElementById('catList');
+  list.innerHTML = '';
+  if (!categories.length) {
+    list.innerHTML = '<div style="color:#B3B3B3;font-size:0.85rem;padding:0.5rem 0 1rem;">No categories yet — click Add Category below.</div>';
+    return;
   }
+  categories.forEach(cat => {
+    const div = document.createElement('div');
+    div.className = 'cat-card';
+    div.id = 'catcard-'+cat.id;
+    div.style.borderColor = cat.color+'55';
 
-  document.getElementById('ticketTypesJson').value = JSON.stringify(tickets);
-  return true;
+    const swatches = PRESET_COLORS.map(c =>
+      `<div onclick="updateCat(${cat.id},'color','${c}')" style="width:22px;height:22px;border-radius:50%;background:${c};cursor:pointer;border:2.5px solid ${cat.color===c?'#fff':'transparent'};flex-shrink:0;transition:border 0.15s;" id="sw-${cat.id}-${c.replace('#','')}"></div>`
+    ).join('');
+
+    const seatEndVal = (cat.seatPrefix && cat.totalSeats)
+      ? `${cat.seatPrefix}_${(cat.seatStart||1)+cat.totalSeats-1}` : '—';
+    const seatPreview = seatPreviewHtml(cat);
+
+    div.innerHTML = `
+      <div class="cat-card-head" id="cathead-${cat.id}" style="background:${cat.color}14;" onclick="toggleCatCard(${cat.id})">
+        <div style="display:flex;align-items:center;gap:0.8rem;flex:1;min-width:0;">
+          <div style="width:12px;height:12px;border-radius:50%;background:${cat.color};flex-shrink:0;box-shadow:0 0 8px ${cat.color};"></div>
+          <span style="font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(cat.name) || '<span style="color:#555;font-style:italic;">Unnamed Category</span>'}</span>
+          <span class="cat-badge-pill" style="background:${cat.color}22;color:${cat.color};border:1px solid ${cat.color}44;">${cat.isActive?'ACTIVE':'OFF'}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:1rem;flex-shrink:0;">
+          ${cat.price ? `<span style="font-family:'Space Mono',monospace;font-size:0.75rem;color:${cat.color};">₹${cat.price}</span>` : ''}
+          <button type="button" class="btn-remove" onclick="event.stopPropagation();removeCategory(${cat.id})" style="padding:0.3rem 0.5rem;"><i class="bi bi-trash"></i></button>
+          <i class="bi bi-chevron-down" id="chev-${cat.id}" style="color:#B3B3B3;transition:transform 0.2s;"></i>
+        </div>
+      </div>
+      <div class="cat-card-body" id="catbody-${cat.id}">
+
+        <!-- Name + Color -->
+        <div class="field-row cols-2" style="margin-bottom:1rem;">
+          <div class="field-group">
+            <label class="field-label">Category Name *</label>
+            <input class="field-input" placeholder="e.g. VIP, Gold, Fan Pit..." value="${escHtml(cat.name)}"
+              oninput="updateCat(${cat.id},'name',this.value)"/>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Category Color</label>
+            <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;margin-top:0.3rem;">
+              ${swatches}
+              <input type="color" value="${cat.color}" title="Custom color"
+                oninput="updateCat(${cat.id},'color',this.value)"
+                style="width:22px;height:22px;padding:0;border:none;border-radius:50%;cursor:pointer;background:none;flex-shrink:0;"/>
+            </div>
+          </div>
+        </div>
+
+        <!-- Price / Seats / Age -->
+        <div class="field-row cols-3" style="margin-bottom:1rem;">
+          <div class="field-group">
+            <label class="field-label">Price (₹) *</label>
+            <input class="field-input" type="number" placeholder="0" value="${cat.price||''}"
+              oninput="updateCat(${cat.id},'price',+this.value)"/>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Total Seats *</label>
+            <input class="field-input" type="number" placeholder="100" value="${cat.totalSeats||''}"
+              oninput="updateCat(${cat.id},'totalSeats',+this.value)"/>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Age Limit</label>
+            <input class="field-input" type="number" placeholder="18" value="${cat.ageLimit||18}"
+              oninput="updateCat(${cat.id},'ageLimit',+this.value)"/>
+          </div>
+        </div>
+        <div class="field-row cols-3" style="margin-bottom:1rem;">
+          <div class="field-group">
+            <label class="field-label">Max Per Order</label>
+            <input class="field-input" type="number" placeholder="10" min="1" value="${cat.maxPerOrder||10}"
+              oninput="updateCat(${cat.id},'maxPerOrder',+this.value)"/>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Ticket Type</label>
+            <select class="field-input" onchange="updateCat(${cat.id},'ticketType',this.value)">
+              <option value="single"   ${cat.ticketType==='single'  ?'selected':''}>Single Entry</option>
+              <option value="multiple" ${cat.ticketType==='multiple'?'selected':''}>Multiple Entry</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Booked Seats (current)</label>
+            <input class="field-input" type="number" value="${cat.bookedSeats||0}" min="0"
+              oninput="updateCat(${cat.id},'bookedSeats',+this.value)"/>
+          </div>
+        </div>
+
+        <!-- SEAT TYPE -->
+        <div class="seat-sub-section">
+          <div style="font-family:'Space Mono',monospace;font-size:0.6rem;letter-spacing:2px;color:#B3B3B3;margin-bottom:0.8rem;">💺 SEAT CONFIGURATION</div>
+        
+
+           <div class="field-row cols-2" style="margin-bottom:0.8rem;">
+            <div class="field-group">
+              <label class="field-label">Seating Type</label>
+              <select class="field-input" onchange="updateCat(${cat.id},'seatType',this.value)">
+                <option value="standing" ${cat.seatType==='standing'?'selected':''}>🏃 Standing — General Admission</option>
+                <option value="sitting"  ${cat.seatType==='sitting' ?'selected':''}>💺 Sitting — Numbered Seats</option>
+              </select>
+            </div>
+            <div class="field-group">
+              <label class="field-label">Gate Number <span style="font-size:0.55rem;color:#555;">(e.g. Gate 1, Gate A, VIP Gate)</span></label>
+              <input class="field-input" placeholder="e.g. Gate 1" value="${escHtml(cat.gateNumber||'')}"
+                oninput="updateCat(${cat.id},'gateNumber',this.value)"/>
+            </div>
+          </div>
+
+          <div id="seatfields-${cat.id}" style="display:${cat.seatType==='sitting'?'block':'none'}">
+            <div class="field-row cols-3" style="margin-bottom:0.4rem;">
+              <div class="field-group">
+                <label class="field-label">Seat Prefix</label>
+                <input class="field-input" placeholder="e.g. fanpit, vip, a" value="${escHtml(cat.seatPrefix)}"
+                  oninput="updateCat(${cat.id},'seatPrefix',this.value.toLowerCase().replace(/\\s+/g,''))"/>
+              </div>
+              <div class="field-group">
+                <label class="field-label">Start Number</label>
+                <input class="field-input" type="number" placeholder="1" min="1" value="${cat.seatStart||1}"
+                  oninput="updateCat(${cat.id},'seatStart',+this.value)"/>
+              </div>
+              <div class="field-group">
+                <label class="field-label">End (auto-calculated)</label>
+                <input class="field-input" disabled id="seatend-${cat.id}" value="${seatEndVal}" style="opacity:0.5;"/>
+              </div>
+            </div>
+            <div class="seat-preview" id="seatprev-${cat.id}">${seatPreview || 'Enter a prefix and total seats to preview numbers.'}</div>
+          </div>
+        </div>
+
+        <!-- Bulk Discount Tiers -->
+        <div class="seat-sub-section" style="margin-bottom:1rem;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.8rem;">
+            <div style="font-family:'Space Mono',monospace;font-size:0.6rem;letter-spacing:2px;color:#B3B3B3;">🎯 BULK DISCOUNT TIERS</div>
+            <button type="button" class="btn-add" style="padding:0.35rem 0.8rem;font-size:0.75rem;" onclick="addTier(${cat.id})">
+              <i class="bi bi-plus"></i> Add Tier
+            </button>
+          </div>
+          <div id="tiers-${cat.id}">
+            ${renderTiersHtml(cat)}
+          </div>
+          <div style="font-size:0.75rem;color:#555;margin-top:0.5rem;">e.g. Buy 4 → ₹200 off &nbsp;·&nbsp; Buy 8 → ₹400 off. Best applicable tier is auto-applied at checkout.</div>
+        </div>
+
+        <!-- Combo Bundle -->
+        <div class="field-row cols-2" style="margin-bottom:1rem;">
+          <div class="field-group">
+            <label class="field-label">Combo Bundle?</label>
+            <select class="field-input" onchange="updateCat(${cat.id},'isCombo',this.value==='true')">
+              <option value="false" ${!cat.isCombo?'selected':''}>No — Single Ticket</option>
+              <option value="true"  ${cat.isCombo ?'selected':''}>Yes — Combo Bundle</option>
+            </select>
+          </div>
+          <div class="field-group" id="combocount-${cat.id}" style="display:${cat.isCombo?'flex':'none'}">
+            <label class="field-label">Tickets Per Bundle</label>
+            <input class="field-input" type="number" min="2" value="${cat.comboCount||4}"
+              oninput="updateCat(${cat.id},'comboCount',+this.value)"/>
+          </div>
+        </div>
+        <div class="field-row" style="margin-bottom:1rem;">
+          <div class="field-group">
+            <label class="field-label">Terms & Conditions</label>
+            <textarea class="field-input" placeholder="Entry conditions, refund policy..." style="min-height:70px;"
+              oninput="updateCat(${cat.id},'terms',this.value)">${escHtml(cat.terms||'')}</textarea>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:0.8rem;">
+          <div class="toggle-sw ${cat.isActive?'on':''}" id="cattog-${cat.id}"
+            onclick="updateCat(${cat.id},'isActive',!categories.find(c=>c.id===${cat.id}).isActive)"></div>
+          <span style="font-size:0.85rem;color:#B3B3B3;" id="cattoglbl-${cat.id}">${cat.isActive?'Category Enabled':'Category Disabled'}</span>
+        </div>
+      </div>
+    `;
+    list.appendChild(div);
+  });
 }
 
-function showToast(msg, type = 'ok') {
+function toggleCatCard(id) {
+  const body = document.getElementById('catbody-'+id);
+  const chev = document.getElementById('chev-'+id);
+  body.classList.toggle('open');
+  chev.style.transform = body.classList.contains('open') ? 'rotate(180deg)' : '';
+}
+
+function seatPreviewHtml(cat) {
+  if (!cat.seatPrefix || !cat.totalSeats) return '';
+  const start = cat.seatStart||1, end = start+cat.totalSeats-1;
+  const items = [];
+  for (let n=start; n<=Math.min(start+5,end); n++) items.push(`${cat.seatPrefix}_${n}`);
+  if (end > start+5) items.push(`... ${cat.seatPrefix}_${end}`);
+  return `<b style="color:#fff;letter-spacing:1px;">SEATS (${cat.totalSeats} total):</b><br/>`+items.join(' &nbsp;·&nbsp; ');
+}
+
+function updateCat(id, field, value) {
+  const cat = categories.find(c=>c.id===id); if(!cat) return;
+  cat[field] = value;
+
+  if (field==='name') {
+    const span = document.querySelector(`#cathead-${id} > div > span:nth-child(2)`);
+    if (span) span.innerHTML = escHtml(value) || '<span style="color:#555;font-style:italic;">Unnamed Category</span>';
+  }
+  if (field==='color') {
+    const card = document.getElementById('catcard-'+id);
+    const head = document.getElementById('cathead-'+id);
+    if (card) card.style.borderColor = value+'55';
+    if (head) head.style.background = value+'14';
+    // dot
+    const dot = head?.querySelector('div[style*="border-radius:50%"]');
+    if (dot) { dot.style.background = value; dot.style.boxShadow = `0 0 8px ${value}`; }
+    // swatches
+    PRESET_COLORS.forEach(c => {
+      const sw = document.getElementById(`sw-${id}-${c.replace('#','')}`);
+      if (sw) sw.style.border = `2.5px solid ${c===value?'#fff':'transparent'}`;
+    });
+    // badge
+    const badge = document.querySelector(`#catcard-${id} .cat-badge-pill`);
+    if (badge) { badge.style.background=value+'22'; badge.style.color=value; badge.style.border=`1px solid ${value}44`; }
+    // price span
+    const priceSpan = document.querySelector(`#cathead-${id} [style*="Space Mono"]`);
+    if (priceSpan) priceSpan.style.color = value;
+  }
+  if (field==='price') {
+    // update head price label
+    const head = document.getElementById('cathead-'+id);
+    let ps = head?.querySelector('[data-price]');
+    // just re-render header portion — but keeping DOM-targeted approach
+  }
+  if (field==='isActive') {
+    const tog = document.getElementById('cattog-'+id);
+    const lbl = document.getElementById('cattoglbl-'+id);
+    if(tog) tog.classList.toggle('on', value);
+    if(lbl) lbl.textContent = value ? 'Category Enabled' : 'Category Disabled';
+    const badge = document.querySelector(`#catcard-${id} .cat-badge-pill`);
+    if(badge) badge.textContent = value ? 'ACTIVE' : 'OFF';
+  }
+  if (field==='seatType') {
+    const sf = document.getElementById('seatfields-'+id);
+    if(sf) sf.style.display = value==='sitting'?'block':'none';
+  }
+  if (field==='isCombo') {
+    const cc = document.getElementById('combocount-'+id);
+    if(cc) cc.style.display = value?'flex':'none';
+    if(value) cat.comboCount = cat.comboCount||4;
+  }
+  if (['seatPrefix','seatStart','totalSeats'].includes(field)) {
+    const endEl = document.getElementById('seatend-'+id);
+    const prevEl = document.getElementById('seatprev-'+id);
+    const s = cat.seatStart||1, e = s+cat.totalSeats-1;
+    if (endEl) endEl.value = (cat.seatPrefix&&cat.totalSeats) ? `${cat.seatPrefix}_${e}` : '—';
+    if (prevEl) prevEl.innerHTML = seatPreviewHtml(cat) || 'Enter a prefix and total seats to preview numbers.';
+  }
+}
+
+// ── DISCOUNT TIERS ────────────────────────────────
+function renderTiersHtml(cat) {
+  if (!cat.discountTiers || !cat.discountTiers.length) {
+    return '<div style="color:#555;font-size:0.8rem;padding:0.2rem 0;">No tiers yet — click Add Tier.</div>';
+  }
+  return cat.discountTiers.map((tier, ti) => `
+    <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:0.6rem;align-items:center;margin-bottom:0.5rem;" id="tier-${cat.id}-${ti}">
+      <div class="field-group">
+        <label class="field-label">Min Tickets</label>
+        <input class="field-input" type="number" min="1" placeholder="4" value="${tier.minQty||''}"
+          oninput="updateTier(${cat.id},${ti},'minQty',+this.value)"
+          style="padding:0.5rem 0.75rem;font-size:0.85rem;"/>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Discount (₹)</label>
+        <input class="field-input" type="number" min="1" placeholder="200" value="${tier.discount||''}"
+          oninput="updateTier(${cat.id},${ti},'discount',+this.value)"
+          style="padding:0.5rem 0.75rem;font-size:0.85rem;"/>
+      </div>
+      <button type="button" class="btn-remove" onclick="removeTier(${cat.id},${ti})" style="margin-top:1.4rem;padding:0.4rem 0.6rem;"><i class="bi bi-trash"></i></button>
+    </div>
+  `).join('') + (cat.discountTiers.length > 0 ? `
+    <div style="margin-top:0.4rem;padding:0.5rem 0.8rem;background:rgba(106,13,173,0.06);border:1px solid rgba(106,13,173,0.15);border-radius:7px;font-size:0.75rem;color:#9D4EDD;font-family:'Space Mono',monospace;">
+      ${cat.discountTiers
+        .filter(d=>d.minQty&&d.discount)
+        .sort((a,b)=>a.minQty-b.minQty)
+        .map(d=>`Buy ${d.minQty}+ → ₹${d.discount} off`).join('  ·  ')}
+    </div>
+  ` : '');
+}
+
+function addTier(catId) {
+  const cat = categories.find(c=>c.id===catId); if(!cat) return;
+  if (!cat.discountTiers) cat.discountTiers = [];
+  cat.discountTiers.push({ minQty: 0, discount: 0 });
+  refreshTiers(catId);
+}
+
+function removeTier(catId, ti) {
+  const cat = categories.find(c=>c.id===catId); if(!cat) return;
+  cat.discountTiers.splice(ti, 1);
+  refreshTiers(catId);
+}
+
+function updateTier(catId, ti, field, value) {
+  const cat = categories.find(c=>c.id===catId); if(!cat) return;
+  cat.discountTiers[ti][field] = value;
+  // Update preview line without full re-render
+  const container = document.getElementById('tiers-'+catId);
+  const preview = container?.querySelector('[data-tier-preview]');
+  if (preview) {
+    const lines = cat.discountTiers
+      .filter(d=>d.minQty&&d.discount)
+      .sort((a,b)=>a.minQty-b.minQty)
+      .map(d=>`Buy ${d.minQty}+ → ₹${d.discount} off`).join('  ·  ');
+    preview.textContent = lines;
+  }
+}
+
+function refreshTiers(catId) {
+  const container = document.getElementById('tiers-'+catId);
+  const cat = categories.find(c=>c.id===catId);
+  if (container && cat) container.innerHTML = renderTiersHtml(cat);
+  // mark preview element
+  const preview = container?.querySelector('[style*="9D4EDD"]');
+  if (preview) preview.setAttribute('data-tier-preview','1');
+}
+
+// ── SUBMIT ────────────────────────────────────────
+async function doSubmit() {
+  // Required field check
+  const nameVal = document.querySelector('[name="name"]')?.value.trim();
+  if (!nameVal) { showToast('Event name is required.', 'err'); return; }
+  const dateVal = document.querySelector('[name="date"]')?.value;
+  if (!dateVal) { showToast('Event date is required.', 'err'); return; }
+  const venueVal = document.querySelector('[name="venue"]')?.value.trim();
+  if (!venueVal) { showToast('Venue name is required.', 'err'); return; }
+
+  // Required image check
+  const requiredImages = [
+    { id: 'bannerDesktop',      label: 'Home Page Desktop Banner (Field 1)' },
+    { id: 'bannerMobile',       label: 'Home Page Phone Banner (Field 2)' },
+    { id: 'bannerDetail',       label: 'Event Detail Desktop Banner (Field 3)' },
+    { id: 'bannerDetailMobile', label: 'Event Detail Phone Banner (Field 4)' },
+  ];
+  // Fields 5 & 6 (slideDesktop / slideMobile) are optional
+  for (const img of requiredImages) {
+    const val = document.getElementById(img.id)?.value;
+    if (!val) {
+      showToast(`${img.label} is required.`, 'err');
+      document.getElementById('prevwrap-' + img.id)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+  }
+  if (!categories.length) { showToast('Add at least one ticket category.', 'err'); return; }
+  const noName = categories.find(c => !c.name.trim());
+  if (noName)  { showToast('All categories need a name.', 'err'); return; }
+  const noPrice = categories.find(c => !c.price || !c.totalSeats);
+  if (noPrice) { showToast(`"${noPrice.name||'A category'}" needs price and seats.`, 'err'); return; }
+
+  // Build payload object (avoids urlencoded size issues with large base64 images)
+  const payload = {
+    name:             document.querySelector('[name="name"]').value.trim(),
+    shortDescription: document.querySelector('[name="shortDescription"]')?.value.trim() || '',
+    about:            document.querySelector('[name="about"]')?.value.trim() || '',
+    instructions:     document.querySelector('[name="instructions"]')?.value.trim() || '',
+    date:             document.querySelector('[name="date"]').value,
+    doorsOpen:        document.querySelector('[name="doorsOpen"]')?.value || '8:00 PM',
+    endTime:          document.querySelector('[name="endTime"]')?.value || '4:00 AM',
+    venue:            document.querySelector('[name="venue"]').value.trim(),
+    venueAddress:     document.querySelector('[name="venueAddress"]')?.value.trim() || '',
+    googleMapLink:    document.querySelector('[name="googleMapLink"]')?.value.trim() || '',
+    convenienceFee:   document.querySelector('[name="convenienceFee"]')?.value || 0,
+    ageLimit:         document.querySelector('[name="ageLimit"]')?.value || 0,
+    isActive:         document.querySelector('[name="isActive"]')?.checked ? 'true' : '',
+    isFeatured:       document.querySelector('[name="isFeatured"]')?.checked ? 'true' : '',
+    bannerDesktop:      document.getElementById('bannerDesktop')?.value || '',
+    bannerMobile:       document.getElementById('bannerMobile')?.value || '',
+    bannerDetail:       document.getElementById('bannerDetail')?.value || '',
+    bannerDetailMobile: document.getElementById('bannerDetailMobile')?.value || '',
+    slideDesktop:       document.getElementById('slideDesktop')?.value || '',
+    slideMobile:        document.getElementById('slideMobile')?.value || '',
+    artistsJson:      JSON.stringify(artists),
+    ticketTypesJson:  JSON.stringify(
+      categories.map(c => ({
+        category:     c.name.toLowerCase().replace(/\s+/g,'_'),
+        name:         c.name, color: c.color, price: c.price, ageLimit: c.ageLimit,
+        ticketType:   c.ticketType, totalSeats: c.totalSeats, bookedSeats: c.bookedSeats,
+        maxPerOrder:  c.maxPerOrder, terms: c.terms, isActive: c.isActive,
+        isCombo:      c.isCombo, comboCount: c.comboCount,
+        seatType:     c.seatType, seatPrefix: c.seatPrefix, seatStart: c.seatStart,
+        gateNumber:   c.gateNumber||'',
+        discountTiers: (c.discountTiers||[]).filter(d=>d.minQty>0&&d.discount>0).sort((a,b)=>a.minQty-b.minQty),
+      }))
+    ),
+  };
+
+  const btn = document.getElementById('saveBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span style="width:16px;height:16px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite;display:inline-block;margin-right:6px;vertical-align:middle;"></span> Saving…';
+
+  const isEdit = !!('<%= event ? event._id : "" %>'.trim());
+  const url    = isEdit ? '/admin/events/<%= event ? event._id : "" %>' : '/admin/events';
+
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    // Server may redirect (302) or return JSON error
+    if (res.redirected) {
+      window.location.href = res.url;
+      return;
+    }
+    if (res.ok) {
+      // If JSON response
+      const ct = res.headers.get('content-type') || '';
+      if (ct.includes('application/json')) {
+        const d = await res.json();
+        if (d.success) { window.location.href = '/admin?success=Event+saved'; return; }
+        showToast(d.message || 'Save failed.', 'err');
+      } else {
+        // HTML response (redirect landed) - go to admin
+        window.location.href = '/admin?success=Event+saved';
+      }
+    } else {
+      const text = await res.text();
+      showToast('Server error ' + res.status + '. Check console.', 'err');
+      console.error('Save error:', text.substring(0, 500));
+    }
+  } catch(e) {
+    showToast('Network error: ' + e.message, 'err');
+    console.error(e);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-check-circle-fill"></i> <%= event ? "Update Event" : "Create Event" %>';
+  }
+}
+
+// add spin keyframe if not present
+if (!document.querySelector('#spinStyle')) {
+  const s = document.createElement('style');
+  s.id = 'spinStyle';
+  s.textContent = '@keyframes spin{to{transform:rotate(360deg)}}';
+  document.head.appendChild(s);
+}
+
+function showToast(msg, type='ok') {
   const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className   = 'toast ' + type;
-  t.style.display = 'block';
-  setTimeout(() => { t.style.display = 'none'; }, 3500);
+  t.textContent=msg; t.className='toast '+type; t.style.display='block';
+  setTimeout(()=>{t.style.display='none';},3500);
 }
 
-// ── Seating type toggle ──
-function toggleSeatFields() {
-  const type = document.getElementById('seatingTypeSelect').value;
-  document.getElementById('seatNumberFields').style.display = type === 'sitting' ? 'block' : 'none';
-}
-// Init on load
-toggleSeatFields();
-
-// Init
+// INIT
 renderArtists();
+renderCategories();
+categories.forEach(c=>{
+  if(c.price||c.totalSeats){
+    const body=document.getElementById('catbody-'+c.id);
+    const chev=document.getElementById('chev-'+c.id);
+    if(body){body.classList.add('open');if(chev)chev.style.transform='rotate(180deg)';}
+  }
+});
 </script>
+</div><!-- /main-content -->
+</div><!-- /admin-layout -->
 </body>
 </html>

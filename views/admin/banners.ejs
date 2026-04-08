@@ -38,9 +38,9 @@
     .crop-mode-bar{display:flex;gap:0.5rem;margin-bottom:0.7rem;}
     .crop-mode-btn{padding:0.3rem 0.8rem;border-radius:5px;font-size:0.72rem;font-family:'Space Mono',monospace;cursor:pointer;border:1px solid rgba(255,255,255,0.1);background:transparent;color:#555;transition:all 0.15s;}
     .crop-mode-btn.active{background:rgba(106,13,173,0.15);border-color:rgba(106,13,173,0.4);color:#9D4EDD;}
-    .crop-area{position:relative;width:100%;aspect-ratio:16/5;background:#08080e;border-radius:10px;overflow:hidden;border:1px solid var(--border);touch-action:none;transition:aspect-ratio 0.2s;}
-    .crop-area.landscape{aspect-ratio:16/5;}
-    .crop-area.portrait{aspect-ratio:3/4;max-width:300px;}
+    .crop-area{position:relative;width:100%;aspect-ratio:380/200;background:#08080e;border-radius:10px;overflow:hidden;border:1px solid var(--border);touch-action:none;transition:aspect-ratio 0.2s;}
+    .crop-area.landscape{aspect-ratio:380/200;}
+    .crop-area.portrait{aspect-ratio:260/140;max-width:400px;}
     .crop-canvas{display:block;width:100%;height:100%;}
     .crop-overlay{position:absolute;inset:0;pointer-events:none;border:2px dashed rgba(106,13,173,0.6);border-radius:10px;}
     .crop-controls{margin-top:0.8rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap;}
@@ -69,7 +69,7 @@
     .banner-card{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;transition:border-color 0.18s;}
     .banner-card.hidden-banner{opacity:0.45;}
     .banner-card:hover{border-color:rgba(106,13,173,0.3);}
-    .banner-img{width:100%;aspect-ratio:16/5;object-fit:cover;background:#0a0a12;display:block;}
+    .banner-img{width:100%;aspect-ratio:380/200;object-fit:cover;background:#0a0a12;display:block;border-radius:6px;}
     .banner-meta{padding:0.8rem;}
     .banner-title{font-weight:700;font-size:0.85rem;color:#fff;margin-bottom:0.3rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
     .banner-actions{display:flex;gap:0.5rem;margin-top:0.6rem;}
@@ -117,9 +117,15 @@
           ondrop="handleDrop(event)">
           <i class="bi bi-cloud-arrow-up"></i>
           <p>Click or drag & drop banner image</p>
-          <small>Recommended: 1200×375px (16:5 ratio) · JPEG/PNG/WebP · Max 5MB</small>
+          <small>Sponsor Banner: <strong>380×200px</strong> (landscape) · JPEG/PNG/WebP · Max 5MB</small>
         </div>
         <input type="file" id="bannerFileInput" accept="image/*" style="display:none;" onchange="loadBannerImage(event)"/>
+        <div style="background:rgba(106,13,173,0.06);border:1px solid rgba(106,13,173,0.15);border-radius:7px;padding:0.6rem 0.85rem;font-size:0.75rem;color:#9D4EDD;margin-bottom:0.8rem;line-height:1.7;">
+          <i class="bi bi-info-circle-fill"></i>&nbsp;
+          <strong>Desktop banner:</strong> 380×200px &nbsp;·&nbsp;
+          <strong>Mobile banner:</strong> 260×140px &nbsp;·&nbsp;
+          Upload, then choose mode, drag to position &amp; zoom to fit
+        </div>
 
         <!-- Crop area (hidden until image loaded) -->
         <div class="crop-wrap" id="cropWrap">
@@ -129,8 +135,8 @@
           </div>
           <!-- Mode selector -->
           <div class="crop-mode-bar">
-            <button class="crop-mode-btn active" id="modeBtn-landscape" onclick="setCropMode('landscape')">🖼 Landscape (16:5)</button>
-            <button class="crop-mode-btn" id="modeBtn-portrait" onclick="setCropMode('portrait')">📱 Portrait (3:4)</button>
+            <button class="crop-mode-btn active" id="modeBtn-landscape" onclick="setCropMode('landscape')">🖼 Desktop (380×200)</button>
+            <button class="crop-mode-btn" id="modeBtn-portrait" onclick="setCropMode('portrait')">📱 Mobile (260×140)</button>
           </div>
           <div class="crop-area landscape" id="cropArea">
             <canvas class="crop-canvas" id="bannerCanvas"></canvas>
@@ -211,8 +217,8 @@ function loadBannerImage(e) {
 
 let bMode = 'landscape'; // 'landscape' or 'portrait'
 const CROP_CONFIGS = {
-  landscape: { ar_w:16, ar_h:5, out_w:1200, out_h:375 },
-  portrait:  { ar_w:3,  ar_h:4, out_w:800,  out_h:1067 },
+  landscape: { ar_w:380, ar_h:200, out_w:760,  out_h:400  }, // 2x for retina — desktop sponsor banner
+  portrait:  { ar_w:260, ar_h:140, out_w:520,  out_h:280  }, // 2x for retina — mobile sponsor banner
 };
 
 function setCropMode(mode) {
@@ -248,8 +254,8 @@ function processFile(file) {
     const img = new Image();
     img.onload = () => {
       bImg = img; bScale = 1; bOffX = 0; bOffY = 0;
-      // Auto-detect landscape or portrait
-      const isPortrait = img.height > img.width * 1.1;
+      // Auto-detect: portrait mode if image is narrower than 2:1 ratio
+      const isPortrait = img.height > img.width * 0.6; // taller images → portrait mode
       const autoMode = isPortrait ? 'portrait' : 'landscape';
       document.getElementById('cropDetectedMode').textContent = isPortrait ? '📱 Portrait detected' : '🖼 Landscape detected';
       setCropMode(autoMode);

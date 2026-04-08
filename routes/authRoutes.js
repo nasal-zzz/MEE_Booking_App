@@ -71,5 +71,7 @@ router.get('/google/callback',
 // ── LOGOUT ──
 router.get('/logout', noCache, authController.logout);
 
-module.exports = router;
+// ── SAVE EMAIL (post-OTP popup) ──
+router.post('/save-email', authController.saveEmail);
 
+module.exports = router;

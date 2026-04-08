@@ -3,25 +3,49 @@ const mongoose = require('mongoose');
 // ── Artist Schema ──
 const artistSchema = new mongoose.Schema({
   name:        { type: String, required: true },
-  designation: { type: String, default: '' },   // e.g. "DJ", "Live Act", "MC"
-  photo:       { type: String, default: '' },   // base64 or URL
+  designation: { type: String, default: '' },
+  photo:       { type: String, default: '' },
 });
 
 // ── Ticket Category Schema ──
 const ticketTypeSchema = new mongoose.Schema({
-  category:    { type: String, required: true },   // free-text name e.g. "VIP", "Gold", "Family"
-  name:        { type: String, default: '' },       // display name (same as category or custom)
-  color:       { type: String, default: '#6A0DAD' }, // hex color chosen by admin
+  category:    { type: String, required: true },
+  name:        { type: String, default: '' },
+  color:       { type: String, default: '#6A0DAD' },
   price:       { type: Number, required: true },
   ageLimit:    { type: Number, default: 0 },
   ticketType:  { type: String, enum: ['single', 'multiple'], default: 'single' },
   isCombo:     { type: Boolean, default: false },
   comboCount:  { type: Number, default: 1 },
-  // Combo offer: buy comboOfferMinQty or more tickets → get comboOfferDiscount rupees off
-  comboOfferMinQty:    { type: Number, default: 0 },   // 0 = no combo offer
-  comboOfferDiscount:  { type: Number, default: 0 },   // flat rupee discount
+  comboOfferMinQty:   { type: Number, default: 0 },
+  comboOfferDiscount: { type: Number, default: 0 },
   totalSeats:  { type: Number, required: true },
   bookedSeats: { type: Number, default: 0 },
+  releasedSeats: { type: [Number], default: [] },
+
+  // ─────────────────────────────────────────────────────────────
+  // ✅ seatCounter — monotonically increasing, NEVER decremented.
+  //
+  // bookedSeats tracks current occupancy (goes up on reserve, down on cancel).
+  // seatCounter tracks how many seats have EVER been assigned — only goes up.
+  //
+  // Why two fields?
+  //   If A and B both reserve seats (seatCounter: 2, 3 respectively),
+  //   and A cancels, bookedSeats decrements but seatCounter stays at 3.
+  //   The next booking gets seatCounter=4 — unique, no collision with B's seat 3.
+  //   Without this: the next booking would re-use seatCounter=3, duplicating B's seat.
+  //
+  // Rule: ALWAYS increment seatCounter when seats are reserved.
+  //       NEVER decrement seatCounter for any reason.
+  // ─────────────────────────────────────────────────────────────
+  paidSeatCount: { type: Number, default: 0 },
+
+  maxPerOrder: { type: Number, default: 10 },
+  seatType:    { type: String, enum: ['standing','sitting'], default: 'standing' },
+  seatPrefix:  { type: String, default: '' },
+  seatStart:   { type: Number, default: 1 },
+  gateNumber:  { type: String, default: '' },   // ✅ Gate number for this category
+  discountTiers: [{ minQty: { type: Number }, discount: { type: Number } }],
   terms:       { type: String, default: '' },
   isActive:    { type: Boolean, default: true },
 });
@@ -38,11 +62,15 @@ const eventSchema = new mongoose.Schema({
   name:              { type: String, required: true },
   shortDescription:  { type: String, default: '' },
   about:             { type: String, default: '' },
+  instructions:      { type: String, default: '' },
 
   // Banners
-  bannerDesktop:     { type: String, default: '' },  // landing page banner
-  bannerMobile:      { type: String, default: '' },  // mobile banner
-  bannerDetail:      { type: String, default: '' },  // event detail page banner
+  bannerDesktop:      { type: String, default: '' },
+  bannerMobile:       { type: String, default: '' },
+  bannerDetail:       { type: String, default: '' },
+  bannerDetailMobile: { type: String, default: '' },
+  slideDesktop:       { type: String, default: '' },
+  slideMobile:        { type: String, default: '' },
 
   // Artists
   artists:           [artistSchema],
@@ -78,3 +106,4 @@ eventSchema.virtual('minPrice').get(function() {
 });
 
 module.exports = mongoose.model('Event', eventSchema);
+

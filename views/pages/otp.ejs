@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Verify OTP — NightPass</title>
-  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Outfit:wght@400;500;600;700&family=Space+Mono&display=swap" rel="stylesheet"/>
+  <title>Verify OTP — MEE</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&family=Outfit:wght@400;500;600;700&family=Space+Mono&display=swap" rel="stylesheet"/>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet"/>
   <link rel="stylesheet" href="/css/index.css"/>
   <script src="/js/ui.js" defer></script>
@@ -15,7 +15,7 @@
     body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(255,255,255,0.012) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.012) 1px,transparent 1px);background-size:50px 50px;pointer-events:none;}
     .orb1{position:fixed;top:-150px;left:-100px;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(106,13,173,0.05) 0%,transparent 65%);pointer-events:none;}
     nav{position:relative;z-index:1;padding:1.1rem 2rem;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);}
-    .logo{font-family:'Anton',sans-serif;font-size:1.5rem;letter-spacing:4px;color:#fff;text-decoration:none;}
+    .logo{font-family:'Poppins',sans-serif;font-size:1.5rem;letter-spacing:4px;color:#fff;text-decoration:none;}
     .logo span{color:var(--accent);}
     .back-link{display:flex;align-items:center;gap:0.4rem;color:var(--muted);text-decoration:none;font-size:0.8rem;letter-spacing:1px;text-transform:uppercase;}
     .back-link:hover{color:#fff;}
@@ -43,12 +43,12 @@
     .change-link:hover{background:var(--accent-dim);}
 
     .eyebrow{font-family:'Space Mono',monospace;font-size:0.62rem;letter-spacing:3px;color:var(--accent);display:block;margin-bottom:0.4rem;}
-    h1{font-family:'Anton',sans-serif;font-size:2.4rem;letter-spacing:2px;color:#fff;line-height:1;margin-bottom:0.5rem;}
+    h1{font-family:'Poppins',sans-serif;font-size:2.4rem;letter-spacing:2px;color:#fff;line-height:1;margin-bottom:0.5rem;}
     .subtitle{font-size:0.88rem;color:var(--muted);line-height:1.6;margin-bottom:1.8rem;}
 
     /* OTP boxes */
     .otp-row{display:flex;gap:0.6rem;justify-content:center;margin-bottom:1.5rem;}
-    .otp-box{width:54px;height:62px;background:var(--surface);border:2px solid var(--border);border-radius:10px;text-align:center;font-family:'Anton',sans-serif;font-size:1.8rem;color:#fff;outline:none;transition:border-color 0.2s,box-shadow 0.2s,transform 0.1s;appearance:none;-moz-appearance:textfield;}
+    .otp-box{width:54px;height:62px;background:var(--surface);border:2px solid var(--border);border-radius:10px;text-align:center;font-family:'Poppins',sans-serif;font-size:1.8rem;color:#fff;outline:none;transition:border-color 0.2s,box-shadow 0.2s,transform 0.1s;appearance:none;-moz-appearance:textfield;}
     .otp-box::-webkit-outer-spin-button,.otp-box::-webkit-inner-spin-button{-webkit-appearance:none;}
     .otp-box:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(106,13,173,0.1);transform:scale(1.04);}
     .otp-box.filled{border-color:rgba(106,13,173,0.5);background:rgba(106,13,173,0.05);}
@@ -81,13 +81,36 @@
     .resend-btn{background:none;border:none;color:var(--accent);font-weight:700;cursor:pointer;font-size:0.85rem;font-family:'Outfit',sans-serif;text-decoration:underline;display:none;}
     .resend-btn.visible{display:inline;}
     @media(max-width:480px){.card-inner{padding:1.5rem 1.1rem;}h1{font-size:2rem;}.otp-box{width:44px;height:54px;font-size:1.5rem;}.otp-row{gap:0.4rem;}}
+
+    /* Email popup overlay */
+    .email-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:300;align-items:center;justify-content:center;padding:1rem;}
+    .email-overlay.show{display:flex;}
+    .email-popup{background:#14141C;border:1px solid rgba(106,13,173,0.4);border-radius:16px;width:100%;max-width:400px;overflow:hidden;box-shadow:0 40px 80px rgba(0,0,0,0.6);}
+    .email-popup-bar{height:3px;background:linear-gradient(90deg,transparent,#6A0DAD,transparent);}
+    .email-popup-inner{padding:2rem 1.8rem;}
+    .email-popup-icon{width:56px;height:56px;border-radius:14px;background:rgba(106,13,173,0.12);border:1px solid rgba(106,13,173,0.25);display:flex;align-items:center;justify-content:center;font-size:1.6rem;margin:0 auto 1.2rem;}
+    .email-popup-title{font-family:'Poppins',sans-serif;font-size:1.6rem;letter-spacing:2px;color:#fff;text-align:center;margin-bottom:0.4rem;}
+    .email-popup-sub{font-size:0.82rem;color:var(--muted);text-align:center;line-height:1.6;margin-bottom:0.6rem;}
+    .email-popup-why{background:rgba(106,13,173,0.07);border:1px solid rgba(106,13,173,0.15);border-radius:8px;padding:0.75rem 1rem;margin-bottom:1.4rem;font-size:0.78rem;color:#888;line-height:1.8;}
+    .email-popup-why span{color:#9D4EDD;font-weight:600;}
+    .email-inp-wrap{position:relative;margin-bottom:0.5rem;}
+    .email-inp{width:100%;background:rgba(255,255,255,0.04);border:1.5px solid rgba(255,255,255,0.1);border-radius:8px;color:#fff;font-family:'Outfit',sans-serif;font-size:0.95rem;padding:0.85rem 1rem;outline:none;transition:border-color 0.2s;}
+    .email-inp:focus{border-color:rgba(106,13,173,0.6);box-shadow:0 0 0 3px rgba(106,13,173,0.08);}
+    .email-inp.has-err{border-color:var(--error);}
+    .email-err{font-size:0.75rem;color:var(--error);min-height:1.1rem;margin-bottom:0.8rem;}
+    .email-popup-btns{display:flex;flex-direction:column;gap:0.6rem;}
+    .btn-save-email{width:100%;padding:0.95rem;background:var(--accent);color:#000;font-family:'Outfit',sans-serif;font-weight:700;font-size:0.95rem;border:none;border-radius:8px;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:0.5rem;}
+    .btn-save-email:hover:not(:disabled){box-shadow:0 0 30px rgba(106,13,173,0.45);}
+    .btn-save-email:disabled{opacity:0.55;cursor:not-allowed;}
+    .btn-skip-email{width:100%;padding:0.7rem;background:transparent;color:#555;font-family:'Outfit',sans-serif;font-size:0.82rem;border:none;cursor:pointer;transition:color 0.2s;}
+    .btn-skip-email:hover{color:#888;}
   </style>
 </head>
 <body>
   <div class="orb1"></div>
 
   <nav>
-    <a href="/" class="logo">NIGHT<span>PASS</span></a>
+    <a href="/" class="logo">M<span>EE</span></a>
     <a href="/auth/login" class="back-link"><i class="bi bi-arrow-left"></i> Back</a>
   </nav>
 
@@ -129,8 +152,8 @@
         <span class="eyebrow">// step 2 of 3</span>
         <h1>VERIFY<br/>NUMBER</h1>
         <p class="subtitle">
-          Enter the 6-digit OTP sent to your Phone<br/>
-          <span style="font-size:0.78rem;color:#25d366;"><i class="bi bi-message"></i> Check your messages</span>
+          Enter the 6-digit OTP sent to your WhatsApp<br/>
+          <span style="font-size:0.78rem;color:#25d366;"><i class="bi bi-message"></i> Check your WhatsApp </span>
         </p>
 
         <!-- OTP Inputs -->
@@ -159,6 +182,18 @@
           <span id="btnText">Verify &amp; Continue</span>
           <div class="spinner" id="spinner"></div>
         </button>
+
+        <!-- Rate limit warning banner (hidden by default) -->
+<div id="rateLimitBanner" style="display:none;background:rgba(255,68,68,0.08);border:1px solid rgba(255,68,68,0.25);border-radius:8px;padding:0.9rem 1rem;margin-top:1rem;text-align:center;">
+  <div style="color:#FF4444;font-size:0.9rem;font-weight:700;margin-bottom:0.25rem;">
+    <i class="bi bi-shield-exclamation"></i> OTP Limit Reached
+  </div>
+  <div style="color:#B3B3B3;font-size:0.78rem;line-height:1.6;">
+    You've requested too many OTPs for this number.<br/>
+    Please wait <strong style="color:#FF4444;" id="waitHint">1 hour</strong> before trying again.
+  </div>
+</div>
+
 
         <div class="resend-area">
           Didn't receive it?
@@ -267,7 +302,13 @@
           document.getElementById('verifyBtn').style.display = 'none';
           document.querySelector('.resend-area').style.display = 'none';
           document.getElementById('successAnim').style.display = 'block';
-          setTimeout(() => window.location.replace(data.redirect || '/booking'), 1500);
+          setTimeout(() => {
+            if (data.showEmailPopup) {
+              showEmailPopup(data.redirect || '/');
+            } else {
+              window.location.replace(data.redirect || '/');
+            }
+          }, 1500);
         } else {
           // Shake and show error
           boxes.forEach(b => { b.classList.add('has-error'); b.classList.remove('filled'); });
@@ -302,43 +343,179 @@
       }
     }, 1000);
 
+    // async function doResend() {
+    //   resendBtn.textContent = 'Sending...';
+    //   resendBtn.disabled = true;
+    //   try {
+    //     const res = await fetch('/auth/resend-otp', {
+    //       method: 'POST',
+    //       headers: { 'Content-Type': 'application/json' },
+    //     });
+    //     const data = await res.json();
+    //     if (data.success) {
+    //       showStatus('success-msg', 'New OTP sent to your WhatsApp!');
+    //       boxes.forEach(b => { b.value = ''; b.classList.remove('filled', 'has-error', 'is-success'); b.disabled = false; });
+    //       boxes[0].focus();
+    //       // Restart timer
+    //       timeLeft = 30;
+    //       timerCount.textContent = 30;
+    //       timerDisplay.style.display = 'inline';
+    //       resendBtn.classList.remove('visible');
+    //       resendBtn.disabled = false;
+    //       resendBtn.textContent = 'Resend OTP';
+    //     } else {
+    //       showStatus('error', data.message || 'Failed to resend. Try again.');
+    //       resendBtn.disabled = false;
+    //       resendBtn.textContent = 'Resend OTP';
+    //     }
+    //   } catch(e) {
+    //     showStatus('error', 'Network error.');
+    //     resendBtn.disabled = false;
+    //     resendBtn.textContent = 'Resend OTP';
+    //   }
+    // }
+
     async function doResend() {
-      resendBtn.textContent = 'Sending...';
-      resendBtn.disabled = true;
-      try {
-        const res = await fetch('/auth/resend-otp', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-        });
-        const data = await res.json();
-        if (data.success) {
-          showStatus('success-msg', 'New OTP sent to your WhatsApp!');
-          boxes.forEach(b => { b.value = ''; b.classList.remove('filled', 'has-error', 'is-success'); b.disabled = false; });
-          boxes[0].focus();
-          // Restart timer
-          timeLeft = 30;
-          timerCount.textContent = 30;
-          timerDisplay.style.display = 'inline';
-          resendBtn.classList.remove('visible');
-          resendBtn.disabled = false;
-          resendBtn.textContent = 'Resend OTP';
-        } else {
-          showStatus('error', data.message || 'Failed to resend. Try again.');
-          resendBtn.disabled = false;
-          resendBtn.textContent = 'Resend OTP';
-        }
-      } catch(e) {
-        showStatus('error', 'Network error.');
-        resendBtn.disabled = false;
-        resendBtn.textContent = 'Resend OTP';
-      }
+  resendBtn.textContent = 'Sending...';
+  resendBtn.disabled = true;
+  try {
+    const res = await fetch('/auth/resend-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    const data = await res.json();
+
+    // ── Rate limit hit (429) ──
+    if (res.status === 429) {
+      document.getElementById('rateLimitBanner').style.display = 'block';
+      document.querySelector('.resend-area').style.display = 'none'; // hide resend UI
+      showStatus('error', data.message || 'Too many OTP requests. Please wait 1 hour.');
+      return; // don't re-enable button
     }
+
+    if (data.success) {
+      showStatus('success-msg', 'New OTP sent to your WhatsApp!');
+      boxes.forEach(b => { b.value = ''; b.classList.remove('filled', 'has-error', 'is-success'); b.disabled = false; });
+      boxes[0].focus();
+      // Restart timer
+      timeLeft = 30;
+      timerCount.textContent = 30;
+      timerDisplay.style.display = 'inline';
+      resendBtn.classList.remove('visible');
+      resendBtn.disabled = false;
+      resendBtn.textContent = 'Resend OTP';
+    } else {
+      showStatus('error', data.message || 'Failed to resend. Try again.');
+      resendBtn.disabled = false;
+      resendBtn.textContent = 'Resend OTP';
+    }
+  } catch(e) {
+    showStatus('error', 'Network error.');
+    resendBtn.disabled = false;
+    resendBtn.textContent = 'Resend OTP';
+  }
+}
   </script>
+
+<!-- Email Popup (#14) -->
+<div class="email-overlay" id="emailOverlay">
+  <div class="email-popup">
+    <div class="email-popup-bar"></div>
+    <div class="email-popup-inner">
+      <div class="email-popup-icon">📧</div>
+      <div class="email-popup-title">ADD YOUR EMAIL</div>
+      <p class="email-popup-sub">Your phone is verified! Add an email to get your tickets and booking updates.</p>
+      <div class="email-popup-why">
+        <span>Why add email?</span><br/>
+        ✉️ Receive PDF tickets in your inbox<br/>
+        🔔 Get booking confirmation instantly<br/>
+        📅 Event reminders &amp; updates
+      </div>
+      <div class="email-inp-wrap">
+        <input class="email-inp" type="email" id="emailPopupInp" placeholder="you@example.com" autocomplete="email" inputmode="email"/>
+      </div>
+      <div class="email-err" id="emailPopupErr"></div>
+      <div class="email-popup-btns">
+        <button class="btn-save-email" id="saveEmailBtn" onclick="submitEmail()">
+          <i class="bi bi-envelope-check-fill"></i> Save Email &amp; Continue
+        </button>
+        <button class="btn-skip-email" onclick="skipEmail()">Skip for now — I'll add it later</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let _emailRedirect = '/';
+
+  function showEmailPopup(redirectUrl) {
+    _emailRedirect = redirectUrl || '/';
+    document.getElementById('emailOverlay').classList.add('show');
+    setTimeout(() => document.getElementById('emailPopupInp').focus(), 200);
+  }
+
+  async function submitEmail() {
+    const inp    = document.getElementById('emailPopupInp');
+    const errEl  = document.getElementById('emailPopupErr');
+    const btn    = document.getElementById('saveEmailBtn');
+    const email  = inp.value.trim();
+    errEl.textContent = '';
+    inp.classList.remove('has-err');
+
+    if (!email) {
+      errEl.textContent = 'Please enter your email address.';
+      inp.classList.add('has-err');
+      inp.focus();
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      errEl.textContent = 'Enter a valid email address.';
+      inp.classList.add('has-err');
+      inp.focus();
+      return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<span style="width:16px;height:16px;border:2px solid rgba(0,0,0,0.25);border-top-color:#000;border-radius:50%;animation:spin 0.7s linear infinite;display:inline-block;"></span> Saving…';
+
+    try {
+      const res  = await fetch('/auth/save-email', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        btn.innerHTML = '✓ Saved!';
+        setTimeout(() => window.location.replace(_emailRedirect), 700);
+      } else {
+        errEl.textContent = data.message || 'Could not save email. Try again.';
+        inp.classList.add('has-err');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-envelope-check-fill"></i> Save Email & Continue';
+      }
+    } catch(e) {
+      errEl.textContent = 'Network error. Please try again.';
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-envelope-check-fill"></i> Save Email & Continue';
+    }
+  }
+
+  function skipEmail() {
+    document.getElementById('emailOverlay').classList.remove('show');
+    window.location.replace(_emailRedirect);
+  }
+
+  // Enter key submits
+  document.getElementById('emailPopupInp').addEventListener('keydown', e => {
+    if (e.key === 'Enter') submitEmail();
+  });
+</script>
 
   <script>
     // Back-button guard — if session token exists, go forward not back
     (function() {
-      // Replace current history entry so back button skips this page
       if (window.history && window.history.replaceState) {
         window.history.replaceState(null, '', window.location.href);
       }

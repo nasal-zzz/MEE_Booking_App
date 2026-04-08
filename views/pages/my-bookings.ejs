@@ -19,17 +19,22 @@
       </div>
     <% } else { %>
     <div style="display:flex;flex-direction:column;gap:1rem;">
-      <% bookings.forEach(function(booking){ 
-           const isPaid  = booking.paymentStatus === 'paid';
-           const isPend  = booking.paymentStatus === 'pending';
-           const isFail  = booking.paymentStatus === 'failed';
-           const statusColor = isPaid?'#00FF88':(isPend?'#f5c842':'#FF4444');
-           const statusBg    = isPaid?'rgba(0,255,136,0.08)':(isPend?'rgba(245,200,66,0.08)':'rgba(255,68,68,0.08)');
-           const statusBorder= isPaid?'rgba(0,255,136,0.3)':(isPend?'rgba(245,200,66,0.3)':'rgba(255,68,68,0.3)');
-           const statusIcon  = isPaid?'check-circle-fill':(isPend?'clock-fill':'x-circle-fill');
-           const statusLbl   = isPaid?'CONFIRMED':(isPend?'PAYMENT PENDING':'PAYMENT FAILED');
-           const evtActive   = booking.event && booking.event.isActive;
-           const evtHasSeats = booking.event && booking.event.ticketTypes && booking.event.ticketTypes.some(function(t){return t.bookedSeats<t.totalSeats;});
+      <% bookings.forEach(function(booking){
+           var isPaid  = booking.paymentStatus === 'paid';
+           var isPend  = booking.paymentStatus === 'pending';
+           var isFail  = booking.paymentStatus === 'failed';
+           var statusColor  = isPaid ? '#00FF88' : (isPend ? '#f5c842' : '#FF4444');
+           var statusBg     = isPaid ? 'rgba(0,255,136,0.08)' : (isPend ? 'rgba(245,200,66,0.08)' : 'rgba(255,68,68,0.08)');
+           var statusBorder = isPaid ? 'rgba(0,255,136,0.3)'  : (isPend ? 'rgba(245,200,66,0.3)'  : 'rgba(255,68,68,0.3)');
+           var statusIcon   = isPaid ? 'check-circle-fill'    : (isPend ? 'clock-fill'             : 'x-circle-fill');
+           var statusLbl    = isPaid ? 'CONFIRMED'            : (isPend ? 'PAYMENT PENDING'        : 'PAYMENT FAILED');
+
+           /* ── FIX: guard every access to booking.event ── */
+           var evt       = booking.event || null;
+           var evtActive = evt && evt.isActive;
+           /* safe check: only call .some() when ticketTypes exists */
+           var evtHasSeats = evt && Array.isArray(evt.ticketTypes) &&
+                             evt.ticketTypes.some(function(t){ return t.totalSeats - t.bookedSeats > 0; });
       %>
       <div data-booking="<%= booking._id %>" style="background:var(--card);border:1px solid rgba(255,255,255,0.07);border-radius:12px;overflow:hidden;">
         <!-- Status accent bar -->
@@ -41,9 +46,13 @@
             <div style="display:flex;align-items:flex-start;gap:1rem;flex:1;min-width:200px;">
               <div style="width:52px;height:52px;border-radius:8px;background:linear-gradient(135deg,#1a1f00,#3d4a00);display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0;">🎶</div>
               <div>
-                <div style="font-family:var(--font-display);font-size:1.1rem;letter-spacing:2px;color:#fff;margin-bottom:0.35rem;"><%= booking.event?booking.event.name.toUpperCase():'EVENT' %></div>
+                <div style="font-family:var(--font-display);font-size:1.1rem;letter-spacing:2px;color:#fff;margin-bottom:0.35rem;">
+                  <%= evt ? evt.name.toUpperCase() : 'EVENT' %>
+                </div>
                 <div style="display:flex;flex-wrap:wrap;gap:0.75rem;margin-bottom:0.35rem;">
-                  <% if(booking.event){ %><span style="font-size:0.72rem;color:var(--muted);"><i class="bi bi-calendar3"></i> <%= new Date(booking.event.date).toDateString() %></span><% } %>
+                  <% if(evt){ %>
+                  <span style="font-size:0.72rem;color:var(--muted);"><i class="bi bi-calendar3"></i> <%= new Date(evt.date).toDateString() %></span>
+                  <% } %>
                   <span style="font-size:0.72rem;color:var(--muted);"><i class="bi bi-ticket-perforated"></i> <%= booking.quantity %> × <%= booking.ticketType %></span>
                   <span style="font-family:var(--font-mono);font-size:0.68rem;color:var(--muted);">REF: <%= booking.bookingRef %></span>
                 </div>
@@ -53,10 +62,12 @@
                 </div>
               </div>
             </div>
+
             <!-- Amount + actions -->
             <div style="display:flex;flex-direction:column;align-items:flex-end;gap:0.7rem;flex-shrink:0;">
-              <div style="font-family:var(--font-display);font-size:1.4rem;color:var(--accent);letter-spacing:1px;">₹<%= booking.totalAmount.toLocaleString('en-IN') %></div>
+              <div style="font-family:var(--font-display);font-size:1.4rem;color:var(--accent);letter-spacing:1px;">₹<%= (booking.totalAmount||0).toLocaleString('en-IN') %></div>
               <div style="display:flex;gap:0.6rem;flex-wrap:wrap;justify-content:flex-end;">
+
                 <% if(isPaid){ %>
                   <a href="/booking/success/<%= booking._id %>" style="display:flex;align-items:center;gap:0.4rem;background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.25);color:#00FF88;padding:0.55rem 1rem;border-radius:6px;text-decoration:none;font-weight:700;font-size:0.78rem;white-space:nowrap;">
                     <i class="bi bi-eye-fill"></i> View Ticket
@@ -64,8 +75,8 @@
                   <button onclick="dlTicket('<%= booking._id %>')" style="display:flex;align-items:center;gap:0.4rem;background:var(--accent);border:none;color:#fff;padding:0.55rem 1rem;border-radius:6px;font-weight:700;font-size:0.78rem;white-space:nowrap;cursor:pointer;">
                     <i class="bi bi-download"></i> Download PDF
                   </button>
+
                 <% } else if(isPend){ %>
-                  <%# PENDING: show complete payment if event still active, else just remove %>
                   <% if(evtActive && evtHasSeats){ %>
                   <a href="/booking/retry-payment/<%= booking._id %>" style="display:flex;align-items:center;gap:0.4rem;background:rgba(245,200,66,0.1);border:1px solid rgba(245,200,66,0.3);color:#f5c842;padding:0.55rem 1rem;border-radius:6px;text-decoration:none;font-weight:700;font-size:0.78rem;white-space:nowrap;">
                     <i class="bi bi-credit-card-fill"></i> Complete Payment
@@ -74,10 +85,10 @@
                   <button onclick="deleteBooking('<%= booking._id %>')" style="display:flex;align-items:center;gap:0.4rem;background:rgba(255,68,68,0.06);border:1px solid rgba(255,68,68,0.2);color:#FF4444;padding:0.55rem 0.9rem;border-radius:6px;font-weight:700;font-size:0.78rem;white-space:nowrap;cursor:pointer;">
                     <i class="bi bi-trash3-fill"></i> Remove
                   </button>
+
                 <% } else { %>
-                  <%# FAILED: offer to book again from scratch, or remove %>
-                  <% if(evtActive){ %>
-                  <a href="/booking/seatmap/<%= booking.event._id %>" style="display:flex;align-items:center;gap:0.4rem;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:var(--muted);padding:0.55rem 1rem;border-radius:6px;text-decoration:none;font-weight:700;font-size:0.78rem;white-space:nowrap;">
+                  <% if(evtActive && evt){ %>
+                  <a href="/booking/seatmap/<%= evt._id %>" style="display:flex;align-items:center;gap:0.4rem;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:var(--muted);padding:0.55rem 1rem;border-radius:6px;text-decoration:none;font-weight:700;font-size:0.78rem;white-space:nowrap;">
                     <i class="bi bi-arrow-clockwise"></i> Book Again
                   </a>
                   <% } %>
@@ -85,17 +96,18 @@
                     <i class="bi bi-trash3-fill"></i> Remove
                   </button>
                 <% } %>
+
               </div>
             </div>
           </div>
 
           <!-- Ticket attendees strip -->
-          <% if(booking.tickets&&booking.tickets.length){ %>
+          <% if(booking.tickets && booking.tickets.length){ %>
           <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid rgba(255,255,255,0.06);display:flex;gap:0.45rem;flex-wrap:wrap;">
-            <% booking.tickets.forEach(function(t,ti){ %>
+            <% booking.tickets.forEach(function(t){ %>
             <div style="display:flex;align-items:center;gap:0.35rem;background:var(--surface);border:1px solid rgba(255,255,255,0.07);border-radius:4px;padding:0.28rem 0.65rem;font-family:var(--font-mono);font-size:0.6rem;color:var(--muted);letter-spacing:1px;">
               <i class="bi bi-person-fill" style="color:var(--accent);"></i>
-              <%= t.attendee.name %> · <%= t.ticketId %>
+              <%= t.attendee && t.attendee.name ? t.attendee.name : 'Guest' %> · <%= t.ticketId %>
               <% if(t.isUsed){ %><span style="color:#FF4444;margin-left:0.25rem;">USED</span><% } %>
             </div>
             <% }); %>

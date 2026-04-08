@@ -1,3 +1,5 @@
+'use strict';
+
 const dns = require('dns');
 dns.setServers(['8.8.8.8', '8.8.4.4']);
 
@@ -7,13 +9,153 @@ const Event    = require('../models/Event');
 const Booking  = require('../models/Booking');
 const SeatMap  = require('../models/SeatMap');
 const User     = require('../models/User');
-const { generateTicketId, generateQRCode, buildQRPayload, buildGroupQRPayload } = require('../utils/qrHelper');
+const { generateTicketId, generateSharedQR } = require('../utils/qrHelper');
 const { sendBookingConfirmation, sendPendingPaymentReminder, sendFailedPaymentNotice } = require('../utils/emailHelper');
+const {
+  isStandingCategory,
+  assignSeatNumbers,
+  releaseSeatsToPool,   // ← replaces your local releaseSeats()
+  fetchFreshTtype,
+} = require('../utils/seatHelper');
+
+// ─────────────────────────────────────────────────────────────
+// HELPERS
+// ─────────────────────────────────────────────────────────────
+
+// Returns true when the ticket category is a standing/general admission type
+// function isStandingCategory(ttype) {
+//   if (!ttype) return false;
+//   const cat  = (ttype.category    || '').toLowerCase();
+//   const type = (ttype.ticketType  || '').toLowerCase();
+//   if (ttype.isStanding === true)      return true;
+//   if (ttype.isStanding === false)     return false;
+//   if (ttype.seatType   === 'sitting') return false;
+//   if (ttype.seatType   === 'standing') return true;
+//   return type === 'standing' || cat === 'standing' || cat === 'general' || cat === 'fanfit';
+// }
+
+// Look up the gateNumber for a given booking's ticket category from the event
+function getGateNumber(event, ticketCategory) {
+  if (!event || !event.ticketTypes) return '';
+  const ttype = event.ticketTypes.find(
+    t => (t.category || '').toLowerCase() === (ticketCategory || '').toLowerCase()
+  );
+  return ttype?.gateNumber || '';
+}
+
+// ─────────────────────────────────────────────────────────────
+// HELPER: Atomically pop one seat number from the released pool
+// Returns the seat number (integer) or null if pool is empty
+// ─────────────────────────────────────────────────────────────
+// async function popOneSeatFromPool(eventId, ttypeId) {
+//   const before = await Event.findOneAndUpdate(
+//     {
+//       _id: eventId,
+//       'ticketTypes._id': ttypeId,
+//       'ticketTypes.releasedSeats.0': { $exists: true },
+//     },
+//     { $pop: { 'ticketTypes.$.releasedSeats': -1 } },
+//     { new: false }
+//   ).lean().catch(() => null);
+
+//   if (!before) return null;
+//   const tt = before.ticketTypes?.find(t => t._id.toString() === ttypeId.toString());
+//   return tt?.releasedSeats?.[0] ?? null;
+// }
+
+// ─────────────────────────────────────────────────────────────
+// HELPER: Release seats back to pool (on cancel / fail)
+// ─────────────────────────────────────────────────────────────
+// async function releaseSeats(eventId, ticketType, bookingDoc) {
+//   const event  = bookingDoc?.event;
+//   const ttype  = event?.ticketTypes?.find(
+//     t => (t.category || '').toLowerCase() === (ticketType || '').toLowerCase()
+//   );
+
+//   const qty = bookingDoc?.quantity || bookingDoc?.tickets?.length || 0;
+//   if (!qty) return;
+
+//   const seatNumbers = [];
+//   if (ttype && !isStandingCategory(ttype)) {
+//     for (const ticket of bookingDoc.tickets || []) {
+//       if (ticket.seatNumber) {
+//         const match = String(ticket.seatNumber).match(/(\d+)$/);
+//         if (match) seatNumbers.push(parseInt(match[1], 10));
+//       }
+//     }
+//   }
+
+//   await Event.updateOne(
+//     {
+//       _id: eventId,
+//       'ticketTypes.category': ticketType,
+//       'ticketTypes.bookedSeats': { $gte: qty },
+//     },
+//     {
+//       $inc: { 'ticketTypes.$.bookedSeats': -qty },
+//       ...(seatNumbers.length > 0 && {
+//         $push: { 'ticketTypes.$.releasedSeats': { $each: seatNumbers } },
+//       }),
+//     }
+//   );
+// }
+
+// ─────────────────────────────────────────────────────────────
+// HELPER: Assign seat numbers to tickets — only at payment time
+// Idempotent: skips tickets that already have a seatNumber
+// Uses pool first (recycled gaps), then fresh counter
+// ─────────────────────────────────────────────────────────────
+// async function assignSeatNumbers(eventId, ttype, tickets, postIncBookedSeats, qty) {
+//   if (!ttype || isStandingCategory(ttype)) {
+//     tickets.forEach(t => { t.isStanding = true; });
+//     return;
+//   }
+
+//   const prefix = (ttype.seatPrefix && ttype.seatPrefix.trim())
+//     ? ttype.seatPrefix.trim()
+//     : (ttype.category || 'ticket').toLowerCase().replace(/[^a-z0-9]/g, '_') + '_s';
+
+//   let freshCounter = 0;
+
+//   for (let i = 0; i < tickets.length; i++) {
+//     const t = tickets[i];
+
+//     // Idempotency guard — never overwrite an existing seat number
+//     if (t.seatNumber) {
+//       t.isStanding = false;
+//       continue;
+//     }
+
+//     // Try pool first (atomic pop)
+//     const pooledSeatNum = await popOneSeatFromPool(eventId, ttype._id);
+
+//     if (pooledSeatNum !== null) {
+//       t.seatNumber = `${prefix}${pooledSeatNum}`;
+//     } else {
+//       const seatNum = (ttype.seatStart || 1) + (postIncBookedSeats - qty) + freshCounter;
+//       t.seatNumber = `${prefix}${seatNum}`;
+//       freshCounter++;
+//     }
+
+//     t.isStanding = false;
+//   }
+// }
+
+// ─────────────────────────────────────────────────────────────
+// FIX RISK 2: Fetch a FRESH ttype from the DB just before
+// calling assignSeatNumbers so postIncBookedSeats is accurate.
+// Used by both the webhook path and anywhere postInc is unknown.
+// ─────────────────────────────────────────────────────────────
+// async function fetchFreshTtype(eventId, ticketCategory) {
+//   const freshEvent = await Event.findOne(
+//     { _id: eventId, 'ticketTypes.category': ticketCategory },
+//     { 'ticketTypes.$': 1 }
+//   ).lean().catch(() => null);
+//   return freshEvent?.ticketTypes?.[0] || null;
+// }
 
 // ─────────────────────────────────────────────────────────────
 // STEP 1 — GET /booking/seatmap/:eventId
-// If event has an active seatmap → render seat picker
-// If no seatmap → redirect straight to details page (no zone)
 // ─────────────────────────────────────────────────────────────
 exports.getSeatPicker = async (req, res) => {
   try {
@@ -34,7 +176,6 @@ exports.getSeatPicker = async (req, res) => {
 
 // ─────────────────────────────────────────────────────────────
 // STEP 2 — GET /booking/details/:eventId
-// Render the attendee details form (comes from seatpicker)
 // ─────────────────────────────────────────────────────────────
 exports.getDetailsPage = async (req, res) => {
   try {
@@ -54,7 +195,6 @@ exports.getDetailsPage = async (req, res) => {
 
 // ─────────────────────────────────────────────────────────────
 // LEGACY — GET /booking/:eventId
-// Keep for backward compat — redirects to seatmap or details
 // ─────────────────────────────────────────────────────────────
 exports.getBookingPage = async (req, res) => {
   try {
@@ -63,7 +203,6 @@ exports.getBookingPage = async (req, res) => {
       ? await Event.findById(eventId)
       : await Event.findOne({ isActive: true }).sort({ date: 1 });
     if (!event) return res.redirect('/');
-
     const seatMap = await SeatMap.findOne({ event: event._id, isActive: true }).lean();
     if (seatMap) return res.redirect(`/booking/seatmap/${event._id}`);
     return res.redirect(`/booking/details/${event._id}`);
@@ -75,11 +214,10 @@ exports.getBookingPage = async (req, res) => {
 
 // ─────────────────────────────────────────────────────────────
 // POST /booking/create-order
-// Creates Razorpay order & stores pending data in session
 // ─────────────────────────────────────────────────────────────
 exports.createOrder = async (req, res) => {
   try {
-    const { ticketType, quantity, couponCode, attendees, zone } = req.body;
+    const { ticketType, quantity, couponCode, attendees, zone, email, whatsapp } = req.body;
     const qty = parseInt(quantity) || 1;
 
     const eventId = req.body.eventId || req.session.pendingEventId;
@@ -91,50 +229,114 @@ exports.createOrder = async (req, res) => {
     const ttype = event.ticketTypes.find(
       t => (t.category||'').trim().toLowerCase() === (ticketType||'').trim().toLowerCase()
     );
-    if (!ttype) return res.json({ success: false, message: 'Invalid ticket type selected.' });
-
-    const available = ttype.totalSeats - ttype.bookedSeats;
-    if (available <= 0) return res.json({ success: false, message: `Sorry, ${ttype.name||ttype.category} tickets are sold out.` });
+    if (!ttype)         return res.json({ success: false, message: 'Invalid ticket type selected.' });
     if (!ttype.isActive) return res.json({ success: false, message: `${ttype.name||ttype.category} tickets are currently not available.` });
-    // For multiple-entry tickets qty=1 but attendees = comboCount
+
     const effectiveQty = ttype.ticketType === 'multiple' ? 1 : qty;
-    if (effectiveQty > 10) return res.json({ success: false, message: 'Max 10 tickets per booking.' });
-    if (available < effectiveQty) return res.json({ success: false, message: `Only ${available} seats left.` });
+    const maxAllowed   = ttype.maxPerOrder > 0 ? ttype.maxPerOrder : 10;
+    if (effectiveQty > maxAllowed)
+      return res.json({ success: false, message: `Max ${maxAllowed} tickets per order for ${ttype.name||ttype.category}.` });
 
-    const pricePerTicket = ttype.price;
-    const subtotal = pricePerTicket * effectiveQty;
-    const convFee  = event.convenienceFee || 0;  // use 0 if admin didn't set one
+    // Cancel old PENDING bookings and release their seats back to the pool
+    const prevPending = await Booking.find({
+      user:          req.user._id,
+      event:         event._id,
+      paymentStatus: 'pending',
+    }).populate('event');
 
-    let discount = 0;
-
-    // ── Combo offer: auto-apply if qty meets the minimum ──
-    if (ttype.comboOfferMinQty > 0 && ttype.comboOfferDiscount > 0 && effectiveQty >= ttype.comboOfferMinQty) {
-      discount = ttype.comboOfferDiscount;
+    for (const prev of prevPending) {
+      await releaseSeatsToPool(event._id, prev.ticketType, prev)
+        .catch(e => console.warn('createOrder: seat release error:', e.message));
+      console.log(`🔓 createOrder: released ${prev.quantity} seats back to pool for ${prev.ticketType}`);
     }
 
-    // ── Coupon code discount ──
+    await Booking.updateMany(
+      { user: req.user._id, event: event._id, paymentStatus: { $in: ['pending', 'failed'] } },
+      { paymentStatus: 'failed' }
+    ).catch(() => {});
+
+    // ── ATOMIC SEAT RESERVATION ──
+    const availableSeats = ttype.totalSeats - ttype.bookedSeats;
+    if (availableSeats < effectiveQty) {
+      const left = Math.max(0, availableSeats);
+      if (left <= 0) return res.json({ success: false, message: `Sorry, ${ttype.name||ttype.category} tickets are sold out.` });
+      return res.json({ success: false, message: `Only ${left} seat(s) left — not enough for your order of ${effectiveQty}.` });
+    }
+
+    const maxBookedSeatsAllowed = ttype.totalSeats - effectiveQty;
+
+    const reservedEvent = await Event.findOneAndUpdate(
+      {
+        _id: event._id,
+        ticketTypes: {
+          $elemMatch: {
+            _id:         ttype._id,
+            isActive:    true,
+            bookedSeats: { $gte: 0, $lte: maxBookedSeatsAllowed },
+          }
+        }
+      },
+      { $inc: { 'ticketTypes.$[tt].bookedSeats': effectiveQty } },
+      { arrayFilters: [{ 'tt._id': ttype._id }], new: true }
+    );
+
+    if (!reservedEvent) {
+      const freshEvent = await Event.findById(event._id);
+      const freshTtype = freshEvent?.ticketTypes?.id(ttype._id);
+      const left = freshTtype ? Math.max(0, freshTtype.totalSeats - freshTtype.bookedSeats) : 0;
+      if (left <= 0) return res.json({ success: false, message: `Sorry, ${ttype.name||ttype.category} tickets are sold out.` });
+      return res.json({ success: false, message: `Only ${left} seat(s) left — not enough for your order of ${effectiveQty}.` });
+    }
+
+    // const updatedTtype       = reservedEvent.ticketTypes.id(ttype._id);
+    // const postIncBookedSeats = updatedTtype.bookedSeats;
+
+    // console.log(`✅ Seats reserved atomically: ${effectiveQty} × ${ttype.category} | bookedSeats now: ${postIncBookedSeats}/${updatedTtype.totalSeats}`);
+
+    const updatedTtype = reservedEvent.ticketTypes.id(ttype._id);
+    console.log(`✅ Seats reserved atomically: ${effectiveQty} × ${ttype.category} | bookedSeats now: ${updatedTtype.bookedSeats}/${updatedTtype.totalSeats}`);
+
+
+    // ── Pricing & coupon ──
+    const pricePerTicket = ttype.price;
+    const subtotal       = pricePerTicket * effectiveQty;
+    const convFee        = event.convenienceFee || 0;
+    let discount = 0;
+
+    if (Array.isArray(ttype.discountTiers) && ttype.discountTiers.length > 0) {
+      const applicable = ttype.discountTiers
+        .filter(d => d.minQty > 0 && d.discount > 0 && effectiveQty >= d.minQty)
+        .sort((a,b) => b.minQty - a.minQty);
+      if (applicable.length > 0) {
+        const bestTier = applicable[0];
+        const groups   = Math.floor(effectiveQty / bestTier.minQty);
+        discount = groups * bestTier.discount;
+      }
+    } else if (ttype.comboOfferMinQty > 0 && ttype.comboOfferDiscount > 0 && effectiveQty >= ttype.comboOfferMinQty) {
+      const groups = Math.floor(effectiveQty / ttype.comboOfferMinQty);
+      discount = groups * ttype.comboOfferDiscount;
+    }
+
     if (couponCode) {
       try {
         const Coupon = require('../models/Coupon');
         const coupon = await Coupon.findOne({ code: couponCode.toUpperCase(), isActive: true });
         if (coupon) {
-          const now = new Date();
+          const now        = new Date();
           const validFrom  = coupon.validFrom  ? new Date(coupon.validFrom)  : null;
           const validUntil = coupon.validUntil ? new Date(coupon.validUntil) : null;
           if (validUntil) validUntil.setHours(23,59,59,999);
-          const notYet  = validFrom  && now < validFrom;
-          const expired = validUntil && now > validUntil;
-          const maxedOut = coupon.maxUses > 0 && coupon.usedCount >= coupon.maxUses;
-          const belowMin = coupon.minOrder > 0 && subtotal < coupon.minOrder;
-          if (!notYet && !expired && !maxedOut && !belowMin) {
+          const notYet      = validFrom  && now < validFrom;
+          const expired     = validUntil && now > validUntil;
+          const maxedOut    = coupon.maxUses > 0 && coupon.usedCount >= coupon.maxUses;
+          const belowMin    = coupon.minOrder > 0 && subtotal < coupon.minOrder;
+          const userId      = req.session?.userId || req.session?.user?._id || null;
+          const alreadyUsed = userId && coupon.usedBy && coupon.usedBy.map(id=>id.toString()).includes(userId.toString());
+          if (!notYet && !expired && !maxedOut && !belowMin && !alreadyUsed) {
             const couponDisc = coupon.type === 'percent'
               ? Math.round(subtotal * coupon.value / 100)
               : coupon.value;
-            // Use coupon if bigger than combo discount, or add to it
             discount = Math.max(discount, couponDisc);
-            console.log('✅ Coupon applied in createOrder:', coupon.code, '→ discount:', discount);
-          } else {
-            console.warn('⚠ Coupon skipped in createOrder:', coupon.code, {notYet, expired, maxedOut, belowMin});
           }
         }
       } catch(e) { console.warn('Coupon error in createOrder:', e.message); }
@@ -151,92 +353,78 @@ exports.createOrder = async (req, res) => {
       currency: 'INR',
       receipt:  'MEE_' + Date.now(),
     });
-    // ── Save / upsert a pending booking so verifyPayment can upgrade it ──
-    // Reuse any existing pending/failed for same user+event to avoid duplicates
-    let pendingBookingDoc = null;
+
     try {
-      const attArr = Array.isArray(attendees) ? attendees : (attendees ? [attendees] : []);
-      const ticketStubs = [];
-      const _qrH = require('../utils/qrHelper');
-      for (let i = 0; i < effectiveQty; i++) {
-        const att = attArr[i] || attArr[0] || {};
-        ticketStubs.push({
-          ticketId: _qrH.generateTicketId(i),
-          attendee: { name: att.name || req.user.firstName || 'Guest', age: parseInt(att.age) || 25, special: att.special || '' },
-          seatNumber: (ttype.category || 'ticket').toLowerCase().replace(/[^a-z0-9]/g, '_') + '_s' + (i + 1),
-          qrCode: '', qrData: ''
-        });
+      const updates = {};
+      if (email    && !req.user.email)    updates.email    = email.trim().toLowerCase();
+      if (whatsapp && !req.user.whatsapp) updates.whatsapp = whatsapp.trim();
+      if (Object.keys(updates).length) {
+        await User.findByIdAndUpdate(req.user._id, updates);
+        if (updates.email)    req.user.email    = updates.email;
+        if (updates.whatsapp) req.user.whatsapp = updates.whatsapp;
       }
-      const existingStale = await Booking.findOne({
-        user: req.user._id,
-        event: event._id,
-        paymentStatus: { $in: ['pending', 'failed'] },
-      }).sort({ createdAt: -1 });
+    } catch(ue) { console.warn('User update error:', ue.message); }
 
-      if (existingStale) {
-        existingStale.ticketType     = ttype.category;
-        existingStale.pricePerTicket = pricePerTicket;
-        existingStale.quantity       = effectiveQty;
-        existingStale.subtotal       = subtotal;
-        existingStale.discount       = discount;
-        existingStale.convenienceFee = convFee;
-        existingStale.totalAmount    = totalAmount;
-        existingStale.orderId        = order.id;
-        existingStale.couponCode     = couponCode ? couponCode.toUpperCase() : null;
-        existingStale.paymentStatus  = 'pending';
-        existingStale.tickets        = ticketStubs;
-        await existingStale.save();
-        pendingBookingDoc = existingStale;
-        console.log('🔄 Reused existing booking for retry:', existingStale.bookingRef);
-      } else {
-        pendingBookingDoc = await Booking.create({
-          user: req.user._id, event: event._id,
-          ticketType: ttype.category, pricePerTicket,
-          quantity: effectiveQty, subtotal, discount,
-          couponCode: couponCode ? couponCode.toUpperCase() : null,
-          convenienceFee: convFee, totalAmount,
-          tickets: ticketStubs, paymentStatus: 'pending',
-          orderId: order.id,
-          contactPhone: req.user.phone || '',
-          contactEmail: req.user.email || '',
-        });
-        await User.findByIdAndUpdate(req.user._id, { $push: { bookings: pendingBookingDoc._id } }).catch(() => {});
-        console.log('📝 New pending booking:', pendingBookingDoc.bookingRef);
-
-        // Send pending notifications only for brand-new bookings (not retries)
-        try {
-          const { sendPendingPaymentReminder } = require('../utils/emailHelper');
-          const { sendWhatsAppPending } = require('../utils/whatsappHelper');
-          if (req.user.email) sendPendingPaymentReminder({ to: req.user.email, name: req.user.firstName, booking: pendingBookingDoc, event }).catch(() => {});
-          if (req.user.phone) sendWhatsAppPending({ phone: req.user.phone, name: req.user.firstName, booking: pendingBookingDoc, event }).catch(() => {});
-          console.log('📨 Pending notifications queued for:', pendingBookingDoc.bookingRef);
-        } catch(ne) { console.warn('Pending notify error:', ne.message); }
-      }
-    } catch (pe) {
-      console.warn('⚠ Pending booking save failed (non-fatal):', pe.message);
+    const attendeeList   = Array.isArray(attendees) ? attendees : [attendees];
+    const standing       = isStandingCategory(ttype);
+    const pendingTickets = [];
+    for (let i = 0; i < effectiveQty; i++) {
+      const att = attendeeList[i] || attendeeList[0] || { name: req.user.firstName, age: 25 };
+      pendingTickets.push({
+        ticketId:   generateTicketId(i),
+        attendee:   { name: att.name || req.user.firstName, age: parseInt(att.age) || 25, gender: att.gender || '', special: att.special || '' },
+        qrCode:     '',
+        qrData:     '',
+        isStanding: standing,
+      });
     }
 
-    req.session.pendingBooking = {
-      bookingId:      pendingBookingDoc ? pendingBookingDoc._id.toString() : null,
-      eventId:        event._id.toString(),
+    const pendingBookingDoc = await Booking.create({
+      user:           req.user._id,
+      event:          event._id,
       ticketType:     ttype.category,
-      zone:           zone || '',
-      quantity:       effectiveQty,
       pricePerTicket,
+      quantity:       effectiveQty,
       subtotal,
       discount,
       couponCode:     couponCode ? couponCode.toUpperCase() : null,
       convenienceFee: convFee,
       totalAmount,
-      attendees:      Array.isArray(attendees) ? attendees : [attendees],
+      gateNumber:     ttype.gateNumber || '',
+      tickets:        pendingTickets,
+      paymentStatus:  'pending',
       orderId:        order.id,
+      contactPhone:   req.user.phone || '',
+      contactEmail:   email ? email.trim().toLowerCase() : (req.user.email || ''),
+      contactName:    (req.user.firstName + ' ' + (req.user.lastName || '')).trim(),
+    });
+
+    console.log('💾 Pending booking saved:', pendingBookingDoc.bookingRef, '| order:', order.id);
+
+    req.session.pendingBooking = {
+      bookingId:          pendingBookingDoc._id.toString(),
+      eventId:            event._id.toString(),
+      ticketType:         ttype.category,
+      zone:               zone || '',
+      quantity:           effectiveQty,
+      pricePerTicket,
+      subtotal,
+      discount,
+      couponCode:         couponCode ? couponCode.toUpperCase() : null,
+      convenienceFee:     convFee,
+      totalAmount,
+      gateNumber:         ttype.gateNumber || '',
+      attendees:          attendeeList,
+      orderId:            order.id,
+      contactEmail:       email ? email.trim().toLowerCase() : (req.user.email || ''),
+      contactWhatsapp:    whatsapp ? whatsapp.trim() : (req.user.whatsapp || req.user.phone || ''),
+      // postIncBookedSeats: postIncBookedSeats,
+      isStanding:         standing,
     };
 
     await new Promise((resolve, reject) => {
       req.session.save(err => err ? reject(err) : resolve());
     });
-
-    console.log('✅ Order created:', order.id, '| Total:', totalAmount);
 
     return res.json({
       success:  true,
@@ -246,7 +434,7 @@ exports.createOrder = async (req, res) => {
       currency: 'INR',
       prefill:  {
         name:    (req.user.firstName + ' ' + (req.user.lastName || '')).trim(),
-        email:   req.user.email || '',
+        email:   email || req.user.email || '',
         contact: req.user.phone || '',
       },
     });
@@ -257,24 +445,50 @@ exports.createOrder = async (req, res) => {
 };
 
 // ─────────────────────────────────────────────────────────────
-// POST /booking/save-pending  — user dismissed Razorpay without paying
-// No-op: the pending booking in DB is fine, user can retry.
+// POST /booking/save-pending
 // ─────────────────────────────────────────────────────────────
 exports.savePending = async (req, res) => {
-  const pending = req.session.pendingBooking;
-  if (pending && pending.bookingId) {
-    console.log('ℹ️  savePending: user dismissed — booking stays pending:', pending.bookingId);
-  } else {
-    console.log('ℹ️  savePending: dismissed (no session)');
-  }
+  try {
+    const pending = req.session.pendingBooking;
+    if (!pending) return res.json({ success: true });
+
+    let bookingDoc = null;
+    if (pending.bookingId) {
+      bookingDoc = await Booking.findById(pending.bookingId).populate('event').catch(() => null);
+    } else if (pending.orderId) {
+      bookingDoc = await Booking.findOne({ orderId: pending.orderId }).populate('event').catch(() => null);
+    }
+
+    const shouldRelease = bookingDoc?.paymentStatus === 'pending';
+
+    if (shouldRelease && pending.eventId && pending.ticketType && bookingDoc) {
+      await releaseSeatsToPool(pending.eventId, pending.ticketType, bookingDoc)
+        .catch(e => console.warn('savePending seat release error:', e.message));
+      console.log(`🔓 savePending: released seats for ${pending.ticketType}`);
+    }
+
+    const name  = req.user?.firstName || 'Customer';
+    const email = pending.contactEmail    || req.user?.email    || '';
+    const phone = pending.contactWhatsapp || req.user?.whatsapp || req.user?.phone || '';
+
+    if (bookingDoc && bookingDoc.paymentStatus === 'pending' && (email || phone)) {
+      try {
+        const eventDoc = await Event.findById(pending.eventId).lean();
+        if (eventDoc) {
+          if (email) {
+            sendPendingPaymentReminder({ to: email, name, booking: bookingDoc, event: eventDoc }).catch(() => {});
+          }
+          if (phone) {
+            const { sendWhatsAppPending } = require('../utils/whatsappHelper');
+            sendWhatsAppPending({ phone, name, booking: bookingDoc, event: eventDoc }).catch(() => {});
+          }
+        }
+      } catch (ne) { console.warn('savePending notify error:', ne.message); }
+    }
+  } catch (e) { console.warn('savePending error:', e.message); }
   return res.json({ success: true });
 };
 
-// ─────────────────────────────────────────────────────────────
-// GET /booking/check-existing?eventId=xxx
-// Returns any pending/failed booking the user has for the event
-// Used by booking page to show "resume payment" banner
-// ─────────────────────────────────────────────────────────────
 exports.checkExistingBooking = async (req, res) => {
   try {
     const { eventId } = req.query;
@@ -284,113 +498,179 @@ exports.checkExistingBooking = async (req, res) => {
       event:         eventId,
       paymentStatus: { $in: ['pending', 'failed'] },
     }).sort({ createdAt: -1 }).select('_id bookingRef paymentStatus totalAmount ticketType quantity createdAt');
-    if (existing) {
-      return res.json({ exists: true, booking: existing });
-    }
+    if (existing) return res.json({ exists: true, booking: existing });
     return res.json({ exists: false });
   } catch(e) {
     return res.json({ exists: false });
   }
 };
 
-
 // ─────────────────────────────────────────────────────────────
-// POST /booking/save-failed  — payment.failed event
-// No-op: we don't persist failed payment records.
-// The overlay on the frontend shows the error and lets user retry or go back.
+// POST /booking/save-failed
 // ─────────────────────────────────────────────────────────────
 exports.saveFailed = async (req, res) => {
   try {
     const pending = req.session.pendingBooking;
-    let failedBooking = null;
+    let failedBooking      = null;
+    let wasActuallyPending = false;
 
-    if (pending && pending.bookingId) {
+    if (pending?.bookingId) {
+      const before = await Booking.findOne({ _id: pending.bookingId, paymentStatus: 'pending' }).catch(() => null);
+      wasActuallyPending = !!before;
+
       failedBooking = await Booking.findOneAndUpdate(
         { _id: pending.bookingId, paymentStatus: { $in: ['pending', 'failed'] } },
         { paymentStatus: 'failed' },
         { new: true }
       ).populate('event').catch(() => null);
-      if (failedBooking) {
-        console.log('❌ saveFailed: booking marked failed:', pending.bookingId);
-      } else {
-        console.log('⚠ saveFailed: not updated (may already be paid):', pending.bookingId);
-      }
-    } else if (pending && pending.orderId) {
+    }
+
+    if (!failedBooking && pending?.orderId) {
+      const before = await Booking.findOne({ orderId: pending.orderId, paymentStatus: 'pending' }).catch(() => null);
+      if (before) wasActuallyPending = true;
+
       failedBooking = await Booking.findOneAndUpdate(
         { orderId: pending.orderId, paymentStatus: { $in: ['pending', 'failed'] } },
         { paymentStatus: 'failed' },
         { new: true }
       ).populate('event').catch(() => null);
-      if (failedBooking) console.log('❌ saveFailed: marked failed by orderId:', pending.orderId);
-    } else {
-      console.log('ℹ️  saveFailed: no active booking to update');
     }
 
-    // Send failed payment notifications
-    if (failedBooking && failedBooking.paymentStatus === 'failed') {
-      try {
-        const eventDoc = failedBooking.event || (pending && pending.eventId ? await require('../models/Event').findById(pending.eventId).lean() : null);
-        const { sendFailedPaymentNotice } = require('../utils/emailHelper');
-        const { sendWhatsAppPaymentFailed } = require('../utils/whatsappHelper');
-        if (req.user && req.user.email) sendFailedPaymentNotice({ to: req.user.email, name: req.user.firstName, booking: failedBooking, event: eventDoc || {} }).catch(() => {});
-        if (req.user && req.user.phone) sendWhatsAppPaymentFailed({ phone: req.user.phone, name: req.user.firstName, booking: failedBooking, event: eventDoc || {} }).catch(() => {});
-        console.log('📨 Failed payment notifications queued for:', failedBooking.bookingRef);
-      } catch(ne) { console.warn('Failed notify error:', ne.message); }
+    if (!failedBooking && pending?.eventId && req.user?._id) {
+      const before = await Booking.findOne({
+        user: req.user._id, event: pending.eventId, paymentStatus: 'pending'
+      }).catch(() => null);
+      if (before) wasActuallyPending = true;
+
+      failedBooking = await Booking.findOneAndUpdate(
+        { user: req.user._id, event: pending.eventId, paymentStatus: { $in: ['pending', 'failed'] } },
+        { paymentStatus: 'failed' },
+        { new: true, sort: { createdAt: -1 } }
+      ).populate('event').catch(() => null);
     }
-  } catch(e) { console.warn('saveFailed error:', e.message); }
+
+    if (wasActuallyPending && pending?.eventId && pending?.ticketType && failedBooking) {
+      await releaseSeatsToPool(pending.eventId, pending.ticketType, failedBooking)
+        .catch(e => console.warn('saveFailed seat release error:', e.message));
+      console.log(`🔓 Released ${pending.quantity} seats (payment failed) for ${pending.ticketType}`);
+    } else if (pending?.eventId && !wasActuallyPending) {
+      console.log(`ℹ️  saveFailed: booking was already failed — skipping seat release for ${pending.ticketType}`);
+    }
+
+    delete req.session.pendingBooking;
+    req.session.save(() => {});
+
+    if (!failedBooking) return res.json({ success: true });
+
+    try {
+      const eventDoc = failedBooking.event || (pending?.eventId ? await Event.findById(pending.eventId).lean() : null);
+      const name     = req.user?.firstName || 'Customer';
+      const email    = pending?.contactEmail    || req.user?.email    || '';
+      const phone    = pending?.contactWhatsapp || req.user?.whatsapp || req.user?.phone || '';
+      if (email && eventDoc) {
+        sendFailedPaymentNotice({ to: email, name, booking: failedBooking, event: eventDoc }).catch(() => {});
+      }
+      if (phone && eventDoc) {
+        const { sendWhatsAppPaymentFailed } = require('../utils/whatsappHelper');
+        sendWhatsAppPaymentFailed({ phone, name, booking: failedBooking, event: eventDoc }).catch(() => {});
+      }
+    } catch (ne) { console.warn('saveFailed notify error:', ne.message); }
+
+  } catch (e) { console.warn('saveFailed error:', e.message); }
   return res.json({ success: true });
 };
-// GET /booking/retry-payment/:bookingId
-// Re-open payment for pending/failed booking with original details
+
+// ─────────────────────────────────────────────────────────────
+// GET /booking/retry/:bookingId
+// FIX RISK 3: If booking is 'failed', its seats were released.
+// Re-reserve atomically before entering the payment flow.
 // ─────────────────────────────────────────────────────────────
 exports.retryPayment = async (req, res) => {
   try {
     const booking = await Booking.findOne({
-      _id: req.params.bookingId,
+      _id:  req.params.bookingId,
       user: req.user._id,
     }).populate('event');
 
-    if (!booking || !['pending','failed'].includes(booking.paymentStatus)) {
+    if (!booking || !['pending', 'failed'].includes(booking.paymentStatus)) {
       return res.redirect('/booking/my-bookings');
     }
 
     const event = booking.event;
     if (!event || !event.isActive) return res.redirect('/booking/my-bookings');
 
-    // Check if tickets still available
     const ttype = event.ticketTypes.find(t => t.category === booking.ticketType);
-    const available = ttype ? (ttype.totalSeats - ttype.bookedSeats) : 0;
-    if (available < booking.quantity) {
-      return res.redirect('/booking/my-bookings?msg=sold_out');
+
+    // ── FIX RISK 3: re-reserve seats when retrying a failed booking ──
+    let postIncBookedSeats = null;
+
+    if (booking.paymentStatus === 'failed') {
+      // Seats were released when it failed — reclaim them atomically now
+      const maxAllowed = ttype ? (ttype.totalSeats - booking.quantity) : 0;
+
+      const reReserved = await Event.findOneAndUpdate(
+        {
+          _id: event._id,
+          ticketTypes: {
+            $elemMatch: {
+              category:    booking.ticketType,
+              isActive:    true,
+              bookedSeats: { $gte: 0, $lte: maxAllowed },
+            }
+          }
+        },
+        { $inc: { 'ticketTypes.$.bookedSeats': booking.quantity } },
+        { new: true }
+      ).catch(() => null);
+
+      if (!reReserved) {
+        console.warn(`retryPayment: could not re-reserve ${booking.quantity} seats for ${booking.ticketType} — sold out`);
+        return res.redirect('/booking/my-bookings?msg=sold_out');
+      }
+
+      const freshTtype = reReserved.ticketTypes.find(t => t.category === booking.ticketType);
+      postIncBookedSeats = freshTtype?.bookedSeats ?? null;
+
+      // Promote booking back to pending so verifyPayment can find and update it
+      await Booking.updateOne(
+        { _id: booking._id },
+        { $set: { paymentStatus: 'pending' } }
+      );
+
+      console.log(`✅ retryPayment: re-reserved ${booking.quantity} seats for ${booking.ticketType} | bookedSeats now: ${postIncBookedSeats}`);
+    } else {
+      // Still pending — seats already held, just look up current counter
+      postIncBookedSeats = ttype?.bookedSeats ?? null;
     }
 
-    // Re-populate session with original booking details
     req.session.pendingBooking = {
-      bookingId:      booking._id.toString(),    // existing booking to update
-      eventId:        event._id.toString(),
-      ticketType:     booking.ticketType,
-      quantity:       booking.quantity,
-      pricePerTicket: booking.pricePerTicket,
-      subtotal:       booking.subtotal,
-      discount:       booking.discount || 0,
-      couponCode:     booking.couponCode || null,
-      convenienceFee: booking.convenienceFee,
-      totalAmount:    booking.totalAmount,
-      attendees:      booking.tickets.map(t => ({ name: t.attendee.name, age: t.attendee.age, special: t.attendee.special||'' })),
+      bookingId:          booking._id.toString(),
+      eventId:            event._id.toString(),
+      ticketType:         booking.ticketType,
+      quantity:           booking.quantity,
+      pricePerTicket:     booking.pricePerTicket,
+      subtotal:           booking.subtotal,
+      discount:           booking.discount || 0,
+      couponCode:         booking.couponCode || null,
+      convenienceFee:     booking.convenienceFee,
+      totalAmount:        booking.totalAmount,
+      gateNumber:         booking.gateNumber || ttype?.gateNumber || '',
+      attendees:          booking.tickets.map(t => ({ name: t.attendee.name, age: t.attendee.age, special: t.attendee.special||'' })),
+      postIncBookedSeats,
     };
-    await new Promise((resolve,reject)=>{ req.session.save(err=>err?reject(err):resolve()); });
 
-    // Create a new Razorpay order
+    await new Promise((resolve, reject) => { req.session.save(err => err ? reject(err) : resolve()); });
+
     const razorpay = new Razorpay({ key_id: process.env.RAZORPAY_KEY_ID, key_secret: process.env.RAZORPAY_KEY_SECRET });
-    const order = await razorpay.orders.create({ amount: booking.totalAmount * 100, currency: 'INR', receipt: 'MEE_RETRY_' + Date.now() });
+    const order    = await razorpay.orders.create({ amount: booking.totalAmount * 100, currency: 'INR', receipt: 'MEE_RETRY_' + Date.now() });
+
     req.session.pendingBooking.orderId = order.id;
-    await new Promise((resolve,reject)=>{ req.session.save(err=>err?reject(err):resolve()); });
+    await new Promise((resolve, reject) => { req.session.save(err => err ? reject(err) : resolve()); });
 
     res.render('pages/retry-payment', {
-      title:   `Complete Payment — ${event.name}`,
-      booking, event,
-      order,
-      user: req.user,
+      title:  `Complete Payment — ${event.name}`,
+      booking, event, order,
+      user:   req.user,
       rzpKey: process.env.RAZORPAY_KEY_ID,
     });
   } catch(err) {
@@ -401,7 +681,6 @@ exports.retryPayment = async (req, res) => {
 
 // ─────────────────────────────────────────────────────────────
 // POST /booking/verify-payment
-// Verifies Razorpay signature, completes booking
 // ─────────────────────────────────────────────────────────────
 exports.verifyPayment = async (req, res) => {
   try {
@@ -412,206 +691,179 @@ exports.verifyPayment = async (req, res) => {
       return res.json({ success: false, message: 'Session expired. Contact support with Payment ID: ' + razorpay_payment_id });
     }
 
-    // Verify signature
     const expectedSig = crypto
       .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
       .update(razorpay_order_id + '|' + razorpay_payment_id)
       .digest('hex');
-
     if (expectedSig !== razorpay_signature) {
       return res.json({ success: false, message: 'Payment signature verification failed.' });
     }
 
-    // If this is a retry, update existing booking
-    if (pending.bookingId) {
-      const existingBooking = await Booking.findById(pending.bookingId);
-      if (existingBooking) {
-        // Generate QR codes for existing tickets
-        for (let i = 0; i < existingBooking.tickets.length; i++) {
-          const t = existingBooking.tickets[i];
-          const qrPayload = buildQRPayload({ ticketId: t.ticketId, bookingRef: existingBooking.bookingRef, eventId: pending.eventId, paymentId: razorpay_payment_id, attendeeName: t.attendee.name, ticketType: pending.ticketType });
-          try { t.qrCode = await generateQRCode(qrPayload); t.qrData = JSON.stringify(qrPayload); } catch(e) { t.qrCode = ''; }
-        }
-        existingBooking.paymentStatus = 'paid';
-        existingBooking.paymentId     = razorpay_payment_id;
-        existingBooking.orderId       = razorpay_order_id;
-        existingBooking.signature     = razorpay_signature;
-        await existingBooking.save();
-
-        // Update Event seat count
-        await Event.updateOne(
-          { _id: pending.eventId, 'ticketTypes.category': pending.ticketType },
-          { $inc: { 'ticketTypes.$.bookedSeats': pending.quantity } }
-        ).catch(() => {});
-
-        // Update SeatMap zone bookedSeats (zone linked by category)
-        if (pending.zone) {
-          await SeatMap.updateOne(
-            { event: pending.eventId, 'sections.name': pending.zone },
-            { $inc: { 'sections.$.bookedSeats': pending.quantity } }
-          ).catch(() => {});
-        }
-
-        delete req.session.pendingBooking;
-        req.session.save(() => {});
-
-        // Send success notifications
-        try {
-          const evDoc = await require('../models/Event').findById(pending.eventId).lean();
-          const { sendBookingConfirmation } = require('../utils/emailHelper');
-          const { sendWhatsAppTickets } = require('../utils/whatsappHelper');
-          if (req.user.email && evDoc) sendBookingConfirmation({ to: req.user.email, name: req.user.firstName, booking: existingBooking, event: evDoc }).catch(() => {});
-          if (req.user.phone && evDoc) sendWhatsAppTickets({ phone: req.user.phone, name: req.user.firstName, booking: existingBooking, event: evDoc }).catch(() => {});
-          console.log('✅ Success notifications sent (retry branch 1):', existingBooking.bookingRef);
-        } catch(ne) { console.warn('Notify err (branch1):', ne.message); }
-
-        return res.json({ success: true, bookingId: existingBooking._id, bookingRef: existingBooking.bookingRef });
-      }
-    }
-
-    // ── CHECK: if a pending/failed booking already exists for this orderId, update it ──
-    const existingByOrder = await Booking.findOne({ orderId: razorpay_order_id });
-    if (existingByOrder && existingByOrder.paymentStatus !== 'paid') {
-      // Regenerate QR codes for existing tickets
-      const { generateQRCode, buildQRPayload, buildGroupQRPayload } = require('../utils/qrHelper');
-      const isGrp = existingByOrder.tickets.length > 1;
-      if (isGrp) {
-        const seatNums = existingByOrder.tickets.map(t => t.seatNumber || t.ticketId);
-        const grpPayload = buildGroupQRPayload({ bookingRef: existingByOrder.bookingRef, eventId: pending.eventId, paymentId: razorpay_payment_id, attendees: existingByOrder.tickets.map(t=>({name:t.attendee.name,ticketId:t.ticketId,seatNumber:t.seatNumber})), ticketType: pending.ticketType });
-        const grpQR = await generateQRCode(grpPayload).catch(()=>'');
-        const grpData = JSON.stringify(grpPayload);
-        existingByOrder.tickets.forEach(t => { t.qrData = grpData; if(grpQR) t.qrCode = grpQR; });
-      } else {
-        for (let i = 0; i < existingByOrder.tickets.length; i++) {
-          const t = existingByOrder.tickets[i];
-          const qrP = buildQRPayload({ ticketId: t.ticketId, bookingRef: existingByOrder.bookingRef, eventId: pending.eventId, paymentId: razorpay_payment_id, attendeeName: t.attendee.name, ticketType: pending.ticketType });
-          try { t.qrCode = await generateQRCode(qrP); t.qrData = JSON.stringify(qrP); } catch(e) { t.qrCode = ''; }
-        }
-      }
-      existingByOrder.paymentStatus = 'paid';
-      existingByOrder.paymentId     = razorpay_payment_id;
-      existingByOrder.signature     = razorpay_signature;
-      await existingByOrder.save();
-      await Event.updateOne(
-        { _id: pending.eventId, 'ticketTypes.category': pending.ticketType },
-        { $inc: { 'ticketTypes.$.bookedSeats': pending.quantity } }
-      ).catch(()=>{});
-      if (pending.zone) {
-        await SeatMap.updateOne(
-          { event: pending.eventId, 'sections.name': pending.zone },
-          { $inc: { 'sections.$.bookedSeats': pending.quantity } }
-        ).catch(()=>{});
-      }
-      // Apply coupon usage if any
-      if (pending.couponCode) {
-        const Coupon = require('../models/Coupon');
-        await Coupon.findOneAndUpdate({ code: pending.couponCode }, { $inc: { usedCount: 1 } }).catch(()=>{});
-      }
-      delete req.session.pendingBooking;
-      req.session.save(()=>{});
-      console.log('✅ Updated existing booking to paid:', existingByOrder.bookingRef);
-      // Send success notifications (email + WhatsApp with QR tickets)
-      try {
-        const ev2 = await require('../models/Event').findById(pending.eventId).lean();
-        const { sendWhatsAppTickets } = require('../utils/whatsappHelper');
-        if (req.user.email && ev2) sendBookingConfirmation({ to: req.user.email, name: req.user.firstName, booking: existingByOrder, event: ev2 }).catch(()=>{});
-        if (req.user.phone && ev2) sendWhatsAppTickets({ phone: req.user.phone, name: req.user.firstName, booking: existingByOrder, event: ev2 }).catch(()=>{});
-        console.log('📨 Success notifications sent (orderId branch):', existingByOrder.bookingRef);
-      } catch(ne) { console.warn('Notif err (branch2):', ne.message); }
-      return res.json({ success: true, bookingId: existingByOrder._id, bookingRef: existingByOrder.bookingRef });
-    }
-
-    // ── DEDUP: check if a paid booking was already created (double-submit guard) ──
-    const alreadyPaid = await Booking.findOne({
-      user:          req.user._id,
-      event:         pending.eventId,
-      paymentStatus: 'paid',
-      paymentId:     razorpay_payment_id,
-    });
+    const alreadyPaid = await Booking.findOne({ paymentId: razorpay_payment_id, paymentStatus: 'paid' });
     if (alreadyPaid) {
-      console.log('ℹ️  verifyPayment: already paid booking found, returning it');
       delete req.session.pendingBooking;
       req.session.save(() => {});
       return res.json({ success: true, bookingId: alreadyPaid._id, bookingRef: alreadyPaid.bookingRef });
     }
 
-    // ── UPSERT: if any pending/failed booking exists for this user+event, update it ──
-    // This prevents creating a new booking when user retried from booking-details page
-    const existingUnpaid = await Booking.findOne({
-      user:          req.user._id,
-      event:         pending.eventId,
-      paymentStatus: { $in: ['pending', 'failed'] },
-    }).sort({ createdAt: -1 });
+    const existingBooking =
+      (pending.bookingId ? await Booking.findOne({ _id: pending.bookingId, paymentStatus: { $in: ['pending','failed'] } }) : null)
+      || await Booking.findOne({ orderId: razorpay_order_id, paymentStatus: { $in: ['pending','failed'] } })
+      || await Booking.findOne({ user: req.user._id, event: pending.eventId, paymentStatus: { $in: ['pending','failed'] } }).sort({ createdAt: -1 });
 
-    if (existingUnpaid) {
-      console.log('🔄 verifyPayment: upgrading existing', existingUnpaid.paymentStatus, 'booking to paid:', existingUnpaid.bookingRef);
-      // Regenerate QR codes
-      const isGrp = existingUnpaid.tickets.length > 1;
-      if (isGrp) {
-        const grpPayload = buildGroupQRPayload({ bookingRef: existingUnpaid.bookingRef, eventId: pending.eventId, paymentId: razorpay_payment_id, attendees: existingUnpaid.tickets.map(t=>({name:t.attendee.name,ticketId:t.ticketId,seatNumber:t.seatNumber})), ticketType: pending.ticketType });
-        const grpQR = await generateQRCode(grpPayload).catch(()=>'');
-        const grpData = JSON.stringify(grpPayload);
-        existingUnpaid.tickets.forEach(t => { t.qrData = grpData; if(grpQR) t.qrCode = grpQR; });
-      } else {
-        for (let i = 0; i < existingUnpaid.tickets.length; i++) {
-          const t = existingUnpaid.tickets[i];
-          const qrP = buildQRPayload({ ticketId: t.ticketId, bookingRef: existingUnpaid.bookingRef, eventId: pending.eventId, paymentId: razorpay_payment_id, attendeeName: t.attendee.name, ticketType: pending.ticketType });
-          try { t.qrCode = await generateQRCode(qrP); t.qrData = JSON.stringify(qrP); } catch(e) { t.qrCode = ''; }
-        }
+    if (existingBooking) {
+      console.log('verifyPayment: upgrading', existingBooking.paymentStatus, '-> paid:', existingBooking.bookingRef);
+
+      const evForSeat    = await Event.findById(pending.eventId).lean();
+      const ttypeForSeat = evForSeat?.ticketTypes?.find(t => t.category === pending.ticketType);
+      const standing     = pending.isStanding ?? isStandingCategory(ttypeForSeat);
+      const gateNumber   = pending.gateNumber || getGateNumber(evForSeat, pending.ticketType);
+
+      // await assignSeatNumbers(
+      //   pending.eventId,
+      //   ttypeForSeat,
+      //   existingBooking.tickets,
+      //   pending.postIncBookedSeats,
+      //   pending.quantity
+      // );
+
+          await assignSeatNumbers(
+      pending.eventId,
+      ttypeForSeat,
+      existingBooking.tickets,
+    );
+
+      existingBooking.gateNumber = gateNumber;
+
+      await generateSharedQR(existingBooking.tickets, {
+        bookingRef: existingBooking.bookingRef,
+        eventId:    pending.eventId,
+        paymentId:  razorpay_payment_id,
+        ticketType: pending.ticketType,
+      });
+
+      const atomicUpdate = await Booking.findOneAndUpdate(
+        { _id: existingBooking._id, paymentStatus: { $in: ['pending', 'failed'] } },
+        {
+          $set: {
+            paymentStatus: 'paid',
+            paymentId:     razorpay_payment_id,
+            orderId:       razorpay_order_id,
+            signature:     razorpay_signature,
+            tickets:       existingBooking.tickets,
+            gateNumber,
+          }
+        },
+        { new: true }
+      );
+
+      if (!atomicUpdate) {
+        console.log('verifyPayment: webhook already completed booking, skipping notifications');
+        delete req.session.pendingBooking;
+        req.session.save(() => {});
+        return res.json({ success: true, bookingId: existingBooking._id, bookingRef: existingBooking.bookingRef });
       }
-      existingUnpaid.paymentStatus = 'paid';
-      existingUnpaid.paymentId     = razorpay_payment_id;
-      existingUnpaid.orderId       = razorpay_order_id;
-      existingUnpaid.signature     = razorpay_signature;
-      await existingUnpaid.save();
-      await Event.updateOne(
-        { _id: pending.eventId, 'ticketTypes.category': pending.ticketType },
-        { $inc: { 'ticketTypes.$.bookedSeats': pending.quantity } }
-      ).catch(()=>{});
+
       if (pending.zone) {
         await SeatMap.updateOne(
           { event: pending.eventId, 'sections.name': pending.zone },
           { $inc: { 'sections.$.bookedSeats': pending.quantity } }
-        ).catch(()=>{});
+        ).catch(() => {});
       }
       if (pending.couponCode) {
-        const Coupon = require('../models/Coupon');
-        await Coupon.findOneAndUpdate({ code: pending.couponCode }, { $inc: { usedCount: 1 } }).catch(()=>{});
+        const Coupon  = require('../models/Coupon');
+        const _userId = req.session?.userId || req.user?._id || null;
+        const _cu     = { $inc: { usedCount: 1 } };
+        if (_userId) _cu.$addToSet = { usedBy: _userId };
+        await Coupon.findOneAndUpdate({ code: pending.couponCode }, _cu).catch(() => {});
       }
+      await User.findByIdAndUpdate(req.user._id, { $addToSet: { bookings: existingBooking._id } }).catch(() => {});
+
       delete req.session.pendingBooking;
       req.session.save(() => {});
-      // Send success notifications (email + WhatsApp with QR tickets)
+
       try {
-        const ev2 = await Event.findById(pending.eventId).lean();
-        const { sendWhatsAppTickets } = require('../utils/whatsappHelper');
-        if (req.user.email && ev2) sendBookingConfirmation({ to: req.user.email, name: req.user.firstName, booking: existingUnpaid, event: ev2 }).catch(()=>{});
-        if (req.user.phone && ev2) sendWhatsAppTickets({ phone: req.user.phone, name: req.user.firstName, booking: existingUnpaid, event: ev2 }).catch(()=>{});
-        console.log('📨 Success notifications sent (unpaid-upsert branch):', existingUnpaid.bookingRef);
-      } catch(ne) { console.warn('Notif err (branch3):', ne.message); }
-      return res.json({ success: true, bookingId: existingUnpaid._id, bookingRef: existingUnpaid.bookingRef });
+        const evDoc          = evForSeat || await Event.findById(pending.eventId).lean();
+        const notifyEmail    = pending.contactEmail    || req.user.email    || '';
+        const notifyWhatsapp = pending.contactWhatsapp || req.user.whatsapp || req.user.phone || '';
+        const bookingForNotify     = atomicUpdate;
+        bookingForNotify.gateNumber = gateNumber;
+        if (notifyEmail    && evDoc) sendBookingConfirmation({ to: notifyEmail, name: req.user.firstName, booking: bookingForNotify, event: evDoc }).catch(() => {});
+        if (notifyWhatsapp && evDoc) {
+          const { sendWhatsAppTickets } = require('../utils/whatsappHelper');
+          sendWhatsAppTickets({ phone: notifyWhatsapp, name: req.user.firstName, booking: bookingForNotify, event: evDoc }).catch(() => {});
+        }
+      } catch(ne) { console.warn('Notify err (pending→paid):', ne.message); }
+
+      return res.json({ success: true, bookingId: existingBooking._id, bookingRef: existingBooking.bookingRef });
     }
 
-    // ── STEP 1: Build ticket stubs (QR generated after save, once bookingRef is known) ──
-    const tickets = [];
-    const attendees = pending.attendees || [];
-    const isMultiple = pending.comboCount > 1 || (attendees.length > 1 && pending.quantity === 1);
+    // ── FALLBACK: session-loss scenario ──
+    // FIX RISK 4: Before creating a new booking, check if a pending
+    // booking already exists for this orderId to avoid double-booking.
+    console.warn('⚠ verifyPayment: no pending booking found — checking for existing orderId before fallback create');
+
+    const orphanedBooking = await Booking.findOne({ orderId: razorpay_order_id }).catch(() => null);
+    if (orphanedBooking) {
+      // A booking exists (maybe paid by webhook already) — don't create another one
+      console.log('verifyPayment: orphaned booking found via orderId, skipping fallback create:', orphanedBooking.bookingRef);
+      delete req.session.pendingBooking;
+      req.session.save(() => {});
+      return res.json({ success: true, bookingId: orphanedBooking._id, bookingRef: orphanedBooking.bookingRef });
+    }
+
+    console.warn('⚠ verifyPayment: confirmed no existing booking — proceeding with session-loss fallback create');
+
+    const evFallback         = await Event.findById(pending.eventId).lean();
+    const ttypeFallback      = evFallback?.ticketTypes?.find(t => t.category === pending.ticketType);
+    const standingFallback   = pending.isStanding ?? isStandingCategory(ttypeFallback);
+    const gateNumberFallback = pending.gateNumber || getGateNumber(evFallback, pending.ticketType);
+
+    const fbTtypeCheck = evFallback?.ticketTypes?.find(t => t.category === pending.ticketType);
+    const fbMaxAllowed = fbTtypeCheck ? (fbTtypeCheck.totalSeats - pending.quantity) : 0;
+
+    const fallbackReserved = await Event.findOneAndUpdate(
+      {
+        _id: pending.eventId,
+        ticketTypes: {
+          $elemMatch: {
+            category:    pending.ticketType,
+            bookedSeats: { $gte: 0, $lte: fbMaxAllowed },
+          }
+        }
+      },
+      { $inc: { 'ticketTypes.$.bookedSeats': pending.quantity } },
+      { new: true }
+    ).catch(() => null);
+
+    // FIX RISK 2 (also applied here): use the fresh postInc from the
+    // atomic update above, not a stale snapshot from populate
+    const fbTtype   = fallbackReserved?.ticketTypes?.find(t => t.category === pending.ticketType);
+    const fbPostInc = fbTtype?.bookedSeats ?? null;
+
+    const attendees   = pending.attendees || [];
     const ticketCount = attendees.length > 0 ? attendees.length : pending.quantity;
-    const makeSeatNum = (category, idx) => `${(category||'ticket').toLowerCase().replace(/[^a-z0-9]/g,'_')}_s${idx + 1}`;
+    const tickets     = [];
 
-    if (isMultiple && attendees.length > 1) {
-      const seatNumbers = attendees.map((_, i) => makeSeatNum(pending.ticketType, i));
-      for (let i = 0; i < attendees.length; i++) {
-        const att = attendees[i] || { name: req.user.firstName, age: 25 };
-        tickets.push({ ticketId: generateTicketId(i), attendee: { name: att.name || req.user.firstName, age: parseInt(att.age)||25, special: att.special||'' }, qrData:'', qrCode:'', seatNumber: seatNumbers[i] });
-      }
-    } else {
-      for (let i = 0; i < ticketCount; i++) {
-        const att = attendees[i] || attendees[0] || { name: req.user.firstName, age: 25 };
-        tickets.push({ ticketId: generateTicketId(i), seatNumber: makeSeatNum(pending.ticketType, i), attendee: { name: att.name||req.user.firstName, age: parseInt(att.age)||25, special: att.special||'' }, qrData:'', qrCode:'' });
-      }
+    for (let i = 0; i < ticketCount; i++) {
+      const att = attendees[i] || attendees[0] || { name: req.user.firstName, age: 25 };
+      tickets.push({
+        ticketId:   generateTicketId(i),
+        isStanding: standingFallback,
+        attendee: {
+          name:    att.name    || req.user.firstName,
+          age:     parseInt(att.age) || 25,
+          gender:  att.gender  || '',
+          special: att.special || '',
+        },
+        qrData: '',
+        qrCode: '',
+      });
     }
 
-    // ── STEP 2: Save booking — now bookingRef is auto-generated by Mongoose ──
+    // Assign seat numbers using fresh postInc (pool-first, then counter)
+    await assignSeatNumbers(pending.eventId, ttypeFallback, tickets, fbPostInc, pending.quantity);
+
     const booking = await Booking.create({
       user:           req.user._id,
       event:          pending.eventId,
@@ -630,72 +882,44 @@ exports.verifyPayment = async (req, res) => {
       signature:      razorpay_signature,
       contactPhone:   req.user.phone || '',
       contactEmail:   req.user.email || '',
+      gateNumber:     gateNumberFallback,
     });
 
-    // ── STEP 3: Regenerate QR codes with real bookingRef, then update DB ──
     try {
-      const realRef = booking.bookingRef;
-      if (isMultiple && attendees.length > 1) {
-        // One shared group QR for all attendees
-        const seatNums = booking.tickets.map(t => t.seatNumber);
-        const groupPayload = buildGroupQRPayload({
-          bookingRef: realRef,
-          eventId:    pending.eventId,
-          paymentId:  razorpay_payment_id,
-          ticketType: pending.ticketType,
-          attendees:  attendees,
-          groupSize:  attendees.length,
-          seatNumbers: seatNums,
-        });
-        const groupQRCode = await generateQRCode(groupPayload).catch(() => '');
-        const groupQRData = JSON.stringify(groupPayload);
-        booking.tickets.forEach(t => { t.qrCode = groupQRCode; t.qrData = groupQRData; });
-      } else {
-        // One QR per ticket
-        for (let i = 0; i < booking.tickets.length; i++) {
-          const t = booking.tickets[i];
-          const payload = buildQRPayload({ ticketId: t.ticketId, bookingRef: realRef, eventId: pending.eventId, paymentId: razorpay_payment_id, attendeeName: t.attendee.name, ticketType: pending.ticketType, seatNumber: t.seatNumber });
-          t.qrCode = await generateQRCode(payload).catch(() => '');
-          t.qrData = JSON.stringify(payload);
-        }
-      }
+      await generateSharedQR(booking.tickets, {
+        bookingRef: booking.bookingRef,
+        eventId:    pending.eventId,
+        paymentId:  razorpay_payment_id,
+        ticketType: pending.ticketType,
+      });
       await booking.save();
-      console.log('✅ QR codes generated with bookingRef:', booking.bookingRef);
-    } catch(qrErr) {
-      console.error('⚠ QR regeneration failed (booking still valid):', qrErr.message);
+    } catch (qrErr) {
+      console.error('QR gen failed (booking still valid):', qrErr.message);
     }
 
-    // Update Event seat count
-    await Event.updateOne(
-      { _id: pending.eventId, 'ticketTypes.category': pending.ticketType },
-      { $inc: { 'ticketTypes.$.bookedSeats': pending.quantity } }
-    ).catch(() => {});
-
-    // Update SeatMap zone bookedSeats
     if (pending.zone) {
       await SeatMap.updateOne(
         { event: pending.eventId, 'sections.name': pending.zone },
         { $inc: { 'sections.$.bookedSeats': pending.quantity } }
       ).catch(() => {});
     }
-
-    // Link to user
     await User.findByIdAndUpdate(req.user._id, { $push: { bookings: booking._id } }).catch(() => {});
 
-    // Send notifications (non-blocking)
+    if (req.user.referralCode) {
+      const Referral = require('../models/Referral');
+      Referral.findOneAndUpdate({ code: req.user.referralCode }, { $inc: { bookings: 1 } }).catch(() => {});
+    }
+
+    const notifyEmail    = pending.contactEmail    || req.user.email    || '';
+    const notifyWhatsapp = pending.contactWhatsapp || req.user.whatsapp || req.user.phone || '';
     let eventDoc = null;
     try { eventDoc = await Event.findById(pending.eventId); } catch(e) {}
 
-    if (req.user.email && eventDoc) {
-      try {
-        const { sendBookingConfirmation } = require('../utils/emailHelper');
-        sendBookingConfirmation({ to: req.user.email, name: req.user.firstName, booking, event: eventDoc }).catch(() => {});
-      } catch(e) {}
-    }
-    if (req.user.phone && eventDoc) {
+    if (notifyEmail    && eventDoc) sendBookingConfirmation({ to: notifyEmail, name: req.user.firstName, booking, event: eventDoc }).catch(() => {});
+    if (notifyWhatsapp && eventDoc) {
       try {
         const { sendWhatsAppTickets } = require('../utils/whatsappHelper');
-        sendWhatsAppTickets({ phone: req.user.phone, name: req.user.firstName, booking, event: eventDoc }).catch(() => {});
+        sendWhatsAppTickets({ phone: notifyWhatsapp, name: req.user.firstName, booking, event: eventDoc }).catch(() => {});
       } catch(e) {}
     }
 
@@ -710,24 +934,32 @@ exports.verifyPayment = async (req, res) => {
 };
 
 // ─────────────────────────────────────────────────────────────
-// GET /booking/success/:bookingId  — success page
+// GET /booking/success/:bookingId
 // ─────────────────────────────────────────────────────────────
 exports.getSuccessPage = async (req, res) => {
   try {
     const booking = await Booking.findOne({
-      _id: req.params.bookingId,
+      _id:  req.params.bookingId,
       user: req.user._id,
     }).populate('event');
+    if (!booking || booking.paymentStatus !== 'paid') return res.redirect('/booking/my-bookings');
 
-    if (!booking || booking.paymentStatus !== 'paid') {
-      return res.redirect('/booking/my-bookings');
+    if (!booking.gateNumber && booking.event) {
+      booking.gateNumber = getGateNumber(booking.event, booking.ticketType);
     }
 
+    let sponsors = [];
+    try {
+      const Sponsor = require('../models/Sponsor');
+      sponsors = await Sponsor.find({ isActive: true, showOnTicket: true }).sort({ order: 1 }).lean();
+    } catch(e) {}
+
     res.render('pages/ticket', {
-      title:   `Booking Confirmed — MEE`,
+      title:   'Booking Confirmed — MEE',
       booking,
       event:   booking.event,
       user:    req.user,
+      sponsors,
     });
   } catch(err) {
     console.error('getSuccessPage error:', err);
@@ -735,9 +967,6 @@ exports.getSuccessPage = async (req, res) => {
   }
 };
 
-// ─────────────────────────────────────────────────────────────
-// GET /booking/ticket/:bookingId  — legacy, redirect to success
-// ─────────────────────────────────────────────────────────────
 exports.getTicket = async (req, res) => {
   return res.redirect('/booking/success/' + req.params.bookingId);
 };
@@ -747,85 +976,59 @@ exports.getTicket = async (req, res) => {
 // ─────────────────────────────────────────────────────────────
 exports.getMyBookings = async (req, res) => {
   try {
-    const all = await Booking.find({ user: req.user._id })
-      .populate('event')
-      .sort({ createdAt: -1 });
-
-    // Build map: eventId → { paid: [], pending: [], failed: [] }
+    const all = await Booking.find({ user: req.user._id }).populate('event').sort({ createdAt: -1 });
     const byEvent = {};
-    const noEvent = []; // bookings where event was deleted
+    const noEvent = [];
     for (const b of all) {
       const evId = b.event?._id?.toString();
       if (!evId) { noEvent.push(b); continue; }
       if (!byEvent[evId]) byEvent[evId] = { paid: [], pending: [], failed: [] };
-      const status = b.paymentStatus;
-      if (status === 'paid') byEvent[evId].paid.push(b);
-      else if (status === 'pending') byEvent[evId].pending.push(b);
-      else byEvent[evId].failed.push(b);
+      if      (b.paymentStatus === 'paid')    byEvent[evId].paid.push(b);
+      else if (b.paymentStatus === 'pending') byEvent[evId].pending.push(b);
+      else                                    byEvent[evId].failed.push(b);
     }
-
     const bookings = [];
-
     for (const evId of Object.keys(byEvent)) {
       const group = byEvent[evId];
-
-      if (group.paid.length > 0) {
-        // Show only the latest paid booking for this event — suppress ALL pending/failed
-        const latest = group.paid.sort((a,b) => new Date(b.createdAt)-new Date(a.createdAt))[0];
-        bookings.push(latest);
-      } else if (group.pending.length > 0) {
-        // No paid — show only the latest pending (1 max), no failed alongside it
-        const latest = group.pending.sort((a,b) => new Date(b.createdAt)-new Date(a.createdAt))[0];
-        bookings.push(latest);
-      } else if (group.failed.length > 0) {
-        // Only failed exist — show only the latest one
-        const latest = group.failed.sort((a,b) => new Date(b.createdAt)-new Date(a.createdAt))[0];
-        bookings.push(latest);
-      }
+      if      (group.paid.length    > 0) bookings.push(group.paid.sort(   (a,b) => new Date(b.createdAt)-new Date(a.createdAt))[0]);
+      else if (group.pending.length > 0) bookings.push(group.pending.sort((a,b) => new Date(b.createdAt)-new Date(a.createdAt))[0]);
+      else if (group.failed.length  > 0) bookings.push(group.failed.sort( (a,b) => new Date(b.createdAt)-new Date(a.createdAt))[0]);
     }
-
-    // Add any orphaned bookings (event deleted)
     for (const b of noEvent) bookings.push(b);
-
-    // Sort by createdAt desc
     bookings.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-
-    res.render('pages/my-bookings', {
-      title:    'My Tickets — MEE',
-      bookings,
-      user:     req.user,
-    });
+    res.render('pages/my-bookings', { title: 'My Tickets — MEE', bookings, user: req.user });
   } catch(err) {
     console.error('getMyBookings error:', err);
     res.status(500).render('pages/error', { message: err.message, code: 500 });
   }
 };
 
-// API endpoints
 exports.getEventData = async (req, res) => {
   try {
     const eventId = req.query.id;
-    const event = eventId ? await Event.findOne({ _id: eventId, isActive: true }) : await Event.findOne({ isActive: true }).sort({ date: 1 });
+    const event = eventId
+      ? await Event.findOne({ _id: eventId, isActive: true })
+      : await Event.findOne({ isActive: true }).sort({ date: 1 });
     if (!event) return res.json({ success: false, message: 'No active event.' });
     res.json({ success: true, event });
-  } catch(err) {
-    res.json({ success: false, message: err.message });
-  }
+  } catch(err) { res.json({ success: false, message: err.message }); }
 };
 
 exports.getAllEvents = async (req, res) => {
   try {
     const events = await Event.find({ isActive: true }).sort({ isFeatured: -1, date: 1 });
     res.json({ success: true, events });
-  } catch(err) {
-    res.json({ success: false, message: err.message });
-  }
+  } catch(err) { res.json({ success: false, message: err.message }); }
 };
-// POST /booking/retry-payment-api/:bookingId — JSON version for profile Pay Now button
+
+// ─────────────────────────────────────────────────────────────
+// POST /booking/retry-payment-api (JSON endpoint)
+// FIX RISK 3: Same re-reservation logic as retryPayment (page)
+// ─────────────────────────────────────────────────────────────
 exports.retryPaymentApi = async (req, res) => {
   try {
     const booking = await Booking.findOne({
-      _id: req.params.bookingId,
+      _id:  req.params.bookingId,
       user: req.user._id,
     }).populate('event');
 
@@ -833,23 +1036,62 @@ exports.retryPaymentApi = async (req, res) => {
       return res.json({ success: false, message: 'Booking not found or already paid.' });
     }
 
-    // Re-populate session
+    const ttype = booking.event?.ticketTypes?.find(t => t.category === booking.ticketType);
+    let postIncBookedSeats = null;
+
+    if (booking.paymentStatus === 'failed') {
+      // Seats were released when it failed — reclaim them atomically now
+      const maxAllowed = ttype ? (ttype.totalSeats - booking.quantity) : 0;
+
+      const reReserved = await Event.findOneAndUpdate(
+        {
+          _id: booking.event._id,
+          ticketTypes: {
+            $elemMatch: {
+              category:    booking.ticketType,
+              isActive:    true,
+              bookedSeats: { $gte: 0, $lte: maxAllowed },
+            }
+          }
+        },
+        { $inc: { 'ticketTypes.$.bookedSeats': booking.quantity } },
+        { new: true }
+      ).catch(() => null);
+
+      if (!reReserved) {
+        return res.json({ success: false, message: `Sorry, ${booking.ticketType} tickets are sold out.` });
+      }
+
+      const freshTtype = reReserved.ticketTypes.find(t => t.category === booking.ticketType);
+      postIncBookedSeats = freshTtype?.bookedSeats ?? null;
+
+      // Promote back to pending
+      await Booking.updateOne({ _id: booking._id }, { $set: { paymentStatus: 'pending' } });
+
+      console.log(`✅ retryPaymentApi: re-reserved ${booking.quantity} seats | bookedSeats now: ${postIncBookedSeats}`);
+    } else {
+      postIncBookedSeats = ttype?.bookedSeats ?? null;
+    }
+
     req.session.pendingBooking = {
-      bookingId:      booking._id.toString(),
-      eventId:        booking.event._id.toString(),
-      ticketType:     booking.ticketType,
-      quantity:       booking.quantity,
-      pricePerTicket: booking.pricePerTicket,
-      subtotal:       booking.subtotal,
-      discount:       booking.discount || 0,
-      couponCode:     booking.couponCode || null,
-      convenienceFee: booking.convenienceFee,
-      totalAmount:    booking.totalAmount,
-      attendees:      booking.tickets.map(t => ({ name: t.attendee.name, age: t.attendee.age, special: t.attendee.special||'' })),
+      bookingId:          booking._id.toString(),
+      eventId:            booking.event._id.toString(),
+      ticketType:         booking.ticketType,
+      quantity:           booking.quantity,
+      pricePerTicket:     booking.pricePerTicket,
+      subtotal:           booking.subtotal,
+      discount:           booking.discount || 0,
+      couponCode:         booking.couponCode || null,
+      convenienceFee:     booking.convenienceFee,
+      totalAmount:        booking.totalAmount,
+      gateNumber:         booking.gateNumber || ttype?.gateNumber || '',
+      attendees:          booking.tickets.map(t => ({ name: t.attendee.name, age: t.attendee.age, special: t.attendee.special||'' })),
+      postIncBookedSeats,
     };
 
     const razorpay = new Razorpay({ key_id: process.env.RAZORPAY_KEY_ID, key_secret: process.env.RAZORPAY_KEY_SECRET });
-    const order = await razorpay.orders.create({ amount: booking.totalAmount * 100, currency: 'INR', receipt: 'MEE_PAYNOW_' + Date.now() });
+    const order    = await razorpay.orders.create({ amount: booking.totalAmount * 100, currency: 'INR', receipt: 'MEE_PAYNOW_' + Date.now() });
+
     req.session.pendingBooking.orderId = order.id;
     await new Promise((resolve, reject) => { req.session.save(err => err ? reject(err) : resolve()); });
 
@@ -861,13 +1103,198 @@ exports.retryPaymentApi = async (req, res) => {
       orderId:     order.id,
       description: booking.ticketType + ' × ' + booking.quantity,
       prefill: {
-        name:  req.user.firstName + ' ' + (req.user.lastName||''),
-        email: req.user.email || '',
-        contact: req.user.phone || '',
+        name:    req.user.firstName + ' ' + (req.user.lastName || ''),
+        email:   req.user.email    || '',
+        contact: req.user.phone    || '',
       },
     });
   } catch(err) {
     console.error('retryPaymentApi error:', err);
     res.json({ success: false, message: err.message });
+  }
+};
+
+// ─────────────────────────────────────────────────────────────
+// POST /booking/resend-whatsapp/:bookingId
+// ─────────────────────────────────────────────────────────────
+exports.resendWhatsApp = async (req, res) => {
+  const fs   = require('fs');
+  const path = require('path');
+  let tmpFile = null;
+  try {
+    const booking = await Booking.findOne({
+      _id:           req.params.bookingId,
+      user:          req.user._id,
+      paymentStatus: 'paid',
+    }).populate('event');
+    if (!booking) return res.json({ success: false, message: 'Booking not found.' });
+
+    const phone = req.user.whatsapp || req.user.phone;
+    if (!phone) return res.json({ success: false, message: 'No WhatsApp number on your account.' });
+
+    const { pdfBase64 } = req.body;
+    if (!pdfBase64) return res.json({ success: false, message: 'No PDF data received.' });
+
+    const base64Data = pdfBase64.replace(/^data:application\/pdf;base64,/, '');
+    const filename   = `ticket_${booking.bookingRef}_${Date.now()}.pdf`;
+    const ticketDir  = path.join(__dirname, '../public/ticket');
+    if (!fs.existsSync(ticketDir)) fs.mkdirSync(ticketDir, { recursive: true });
+    tmpFile = path.join(ticketDir, filename);
+    fs.writeFileSync(tmpFile, Buffer.from(base64Data, 'base64'));
+
+    const APP_URL = (process.env.APP_URL || 'http://localhost:3000').replace(/\/$/, '');
+    const pdfUrl  = `${APP_URL}/ticket/${filename}`;
+
+    const { sendWhatsAppPDF } = require('../utils/whatsappHelper');
+    await sendWhatsAppPDF({ phone, pdfUrl, bookingRef: booking.bookingRef });
+
+    
+
+    setTimeout(() => {
+  try { if (fs.existsSync(tmpFile)) fs.unlinkSync(tmpFile); } catch(e) {}
+}, 2 * 60 * 1000);
+
+
+    return res.json({ success: true });
+  } catch(err) {
+    console.error('resendWhatsApp error:', err);
+    try { if (tmpFile && require('fs').existsSync(tmpFile)) require('fs').unlinkSync(tmpFile); } catch(e) {}
+    return res.json({ success: false, message: 'Failed to send: ' + err.message });
+  }
+};
+
+// ─────────────────────────────────────────────────────────────
+// RAZORPAY WEBHOOK HANDLER
+// FIX RISK 2: fetch fresh ttype from DB before assignSeatNumbers
+// ─────────────────────────────────────────────────────────────
+exports.razorpayWebhook = async (req, res) => {
+  try {
+    const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
+    if (!webhookSecret) return res.status(200).json({ status: 'error', message: 'Webhook secret not configured' });
+
+    const receivedSig = req.headers['x-razorpay-signature'];
+    if (!receivedSig) return res.status(400).json({ error: 'Missing signature' });
+
+    const expectedSig = crypto.createHmac('sha256', webhookSecret).update(req.rawBody).digest('hex');
+    if (expectedSig !== receivedSig) return res.status(400).json({ error: 'Invalid signature' });
+
+    const webhookEvent = req.body;
+    const evtType      = webhookEvent.event;
+    console.log(`📩 Razorpay Webhook: ${evtType}`);
+
+    if (evtType === 'payment.captured' || evtType === 'order.paid') {
+      const paymentId = webhookEvent.payload?.payment?.entity?.id;
+      const orderId   = webhookEvent.payload?.payment?.entity?.order_id || webhookEvent.payload?.order?.entity?.id;
+      if (!paymentId || !orderId) return res.status(200).json({ status: 'ignored' });
+
+      const alreadyPaid = await Booking.findOne({ paymentId, paymentStatus: 'paid' });
+      if (alreadyPaid) return res.status(200).json({ status: 'already_processed' });
+
+      const booking = await Booking.findOne({
+        orderId,
+        paymentStatus: { $in: ['pending', 'failed'] },
+      }).populate('event').populate('user');
+      if (!booking) return res.status(200).json({ status: 'no_booking_found' });
+
+      const eventDoc = booking.event;
+      const userDoc  = booking.user;
+      if (!eventDoc || !userDoc) return res.status(200).json({ status: 'missing_references' });
+
+      // FIX RISK 2: fetch a FRESH ttype snapshot so bookedSeats
+      // is current, not a stale value from the populate above
+      const freshTtype = await fetchFreshTtype(eventDoc._id, booking.ticketType);
+      const standing   = isStandingCategory(freshTtype);
+      const gateNumber = getGateNumber(eventDoc, booking.ticketType);
+
+      // postIncBookedSeats from the fresh fetch — accurate counter
+      const postIncBookedSeats = freshTtype?.bookedSeats ?? null;
+
+      // await assignSeatNumbers(
+      //   eventDoc._id,
+      //   freshTtype,
+      //   booking.tickets,
+      //   postIncBookedSeats,
+      //   booking.quantity
+      // );
+
+          await assignSeatNumbers(
+      eventDoc._id,
+      freshTtype,
+      booking.tickets,
+    );
+
+      await generateSharedQR(booking.tickets, {
+        bookingRef: booking.bookingRef,
+        eventId:    eventDoc._id,
+        paymentId,
+        ticketType: booking.ticketType,
+      });
+
+      const webhookFlipped = await Booking.findOneAndUpdate(
+        { _id: booking._id, paymentStatus: { $in: ['pending', 'failed'] } },
+        {
+          $set: {
+            paymentStatus: 'paid',
+            paymentId,
+            orderId,
+            tickets:    booking.tickets,
+            gateNumber,
+          }
+        },
+        { new: true }
+      );
+
+      if (!webhookFlipped) {
+        console.log(`ℹ️  Webhook: verifyPayment already completed ${booking.bookingRef} — skipping notifications`);
+        return res.status(200).json({ status: 'already_processed_by_verify' });
+      }
+
+      if (booking.couponCode) {
+        const Coupon = require('../models/Coupon');
+        await Coupon.findOneAndUpdate(
+          { code: booking.couponCode },
+          { $inc: { usedCount: 1 }, $addToSet: { usedBy: userDoc._id } }
+        ).catch(() => {});
+      }
+      await User.findByIdAndUpdate(userDoc._id, { $addToSet: { bookings: booking._id } }).catch(() => {});
+
+      try {
+        const notifyEmail    = booking.contactEmail    || userDoc.email    || '';
+        const notifyWhatsapp = booking.contactWhatsapp || userDoc.whatsapp || userDoc.phone || '';
+        const userName       = userDoc.firstName || 'Customer';
+        const bookingForNotify     = webhookFlipped;
+        bookingForNotify.gateNumber = gateNumber;
+        if (notifyEmail)    sendBookingConfirmation({ to: notifyEmail, name: userName, booking: bookingForNotify, event: eventDoc }).catch(() => {});
+        if (notifyWhatsapp) {
+          const { sendWhatsAppTickets } = require('../utils/whatsappHelper');
+          sendWhatsAppTickets({ phone: notifyWhatsapp, name: userName, booking: bookingForNotify, event: eventDoc }).catch(() => {});
+        }
+      } catch (ne) { console.warn('Webhook notify error:', ne.message); }
+
+      return res.status(200).json({ status: 'ok', bookingRef: booking.bookingRef });
+    }
+
+    if (evtType === 'payment.failed') {
+      const orderId = webhookEvent.payload?.payment?.entity?.order_id;
+      if (orderId) {
+        const failedB = await Booking.findOne({ orderId, paymentStatus: 'pending' }).catch(() => null);
+        if (failedB) {
+          const failedBWithTickets = await Booking.findById(failedB._id)
+            .populate('event').lean().catch(() => failedB);
+          await releaseSeatsToPool(failedB.event, failedB.ticketType, failedBWithTickets).catch(() => {});
+          console.log(`🔓 Webhook: released ${failedB.quantity} seats (payment.failed) for ${failedB.ticketType}`);
+        }
+        await Booking.findOneAndUpdate(
+          { orderId, paymentStatus: { $in: ['pending', 'failed'] } },
+          { paymentStatus: 'failed' }
+        ).catch(() => null);
+      }
+      return res.status(200).json({ status: 'ok' });
+    }
+
+    return res.status(200).json({ status: 'ignored' });
+  } catch (err) {
+    console.error('❌ Webhook handler error:', err);
+    return res.status(200).json({ status: 'error', message: err.message });
   }
 };

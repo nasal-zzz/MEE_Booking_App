@@ -1,0 +1,209 @@
+<style>
+  /* ============================================================
+   FOOTER
+   Add to style.css or import as footer.css
+   ============================================================ */
+
+  .site-footer {
+    position: relative;
+    z-index: 10;
+    margin-top: auto;
+    border-top: 1px solid rgba(255, 255, 255, 0.07);
+    background: rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  .footer-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+  }
+
+  /* ---------- Top row ---------- */
+  .footer-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    padding: 1.5rem 0 1.25rem;
+  }
+
+  /* Logo — fixed height, never reflows */
+  .footer-logo {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    opacity: 0.85;
+    transition: opacity 0.2s ease;
+  }
+
+  .footer-logo:hover {
+    opacity: 1;
+  }
+
+  .footer-logo img {
+    display: block;
+    height: 40px;
+    /* fixed — never changes */
+    width: auto;
+    object-fit: contain;
+  }
+
+  /* Nav links */
+  .footer-nav {
+    display: flex;
+    align-items: center;
+    gap: 1.75rem;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .footer-link {
+    font-size: 0.8125rem;
+    /* 13px */
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.4);
+    text-decoration: none;
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+    transition: color 0.2s ease;
+  }
+
+  .footer-link:hover {
+    color: #d103ef;
+  }
+
+  /* ---------- Divider ---------- */
+  .footer-divider {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  /* ---------- Bottom row ---------- */
+  .footer-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.9rem 0;
+  }
+
+  .footer-copy {
+    font-size: 0.85rem;
+    /* 12px */
+    color: rgba(255, 255, 255, 0.25);
+    font-weight: 400;
+    margin: 0;
+    letter-spacing: 0.01em;
+  }
+
+  .footer-made {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.18);
+    font-weight: 400;
+    margin: 0;
+    white-space: nowrap;
+    letter-spacing: 0.01em;
+  }
+
+  /* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+  /* Tablet */
+  @media (max-width: 768px) {
+    .footer-inner {
+      padding: 0 1.25rem;
+    }
+
+    .footer-top {
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+      padding: 1.5rem 0 1.25rem;
+      text-align: center;
+    }
+
+    .footer-nav {
+      justify-content: center;
+      gap: 1.25rem;
+    }
+
+    .footer-bottom {
+      flex-direction: column;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.875rem 0;
+      text-align: center;
+    }
+  }
+
+  /* Small mobile */
+  @media (max-width: 480px) {
+    .footer-inner {
+      padding: 0 1rem;
+    }
+
+    .footer-logo img {
+      height: 24px;
+      /* slightly smaller on very small screens */
+    }
+
+    .footer-nav {
+      gap: 1rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .footer-link {
+      font-size: 0.75rem;
+      /* 12px */
+    }
+
+    .footer-copy,
+    .footer-made {
+      font-size: 0.6875rem;
+      /* 11px */
+    }
+  }
+</style>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+
+    <!-- Top row: Logo + Nav links -->
+    <div class="footer-top">
+
+      <!-- Logo -->
+      <a href="/" class="footer-logo" onclick="window.scrollTo({top: 0, behavior: 'smooth'}); return false;"
+        aria-label="Back to top">
+        <img src="/images/brandings/logo.png" alt="MEE Logo">
+      </a>
+
+      <!-- Nav links -->
+      <nav class="footer-nav" aria-label="Footer navigation">
+        <a href="/privacy" class="footer-link">Privacy &amp; Policy</a>
+        <a href="/terms" class="footer-link">Terms &amp; Conditions</a>
+        <a href="/support" class="footer-link">Support</a>
+      </nav>
+    </div>
+
+    <!-- Divider -->
+    <div class="footer-divider"></div>
+
+    <!-- Bottom row: copyright -->
+    <div class="footer-bottom">
+      <p class="footer-copy">
+        &copy; <span id="current-year"></span> Melattur Events &amp; Entertainments.
+        All rights reserved.
+      </p>
+      <p class="footer-made">Melattur ♥ Kerala</p>
+    </div>
+
+  </div>
+</footer>
+
+<script>
+  document.getElementById('current-year').textContent = new Date().getFullYear();
+</script>

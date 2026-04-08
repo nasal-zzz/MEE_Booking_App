@@ -7,6 +7,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins&family=Outfit:wght@400;500;600;700&family=Space+Mono&display=swap" rel="stylesheet"/>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet"/>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
   <style>
     :root{--bg:#0B0B0F;--surface:#14141C;--card:#14141C;--card2:#1a1a24;--border:rgba(255,255,255,0.08);--accent:#6A0DAD;--accent-dim:rgba(106,13,173,0.09);--text:#FFFFFF;--muted:#B3B3B3;--success:#00FF88;--error:#FF4444;}
@@ -284,9 +285,9 @@
       <!-- ── RIGHT — Tabs ── -->
       <div>
         <!-- Tabs -->
-        <div class="tabs">
+        <div class="tabs" id="myBookings">
           <button class="tab active" onclick="switchTab('bookings', this)">
-            <i class="bi bi-ticket-perforated"></i> My Bookings (<%= stats.totalBookings %>)
+            <i class="bi bi-ticket-perforated"></i> My Bookings (<%= (stats.totalBookings || 0) + 1 %>)
           </button>
           <button class="tab" onclick="switchTab('activity', this)">
             <i class="bi bi-activity"></i> Activity
@@ -300,7 +301,7 @@
               <div class="empty-icon">🎟</div>
               <div class="empty-title">NO BOOKINGS YET</div>
               <div class="empty-sub">You haven't booked any tickets yet. Get your pass for Eclipse Dark Night!</div>
-              <a href="/booking" class="btn-book-now"><i class="bi bi-ticket-perforated-fill"></i> Book Tickets Now</a>
+              <a href="/" class="btn-book-now"><i class="bi bi-ticket-perforated-fill"></i> Book Tickets Now</a>
             </div>
           <% } else { %>
             <% bookings.forEach(function(booking, bi) { %>
@@ -350,14 +351,20 @@
                   <i class="bi bi-arrow-repeat"></i> Retry Payment
                 </a>
                 <% } %>
-                <button class="btn-delete-bk" onclick="deleteBooking('<%= booking._id %>', this)">
-                  <i class="bi bi-trash3-fill"></i> Delete
-                </button>
               </div>
               <% } %>
 
               <!-- Individual tickets -->
               <% if (booking.paymentStatus === 'paid' && booking.tickets && booking.tickets.length > 0) { %>
+              <%
+                // Find matching ticket type from event to get seatType and gateNumber
+                var matchedTicketType = booking.event && booking.event.ticketTypes &&
+                  booking.event.ticketTypes.find(function(tt){
+                    return tt.category === booking.ticketType;
+                  });
+                var bookingSeatType  = matchedTicketType ? (matchedTicketType.seatType  || 'standing') : 'standing';
+                var bookingGateNum   = matchedTicketType ? (matchedTicketType.gateNumber || 'GATE - 1') : 'GATE - 1';
+              %>
               <div class="tickets-strip">
                 <div class="tickets-strip-title">Entry Passes</div>
                 <div class="ticket-rows">
@@ -379,24 +386,26 @@
                       <button class="btn-dl-pdf" id="dlbtn-<%= bi %>-<%= ti %>"
                         onclick="downloadTicketPDF(<%= bi %>, <%= ti %>, this)"
                         data-booking='<%- JSON.stringify({
-                          ref: booking.bookingRef,
-                          type: booking.ticketType,
-                          qty: booking.quantity,
-                          price: booking.pricePerTicket
+                          ref:         booking.bookingRef,
+                          type:        booking.ticketType,
+                          qty:         booking.quantity,
+                          price:       booking.pricePerTicket,
+                          seatType:    bookingSeatType,
+                          gateNumber:  bookingGateNum
                         }) %>'
                         data-ticket='<%- JSON.stringify({
-                          ticketId: ticket.ticketId,
+                          ticketId:     ticket.ticketId,
                           attendeeName: ticket.attendee.name,
-                          attendeeAge: ticket.attendee.age,
-                          qrCode: ticket.qrCode || ""
+                          attendeeAge:  ticket.attendee.age  || "",
+                          attendeeGender: ticket.attendee.gender || "",
+                          seatNumber:   ticket.seatNumber    || "",
+                          qrCode:       ticket.qrCode        || ""
                         }) %>'
                         data-event='<%- JSON.stringify({
-                          name: booking.event ? booking.event.name.toUpperCase() : "EVENT",
-                          date: booking.event ? new Date(booking.event.date).toDateString().toUpperCase() : "",
-                          doorsOpen: booking.event ? booking.event.doorsOpen : "",
-                          endTime: booking.event ? booking.event.endTime : "",
-                          venue: booking.event ? booking.event.venue : "",
-                          dressCode: booking.event ? booking.event.dressCode : ""
+                          name:      booking.event ? booking.event.name.toUpperCase() : "EVENT",
+                          date:      booking.event ? new Date(booking.event.date).toLocaleDateString("en-IN",{day:"2-digit",month:"long",year:"numeric"}).toUpperCase() : "",
+                          doorsOpen: booking.event ? (booking.event.doorsOpen || "") : "",
+                          venue:     booking.event ? (booking.event.venue     || "") : ""
                         }) %>'>
                         <i class="bi bi-file-earmark-pdf-fill"></i> Download PDF
                       </button>
@@ -459,6 +468,19 @@
       </div>
     </div>
   </div>
+
+  <!-- ═══════════════════════════════════════════════════════
+       Hidden ticket render zone — used by html2canvas PDF
+  ══════════════════════════════════════════════════════════ -->
+  <div id="ticketRenderZone" style="
+    position:fixed;
+    left:-9999px;
+    top:-9999px;
+    width:1000px;
+    z-index:-1;
+    pointer-events:none;
+    font-family:'Outfit',sans-serif;
+  "></div>
 
   <script>
     // ── Tab switching ──
@@ -559,7 +581,9 @@
       } catch(e) { alert('Error. Try again.'); btnEl.disabled = false; btnEl.innerHTML = '<i class="bi bi-trash3-fill"></i> Delete'; }
     }
 
-    // ── Download single ticket as PDF ──
+    // ══════════════════════════════════════════════════════════════
+    // ── Download single ticket as PDF — same design as confirm page
+    // ══════════════════════════════════════════════════════════════
     async function downloadTicketPDF(bi, ti, btnEl) {
       btnEl.disabled = true;
       btnEl.innerHTML = '<i class="bi bi-hourglass-split"></i> Generating...';
@@ -569,117 +593,250 @@
         const ticketData  = JSON.parse(btnEl.getAttribute('data-ticket'));
         const eventData   = JSON.parse(btnEl.getAttribute('data-event'));
 
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a5' });
-        const W = doc.internal.pageSize.getWidth();
-        const H = doc.internal.pageSize.getHeight();
+        // ── Seat logic: only show seat number if seatType === 'sitting' ──
+        const isSitting   = (bookingData.seatType || 'standing') === 'sitting';
+        const seatDisplay = isSitting ? ((ticketData.seatNumber || 'N/A').toUpperCase()) : 'N/A';
+        const gateDisplay = (bookingData.gateNumber || 'GATE - 1').toUpperCase();
 
-        // Background
-        doc.setFillColor(8, 8, 14); doc.rect(0, 0, W, H, 'F');
+        // ── Gender string ──
+        const genderRaw = ticketData.attendeeGender || '';
+        const genderStr = genderRaw
+          ? genderRaw.charAt(0).toUpperCase() + genderRaw.slice(1)
+          : '';
 
-        // Header band
-        doc.setFillColor(15, 22, 0); doc.rect(0, 0, W * 0.55, H, 'F');
+        // ── QR markup helper ──
+        const qrHTML = (qrCode, styleExtra) =>
+          qrCode
+            ? `<img src="${qrCode}" crossorigin="anonymous" style="width:100%;aspect-ratio:1;display:block;border:2px solid rgba(255,255,255,0.15);border-radius:3px;background:#fff;${styleExtra||''}"/>`
+            : `<div style="width:100%;aspect-ratio:1;background:rgba(255,255,255,0.04);border-radius:3px;"></div>`;
 
-        // Accent top bar
-        doc.setFillColor(200, 255, 0); doc.rect(0, 0, W * 0.55, 2, 'F');
+        // ── Build ticket HTML — mirrors the confirmation page ticket exactly ──
+        const ticketHTML = `
+<div style="
+  width:1000px;
+  aspect-ratio:2000/1430;
+  position:relative;
+  overflow:hidden;
+  border-radius:12px;
+  background:#0d0d18;
+  font-family:'Outfit',sans-serif;
+">
+  <!-- Full BG image -->
+  <img
+    src="/img/ticket_BG.png"
+    crossorigin="anonymous"
+    style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top left;"
+  />
 
-        // Brand
-        doc.setFont('helvetica', 'normal'); doc.setFontSize(7);
-        doc.setTextColor(120, 140, 80);
-        doc.text('MEE · MELATTUR', 12, 14);
+  <!-- QR — top left -->
+  <div style="position:absolute;left:1.5%;top:2.2%;width:10.5%;z-index:2;">
+    ${ticketData.qrCode
+      ? `<img src="${ticketData.qrCode}" crossorigin="anonymous"
+              style="width:100%;aspect-ratio:1;display:block;border:2px solid rgba(255,255,255,0.3);border-radius:3px;background:#fff;"/>`
+      : `<div style="width:100%;aspect-ratio:1;background:#fff;border-radius:3px;"></div>`
+    }
+  </div>
 
-        // Event name
-        doc.setFont('helvetica', 'bold'); doc.setFontSize(20);
-        doc.setTextColor(255, 255, 255);
-        const nameLines = doc.splitTextToSize(eventData.name, 90);
-        doc.text(nameLines, 12, 25);
+  <!-- Event name + price — top centre-right -->
+  <div style="position:absolute;left:33%;right:29.5%;top:5%;text-align:right;z-index:2;">
+    <div style="
+      font-family:Impact,Arial Narrow,Arial,sans-serif;
+      font-size:2.2rem;letter-spacing:3px;color:#fff;line-height:1;
+      text-shadow:0 2px 14px rgba(0,0,0,0.9);
+    ">${(bookingData.type || '').toUpperCase()}</div>
+    <div style="
+      font-family:Impact,Arial Narrow,Arial,sans-serif;
+      font-size:2rem;color:#ff2d78;letter-spacing:1px;margin-top:0.3rem;
+      text-shadow:0 2px 10px rgba(255,45,120,0.6);
+    ">&#8377; ${Number(bookingData.price || 0).toLocaleString('en-IN')}</div>
+  </div>
 
-        // Divider
-        doc.setDrawColor(200, 255, 0); doc.setLineWidth(0.5);
-        doc.line(12, 48, W * 0.55 - 10, 48);
+  <!-- Date / Time / Venue — lower left area -->
+  <div style="position:absolute;left:27%;right:29.5%;top:52%;z-index:2;">
+    <!-- Date + Time row -->
+    <div style="display:flex;flex-direction:row;gap:8%;margin-bottom:2%;align-items:flex-start;">
+      <div style="display:flex;flex-direction:column;">
+        <div style="
+          font-family:'Courier New',Courier,monospace;
+          font-size:0.5rem;letter-spacing:2px;
+          color:rgba(255,255,255,0.45);text-transform:uppercase;margin-bottom:0.3rem;
+        ">DATE</div>
+        <div style="
+          font-family:Arial Narrow,Arial,sans-serif;
+          font-size:1.05rem;font-weight:700;color:#fff;
+          letter-spacing:0.5px;line-height:1.2;
+        ">${eventData.date || ''}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;">
+        <div style="
+          font-family:'Courier New',Courier,monospace;
+          font-size:0.5rem;letter-spacing:2px;
+          color:rgba(255,255,255,0.45);text-transform:uppercase;margin-bottom:0.3rem;
+        ">TIME</div>
+        <div style="
+          font-family:Arial Narrow,Arial,sans-serif;
+          font-size:1.05rem;font-weight:700;color:#fff;
+          letter-spacing:0.5px;line-height:1.2;
+        ">${eventData.doorsOpen || ''}</div>
+      </div>
+    </div>
+    <!-- Divider -->
+    <div style="width:100%;height:1px;background:rgba(255,255,255,0.2);margin:2% 0;"></div>
+    <!-- Venue -->
+    <div style="
+      font-family:Arial Narrow,Arial,sans-serif;
+      font-size:1.25rem;font-weight:700;color:#fff;
+      letter-spacing:0.5px;line-height:1.15;
+    ">${eventData.venue || ''}</div>
+  </div>
 
-        // Info fields
-        const fields = [
-          { label: 'DATE',        value: eventData.date },
-          { label: 'DOORS OPEN',  value: eventData.doorsOpen },
-          { label: 'UNTIL',       value: eventData.endTime },
-          { label: 'VENUE',       value: eventData.venue },
-          { label: 'DRESS CODE',  value: eventData.dressCode },
-          { label: 'TICKET TYPE', value: bookingData.type.toUpperCase() },
-        ];
+  <!-- RIGHT PANEL -->
+  <div style="
+    position:absolute;left:71.5%;right:0;top:11%;bottom:0;z-index:2;
+    display:flex;flex-direction:column;align-items:center;
+    padding:0 2.5%;gap:1.5%;
+  ">
+    <!-- QR code -->
+    <div style="width:46%;flex-shrink:0;">
+      ${ticketData.qrCode
+        ? `<img src="${ticketData.qrCode}" crossorigin="anonymous"
+                style="width:100%;aspect-ratio:1;display:block;border:2px solid rgba(255,255,255,0.15);border-radius:3px;background:#fff;"/>`
+        : `<div style="width:100%;aspect-ratio:1;background:rgba(255,255,255,0.04);border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:0.5rem;color:#555;">QR CODE</div>`
+      }
+    </div>
 
-        let y = 58;
-        fields.forEach((f, i) => {
-          const col = i < 3 ? 12 : 60;
-          const row = i < 3 ? y + (i * 22) : y + ((i - 3) * 22);
-          doc.setFont('helvetica', 'normal'); doc.setFontSize(6);
-          doc.setTextColor(120, 140, 80); doc.text(f.label, col, row);
-          doc.setFont('helvetica', 'bold'); doc.setFontSize(9);
-          doc.setTextColor(230, 230, 230); doc.text(String(f.value), col, row + 5);
+    <!-- Booking ID label -->
+    <div style="
+      font-family:'Courier New',Courier,monospace;
+      font-size:0.45rem;letter-spacing:2px;
+      color:rgba(255,255,255,0.3);text-transform:uppercase;text-align:center;
+    ">BOOKING ID</div>
+
+    <!-- Booking ID value -->
+    <div style="
+      font-family:Arial Narrow,Arial,sans-serif;
+      font-size:1rem;font-weight:800;color:#fff;
+      letter-spacing:2px;text-align:center;line-height:1.1;
+    ">${bookingData.ref || ''}</div>
+
+    <!-- Divider -->
+    <div style="width:90%;height:1px;background:rgba(255,255,255,0.08);"></div>
+
+    <!-- Attendee name -->
+    <div style="
+      font-family:Impact,Arial Narrow,Arial,sans-serif;
+      font-size:0.95rem;letter-spacing:1px;color:#fff;
+      width:100%;text-align:left;line-height:1;
+    ">${ticketData.attendeeName || 'GUEST'}</div>
+
+    <!-- Attendee age / gender -->
+    ${(ticketData.attendeeAge || genderStr) ? `
+    <div style="
+      font-family:'Courier New',Courier,monospace;
+      font-size:0.42rem;color:rgba(255,255,255,0.32);
+      width:100%;text-align:left;letter-spacing:0.8px;margin-top:0.2rem;
+    ">
+      ${ticketData.attendeeAge ? 'AGE - ' + ticketData.attendeeAge : ''}
+      ${(ticketData.attendeeAge && genderStr) ? ' | ' : ''}
+      ${genderStr ? 'GENDER - ' + genderStr : ''}
+    </div>` : ''}
+
+    <!-- Divider -->
+    <div style="width:90%;height:1px;background:rgba(255,255,255,0.08);"></div>
+
+    <!-- Detail grid: 2-column -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1% 2%;width:100%;">
+
+      <div style="display:flex;flex-direction:column;">
+        <div style="font-family:'Courier New',Courier,monospace;font-size:0.4rem;letter-spacing:1px;color:rgba(255,255,255,0.3);text-transform:uppercase;margin-bottom:0.1rem;">Ticket ID</div>
+        <div style="font-family:'Courier New',Courier,monospace;font-size:0.46rem;font-weight:600;color:rgba(255,255,255,0.85);line-height:1.2;">${ticketData.ticketId || ''}</div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;">
+        <div style="font-family:'Courier New',Courier,monospace;font-size:0.4rem;letter-spacing:1px;color:rgba(255,255,255,0.3);text-transform:uppercase;margin-bottom:0.1rem;">Ticket No.</div>
+        <div style="font-family:'Outfit',sans-serif;font-size:0.65rem;font-weight:600;color:rgba(255,255,255,0.85);line-height:1.2;">${ti + 1} of ${bookingData.qty || 1}</div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;">
+        <div style="font-family:'Courier New',Courier,monospace;font-size:0.4rem;letter-spacing:1px;color:rgba(255,255,255,0.3);text-transform:uppercase;margin-bottom:0.1rem;">Category</div>
+        <div style="font-family:'Outfit',sans-serif;font-size:0.65rem;font-weight:600;color:#c8ff00;line-height:1.2;">${(bookingData.type || '').toUpperCase()}</div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;">
+        <div style="font-family:'Courier New',Courier,monospace;font-size:0.4rem;letter-spacing:1px;color:rgba(255,255,255,0.3);text-transform:uppercase;margin-bottom:0.1rem;">Seat No.</div>
+        <div style="font-family:'Outfit',sans-serif;font-size:0.65rem;font-weight:600;color:#c8ff00;line-height:1.2;">${seatDisplay}</div>
+      </div>
+
+      
+
+      <div style="display:flex;flex-direction:column;">
+        <div style="font-family:'Courier New',Courier,monospace;font-size:0.4rem;letter-spacing:1px;color:rgba(255,255,255,0.3);text-transform:uppercase;margin-bottom:0.1rem;">Gate No.</div>
+        <div style="font-family:'Outfit',sans-serif;font-size:0.65rem;font-weight:600;color:rgba(255,255,255,0.85);line-height:1.2;">${gateDisplay}</div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;">
+        <div style="font-family:'Courier New',Courier,monospace;font-size:0.4rem;letter-spacing:1px;color:rgba(255,255,255,0.3);text-transform:uppercase;margin-bottom:0.1rem;">Amount</div>
+        <div style="font-family:'Outfit',sans-serif;font-size:0.65rem;font-weight:600;color:rgba(255,255,255,0.85);line-height:1.2;">&#8377; ${Number(bookingData.price || 0).toLocaleString('en-IN')}/-</div>
+      </div>
+
+    </div>
+
+    <!-- Valid badge -->
+    <div style="
+      width:100%;
+      background:rgba(76,220,128,0.09);
+      border:1px solid rgba(76,220,128,0.28);
+      color:#4cdc80;
+      font-family:'Courier New',Courier,monospace;
+      font-size:0.38rem;letter-spacing:0.5px;
+      padding:0.8% 1%;border-radius:3px;text-align:center;
+    ">&#10003;&nbsp; VALID &nbsp;·&nbsp; ONE TIME ENTRY</div>
+
+  </div><!-- end right panel -->
+</div>`;
+
+        // ── Inject into hidden render zone ──
+        const zone = document.getElementById('ticketRenderZone');
+        zone.innerHTML = ticketHTML;
+        const ticketEl = zone.firstElementChild;
+
+        // ── Wait for all images (BG + QR) to fully load ──
+        const images = Array.from(ticketEl.querySelectorAll('img'));
+        await Promise.all(images.map(img => {
+          if (img.complete && img.naturalWidth > 0) return Promise.resolve();
+          return new Promise(resolve => {
+            img.onload  = resolve;
+            img.onerror = resolve; // don't block if image fails
+          });
+        }));
+
+        // Small extra delay to ensure layout is painted
+        await new Promise(r => setTimeout(r, 120));
+
+        // ── Capture with html2canvas ──
+        const canvas = await html2canvas(ticketEl, {
+          scale:           3,
+          useCORS:         true,
+          allowTaint:      false,
+          backgroundColor: null,
+          logging:         false,
+          width:           1000,
+          height:          ticketEl.offsetHeight,
         });
 
-        // Price
-        doc.setFont('helvetica', 'bold'); doc.setFontSize(18);
-        doc.setTextColor(200, 255, 0);
-        doc.text('₹' + bookingData.price.toLocaleString('en-IN'), 12, H - 10);
+        // ── Generate landscape A4 PDF ──
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+        const imgData = canvas.toDataURL('image/jpeg', 0.92);
+        pdf.addImage(imgData, 'JPEG', 0, 0, 297, 210);
+        pdf.save(`MEE_${bookingData.ref}_${ticketData.ticketId}.pdf`);
 
-        // Perforated divider
-        doc.setDrawColor(50, 50, 50); doc.setLineWidth(0.3);
-        for (let dotY = 5; dotY < H - 5; dotY += 4) {
-          doc.line(W * 0.55, dotY, W * 0.55, dotY + 2);
-        }
-        doc.setFillColor(8, 8, 14);
-        doc.circle(W * 0.55, 0, 5, 'F');
-        doc.circle(W * 0.55, H, 5, 'F');
+        // ── Cleanup ──
+        zone.innerHTML = '';
 
-        // Right side
-        const rx = W * 0.55 + 8;
-
-        doc.setFont('helvetica', 'bold'); doc.setFontSize(14);
-        doc.setTextColor(255, 255, 255);
-        doc.text(ticketData.attendeeName, rx, 18);
-
-        doc.setFont('helvetica', 'normal'); doc.setFontSize(8);
-        doc.setTextColor(120, 130, 100);
-        doc.text('1 of ' + bookingData.qty + ' · ' + bookingData.type, rx, 25);
-
-        // QR Code
-        if (ticketData.qrCode && ticketData.qrCode.startsWith('data:image')) {
-          try { doc.addImage(ticketData.qrCode, 'PNG', rx, 32, 55, 55); }
-          catch(e) {
-            doc.setFillColor(30,30,30); doc.rect(rx, 32, 55, 55, 'F');
-            doc.setFont('helvetica','normal'); doc.setFontSize(7);
-            doc.setTextColor(100,100,100); doc.text('QR CODE', rx + 16, 60);
-          }
-        } else {
-          doc.setFillColor(30, 30, 30); doc.rect(rx, 32, 55, 55, 'F');
-          doc.setFont('helvetica','normal'); doc.setFontSize(7);
-          doc.setTextColor(100,100,100); doc.text('QR CODE', rx + 16, 60);
-        }
-
-        // Valid badge
-        doc.setFillColor(20, 60, 30); doc.roundedRect(rx, 91, 55, 8, 2, 2, 'F');
-        doc.setFont('helvetica', 'bold'); doc.setFontSize(7);
-        doc.setTextColor(76, 220, 128);
-        doc.text('✓ VALID · ONE TIME ENTRY', rx + 4, 96.5);
-
-        // Ticket ID & ref
-        doc.setFont('courier', 'bold'); doc.setFontSize(7);
-        doc.setTextColor(120, 130, 100);
-        doc.text(ticketData.ticketId, rx, 107);
-
-        doc.setFont('helvetica', 'normal'); doc.setFontSize(6);
-        doc.setTextColor(80, 90, 70);
-        doc.text('REF: ' + bookingData.ref, rx, 113);
-
-        doc.setFont('helvetica', 'normal'); doc.setFontSize(6);
-        doc.setTextColor(60, 70, 50);
-        doc.text('SCAN AT ENTRY · 18+ · VALID PHOTO ID REQUIRED', rx, H - 6);
-
-        doc.save('Melattur Entertainment Events_' + ticketData.ticketId + '.pdf');
       } catch(e) {
-        console.error('PDF error:', e);
-        alert('PDF generation failed. Please try again.');
+        console.error('PDF generation error:', e);
+        alert('PDF generation failed: ' + e.message);
       }
 
       btnEl.disabled = false;
@@ -694,7 +851,9 @@
     }
   </script>
 
-  <!-- Avatar Crop Modal -->
+  <!-- ═══════════════════════════════════════════
+       Avatar Crop Modal
+  ════════════════════════════════════════════════ -->
   <div id="cropModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:1100;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(8px);">
     <div style="background:#14141C;border:1px solid rgba(255,255,255,0.09);border-radius:16px;width:100%;max-width:420px;overflow:hidden;">
       <div style="height:3px;background:linear-gradient(90deg,#6A0DAD,#9D4EDD,#6A0DAD);"></div>
@@ -778,7 +937,6 @@
     ctx.fillRect(0, 0, size, size);
     if (!cropImg) return;
 
-    // Fit image to canvas with scale
     const aspect = cropImg.width / cropImg.height;
     let baseW, baseH;
     if (aspect > 1) { baseH = size; baseW = baseH * aspect; }
@@ -837,7 +995,6 @@
     const container = document.getElementById('cropContainer');
     const size = container.offsetWidth;
 
-    // Export circular crop as 200x200 PNG
     const outCanvas = document.createElement('canvas');
     outCanvas.width = 200; outCanvas.height = 200;
     const ctx = outCanvas.getContext('2d');
@@ -856,7 +1013,6 @@
       });
       const d = await res.json();
       if (d.success) {
-        // Update avatar on page
         let imgEl = document.getElementById('avatarImg');
         const initials = document.getElementById('avatarInitials');
         if (!imgEl) {

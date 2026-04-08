@@ -49,6 +49,13 @@
         <div class="action-sub">Scan entry tickets</div>
       </a>
       <% } %>
+      <% if(staffUser.canSellTickets){ %>
+      <a href="/staff/sell" class="action-card" style="border-color:rgba(0,200,80,0.2);">
+        <div class="action-icon" style="background:rgba(0,200,80,0.1);border-color:rgba(0,200,80,0.25);color:#00c850;"><i class="bi bi-cash-stack"></i></div>
+        <div class="action-label">Sell Tickets</div>
+        <div class="action-sub">Offline cash sales</div>
+      </a>
+      <% } %>
       <% if(staffUser.canViewBookings){ %>
       <a href="/admin/bookings" class="action-card">
         <div class="action-icon"><i class="bi bi-ticket-perforated-fill"></i></div>
@@ -63,7 +70,7 @@
         <div class="action-sub">Manage events</div>
       </a>
       <% } %>
-      <% if(!staffUser.canScanQR && !staffUser.canViewBookings && !staffUser.canManageEvents){ %>
+      <% if(!staffUser.canScanQR && !staffUser.canViewBookings && !staffUser.canManageEvents && !staffUser.canSellTickets){ %>
       <div class="no-access" style="grid-column:1/-1;">
         <i class="bi bi-lock-fill" style="font-size:2rem;display:block;margin-bottom:0.7rem;color:#FF4444;"></i>
         No access permissions assigned yet.<br/>Contact your admin.

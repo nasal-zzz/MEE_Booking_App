@@ -133,7 +133,7 @@
         <td style="font-size:0.8rem;color:var(--muted);"><%= m.email %></td>
         <td style="font-size:0.8rem;color:var(--muted);"><%= m.phone||'—' %></td>
         <td style="font-size:0.72rem;color:var(--muted);">
-          <%= [m.canScanQR&&'QR',m.canViewBookings&&'Bookings',m.canManageEvents&&'Events'].filter(Boolean).join(' · ')||'None' %>
+          <%= [m.canScanQR&&'QR',m.canViewBookings&&'Bookings',m.canManageEvents&&'Events',m.canSellTickets&&'Sell'].filter(Boolean).join(' · ')||'None' %>
         </td>
         <td><span class="<%= m.isActive?'badge-active':'badge-blocked' %>" id="sbadge-<%= m._id %>"><%= m.isActive?'ACTIVE':'BLOCKED' %></span></td>
         <td>

@@ -13,6 +13,36 @@ function getCurrentAdmin(req) {
 function parseEventBody(b) {
   let rawTiers = [];
   try { rawTiers = JSON.parse(b.ticketTypesJson || '[]'); } catch(e) {}
+  // const ticketTypes = rawTiers.map(t => ({
+  //   category:    String(t.category || '').toLowerCase().replace(/\s+/g,'_'),
+  //   name:        String(t.name     || t.category || ''),
+  //   color:       t.color           || '#6A0DAD',
+  //   price:       parseInt(t.price)        || 0,
+  //   ageLimit:    parseInt(t.ageLimit)     || 0,
+  //   ticketType:  t.ticketType             || 'single',
+  //   totalSeats:  parseInt(t.totalSeats)   || 0,
+  //   bookedSeats: parseInt(t.bookedSeats)  || 0,
+  //   maxPerOrder: parseInt(t.maxPerOrder)  || 10,
+  //   seatType:    t.seatType               || 'standing',
+  //   seatPrefix:  String(t.seatPrefix      || '').toLowerCase().replace(/\s+/g,''),
+  //   seatStart:   parseInt(t.seatStart)    || 1,
+  //   discountTiers: Array.isArray(t.discountTiers)
+  //     ? t.discountTiers
+  //         .filter(d => d.minQty > 0 && d.discount > 0)
+  //         .map(d => ({ minQty: parseInt(d.minQty), discount: parseInt(d.discount) }))
+  //         .sort((a,b) => a.minQty - b.minQty)
+  //     : [],
+  //   // keep legacy fields synced to first tier for backward compat
+  //   comboOfferMinQty:   (Array.isArray(t.discountTiers) && t.discountTiers[0]) ? parseInt(t.discountTiers[0].minQty)||0 : 0,
+  //   comboOfferDiscount: (Array.isArray(t.discountTiers) && t.discountTiers[0]) ? parseInt(t.discountTiers[0].discount)||0 : 0,
+  //   terms:       t.terms                  || '',
+  //   isActive:    t.isActive === true || t.isActive === 'true',
+  //   isCombo:     t.isCombo  === true || t.isCombo  === 'true',
+  //   comboCount:          parseInt(t.comboCount)          || 0,
+  //   comboOfferMinQty:    parseInt(t.comboOfferMinQty)    || 0,
+  //   comboOfferDiscount:  parseInt(t.comboOfferDiscount)  || 0,
+  // }));
+
   const ticketTypes = rawTiers.map(t => ({
     category:    String(t.category || '').toLowerCase().replace(/\s+/g,'_'),
     name:        String(t.name     || t.category || ''),
@@ -22,12 +52,25 @@ function parseEventBody(b) {
     ticketType:  t.ticketType             || 'single',
     totalSeats:  parseInt(t.totalSeats)   || 0,
     bookedSeats: parseInt(t.bookedSeats)  || 0,
+    maxPerOrder: parseInt(t.maxPerOrder)  || 10,
+    seatType:    t.seatType               || 'standing',
+    seatPrefix:  String(t.seatPrefix      || '').toLowerCase().replace(/\s+/g,''),
+    seatStart:   parseInt(t.seatStart)    || 1,
+    gateNumber:  String(t.gateNumber      || ''),   // ← ADD THIS LINE
+    discountTiers: Array.isArray(t.discountTiers)
+      ? t.discountTiers
+          .filter(d => d.minQty > 0 && d.discount > 0)
+          .map(d => ({ minQty: parseInt(d.minQty), discount: parseInt(d.discount) }))
+          .sort((a,b) => a.minQty - b.minQty)
+      : [],
+    // Legacy fields — derive from first discount tier only (remove the duplicate block below)
+    comboOfferMinQty:   (Array.isArray(t.discountTiers) && t.discountTiers[0]) ? parseInt(t.discountTiers[0].minQty)||0 : 0,
+    comboOfferDiscount: (Array.isArray(t.discountTiers) && t.discountTiers[0]) ? parseInt(t.discountTiers[0].discount)||0 : 0,
     terms:       t.terms                  || '',
     isActive:    t.isActive === true || t.isActive === 'true',
     isCombo:     t.isCombo  === true || t.isCombo  === 'true',
-    comboCount:          parseInt(t.comboCount)          || 1,
-    comboOfferMinQty:    parseInt(t.comboOfferMinQty)    || 0,
-    comboOfferDiscount:  parseInt(t.comboOfferDiscount)  || 0,
+    comboCount:  parseInt(t.comboCount)   || 0,
+    // ← DELETE the old duplicate comboOfferMinQty / comboOfferDiscount lines that were here
   }));
 
   let artists = [];
@@ -37,9 +80,13 @@ function parseEventBody(b) {
     name:             b.name,
     shortDescription: b.shortDescription || '',
     about:            b.about            || '',
-    bannerDesktop:    b.bannerDesktop    || '',
-    bannerMobile:     b.bannerMobile     || '',
-    bannerDetail:     b.bannerDetail     || '',
+    instructions:     b.instructions     || '',
+    bannerDesktop:      b.bannerDesktop      || '',
+    bannerMobile:       b.bannerMobile       || '',
+    bannerDetail:       b.bannerDetail       || '',
+    bannerDetailMobile: b.bannerDetailMobile || '',
+    slideDesktop:       b.slideDesktop       || '',
+    slideMobile:        b.slideMobile        || '',
     artists,
     date:             new Date(b.date),
     doorsOpen:        b.doorsOpen        || '8:00 PM',
@@ -65,6 +112,19 @@ exports.getDashboard = async (req, res) => {
       { $match: { paymentStatus: 'paid' } },
       { $group: { _id: null, total: { $sum: '$totalAmount' } } },
     ]);
+
+    // Get active event details with attendees
+    const activeEvent = events.find(e => e.isActive) || null;
+    let activeEventBookings = [];
+    let activeEventRevenue = 0;
+    if (activeEvent) {
+      activeEventBookings = await Booking.find({
+        event: activeEvent._id,
+        paymentStatus: 'paid',
+      }).populate('user', 'name phone email').lean();
+      activeEventRevenue = activeEventBookings.reduce((s, b) => s + (b.totalAmount || 0), 0);
+    }
+
     const currentAdmin  = getCurrentAdmin(req);
     const isSuperAdmin  = req.session.superAdminLoggedIn ||
       (req.session.staffLoggedIn && req.session.staffUser?.role === 'superadmin');
@@ -73,6 +133,9 @@ exports.getDashboard = async (req, res) => {
       events,
       currentAdmin,
       isSuperAdmin,
+      activeEvent,
+      activeEventBookings,
+      activeEventRevenue,
       stats: {
         totalEvents: events.length,
         activeEvents: events.filter(e => e.isActive).length,
@@ -99,7 +162,9 @@ exports.postCreateEvent = async (req, res) => {
     return res.redirect('/admin?success=Event+created');
   } catch (err) {
     console.error('postCreateEvent error:', err);
-    return res.render('admin/event-form', { title: 'New Event', event: null, error: err.message });
+    const currentAdmin = getCurrentAdmin(req);
+    const isSuperAdmin = req.session.superAdminLoggedIn || (req.session.staffLoggedIn && req.session.staffUser?.role === 'superadmin');
+    return res.render('admin/event-form', { title: 'New Event', event: null, error: err.message, currentAdmin, isSuperAdmin });
   }
 };
 
@@ -107,7 +172,9 @@ exports.getEditEvent = async (req, res) => {
   try {
     const event = await Event.findById(req.params.id);
     if (!event) return res.redirect('/admin');
-    res.render('admin/event-form', { title: 'Edit Event — Admin', event, error: null });
+    const currentAdmin = getCurrentAdmin(req);
+    const isSuperAdmin = req.session.superAdminLoggedIn || (req.session.staffLoggedIn && req.session.staffUser?.role === 'superadmin');
+    res.render('admin/event-form', { title: 'Edit Event — Admin', event, error: null, currentAdmin, isSuperAdmin });
   } catch (err) { res.redirect('/admin'); }
 };
 
@@ -117,7 +184,9 @@ exports.postUpdateEvent = async (req, res) => {
     return res.redirect('/admin?success=Event+updated');
   } catch (err) {
     const event = await Event.findById(req.params.id).catch(() => null);
-    return res.render('admin/event-form', { title: 'Edit Event', event, error: err.message });
+    const currentAdmin = getCurrentAdmin(req);
+    const isSuperAdmin = req.session.superAdminLoggedIn || (req.session.staffLoggedIn && req.session.staffUser?.role === 'superadmin');
+    return res.render('admin/event-form', { title: 'Edit Event', event, error: err.message, currentAdmin, isSuperAdmin });
   }
 };
 
@@ -219,9 +288,52 @@ exports.postSeatMap = async (req, res) => {
       { upsert: true, new: true, runValidators: false }
     );
 
+    // ── Write bookedSeats back to Event.ticketTypes (seat map is source of truth) ──
+    try {
+      const event = await Event.findById(eventId);
+      if (event) {
+        // Build map: category → total bookedSeats across all zones
+        const bookedMap = {};
+        cleanSections.forEach(s => {
+          bookedMap[s.category] = (bookedMap[s.category] || 0) + (s.bookedSeats || 0);
+        });
+        let changed = false;
+        event.ticketTypes.forEach(t => {
+          if (bookedMap[t.category] !== undefined && t.bookedSeats !== bookedMap[t.category]) {
+            t.bookedSeats = bookedMap[t.category];
+            changed = true;
+          }
+        });
+        if (changed) await event.save();
+      }
+    } catch (e) {
+      console.warn('SeatMap bookedSeats writeback warning:', e.message);
+      // Non-fatal — seatmap still saved
+    }
+
     res.json({ success: true });
   } catch (err) {
     console.error('SeatMap save error:', err);
+    res.json({ success: false, message: err.message });
+  }
+};
+
+// GET /admin/seatmap/:eventId/quota — fresh category quotas for sync
+exports.getEventQuota = async (req, res) => {
+  try {
+    const event = await Event.findById(req.params.eventId).lean();
+    if (!event) return res.json({ success: false, message: 'Event not found' });
+    res.json({
+      success: true,
+      categories: event.ticketTypes.map(t => ({
+        category:   t.category,
+        name:       t.name || t.category,
+        totalSeats: t.totalSeats || 0,
+        color:      t.color || '#6A0DAD',
+        price:      t.price || 0,
+      })),
+    });
+  } catch (err) {
     res.json({ success: false, message: err.message });
   }
 };

@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy & Policy | Melattur Events & Entertainments</title>
+  <meta name="description"
+    content="Privacy Policy for Melattur Events & Entertainments — how we collect, use, and protect your personal information when you book tickets for Melattur Pattu.">
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+  <!-- Global Stylesheet -->
+  <link href="/css/style.css" rel="stylesheet">
+  <!-- Privacy Page Stylesheet -->
+  <link href="/css/privacy.css" rel="stylesheet">
+</head>
+
+<body class="privacy-bg font-sans antialiased text-white relative min-h-screen flex flex-col">
+
+  <!-- Decorative fixed orbs -->
+  <div class="prv-orb prv-orb--tl"></div>
+  <div class="prv-orb prv-orb--br"></div>
+  <div class="prv-orb prv-orb--mid"></div>
+
+  <!-- Background Noise/Texture -->
+  <div class="fixed inset-0 opacity-[0.03] z-[-5] pointer-events-none"
+    style="background-image: url('data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E');">
+  </div>
+
+  <!-- Navbar -->
+    <%- include('../partials/navbar_home') %>
+
+    <main class="flex-grow">
+
+      <!-- ── Hero Banner ── -->
+      <section class="prv-hero">
+        <div class="prv-hero-eyebrow">
+          <span class="prv-hero-eyebrow-line"></span>
+          Melattur Events &amp; Entertainments
+        </div>
+        <h1>Privacy &amp; Policy</h1>
+        <p class="prv-hero-sub">
+          We are committed to protecting your <strong>personal information</strong> and your right to privacy.
+          This policy explains how we collect, use, and safeguard your data.
+        </p>
+
+        <!-- Meta badges -->
+        <div class="prv-hero-meta">
+          <span class="prv-hero-badge">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+              stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+            Your data is protected
+          </span>
+          <span class="prv-hero-badge">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+              stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+            Last updated: April 2026
+          </span>
+          <span class="prv-hero-badge">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+            </svg>
+            Applies to all attendees
+          </span>
+        </div>
+
+        <div class="prv-hero-divider"></div>
+      </section>
+
+      <!-- ── Two-Column Layout ── -->
+      <div class="prv-layout">
+
+        <!-- ── Sticky Sidebar TOC ── -->
+        <aside class="prv-toc" aria-label="Table of Contents">
+          <p class="prv-toc-title">Contents</p>
+          <ul class="prv-toc-list">
+            <li><a href="#prv-1" id="prv-toc-1"><span class="prv-toc-num">01</span>Information We Collect</a></li>
+            <li><a href="#prv-2" id="prv-toc-2"><span class="prv-toc-num">02</span>How We Use It</a></li>
+            <li><a href="#prv-3" id="prv-toc-3"><span class="prv-toc-num">03</span>Payment Security</a></li>
+            <li><a href="#prv-4" id="prv-toc-4"><span class="prv-toc-num">04</span>Data Sharing</a></li>
+            <li><a href="#prv-5" id="prv-toc-5"><span class="prv-toc-num">05</span>Cookies</a></li>
+            <li><a href="#prv-6" id="prv-toc-6"><span class="prv-toc-num">06</span>Data Retention</a></li>
+            <li><a href="#prv-7" id="prv-toc-7"><span class="prv-toc-num">07</span>Your Rights</a></li>
+            <li><a href="#prv-8" id="prv-toc-8"><span class="prv-toc-num">08</span>Media Consent</a></li>
+            <li><a href="#prv-9" id="prv-toc-9"><span class="prv-toc-num">09</span>Policy Changes</a></li>
+          </ul>
+          <div class="prv-toc-divider"></div>
+          <a href="#prv-contact" id="prv-toc-contact" class="prv-toc-contact-link">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path
+                d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z">
+              </path>
+            </svg>
+            Contact Us
+          </a>
+        </aside>
+
+        <!-- ── Main Content ── -->
+        <div class="prv-content">
+
+          <!-- Preamble -->
+          <div class="prv-preamble">
+            This Privacy Policy applies to all users of <strong>Melattur Events &amp; Entertainments</strong> —
+            including anyone who visits our website, purchases tickets, or attends our events. By using our services,
+            you agree to the collection and use of information in accordance with this policy.
+            This policy is effective as of <strong>April 2026</strong>.
+          </div>
+
+          <!-- ── Section 1: Information We Collect ── -->
+          <section id="prv-1" class="prv-section">
+            <div class="prv-section-header">
+              <div class="prv-section-badge">01</div>
+              <div class="prv-section-title-group">
+                <p class="prv-section-number">Section 1</p>
+                <h2 class="prv-section-title">Information We Collect</h2>
+              </div>
+            </div>
+            <div class="prv-section-divider"></div>
+            <p class="prv-body">When you use our services, we may collect the following types of information:</p>
+            <ul class="prv-list">
+              <li>
+                <span class="prv-bullet"></span>
+                <span><strong>Personal Identification:</strong> Full name, gender, email address, phone number, and age
+                  (required for ticket registration and age verification).</span>
+              </li>
+              <li>
+                <span class="prv-bullet"></span>
+                <span><strong>Ticket & Booking Details:</strong> Ticket type, seat category, quantity purchased, and
+                  associated QR code data.</span>
+              </li>
+              <li>
+                <span class="prv-bullet"></span>
+                <span><strong>Payment Information:</strong> Transaction reference, payment method type. We do
+                  <strong>not</strong> store raw card or banking details — see Section 3.</span>
+              </li>
+              <li>
+                <span class="prv-bullet"></span>
+                <span><strong>Device & Usage Data:</strong> IP address, browser type, device type, pages visited, and
+                  time spent on our website (collected automatically via cookies).</span>
+              </li>
+              <li>
+                <span class="prv-bullet"></span>
+                <span><strong>Event Attendance:</strong> Check-in timestamps and scan logs, used for crowd management
+                  and audit purposes.</span>
+              </li>
+            </ul>
+          </section>
+
+          <!-- ── Section 2: How We Use It ── -->
+          <section id="prv-2" class="prv-section">
+            <div class="prv-section-header">
+              <div class="prv-section-badge">02</div>
+              <div class="prv-section-title-group">
+                <p class="prv-section-number">Section 2</p>
+                <h2 class="prv-section-title">How We Use Your Information</h2>
+              </div>
+            </div>
+            <div class="prv-section-divider"></div>
+            <p class="prv-body">Your data is used exclusively to operate and improve our services:</p>
+            <ul class="prv-list">
+              <li>
+                <span class="prv-bullet"></span>
+                <span>To process your ticket purchase and issue a valid QR code for event entry.</span>
+              </li>
+              <li>
+                <span class="prv-bullet"></span>
+                <span>To send booking confirmations, event reminders, and important updates via email or SMS.</span>
+              </li>
+              <li>
+                <span class="prv-bullet"></span>
+                <span>To manage on-site check-in, crowd safety, and staff coordination.</span>
+              </li>
+              <li>
+                <span class="prv-bullet"></span>
+                <span>To detect and prevent fraudulent, duplicate, or counterfeit tickets.</span>
+              </li>
+              <li>
+                <span class="prv-bullet"></span>
+                <span>To analyse website usage and improve the user experience of our booking platform.</span>
+              </li>
+              <li>
+                <span class="prv-bullet"></span>
+                <span>To comply with any applicable legal or regulatory obligations.</span>
+              </li>
+            </ul>
+            <div class="prv-infobox">
+              <strong>We do not use your data for unsolicited marketing.</strong> You will only receive communications
+              directly related to your booking or future events from Melattur Events &amp; Entertainments.
+            </div>
+          </section>
+
+          <!-- ── Section 3: Payment Security ── -->
+          <section id="prv-3" class="prv-section">
+            <div class="prv-section-header">
+              <div class="prv-section-badge">03</div>
+              <div class="prv-section-title-group">
+                <p class="prv-section-number">Section 3</p>
+                <h2 class="prv-section-title">Payment Security</h2>
+              </div>
+            </div>
+            <div class="prv-section-divider"></div>
+            <p class="prv-body">
+              All payments are processed through <strong>secure, encrypted payment gateways</strong>. Melattur Events
+              &amp; Entertainments does <strong>not</strong> store, access, or process raw card numbers, CVVs, or
+              banking credentials at any point.
+            </p>
+            <ul class="prv-list">
+              <li>
+                <span class="prv-bullet"></span>
+                <span>Payment data is handled end-to-end by our certified payment processor.</span>
+              </li>
+              <li>
+                <span class="prv-bullet"></span>
+                <span>All transactions are protected using industry-standard <strong>SSL/TLS encryption</strong>.</span>
+              </li>
+              <li>
+                <span class="prv-bullet"></span>
+                <span>We retain only a transaction reference ID for reconciliation and support purposes.</span>
+              </li>
+            </ul>
+          </section>
+
+          <!-- ── Section 4: Data Sharing ── -->
+          <section id="prv-4" class="prv-section">
+            <div class="prv-section-header">
+              <div class="prv-section-badge">04</div>
+              <div class="prv-section-title-group">
+                <p class="prv-section-number">Section 4</p>
+                <h2 class="prv-section-title">Data Sharing &amp; Third Parties</h2>
+              </div>
+            </div>
+            <div class="prv-section-divider"></div>
+            <p class="prv-body">
+              We <strong>do not sell, rent, or trade</strong> your personal information to any third party.
+              Your data may be shared only in the following limited circumstances:
+            </p>
+            <ul class="prv-list">
+              <li>
+                <span class="prv-bullet"></span>
+                <span><strong>Service Providers:</strong> Trusted partners (e.g., payment processors, email delivery
+                  services) who assist in operating our platform under strict confidentiality agreements.</span>
+              </li>
+              <li>
+                <span class="prv-bullet"></span>
+                <span><strong>Legal Compliance:</strong> If required by law, court order, or government authority, we
+                  may disclose information as legally mandated.</span>
+              </li>
+              <li>
+                <span class="prv-bullet"></span>
+                <span><strong>Event Safety:</strong> Attendance and check-in data may be shared with on-site security
+                  or venue management solely for crowd safety purposes.</span>
+              </li>
+            </ul>
+          </section>
+
+          <!-- ── Section 5: Cookies ── -->
+          <section id="prv-5" class="prv-section">
+            <div class="prv-section-header">
+              <div class="prv-section-badge">05</div>
+              <div class="prv-section-title-group">
+                <p class="prv-section-number">Section 5</p>
+                <h2 class="prv-section-title">Cookies &amp; Tracking</h2>
+              </div>
+            </div>
+            <div class="prv-section-divider"></div>
+            <p class="prv-body">
+              Our website uses <strong>cookies</strong> — small data files stored on your browser — to enhance
+              your experience and analyse site usage.
+            </p>
+            <ul class="prv-list">
+              <li>
+                <span class="prv-bullet"></span>
+                <span><strong>Essential Cookies:</strong> Required for the website and booking process to function
+                  correctly (e.g., session management, cart state).</span>
+              </li>
+              <li>
+                <span class="prv-bullet"></span>
+                <span><strong>Analytics Cookies:</strong> Help us understand how visitors interact with the site so
+                  we can improve performance and usability.</span>
+              </li>
+            </ul>
+            <div class="prv-infobox">
+              You can control cookie preferences through your browser settings. Disabling essential cookies may
+              affect the functionality of the booking platform.
+            </div>
+          </section>
+
+          <!-- ── Section 6: Data Retention ── -->
+          <section id="prv-6" class="prv-section">
+            <div class="prv-section-header">
+              <div class="prv-section-badge">06</div>
+              <div class="prv-section-title-group">
+                <p class="prv-section-number">Section 6</p>
+                <h2 class="prv-section-title">Data Retention</h2>
+              </div>
+            </div>
+            <div class="prv-section-divider"></div>
+            <p class="prv-body">
+              We retain your personal data only for as long as necessary to fulfil the purposes outlined in this
+              policy or as required by applicable laws.
+            </p>
+            <ul class="prv-list">
+              <li>
+                <span class="prv-bullet"></span>
+                <span>Booking and attendance records are retained for a minimum of <strong>12 months</strong>
+                  post-event for audit and legal compliance.</span>
+              </li>
+              <li>
+                <span class="prv-bullet"></span>
+                <span>Anonymous, aggregated analytics data may be retained indefinitely for performance analysis.</span>
+              </li>
+              <li>
+                <span class="prv-bullet"></span>
+                <span>Upon verified request for deletion, we will remove personal data within <strong>30 business
+                    days</strong>, subject to any legal retention requirements.</span>
+              </li>
+            </ul>
+          </section>
+
+          <!-- ── Section 7: Your Rights ── -->
+          <section id="prv-7" class="prv-section">
+            <div class="prv-section-header">
+              <div class="prv-section-badge">07</div>
+              <div class="prv-section-title-group">
+                <p class="prv-section-number">Section 7</p>
+                <h2 class="prv-section-title">Your Rights</h2>
+              </div>
+            </div>
+            <div class="prv-section-divider"></div>
+            <p class="prv-body">As a user of our services, you have the following rights regarding your personal data:
+            </p>
+            <ul class="prv-list">
+              <li>
+                <span class="prv-bullet"></span>
+                <span><strong>Right to Access:</strong> You may request a copy of the personal data we hold about
+                  you.</span>
+              </li>
+              <li>
+                <span class="prv-bullet"></span>
+                <span><strong>Right to Rectification:</strong> You may request correction of inaccurate or incomplete
+                  data.</span>
+              </li>
+              <li>
+                <span class="prv-bullet"></span>
+                <span><strong>Right to Erasure:</strong> You may request deletion of your data, subject to legal
+                  retention requirements.</span>
+              </li>
+              <li>
+                <span class="prv-bullet"></span>
+                <span><strong>Right to Object:</strong> You may object to certain uses of your data, including
+                  analytics.</span>
+              </li>
+              <li>
+                <span class="prv-bullet"></span>
+                <span><strong>Right to Data Portability:</strong> You may request your data in a structured,
+                  machine-readable format.</span>
+              </li>
+            </ul>
+            <div class="prv-infobox">
+              To exercise any of these rights, please contact us at
+              <strong>meemelattur@gmail.com</strong>.
+              We will respond within <strong>30 business days</strong>.
+            </div>
+          </section>
+
+          <!-- ── Section 8: Media Consent ── -->
+          <section id="prv-8" class="prv-section">
+            <div class="prv-section-header">
+              <div class="prv-section-badge">08</div>
+              <div class="prv-section-title-group">
+                <p class="prv-section-number">Section 8</p>
+                <h2 class="prv-section-title">Media &amp; Photography Consent</h2>
+              </div>
+            </div>
+            <div class="prv-section-divider"></div>
+            <p class="prv-body">
+              By attending the event, you acknowledge that the event may be <strong>photographed, filmed, or
+                live-streamed</strong>. Your attendance constitutes consent to appear in event media.
+            </p>
+            <ul class="prv-list">
+              <li>
+                <span class="prv-bullet"></span>
+                <span>Event media (photos and videos) may be used for promotional purposes on social media, websites,
+                  and marketing materials <strong>without additional compensation</strong>.</span>
+              </li>
+              <li>
+                <span class="prv-bullet"></span>
+                <span>Melattur Events &amp; Entertainments retains full ownership of all event media produced by
+                  our team or contracted photographers.</span>
+              </li>
+              <li>
+                <span class="prv-bullet"></span>
+                <span>If you have concerns about appearing in event media, please contact us <strong>before the
+                    event date</strong>.</span>
+              </li>
+            </ul>
+          </section>
+
+          <!-- ── Section 9: Policy Changes ── -->
+          <section id="prv-9" class="prv-section">
+            <div class="prv-section-header">
+              <div class="prv-section-badge">09</div>
+              <div class="prv-section-title-group">
+                <p class="prv-section-number">Section 9</p>
+                <h2 class="prv-section-title">Changes to This Policy</h2>
+              </div>
+            </div>
+            <div class="prv-section-divider"></div>
+            <p class="prv-body">
+              We may update this Privacy Policy from time to time. Any changes will be posted on this page with an
+              updated effective date. We encourage you to review this policy periodically.
+            </p>
+            <p class="prv-body">
+              Continued use of our website or services after any changes constitutes your acceptance of the
+              updated policy. For significant changes, we will make reasonable efforts to notify registered users
+              via email.
+            </p>
+          </section>
+
+          <!-- ── Contact Card ── -->
+          <div id="prv-contact" class="prv-contact-card">
+            <div class="prv-contact-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path
+                  d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.21 12.9a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.09 9.91A16 16 0 0 0 13 15.83l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 21 16.92z">
+                </path>
+              </svg>
+            </div>
+            <h2>Questions or Concerns?</h2>
+            <p>
+              If you have any questions about this Privacy Policy or how we handle your data, please reach out
+              to our team. We are committed to addressing your concerns promptly and transparently.
+            </p>
+            <p>
+              📧 Email:
+              <a href="mailto:meemelattur@gmail.com">
+                meemelattur@gmail.com
+              </a>
+            </p>
+            <p>
+              We aim to respond to all privacy-related inquiries within <strong>5 business days</strong>.
+            </p>
+          </div>
+
+        </div><!-- end .prv-content -->
+
+      </div><!-- end .prv-layout -->
+
+    </main>
+
+    <!-- Footer -->
+    <%- include('../partials/footer_home') %>
+
+      <script>
+        // ── Active TOC highlighting on scroll ──
+        const sections = document.querySelectorAll('[id^="prv-"]');
+        const tocLinks = document.querySelectorAll('.prv-toc-list li a, .prv-toc-contact-link');
+
+        const tocMap = {
+          'prv-1': document.getElementById('prv-toc-1'),
+          'prv-2': document.getElementById('prv-toc-2'),
+          'prv-3': document.getElementById('prv-toc-3'),
+          'prv-4': document.getElementById('prv-toc-4'),
+          'prv-5': document.getElementById('prv-toc-5'),
+          'prv-6': document.getElementById('prv-toc-6'),
+          'prv-7': document.getElementById('prv-toc-7'),
+          'prv-8': document.getElementById('prv-toc-8'),
+          'prv-9': document.getElementById('prv-toc-9'),
+          'prv-contact': document.getElementById('prv-toc-contact'),
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              tocLinks.forEach(l => l.classList.remove('prv-toc-active'));
+              const id = entry.target.getAttribute('id');
+              if (tocMap[id]) tocMap[id].classList.add('prv-toc-active');
+            }
+          });
+        }, { rootMargin: '-80px 0px -55% 0px', threshold: 0 });
+
+        sections.forEach(s => observer.observe(s));
+
+        // Footer year
+        const yearEl = document.getElementById('current-year');
+        if (yearEl) yearEl.textContent = new Date().getFullYear();
+      </script>
+
+</body>
+
+</html>

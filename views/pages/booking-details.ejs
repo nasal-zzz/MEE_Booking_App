@@ -69,7 +69,7 @@
     .form-inp:focus{border-color:rgba(106,13,173,0.4);}
     .form-inp.err{border-color:#FF4444;}
     .form-inp[readonly]{opacity:0.55;cursor:not-allowed;}
-    /* Dark styled select - override browser default white dropdown */
+    /* Dark styled select */
     select.form-inp{
       appearance:none; -webkit-appearance:none;
       background:rgba(255,255,255,0.04) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236A0DAD' stroke-width='1.8' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 0.85rem center;
@@ -233,12 +233,12 @@
       <div class="sec-card">
         <div class="sec-hd"><div class="sec-num">1</div><div class="sec-title">SELECTED TICKET</div></div>
         <div class="sec-body">
-          <!-- JS fills this in from sessionStorage/URL -->
           <div id="selTicketDisplay" style="display:flex;align-items:center;gap:1rem;background:rgba(255,255,255,0.025);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:1rem 1.2rem;margin-bottom:1.2rem;">
             <div id="selTicketColor" style="width:44px;height:44px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;background:rgba(106,13,173,0.2);">🎟️</div>
             <div style="flex:1;">
               <div id="selTicketCat" style="font-family:var(--font-display);font-size:1.1rem;letter-spacing:2px;color:#fff;margin-bottom:0.2rem;">—</div>
               <div id="selTicketPrice" style="font-family:var(--font-mono);font-size:0.85rem;color:var(--accent);">—</div>
+              <div id="selTicketTiers" style="font-size:0.68rem;color:#f5c842;font-family:var(--font-mono);margin-top:0.2rem;display:none;"></div>
             </div>
             <a href="/booking/seatmap/<%= event._id %>" style="font-size:0.72rem;color:var(--accent);text-decoration:none;border-bottom:1px solid rgba(106,13,173,0.35);white-space:nowrap;">← Change</a>
           </div>
@@ -351,7 +351,7 @@
   <script>
   const EVENT_DATA = <%- JSON.stringify(event) %>;
   const CONV_FEE   = <%= event.convenienceFee||0 %>;
-  const USER       = <%- JSON.stringify(user?{name:(user.firstName||'')+' '+(user.lastName||''),phone:user.phone||'',email:user.email||''}:{name:'',phone:'',email:''}) %>;
+  const USER       = <%- JSON.stringify(user?{name:(user.firstName||'')+' '+(user.lastName||''),phone:user.phone||'',email:user.email||'',whatsapp:user.whatsapp||''}:{name:'',phone:'',email:'',whatsapp:''}) %>;
   // Dynamic colors from ticket type data
   const TCOLORS = Object.fromEntries((EVENT_DATA.ticketTypes||[]).map(t=>[t.category, t.color||'#6A0DAD']));
 
@@ -379,7 +379,7 @@
       const tt=EVENT_DATA.ticketTypes.find(t=>t.category===urlCat);
       if(tt && tt.bookedSeats < tt.totalSeats){
         price=tt.price; selTypeName=tt.category;
-        selTicketData=tt; // store full ticket data for comboCount
+        selTicketData=tt;
       } else {
         // Fallback to first available
         const fallback=EVENT_DATA.ticketTypes.find(t=>t.bookedSeats<t.totalSeats);
@@ -387,16 +387,13 @@
       }
 
       // Multiple-entry / combo: lock qty=1, attendee count = comboCount
-      // Triggers for: ticketType==='multiple' OR isCombo===true (covers family + any combo)
       const isComboTicket = selTicketData && (selTicketData.ticketType==='multiple' || selTicketData.isCombo===true);
       if(isComboTicket){
         isMultiEntry=true;
         multiCount=selTicketData.comboCount||2;
-        qty=1; // 1 ticket purchase = comboCount people
-        // Hide quantity controls
+        qty=1;
         const qtySection=document.getElementById('qtySectionWrap');
         if(qtySection){qtySection.style.display='none';}
-        // Show group ticket note
         const note=document.getElementById('groupTicketNote');
         if(note){note.style.display='flex'; note.querySelector('.gtn-count').textContent=multiCount;}
       }
@@ -404,7 +401,7 @@
       // Set hidden input
       document.getElementById('hiddenTicketType').value=selTypeName;
 
-      // Display selected ticket info (no grid — just a summary box)
+      // Display selected ticket info
       const c=TCOLORS[selTypeName]||'#6A0DAD';
       const displayEl=document.getElementById('selTicketDisplay');
       if(displayEl){displayEl.style.borderColor=c+'44';}
@@ -415,10 +412,31 @@
       const priceEl=document.getElementById('selTicketPrice');
       if(priceEl){priceEl.textContent='₹'+price.toLocaleString('en-IN')+' per person';}
 
+      // Show bulk discount tiers below price
+      const tiersEl = document.getElementById('selTicketTiers');
+      if(tiersEl && selTicketData){
+        const trs = (Array.isArray(selTicketData.discountTiers) && selTicketData.discountTiers.length > 0)
+          ? selTicketData.discountTiers.filter(d=>d.minQty>0&&d.discount>0).sort((a,b)=>a.minQty-b.minQty)
+          : (selTicketData.comboOfferMinQty>0 ? [{minQty:selTicketData.comboOfferMinQty,discount:selTicketData.comboOfferDiscount}] : []);
+        if(trs.length > 0){
+          tiersEl.textContent = '🎯 ' + trs.map(d=>`Buy ${d.minQty}+ → ₹${d.discount.toLocaleString('en-IN')} off per group`).join(' · ');
+          tiersEl.style.display = 'block';
+        } else {
+          tiersEl.style.display = 'none';
+        }
+      }
+
+      // Update max qty hint
+      const qtyHint = document.getElementById('qtyHint');
+      if(qtyHint && selTicketData && selTicketData.maxPerOrder > 0){
+        qtyHint.textContent = `Max ${selTicketData.maxPerOrder} per order`;
+      }
+
       // Cap qty by available seats for this ticket type
       const _tt = EVENT_DATA.ticketTypes.find(t=>t.category===selTypeName);
       const _avail = _tt ? Math.max(0, (_tt.totalSeats||999) - (_tt.bookedSeats||0)) : 999;
-      const _maxQ = _avail > 0 ? Math.min(10, _avail) : 10;
+      const _perOrderMax = (_tt && _tt.maxPerOrder > 0) ? _tt.maxPerOrder : 10;
+      const _maxQ = _avail > 0 ? Math.min(_perOrderMax, _avail) : _perOrderMax;
       qty = Math.min(urlQty, _maxQ);
 
       // Update zone banner
@@ -430,14 +448,13 @@
     setQtyDisplay(); updateChips(); updateAttendeeForms(); updateSummary();
   })();
 
-  // (Ticket type is locked from step 1 — no tier selection needed here)
-
   // ─── QTY ─────────────────────────────────────────────────────────
   function getMaxQty(){
     const tt=EVENT_DATA.ticketTypes.find(t=>t.category===selTypeName);
-    if(!tt||!tt.totalSeats) return 10;
+    if(!tt||!tt.totalSeats) return (tt && tt.maxPerOrder) ? tt.maxPerOrder : 10;
     const avail=Math.max(0,(tt.totalSeats||0)-(tt.bookedSeats||0));
-    return avail>0 ? Math.min(10,avail) : 10;
+    const perOrderMax = tt.maxPerOrder > 0 ? tt.maxPerOrder : 10;
+    return avail>0 ? Math.min(perOrderMax, avail) : perOrderMax;
   }
   function changeQty(d){
     const mq=getMaxQty();
@@ -451,7 +468,6 @@
     document.getElementById('qtyDisplay').textContent=qty;
     document.getElementById('qtyMinus').disabled=qty<=1;
     document.getElementById('qtyPlus').disabled=qty>=mq;
-    // Update hint text
     const hintEl=document.getElementById('qtyHint');
     if(hintEl){
       if(avail>0&&avail<=10){
@@ -464,7 +480,6 @@
         hintEl.style.display='block';
       }
     }
-    // Availability warning banner
     const warnEl=document.getElementById('qtyAvailWarn');
     const warnTxt=document.getElementById('qtyAvailWarnTxt');
     if(warnEl&&warnTxt){
@@ -526,20 +541,24 @@
         ${isFirst?`
         <div>
           <label class="form-label">Phone</label>
-          <input type="tel" class="form-inp" value="${USER.phone}" readonly/>
+          <input type="tel" class="form-inp" value="${USER.phone}" readonly style="opacity:0.6;cursor:not-allowed;"/>
         </div>
         <div>
-          <label class="form-label">Email</label>
-          <input type="email" class="form-inp" id="em-1" placeholder="email@example.com" value="${USER.email}"/>
+          <label class="form-label">Email ${USER.email?'':'<span style="color:#FF4444;">*</span>'}</label>
+          <input type="email" class="form-inp" id="em-1" placeholder="email@example.com" value="${USER.email}" ${USER.email?'readonly style="opacity:0.6;cursor:not-allowed;"':''}/>
+          <div class="field-err" id="em-err-1"><i class="bi bi-exclamation-circle"></i> Valid email required</div>
+        </div>
+        <div style="grid-column:1/-1;">
+          <label class="form-label">WhatsApp Number ${USER.whatsapp?'':'<span style="color:#FF4444;">*</span>'}</label>
+          <input type="tel" class="form-inp" id="wa-1" placeholder="91XXXXXXXXXX" value="${USER.whatsapp||USER.phone||''}" ${USER.whatsapp?'readonly style="opacity:0.6;cursor:not-allowed;"':''} inputmode="numeric" maxlength="15"/>
+          <div class="field-err" id="wa-err-1"><i class="bi bi-exclamation-circle"></i> WhatsApp number required</div>
+          <div style="font-size:0.68rem;color:#555;margin-top:0.25rem;">Your ticket PDF will be sent here via WhatsApp &amp; email.</div>
         </div>`:''}
       </div>
       <div class="special-toggle" onclick="document.getElementById('sp-${n}').classList.toggle('show')">
         <i class="bi bi-chat-left-text"></i> Add special request
       </div>
       <textarea class="special-inp" id="sp-${n}" rows="2" placeholder="E.g. wheelchair access..."></textarea>`;
-    // Live blur validation for this attendee card
-    var nEl = document.getElementById ? el.querySelector('#n-'+n) : null;
-    // Use setTimeout to ensure DOM is appended before querying
     setTimeout(function(){
       var nf = document.getElementById('n-'+n);
       var af = document.getElementById('a-'+n);
@@ -558,13 +577,37 @@
 
   function updateSummary(){
     const sub = qty * price;
-    // Auto-apply combo offer if qty meets minimum
-    let comboDisc = 0;
-    const comboMin = selTicketData?.comboOfferMinQty || 0;
-    const comboAmt = selTicketData?.comboOfferDiscount || 0;
-    if (comboMin > 0 && comboAmt > 0 && qty >= comboMin) comboDisc = comboAmt;
 
-    // Use whichever discount is bigger: combo offer or coupon
+    // ── Bulk discount tiers (new system) + legacy combo fallback ──
+    // ✅ FIX: multiply discount by number of groups to match backend logic
+    // e.g. minQty=4, discount=200, qty=8 → Math.floor(8/4) * 200 = ₹400
+    let comboDisc = 0;
+    let comboNudgeMsg = '';
+    const tiers = (selTicketData && Array.isArray(selTicketData.discountTiers) && selTicketData.discountTiers.length > 0)
+      ? selTicketData.discountTiers.filter(d => d.minQty > 0 && d.discount > 0).sort((a,b) => a.minQty - b.minQty)
+      : (selTicketData && selTicketData.comboOfferMinQty > 0
+          ? [{ minQty: selTicketData.comboOfferMinQty, discount: selTicketData.comboOfferDiscount }]
+          : []);
+
+    if (tiers.length > 0) {
+      // Find best applicable tier (highest minQty that qty satisfies)
+      const applicable = tiers.filter(d => qty >= d.minQty).sort((a,b) => b.minQty - a.minQty);
+      if (applicable.length > 0) {
+        // ✅ KEY FIX: multiply by number of complete groups, matching backend
+        const bestTier = applicable[0];
+        const groups = Math.floor(qty / bestTier.minQty);
+        comboDisc = groups * bestTier.discount;
+      }
+      // Next tier nudge — show how much more to unlock the next tier
+      const next = tiers.find(d => qty < d.minQty);
+      if (next) {
+        const need = next.minQty - qty;
+        const nextGroups = Math.floor(next.minQty / next.minQty); // always 1 for first group
+        comboNudgeMsg = `Add ${need} more ticket${need>1?'s':''} → unlock ₹${next.discount.toLocaleString('en-IN')} off!`;
+      }
+    }
+
+    // Use whichever discount is bigger: bulk tier or coupon
     const disc = Math.max(couponApplied ? discAmt : 0, comboDisc);
     const total = Math.max(sub - disc + CONV_FEE, 0);
 
@@ -576,22 +619,23 @@
     setEl('qtyTotalAmt', price?'₹'+sub.toLocaleString('en-IN'):'—');
     setEl('mobTotal',    price?'₹'+total.toLocaleString('en-IN'):'—');
 
-    const discRow  = document.getElementById('discRow');
-    const discVal  = document.getElementById('discVal');
+    const discRow    = document.getElementById('discRow');
+    const discVal    = document.getElementById('discVal');
     const comboNudge = document.getElementById('comboOfferNudge');
-    if (comboMin > 0 && comboAmt > 0) {
-      if (qty >= comboMin) {
-        if(discRow) discRow.classList.add('show');
-        if(discVal){ discVal.textContent='-₹'+disc.toLocaleString('en-IN'); discVal.style.color='#f5c842'; }
-        if(comboNudge) comboNudge.style.display='none';
-      } else {
-        const need = comboMin - qty;
-        if(comboNudge){ comboNudge.style.display='flex'; var cnTxt=comboNudge.querySelector('.cn-text'); if(cnTxt) cnTxt.textContent='Add '+need+' more ticket'+(need>1?'s':'')+' → get ₹'+comboAmt.toLocaleString('en-IN')+' off!'; }
-        if(!couponApplied){ if(discRow) discRow.classList.remove('show'); }
-        else { if(discRow) discRow.classList.add('show'); if(discVal){ discVal.textContent='-₹'+(couponApplied?discAmt:0).toLocaleString('en-IN'); discVal.style.color='#00FF88'; } }
-      }
+
+    if (comboDisc > 0) {
+      // Tier discount applied — show it
+      if(discRow) discRow.classList.add('show');
+      if(discVal){ discVal.textContent = '-₹'+disc.toLocaleString('en-IN'); discVal.style.color='#f5c842'; }
+      if(comboNudge) comboNudge.style.display = comboNudgeMsg ? 'flex' : 'none';
+      if(comboNudgeMsg){ var cnTxt=comboNudge.querySelector('.cn-text'); if(cnTxt) cnTxt.textContent=comboNudgeMsg; }
+    } else if (tiers.length > 0 && comboNudgeMsg) {
+      // Tiers exist but none unlocked yet — show nudge only
+      if(comboNudge){ comboNudge.style.display='flex'; var cnTxt2=comboNudge.querySelector('.cn-text'); if(cnTxt2) cnTxt2.textContent=comboNudgeMsg; }
+      if(!couponApplied){ if(discRow) discRow.classList.remove('show'); }
+      else { if(discRow) discRow.classList.add('show'); if(discVal){ discVal.textContent='-₹'+discAmt.toLocaleString('en-IN'); discVal.style.color='#00FF88'; } }
     } else {
-      if(comboNudge) comboNudge.style.display='none';
+      if(comboNudge) comboNudge.style.display = 'none';
       if(couponApplied){ if(discRow) discRow.classList.add('show'); if(discVal){ discVal.textContent='-₹'+discAmt.toLocaleString('en-IN'); discVal.style.color='#00FF88'; } }
       else { if(discRow) discRow.classList.remove('show'); }
     }
@@ -679,6 +723,30 @@
       if(!a.value||isNaN(age)||age<1||age>120){a.classList.add('err');document.getElementById('ae-'+i).classList.add('show');ok=false;}
       if(g&&!g.value){g.classList.add('err');document.getElementById('ge-'+i).classList.add('show');if(ok){g.scrollIntoView({behavior:'smooth',block:'center'});}ok=false;}
     }
+    // Email — mandatory if not pre-filled
+    if(!USER.email){
+      const emEl=document.getElementById('em-1'), emErr=document.getElementById('em-err-1');
+      if(emEl&&emErr){
+        emErr.classList.remove('show'); emEl.classList.remove('err');
+        const ev=emEl.value.trim();
+        if(!ev||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(ev)){
+          emEl.classList.add('err'); emErr.classList.add('show');
+          emEl.scrollIntoView({behavior:'smooth',block:'center'}); ok=false;
+        }
+      }
+    }
+    // WhatsApp — mandatory if not pre-filled
+    if(!USER.whatsapp){
+      const waEl=document.getElementById('wa-1'), waErr=document.getElementById('wa-err-1');
+      if(waEl&&waErr){
+        waErr.classList.remove('show'); waEl.classList.remove('err');
+        const wv=waEl.value.trim();
+        if(!wv||wv.length<10){
+          waEl.classList.add('err'); waErr.classList.add('show');
+          waEl.scrollIntoView({behavior:'smooth',block:'center'}); ok=false;
+        }
+      }
+    }
     return ok;
   }
 
@@ -703,6 +771,7 @@
   var _lastOrderId = null;
   var _lastPayData = null;
   var _paymentCompleted = false;
+  var _paymentFailed = false;
 
   function showPayFailed(errMsg) {
     document.getElementById('pfErrorMsg').textContent = errMsg || 'Please try again or use a different payment method.';
@@ -717,8 +786,9 @@
 
   function retryFromOverlay() {
     document.getElementById('payFailedOverlay').classList.remove('show');
-    setLoading(false); // re-enable Pay Now button
+    setLoading(false);
     if (_lastPayData) {
+      _paymentFailed = false;
       setTimeout(function(){ launchRazorpay(_lastPayData); }, 200);
     } else {
       setLoading(false);
@@ -741,6 +811,8 @@
         special: spEl ? spEl.value : ''
       });
     }
+    var emailVal    = (document.getElementById('em-1')?.value||'').trim() || USER.email    || '';
+    var whatsappVal = (document.getElementById('wa-1')?.value||'').trim() || USER.whatsapp || '';
     var submitQty = isMultiEntry ? 1 : qty;
     setLoading(true);
     fetch('/booking/create-order', {
@@ -751,7 +823,8 @@
         eventId: EVENT_DATA._id, ticketType: selTypeName,
         quantity: submitQty, couponCode: couponCode,
         attendees: attendees, zone: selZone,
-        comboCount: isMultiEntry ? multiCount : 1
+        comboCount: isMultiEntry ? multiCount : 1,
+        email: emailVal, whatsapp: whatsappVal
       })
     })
     .then(function(r){ return r.json(); })
@@ -770,6 +843,7 @@
   }
 
   function launchRazorpay(data) {
+    _paymentFailed = false;
     _paymentCompleted = false;
     var rzp = new Razorpay({
       key: data.key, amount: data.amount, currency: data.currency,
@@ -778,22 +852,34 @@
       order_id: data.orderId, prefill: data.prefill,
       theme: { color: '#6A0DAD', backdrop_color: '#0B0B0F' },
       modal: {
+        // ondismiss: function(){
+        //   setTimeout(function(){
+        //     if(_paymentCompleted) return;
+        //     fetch('/booking/save-pending', {
+        //       method: 'POST', headers: { 'Content-Type': 'application/json' },
+        //       credentials: 'include',
+        //       body: JSON.stringify({ orderId: data.orderId })
+        //     }).catch(function(){});
+        //     setLoading(false);
+        //   }, 900);
+        // }
         ondismiss: function(){
-          // Delay 900ms — if handler fired (payment succeeded), _paymentCompleted will be true
-          // This prevents the race where ondismiss and handler fire at nearly the same time
-          setTimeout(function(){
-            if(_paymentCompleted) return;
-            fetch('/booking/save-pending', {
-              method: 'POST', headers: { 'Content-Type': 'application/json' },
-              credentials: 'include',
-              body: JSON.stringify({ orderId: data.orderId })
-            }).catch(function(){});
-            setLoading(false);
-          }, 900);
-        }
+  // If payment.failed already fired, skip save-pending.
+  // save-failed already released seats — save-pending would double-release.
+  if(_paymentCompleted || _paymentFailed) { setLoading(false); return; }
+  setTimeout(function(){
+    if(_paymentCompleted || _paymentFailed) return;
+    fetch('/booking/save-pending', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ orderId: data.orderId })
+    }).catch(function(){});
+    setLoading(false);
+  }, 900);
+}
       },
       handler: function(response){
-        _paymentCompleted = true; // set immediately before any async work
+        _paymentCompleted = true;
         showToast('Verifying payment', 'Please wait a moment...', 'info', 9000);
         fetch('/booking/verify-payment', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -821,6 +907,7 @@
       }
     });
     rzp.on('payment.failed', function(r){
+      _paymentFailed = true;
       var errMsg = r.error && r.error.description ? r.error.description : 'Payment could not be processed.';
       fetch('/booking/save-failed', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -837,8 +924,6 @@
     document.getElementById('payBtnTxt').style.display=on?'none':'flex';
     document.getElementById('paySpinner').style.display=on?'block':'none';
   }
-
-  // mob-bar removed
   </script>
 </body>
 </html>

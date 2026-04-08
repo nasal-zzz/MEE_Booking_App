@@ -424,29 +424,7 @@
           </div>
         </div>
 
-        <!-- FAQs -->
-        <div class="faq-section">
-          <p class="faq-tag">// frequently asked</p>
-          <h2 class="faq-title">QUICK ANSWERS</h2>
-          <div class="faq-list">
-            <% [
-              {q:'Can I cancel or get a refund for my ticket?', a:'Tickets are non-refundable once payment is confirmed. In case of event cancellation by the organiser, a full refund will be processed within 7 working days.'},
-              {q:'I paid but didn\'t receive my ticket. What do I do?', a:'Log in and check My Tickets. If payment was deducted but no ticket shows, please contact us via this form or WhatsApp with your payment ID and we\'ll resolve it immediately.'},
-              {q:'What is the minimum age for entry?', a:'Entry age varies by event and ticket category. The minimum age is clearly listed on each ticket tier. You must carry a valid government ID for verification at the gate.'},
-              {q:'Can I transfer my ticket to someone else?', a:'Tickets are non-transferable and linked to the attendee details you provided at the time of booking. Present the QR code along with a matching ID at entry.'},
-              {q:'What payment methods are accepted?', a:'We accept all major UPI apps (GPay, PhonePe, Paytm), net banking, debit cards, and credit cards via our Razorpay-powered secure checkout.'},
-              {q:'My payment failed but money was deducted. Help!', a:'In this case the amount will be automatically refunded to your source account within 5–7 business days. You can also retry payment from My Tickets. If you need help urgently, reach us on WhatsApp.'},
-            ].forEach(function(f){ %>
-            <div class="faq-item" onclick="toggleFaq(this)">
-              <div class="faq-q"><span><%= f.q %></span><i class="bi bi-chevron-down"></i></div>
-              <div class="faq-a"><%= f.a %></div>
-            </div>
-            <% }); %>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+        
 
   <%- include('../partials/scripts') %>
   <script>

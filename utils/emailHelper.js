@@ -1,23 +1,31 @@
+'use strict';
+
 const nodemailer = require('nodemailer');
-const { generateTicketPDF } = require('./pdfHelper');
 
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST || 'smtp.gmail.com',
-  port: parseInt(process.env.SMTP_PORT) || 587,
-  secure: false,
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-});
+// ── Lazy transporter (avoids crash if SMTP not configured) ──────────────────
+let _transporter = null;
+const getTransporter = () => {
+  if (_transporter) return _transporter;
+  _transporter = nodemailer.createTransport({
+    host:   process.env.SMTP_HOST || 'smtp.gmail.com',
+    port:   parseInt(process.env.SMTP_PORT) || 587,
+    secure: false,
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
+    },
+  });
+  return _transporter;
+};
 
-// Send booking confirmation email with QR codes
+// ── 1. Booking Confirmation (with PDF ticket attachment) ────────────────────
 const sendBookingConfirmation = async ({ to, name, booking, event }) => {
   if (!process.env.SMTP_USER) {
     console.log(`📧 [DEV] Skipping email to ${to} — SMTP not configured.`);
     return;
   }
 
+  // ── Build attendee rows ──
   const ticketRows = booking.tickets.map((t, i) => `
     <tr>
       <td style="padding:8px;border-bottom:1px solid #eee;">${i + 1}</td>
@@ -28,7 +36,8 @@ const sendBookingConfirmation = async ({ to, name, booking, event }) => {
   const html = `
     <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#08080e;color:#e8e8f0;border-radius:12px;overflow:hidden;">
       <div style="background:linear-gradient(135deg,#0a0a0f,#1a1f00);padding:30px;text-align:center;">
-        <img src="${process.env.APP_URL}/img/mee-logo.png" alt="Melattur Entertainment Events" style="height:52px;width:auto;object-fit:contain;" onerror="this.style.display='none'"/><h1 style="font-size:1rem;letter-spacing:3px;color:#aaa;margin:6px 0 0;font-weight:400;">MELATTUR ENTERTAINMENT EVENTS</h1>
+        <img src="${process.env.APP_URL}/img/mee-logo.png" alt="Melattur Entertainment Events" style="height:52px;width:auto;object-fit:contain;" onerror="this.style.display='none'"/>
+        <h1 style="font-size:1rem;letter-spacing:3px;color:#aaa;margin:6px 0 0;font-weight:400;">MELATTUR ENTERTAINMENT EVENTS</h1>
       </div>
       <div style="padding:30px;">
         <h2 style="color:#c8ff00;letter-spacing:2px;margin-bottom:8px;">BOOKING CONFIRMED! 🎉</h2>
@@ -56,19 +65,18 @@ const sendBookingConfirmation = async ({ to, name, booking, event }) => {
 
         <div style="background:rgba(200,255,0,0.08);border:1px solid rgba(200,255,0,0.2);border-radius:8px;padding:16px;margin-top:20px;">
           <p style="margin:0;font-size:13px;color:#aaa;">
-            <strong style="color:#c8ff00;">⚠ Important:</strong> Each QR code is for single-entry use only. 
-            Carry a valid government ID.  
+            <strong style="color:#c8ff00;">⚠ Important:</strong> Each QR code is for single-entry use only.
             Doors open at <strong style="color:#fff;">${event.doorsOpen}</strong>.
           </p>
         </div>
 
         <div style="background:rgba(200,255,0,0.06);border:1px solid rgba(200,255,0,0.2);border-radius:8px;padding:16px;margin-top:20px;text-align:center;">
-          <p style="margin:0 0 6px;font-size:13px;color:#c8ff00;font-weight:700;">📎 Your tickets are attached to this email</p>
-          <p style="margin:0;font-size:12px;color:#aaa;">Open the attached file in your browser and press <strong style="color:#fff;">Ctrl+P → Save as PDF</strong> to save your QR tickets.</p>
+          <p style="margin:0 0 6px;font-size:13px;color:#c8ff00;font-weight:700;">📎 Your tickets are attached to this email as a PDF</p>
+          <p style="margin:0;font-size:12px;color:#aaa;">Open the attached PDF to view your QR code tickets. Screenshot or print them before the event.</p>
         </div>
 
         <div style="text-align:center;margin-top:20px;">
-          <a href="${process.env.APP_URL}/booking/ticket/${booking._id}" 
+          <a href="${process.env.APP_URL}/booking/ticket/${booking._id}"
              style="background:#c8ff00;color:#000;padding:12px 30px;border-radius:4px;text-decoration:none;font-weight:700;letter-spacing:1px;">
             VIEW MY TICKETS ONLINE
           </a>
@@ -79,49 +87,56 @@ const sendBookingConfirmation = async ({ to, name, booking, event }) => {
       </div>
     </div>`;
 
-  // Generate ticket PDF buffer
+  // ── Generate real PDF attachment ──
   let pdfAttachment = null;
   try {
-    const pdfBuffer = await generateTicketPDF({ booking, event });
+    const { generateTicketPDF } = require('./pdfHelper');
+
+    let pdfSponsors = [];
+    try {
+      const Sponsor = require('../models/Sponsor');
+      pdfSponsors = await Sponsor.find({ isActive: true, showOnTicket: true }).sort({ order: 1 }).lean();
+    } catch (e) { /* sponsors optional */ }
+
+    const pdfBuffer = await generateTicketPDF({ booking, event, sponsors: pdfSponsors });
+
     pdfAttachment = {
-      filename: `MEE_${booking.bookingRef}_Tickets.html`,
-      content: pdfBuffer,
-      contentType: 'text/html',
+      filename:    `MEE_${booking.bookingRef}_Tickets.pdf`,
+      content:     pdfBuffer,
+      contentType: 'application/pdf',
     };
-    console.log('📄 Ticket PDF generated:', pdfBuffer.length, 'bytes');
+    console.log('📄 Ticket PDF generated for email:', pdfBuffer.length, 'bytes');
   } catch (pdfErr) {
     console.error('⚠ PDF generation failed (email will send without attachment):', pdfErr.message);
   }
 
-  const mailOptions = {
-    from: `"Melattur Entertainment Events" <${process.env.SMTP_USER}>`,
+  await getTransporter().sendMail({
+    from:        `"Melattur Entertainment Events" <${process.env.SMTP_USER}>`,
+     envelope: {
+    from: process.env.BOUNCE_EMAIL || process.env.SMTP_USER,  // ← ADD THIS
     to,
-    subject: `🎟 Your Tickets — ${event.name} [${booking.bookingRef}]`,
+  },
+    to,
+    subject:     `🎟 Your Tickets — ${event.name} [${booking.bookingRef}]`,
     html,
     attachments: pdfAttachment ? [pdfAttachment] : [],
-  };
+  });
 
-  await transporter.sendMail(mailOptions);
-  console.log(`📧 Confirmation email sent to ${to} ${pdfAttachment ? '(with ticket attachment)' : '(no attachment)'}`);
+  console.log(`📧 Confirmation email sent to ${to} ${pdfAttachment ? '(with PDF attachment)' : '(no attachment)'}`);
 };
 
-// re-exported below with new functions
-
-
-// Send pending payment reminder
+// ── 2. Payment Pending Reminder ─────────────────────────────────────────────
 const sendPendingPaymentReminder = async ({ to, name, booking, event }) => {
   if (!process.env.SMTP_USER) {
     console.log(`📧 [DEV] Pending reminder → ${to}`);
     return;
   }
-  const transporter = require('nodemailer').createTransport({
-    host: process.env.SMTP_HOST || 'smtp.gmail.com',
-    port: parseInt(process.env.SMTP_PORT) || 587,
-    secure: false,
-    auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
-  });
-  await transporter.sendMail({
-    from: `"Melattur Entertainment Events" <${process.env.SMTP_USER}>`,
+  await getTransporter().sendMail({
+    from:    `"Melattur Entertainment Events" <${process.env.SMTP_USER}>`,
+     envelope: {
+    from: process.env.BOUNCE_EMAIL || process.env.SMTP_USER,  // ← ADD THIS
+    to,
+  },
     to,
     subject: `⏳ Complete Your Booking for ${event.name}`,
     html: `
@@ -137,7 +152,8 @@ const sendPendingPaymentReminder = async ({ to, name, booking, event }) => {
             <p style="margin:4px 0;"><span style="color:#777;">Tickets:</span> <strong>${booking.quantity} × ${booking.ticketType}</strong></p>
             <p style="margin:4px 0;"><span style="color:#777;">Amount:</span> <strong style="color:#f5c842;">₹${booking.totalAmount.toLocaleString('en-IN')}</strong></p>
           </div>
-          <a href="${process.env.APP_URL || 'https://yourapp.com'}/booking/retry-payment/${booking._id}" style="display:inline-block;background:#f5c842;color:#0a0a0f;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:700;letter-spacing:1px;margin-top:8px;">
+          <a href="${process.env.APP_URL || 'https://yourapp.com'}/booking/retry-payment/${booking._id}"
+             style="display:inline-block;background:#f5c842;color:#0a0a0f;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:700;letter-spacing:1px;margin-top:8px;">
             💳 Complete Payment
           </a>
           <p style="margin-top:20px;font-size:12px;color:#555;">If you did not initiate this booking, you can ignore this email.</p>
@@ -146,20 +162,18 @@ const sendPendingPaymentReminder = async ({ to, name, booking, event }) => {
   });
 };
 
-// Send failed payment notification
+// ── 3. Payment Failed Notice ────────────────────────────────────────────────
 const sendFailedPaymentNotice = async ({ to, name, booking, event }) => {
   if (!process.env.SMTP_USER) {
     console.log(`📧 [DEV] Failed payment notice → ${to}`);
     return;
   }
-  const transporter = require('nodemailer').createTransport({
-    host: process.env.SMTP_HOST || 'smtp.gmail.com',
-    port: parseInt(process.env.SMTP_PORT) || 587,
-    secure: false,
-    auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
-  });
-  await transporter.sendMail({
-    from: `"Melattur Entertainment Events" <${process.env.SMTP_USER}>`,
+  await getTransporter().sendMail({
+    from:    `"Melattur Entertainment Events" <${process.env.SMTP_USER}>`,
+     envelope: {
+    from: process.env.BOUNCE_EMAIL || process.env.SMTP_USER,  // ← ADD THIS
+    to,
+  },
     to,
     subject: `❌ Payment Failed — ${event.name}`,
     html: `
@@ -175,8 +189,9 @@ const sendFailedPaymentNotice = async ({ to, name, booking, event }) => {
             <p style="margin:4px 0;"><span style="color:#777;">Event:</span> <strong>${event.name}</strong></p>
             <p style="margin:4px 0;"><span style="color:#777;">Amount:</span> <strong>₹${booking.totalAmount.toLocaleString('en-IN')}</strong></p>
           </div>
-          <p style="color:#aaa;font-size:13px;">If money was deducted, it will be automatically refunded to your source account within 5–7 business days.</p>
-          <a href="${process.env.APP_URL || 'https://yourapp.com'}/booking/my-bookings" style="display:inline-block;background:#6A0DAD;color:#fff;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:700;letter-spacing:1px;margin-top:12px;">
+          <p style="color:#aaa;font-size:13px;">If money was deducted, it will be automatically refunded within 5–7 business days.</p>
+          <a href="${process.env.APP_URL || 'https://yourapp.com'}/booking/my-bookings"
+             style="display:inline-block;background:#6A0DAD;color:#fff;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:700;letter-spacing:1px;margin-top:12px;">
             🔄 Try Again
           </a>
           <p style="margin-top:20px;font-size:12px;color:#555;">Need help? Contact us at meemelattur@gmail.com or +91 99958 43003</p>

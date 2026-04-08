@@ -124,6 +124,10 @@
             <td style="color:var(--muted);font-size:0.72rem;white-space:nowrap;"><%= new Date(b.createdAt).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}) %></td>
             <td>
               <span class="badge b-<%= b.paymentStatus %>"><%= b.paymentStatus.toUpperCase() %></span>
+              <% if(b.paymentMethod === 'cash'){ %>
+              <span style="display:inline-block;margin-top:3px;font-family:'Space Mono',monospace;font-size:0.55rem;letter-spacing:1px;background:rgba(0,200,80,0.1);border:1px solid rgba(0,200,80,0.3);color:#00c850;padding:0.1rem 0.4rem;border-radius:4px;">CASH</span>
+              <% if(b.soldBy){ %><div style="font-size:0.6rem;color:#555;margin-top:2px;">by <%= b.soldBy %></div><% } %>
+              <% } %>
             </td>
             <td>
               <% if(b.paymentStatus === 'pending' || b.paymentStatus === 'failed') { %>

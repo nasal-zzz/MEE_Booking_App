@@ -92,7 +92,11 @@
                     <span style="color:var(--muted);font-size:0.72rem;"><%= avail %> seats left</span>
                   <% } %>
                 </div>
-                <% if (!isSoldOut && ttype.comboOfferMinQty > 0 && ttype.comboOfferDiscount > 0) { %>
+                <% if (!isSoldOut && ttype.discountTiers && ttype.discountTiers.length > 0) { %>
+                <div style="margin-top:0.4rem;font-size:0.6rem;color:#f5c842;font-family:var(--font-mono);background:rgba(245,200,66,0.08);border:1px solid rgba(245,200,66,0.2);border-radius:4px;padding:0.15rem 0.45rem;text-align:center;">
+                  🎯 <% ttype.discountTiers.forEach(function(d,di){ %><%= di>0?' · ':'' %>Buy <%= d.minQty %>+ → ₹<%= d.discount %> off<% }); %>
+                </div>
+                <% } else if (!isSoldOut && ttype.comboOfferMinQty > 0 && ttype.comboOfferDiscount > 0) { %>
                 <div style="margin-top:0.4rem;font-size:0.6rem;color:#f5c842;font-family:var(--font-mono);background:rgba(245,200,66,0.08);border:1px solid rgba(245,200,66,0.2);border-radius:4px;padding:0.15rem 0.45rem;text-align:center;">
                   🎯 Buy <%= ttype.comboOfferMinQty %>+ → ₹<%= ttype.comboOfferDiscount %> off
                 </div>
@@ -104,15 +108,39 @@
               <% }); %>
             </div>
 
-            <div style="height:1px;background:var(--border);margin:1.2rem 0;"></div>
+            <!-- <div style="height:1px;background:var(--border);margin:1.2rem 0;"></div> -->
 
-            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.8rem;">
+            <!-- <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.8rem;">
               <div>
                 <div style="font-size:0.75rem;color:var(--muted);margin-bottom:0.2rem;">Total Amount</div>
                 <div style="font-family:var(--font-display);font-size:1.8rem;color:var(--accent);letter-spacing:1px;" id="qtyTotalPrice">—</div>
               </div>
               <input type="hidden" id="qtyDisplay" value="1"/>
-            </div>
+            </div> -->
+
+            <div style="height:1px;background:var(--border);margin:0.4rem 0 1rem;"></div>
+ 
+<!-- Quantity stepper -->
+<div style="margin-bottom:1rem;">
+  <div class="qty-label" style="margin-bottom:0.6rem;">Number of Tickets</div>
+  <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
+    <div style="display:flex;align-items:center;gap:0;">
+      <button type="button" class="qty-btn" id="qtyMinus" onclick="changeQty(-1)" disabled
+        style="width:42px;height:42px;border-radius:8px 0 0 8px;background:var(--surface);border:1px solid var(--border);color:#fff;font-size:1.3rem;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:0.2s;user-select:none;">−</button>
+      <div id="qtyDisplay"
+        style="width:52px;height:42px;background:rgba(106,13,173,0.08);border-top:1px solid var(--border);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:'Poppins',sans-serif;font-size:1.4rem;font-weight:700;color:#fff;">1</div>
+      <button type="button" class="qty-btn" id="qtyPlus" onclick="changeQty(1)"
+        style="width:42px;height:42px;border-radius:0 8px 8px 0;background:var(--surface);border:1px solid var(--border);color:#fff;font-size:1.3rem;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:0.2s;user-select:none;">+</button>
+    </div>
+    <div>
+      <div style="font-size:0.72rem;color:var(--muted);margin-bottom:0.15rem;">Total Amount</div>
+      <div style="font-family:var(--font-display);font-size:1.8rem;color:var(--accent);letter-spacing:1px;" id="qtyTotalPrice">—</div>
+    </div>
+  </div>
+  <div id="qtyHintTxt" style="font-size:0.7rem;color:var(--muted);margin-top:0.35rem;"></div>
+</div>
+
+
           </div>
         </div>
 
@@ -212,49 +240,78 @@
     // ── EVENT DATA from server ──
     const EVENT_DATA = <%- JSON.stringify(event) %>;
     const CONV_FEE = <%= event.convenienceFee %>;
-    const USER = <%- JSON.stringify(user ? { name: (user.firstName||'') + ' ' + (user.lastName||''), phone: user.phone||'', email: user.email||'' } : { name: '', phone: '', email: '' }) %>;
+    const USER = <%- JSON.stringify(user ? { name: (user.firstName||'') + ' ' + (user.lastName||''), phone: user.phone||'', email: user.email||'', whatsapp: user.whatsapp||'' } : { name: '', phone: '', email: '', whatsapp: '' }) %>;
 
     let qty = 1;
     let pricePerTicket = 0;
     let selectedTypeName = '';
 
-    // Init runs after DOM is ready — find the selected tier card
+    // // Init runs after DOM is ready — find the selected tier card
+    // function initSelectedTier() {
+    //   // Find whichever card has 'selected' class, fallback to first non-sold-out
+    //   const selectedCard = document.querySelector('.ticket-tier-card.selected')
+    //                     || document.querySelector('.ticket-tier-card:not(.sold-out)');
+
+    //   if (!selectedCard) {
+    //     // No available tiers
+    //     pricePerTicket = 0;
+    //     selectedTypeName = '';
+    //     console.warn('⚠️ No available tiers found');
+    //     return;
+    //   }
+
+    //   // Make sure this card has selected class and its radio is checked
+    //   document.querySelectorAll('.ticket-tier-card').forEach(o => {
+    //     o.classList.remove('selected');
+    //     const inp = o.querySelector('input[type=radio]');
+    //     if (inp) inp.checked = false;
+    //   });
+    //   selectedCard.classList.add('selected');
+    //   const radio = selectedCard.querySelector('input[type=radio]');
+    //   if (radio) radio.checked = true;
+
+    //   const name = radio ? radio.value : '';
+    //   const tier = EVENT_DATA.ticketTypes.find(t => t.name === name) || EVENT_DATA.ticketTypes[0];
+    //   pricePerTicket = tier?.price || 0;
+    //   selectedTypeName = tier?.name || '';
+
+    //   // Update summary display immediately
+    //   const sumTypeEl = document.getElementById('sumType');
+    //   const sumPriceEl = document.getElementById('sumPriceEach');
+    //   if (sumTypeEl) sumTypeEl.textContent = selectedTypeName;
+    //   if (sumPriceEl) sumPriceEl.textContent = '₹' + pricePerTicket.toLocaleString('en-IN');
+
+    //   console.log('✅ Init tier:', selectedTypeName, '| price: ₹' + pricePerTicket);
+    // }
+
     function initSelectedTier() {
-      // Find whichever card has 'selected' class, fallback to first non-sold-out
-      const selectedCard = document.querySelector('.ticket-tier-card.selected')
-                        || document.querySelector('.ticket-tier-card:not(.sold-out)');
+  const selectedCard = document.querySelector('.ticket-tier-card.selected')
+                    || document.querySelector('.ticket-tier-card:not(.sold-out)');
+  if (!selectedCard) { pricePerTicket = 0; selectedTypeName = ''; return; }
+ 
+  document.querySelectorAll('.ticket-tier-card').forEach(o => {
+    o.classList.remove('selected');
+    const inp = o.querySelector('input[type=radio]');
+    if (inp) inp.checked = false;
+  });
+  selectedCard.classList.add('selected');
+  const radio = selectedCard.querySelector('input[type=radio]');
+  if (radio) radio.checked = true;
+ 
+  const val = radio ? radio.value : '';
+  // ✅ FIX: match by category (radio value) OR name
+  const tier = EVENT_DATA.ticketTypes.find(t => t.category === val || t.name === val)
+            || EVENT_DATA.ticketTypes[0];
+ 
+  pricePerTicket   = tier?.price    || 0;
+  selectedTypeName = tier?.category || tier?.name || '';
+ 
+  const sumTypeEl  = document.getElementById('sumType');
+  const sumPriceEl = document.getElementById('sumPriceEach');
+  if (sumTypeEl)  sumTypeEl.textContent  = tier?.name || selectedTypeName;
+  if (sumPriceEl) sumPriceEl.textContent = '₹' + pricePerTicket.toLocaleString('en-IN');
+}
 
-      if (!selectedCard) {
-        // No available tiers
-        pricePerTicket = 0;
-        selectedTypeName = '';
-        console.warn('⚠️ No available tiers found');
-        return;
-      }
-
-      // Make sure this card has selected class and its radio is checked
-      document.querySelectorAll('.ticket-tier-card').forEach(o => {
-        o.classList.remove('selected');
-        const inp = o.querySelector('input[type=radio]');
-        if (inp) inp.checked = false;
-      });
-      selectedCard.classList.add('selected');
-      const radio = selectedCard.querySelector('input[type=radio]');
-      if (radio) radio.checked = true;
-
-      const name = radio ? radio.value : '';
-      const tier = EVENT_DATA.ticketTypes.find(t => t.name === name) || EVENT_DATA.ticketTypes[0];
-      pricePerTicket = tier?.price || 0;
-      selectedTypeName = tier?.name || '';
-
-      // Update summary display immediately
-      const sumTypeEl = document.getElementById('sumType');
-      const sumPriceEl = document.getElementById('sumPriceEach');
-      if (sumTypeEl) sumTypeEl.textContent = selectedTypeName;
-      if (sumPriceEl) sumPriceEl.textContent = '₹' + pricePerTicket.toLocaleString('en-IN');
-
-      console.log('✅ Init tier:', selectedTypeName, '| price: ₹' + pricePerTicket);
-    }
     let discountAmount = 0;
     let couponApplied = false;
     let couponCode = null;
@@ -284,6 +341,17 @@
       document.getElementById('sumPriceEach').textContent = '₹' + pricePerTicket.toLocaleString('en-IN');
       updateComboOffer();
       updateSummary();
+
+  const _tt2 = EVENT_DATA.ticketTypes.find(t => t.category === selectedTypeName);
+  const _avail2 = _tt2 ? Math.max(0, _tt2.totalSeats - _tt2.bookedSeats) : 20;
+  const _maxQ2  = Math.min(_tt2?.maxPerOrder > 0 ? _tt2.maxPerOrder : 10, _avail2);
+  const _plus2  = document.getElementById('qtyPlus');
+  const _minus2 = document.getElementById('qtyMinus');
+  const _hint2  = document.getElementById('qtyHintTxt');
+  if (_plus2)  _plus2.disabled  = qty >= _maxQ2;
+  if (_minus2) _minus2.disabled = qty <= 1;
+  if (_hint2)  _hint2.textContent = `Max ${_maxQ2} per order`;
+
     }
 
     document.querySelectorAll('.ticket-tier-card').forEach(card => {
@@ -291,15 +359,44 @@
     });
 
     // ── Quantity ──
+    // function changeQty(d) {
+    //   const n = qty + d;
+    //   if (n < 1 || n > MAX_QTY) return;
+    //   qty = n;
+    //   document.getElementById('qtyDisplay').textContent = qty;
+    //   document.getElementById('qtyMinus').disabled = qty <= 1;
+    //   document.getElementById('qtyPlus').disabled = qty >= MAX_QTY;
+    //   updateChips(); updateAttendeeForms(); updateComboOffer(); updateSummary();
+    // }
+
+
     function changeQty(d) {
-      const n = qty + d;
-      if (n < 1 || n > MAX_QTY) return;
-      qty = n;
-      document.getElementById('qtyDisplay').textContent = qty;
-      document.getElementById('qtyMinus').disabled = qty <= 1;
-      document.getElementById('qtyPlus').disabled = qty >= MAX_QTY;
-      updateChips(); updateAttendeeForms(); updateComboOffer(); updateSummary();
-    }
+  const tt = EVENT_DATA.ticketTypes.find(t => t.category === selectedTypeName);
+  const avail = tt ? Math.max(0, tt.totalSeats - tt.bookedSeats) : 20;
+  const maxQ  = Math.min(tt?.maxPerOrder > 0 ? tt.maxPerOrder : 10, avail);
+  const n = qty + d;
+  if (n < 1 || n > maxQ) return;
+  qty = n;
+ 
+  // Update stepper display
+  const dispEl = document.getElementById('qtyDisplay');
+  if (dispEl) dispEl.textContent = qty;
+ 
+  const minus = document.getElementById('qtyMinus');
+  const plus  = document.getElementById('qtyPlus');
+  if (minus) minus.disabled = qty <= 1;
+  if (plus)  plus.disabled  = qty >= maxQ;
+ 
+  // Update hint
+  const hint = document.getElementById('qtyHintTxt');
+  if (hint) hint.textContent = `Max ${maxQ} per order`;
+ 
+  updateAttendeeForms();
+  updateComboOffer();
+  updateSummary();
+}
+
+
 
     function updateChips() {
       const c = document.getElementById('ticketChips');
@@ -342,8 +439,15 @@
             <input type="tel" class="form-input" value="${USER.phone}" readonly style="opacity:0.6;cursor:not-allowed;"/>
           </div>
           <div>
-            <label class="form-label-custom">Email</label>
-            <input type="email" class="form-input" id="email-1" placeholder="your@email.com" value="${USER.email || ''}"/>
+            <label class="form-label-custom">Email ${USER.email ? '' : '<span style="color:#FF4444;">*</span>'}</label>
+            <input type="email" class="form-input" id="email-1" placeholder="your@email.com" value="${USER.email || ''}" ${USER.email ? 'readonly style="opacity:0.6;cursor:not-allowed;"' : 'required'}/>
+            <div class="field-error" id="emailErr-1"><i class="bi bi-exclamation-circle"></i> Valid email required</div>
+          </div>
+          <div style="grid-column:1/-1;">
+            <label class="form-label-custom">WhatsApp Number ${USER.whatsapp ? '' : '<span style="color:#FF4444;">*</span>'}</label>
+            <input type="tel" class="form-input" id="whatsapp-1" placeholder="91XXXXXXXXXX (with country code)" value="${USER.whatsapp || USER.phone || ''}" ${USER.whatsapp ? 'readonly style="opacity:0.6;cursor:not-allowed;"' : ''} inputmode="numeric" maxlength="15"/>
+            <div class="field-error" id="waErr-1"><i class="bi bi-exclamation-circle"></i> WhatsApp number required</div>
+            <div style="font-size:0.68rem;color:#555;margin-top:0.25rem;">Your ticket PDF will be sent here via WhatsApp &amp; email.</div>
           </div>` : ''}
         </div>
         <div style="display:flex;align-items:center;gap:0.5rem;font-size:0.8rem;color:var(--muted);cursor:pointer;margin-top:0.8rem;" onclick="document.getElementById('special-${num}').classList.toggle('show')">
@@ -353,35 +457,94 @@
       return d;
     }
 
-    // ── Combo Offer auto-apply ──
+    // ── Bulk Discount Tiers auto-apply ──
+    // function updateComboOffer() {
+    //   const tt = EVENT_DATA.ticketTypes.find(t => t.category === selectedTypeName);
+    //   const bannerEl = document.getElementById('comboOfferBanner');
+
+    //   // Build tiers list (new multi-tier or legacy single tier)
+    //   const tiers = (tt && Array.isArray(tt.discountTiers) && tt.discountTiers.length > 0)
+    //     ? tt.discountTiers.filter(d => d.minQty > 0 && d.discount > 0)
+    //     : (tt && tt.comboOfferMinQty > 0 ? [{ minQty: tt.comboOfferMinQty, discount: tt.comboOfferDiscount }] : []);
+
+    //   if (!bannerEl) return;
+
+    //   if (tiers.length > 0) {
+    //     const sorted  = [...tiers].sort((a,b) => b.minQty - a.minQty);
+    //     const applied = sorted.find(d => qty >= d.minQty);
+    //     const asc     = [...tiers].sort((a,b) => a.minQty - b.minQty);
+    //     const next    = asc.find(d => qty < d.minQty);
+
+    //     if (applied) {
+    //       comboOfferDiscount = applied.discount;
+    //       bannerEl.style.display = 'flex';
+    //       bannerEl.style.background = 'rgba(245,200,66,0.08)';
+    //       bannerEl.style.borderColor = 'rgba(245,200,66,0.3)';
+    //       bannerEl.style.color = '#f5c842';
+    //       bannerEl.innerHTML = `<i class="bi bi-gift-fill" style="color:#f5c842;"></i> 🎉 ₹${applied.discount} discount applied (${applied.minQty}+ tickets)${next ? `&nbsp;·&nbsp; Buy ${next.minQty}+ for ₹${next.discount} off!` : ''}`;
+    //     } else {
+    //       comboOfferDiscount = 0;
+    //       const cheapest = asc[0];
+    //       bannerEl.style.display = 'flex';
+    //       bannerEl.style.background = 'rgba(157,78,221,0.06)';
+    //       bannerEl.style.borderColor = 'rgba(157,78,221,0.2)';
+    //       bannerEl.style.color = '#9D4EDD';
+    //       bannerEl.innerHTML = `<i class="bi bi-gift"></i> Add ${cheapest.minQty - qty} more ticket${cheapest.minQty-qty>1?'s':''} to unlock ₹${cheapest.discount} discount!`;
+    //     }
+    //   } else {
+    //     comboOfferDiscount = 0;
+    //     bannerEl.style.display = 'none';
+    //   }
+    // }
+
+
     function updateComboOffer() {
-      const tt = EVENT_DATA.ticketTypes.find(t => t.category === selectedTypeName);
-      const bannerEl = document.getElementById('comboOfferBanner');
-      if (tt && tt.comboOfferMinQty > 0 && tt.comboOfferDiscount > 0) {
-        if (qty >= tt.comboOfferMinQty) {
-          comboOfferDiscount = tt.comboOfferDiscount;
-          if (bannerEl) {
-            bannerEl.innerHTML = `<i class="bi bi-gift-fill" style="color:#f5c842;"></i> 🎉 Combo offer applied! ₹${tt.comboOfferDiscount} off for buying ${tt.comboOfferMinQty}+ tickets`;
-            bannerEl.style.display = 'flex';
-            bannerEl.style.background = 'rgba(245,200,66,0.08)';
-            bannerEl.style.borderColor = 'rgba(245,200,66,0.3)';
-            bannerEl.style.color = '#f5c842';
-          }
-        } else {
-          comboOfferDiscount = 0;
-          if (bannerEl) {
-            bannerEl.innerHTML = `<i class="bi bi-gift"></i> Add ${tt.comboOfferMinQty - qty} more ticket${tt.comboOfferMinQty - qty > 1 ? 's' : ''} to get ₹${tt.comboOfferDiscount} combo discount!`;
-            bannerEl.style.display = 'flex';
-            bannerEl.style.background = 'rgba(157,78,221,0.06)';
-            bannerEl.style.borderColor = 'rgba(157,78,221,0.2)';
-            bannerEl.style.color = '#9D4EDD';
-          }
-        }
-      } else {
-        comboOfferDiscount = 0;
-        if (bannerEl) bannerEl.style.display = 'none';
-      }
+  const tt = EVENT_DATA.ticketTypes.find(t => t.category === selectedTypeName);
+  const bannerEl = document.getElementById('comboOfferBanner');
+  if (!bannerEl) return;
+ 
+  const tiers = (tt && Array.isArray(tt.discountTiers) && tt.discountTiers.length > 0)
+    ? tt.discountTiers.filter(d => d.minQty > 0 && d.discount > 0)
+    : (tt && tt.comboOfferMinQty > 0
+        ? [{ minQty: tt.comboOfferMinQty, discount: tt.comboOfferDiscount }]
+        : []);
+ 
+  if (tiers.length > 0) {
+    const desc   = [...tiers].sort((a, b) => b.minQty - a.minQty);
+    const asc    = [...tiers].sort((a, b) => a.minQty - b.minQty);
+    const applied = desc.find(d => qty >= d.minQty);
+    const next    = asc.find(d => qty < d.minQty);
+ 
+    if (applied) {
+      // ✅ FIX: multiply discount by number of complete groups
+      const groups = Math.floor(qty / applied.minQty);
+      comboOfferDiscount = groups * applied.discount;
+ 
+      bannerEl.style.display    = 'flex';
+      bannerEl.style.background = 'rgba(245,200,66,0.08)';
+      bannerEl.style.borderColor = 'rgba(245,200,66,0.3)';
+      bannerEl.style.color      = '#f5c842';
+ 
+      const groupInfo = groups > 1 ? ` (${groups} groups × ₹${applied.discount})` : '';
+      const nextMsg   = next
+        ? ` &nbsp;·&nbsp; Buy ${next.minQty}+ for more off!`
+        : '';
+      bannerEl.innerHTML = `<i class="bi bi-gift-fill" style="color:#f5c842;"></i> 🎉 ₹${comboOfferDiscount} off applied${groupInfo}${nextMsg}`;
+    } else {
+      comboOfferDiscount = 0;
+      const cheapest = asc[0];
+      bannerEl.style.display    = 'flex';
+      bannerEl.style.background = 'rgba(157,78,221,0.06)';
+      bannerEl.style.borderColor = 'rgba(157,78,221,0.2)';
+      bannerEl.style.color      = '#9D4EDD';
+      bannerEl.innerHTML = `<i class="bi bi-gift"></i> Add ${cheapest.minQty - qty} more ticket${cheapest.minQty - qty > 1 ? 's' : ''} to unlock ₹${cheapest.discount} off!`;
     }
+  } else {
+    comboOfferDiscount = 0;
+    bannerEl.style.display = 'none';
+  }
+}
+ 
 
     // ── Summary ──
     function updateSummary() {
@@ -404,24 +567,67 @@
     }
 
     // ── Coupon ──
-    const COUPONS = { 'PARTY10': 100, 'NIGHT20': 200, 'FIRST50': 50 };
     function applyCoupon() {
-      const code = document.getElementById('couponInput').value.trim().toUpperCase();
-      const el = document.getElementById('couponSuccess');
-      if (COUPONS[code]) {
-        couponApplied = true; discountAmount = COUPONS[code]; couponCode = code;
-        document.getElementById('couponMsg').textContent = code + ' applied — ₹' + COUPONS[code] + ' off!';
-        el.classList.add('show'); el.style.color = '';
-        document.getElementById('couponInput').style.borderColor = 'var(--success)';
-      } else {
-        couponApplied = false; discountAmount = 0; couponCode = null;
-        document.getElementById('couponMsg').textContent = 'Invalid coupon code';
-        el.classList.add('show'); el.style.color = 'var(--error)';
-        document.getElementById('couponInput').style.borderColor = 'var(--error)';
-        setTimeout(() => { el.classList.remove('show'); document.getElementById('couponInput').style.borderColor=''; el.style.color=''; }, 3000);
-      }
-      updateSummary();
+  const code  = document.getElementById('couponInput').value.trim().toUpperCase();
+  const el    = document.getElementById('couponSuccess');
+  const msgEl = document.getElementById('couponMsg');
+  const btn   = document.querySelector('.coupon-btn');
+ 
+  if (!code) {
+    msgEl.textContent = 'Enter a coupon code first.';
+    el.classList.add('show'); el.style.color = 'var(--error)';
+    setTimeout(() => { el.classList.remove('show'); el.style.color = ''; }, 3000);
+    return;
+  }
+ 
+  btn.textContent = '...'; btn.disabled = true;
+  const sub = qty * pricePerTicket;
+ 
+  fetch('/superadmin/api/validate-coupon', {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ code, ticketType: selectedTypeName, orderAmount: sub }),
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.success) {
+      couponApplied  = true;
+      discountAmount = data.discount;
+      couponCode     = code;
+      msgEl.textContent = code + ' applied — ₹' + data.discount.toLocaleString('en-IN') + ' off!';
+      el.classList.add('show'); el.style.color = '';
+      document.getElementById('couponInput').style.borderColor = 'var(--success)';
+      // Coupon overrides tier discount in updateSummary — reset combo offer display
+      comboOfferDiscount = 0;
+      const banner = document.getElementById('comboOfferBanner');
+      if (banner) banner.style.display = 'none';
+    } else {
+      couponApplied  = false;
+      discountAmount = 0;
+      couponCode     = null;
+      msgEl.textContent = data.message || 'Invalid or expired coupon.';
+      el.classList.add('show'); el.style.color = 'var(--error)';
+      document.getElementById('couponInput').style.borderColor = 'var(--error)';
+      setTimeout(() => {
+        el.classList.remove('show');
+        document.getElementById('couponInput').style.borderColor = '';
+        el.style.color = '';
+      }, 3500);
     }
+  })
+  .catch(() => {
+    msgEl.textContent = 'Network error. Try again.';
+    el.classList.add('show'); el.style.color = 'var(--error)';
+  })
+  .finally(() => {
+    btn.textContent = 'APPLY';
+    btn.disabled    = false;
+    updateSummary();
+  });
+}
+
+
     document.getElementById('couponInput').addEventListener('keydown', e => { if(e.key==='Enter') applyCoupon(); });
 
     // ── Validate ──
@@ -435,6 +641,32 @@
         const age = parseInt(a.value);
         if (!a.value || isNaN(age) || age < 18) { a.classList.add('error'); document.getElementById('ageErr-' + i).classList.add('show'); ok = false; }
       }
+      // Email validation for attendee 1 (only if not pre-filled from profile)
+      if (!USER.email) {
+        const emailEl = document.getElementById('email-1');
+        const emailErr = document.getElementById('emailErr-1');
+        if (emailEl && emailErr) {
+          emailErr.classList.remove('show'); emailEl.classList.remove('error');
+          const ev = emailEl.value.trim();
+          if (!ev || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(ev)) {
+            emailEl.classList.add('error'); emailErr.classList.add('show');
+            emailEl.scrollIntoView({behavior:'smooth',block:'center'}); ok = false;
+          }
+        }
+      }
+      // WhatsApp validation for attendee 1 (only if not pre-filled)
+      if (!USER.whatsapp) {
+        const waEl = document.getElementById('whatsapp-1');
+        const waErr = document.getElementById('waErr-1');
+        if (waEl && waErr) {
+          waErr.classList.remove('show'); waEl.classList.remove('error');
+          const wv = waEl.value.trim();
+          if (!wv || wv.length < 10) {
+            waEl.classList.add('error'); waErr.classList.add('show');
+            waEl.scrollIntoView({behavior:'smooth',block:'center'}); ok = false;
+          }
+        }
+      }
       return ok;
     }
 
@@ -445,13 +677,15 @@
       for (let i = 1; i <= qty; i++) {
         attendees.push({ name: document.getElementById('name-'+i).value.trim(), age: document.getElementById('age-'+i).value, special: document.getElementById('special-'+i)?.value || '' });
       }
+      const emailVal    = document.getElementById('email-1')?.value.trim()    || USER.email    || '';
+      const whatsappVal = document.getElementById('whatsapp-1')?.value.trim() || USER.whatsapp || '';
       setPayLoading(true);
       try {
         const res = await fetch('/booking/create-order', {
           method: 'POST',
           headers: {'Content-Type':'application/json'},
           credentials: 'include',
-          body: JSON.stringify({ eventId: EVENT_DATA._id, ticketType: selectedTypeName, quantity: qty, couponCode, attendees }),
+          body: JSON.stringify({ eventId: EVENT_DATA._id, ticketType: selectedTypeName, quantity: qty, couponCode, attendees, email: emailVal, whatsapp: whatsappVal }),
         });
         const data = await res.json();
         if (!data.success) { alert(data.message); setPayLoading(false); return; }
@@ -527,6 +761,10 @@
         if(qminus) qminus.disabled = qty<=1;
         if(qplus)  qplus.disabled  = qty>=10;
 
+
+   updateComboOffer();  // ← ADD THIS LINE
+  updateSummary();     // ← ADD THIS LINE (replaces the call at bottom of init)    
+
         // Banner: zone selection came from seatpicker
         const banner = document.createElement('div');
         banner.style.cssText='display:flex;align-items:center;gap:0.7rem;background:rgba(106,13,173,0.12);border:1px solid rgba(106,13,173,0.3);border-radius:8px;padding:0.7rem 1rem;margin-bottom:1.2rem;font-size:0.82rem;color:#9D4EDD;';
@@ -537,7 +775,20 @@
       } catch(e){ console.warn('Zone read error:', e); }
     })();
 
-    initSelectedTier(); updateAttendeeForms(); updateSummary();
+    // initSelectedTier(); updateAttendeeForms(); updateSummary();
+
+    initSelectedTier(); updateAttendeeForms(); updateComboOffer(); updateSummary();
+
+  (function initQtyButtons(){
+    const tt = EVENT_DATA.ticketTypes.find(t => t.category === selectedTypeName);
+    const avail = tt ? Math.max(0, tt.totalSeats - tt.bookedSeats) : 20;
+    const maxQ  = Math.min(tt?.maxPerOrder > 0 ? tt.maxPerOrder : 10, avail);
+    const plus  = document.getElementById('qtyPlus');
+    const hint  = document.getElementById('qtyHintTxt');
+    if (plus) plus.disabled = qty >= maxQ;
+    if (hint) hint.textContent = `Max ${maxQ} per order`;
+  })();
+
 
     // ── Booking page CSS ──
     const style = document.createElement('style');

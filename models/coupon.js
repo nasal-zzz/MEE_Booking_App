@@ -8,6 +8,7 @@ const couponSchema = new mongoose.Schema({
   minTickets:  { type: Number, default: 0 },        // minimum ticket quantity to apply
   maxUses:     { type: Number, default: 0 },        // 0 = unlimited
   usedCount:   { type: Number, default: 0 },
+  usedBy:      [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }], // one-per-user tracking
   validFrom:   { type: Date, default: null },
   validUntil:  { type: Date, default: null },
   isActive:    { type: Boolean, default: true },

@@ -2,405 +2,913 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
-  <meta name="apple-mobile-web-app-capable" content="yes"/>
-  <meta name="mobile-web-app-capable" content="yes"/>
-  <meta name="theme-color" content="#0B0B0F"/>
-  <title>QR Scanner — MEE</title>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Space+Mono&display=swap" rel="stylesheet"/>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet"/>
-  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title><%= title %></title>
   <style>
-    *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
-    :root{--bg:#0B0B0F;--surface:#14141C;--border:rgba(255,255,255,0.08);--accent:#6A0DAD;--success:#00FF88;--error:#FF4444;--warn:#f5c842;--text:#fff;--muted:#B3B3B3;}
-    html,body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;min-height:100dvh;overflow-x:hidden;}
+    @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Outfit:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700;800&display=swap');
 
-    /* ── TOPBAR ── */
-    .topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 1rem;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
-    .tb-left{display:flex;align-items:center;gap:0.6rem;}
-    .tb-logo{height:28px;width:auto;object-fit:contain;}
-    .tb-title{font-family:'Space Mono',monospace;font-size:0.6rem;letter-spacing:2px;color:var(--muted);}
-    .tb-right{display:flex;align-items:center;gap:0.5rem;}
-    .tb-user{font-size:0.72rem;color:var(--muted);}
-    .tb-user strong{color:var(--text);}
-    .role-dot{width:7px;height:7px;border-radius:50%;background:var(--success);}
-    .logout-link{font-size:0.72rem;color:var(--error);text-decoration:none;padding:0.3rem 0.5rem;}
+    :root {
+      --bg:      #080810;
+      --card:    #111120;
+      --border:  rgba(255,255,255,0.07);
+      --accent:  #ff2d78;
+      --green:   #00e676;
+      --yellow:  #ffd600;
+      --red:     #ff3d3d;
+      --muted:   #5a5a7a;
+      --white:   #ffffff;
+      --dimW:    rgba(255,255,255,0.55);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--white);
+      font-family: 'Outfit', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── HEADER ── */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(8,8,16,0.95);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .header-brand {
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 3px;
+      color: var(--accent);
+      text-transform: uppercase;
+    }
+    .header-user {
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .btn-logout {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      color: var(--muted);
+      text-decoration: none;
+      border: 1px solid var(--border);
+      padding: 4px 10px;
+      border-radius: 4px;
+      letter-spacing: 1px;
+    }
 
     /* ── MAIN LAYOUT ── */
-    .main{padding:1rem;max-width:480px;margin:0 auto;}
+    .main {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+      max-width: 1100px;
+      margin: 0 auto;
+      width: 100%;
+      padding: 24px 16px;
+    }
+    @media (max-width: 700px) {
+      .main { grid-template-columns: 1fr; }
+    }
 
-    /* ── CAMERA VIEWPORT ── */
-    .scan-box{position:relative;background:#000;border-radius:14px;overflow:hidden;aspect-ratio:1;width:100%;margin-bottom:1rem;border:2px solid var(--border);}
-    .scan-box video{width:100%;height:100%;object-fit:cover;display:block;}
-    .scan-box canvas{display:none;}
-    .scan-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;}
-    .scan-frame{width:65%;aspect-ratio:1;border:3px solid var(--accent);border-radius:12px;box-shadow:0 0 0 1000px rgba(0,0,0,0.45);position:relative;transition:border-color 0.3s;}
-    .scan-frame.ok{border-color:var(--success);box-shadow:0 0 30px rgba(0,255,136,0.4),0 0 0 1000px rgba(0,0,0,0.45);}
-    .scan-frame.fail{border-color:var(--error);box-shadow:0 0 30px rgba(255,68,68,0.4),0 0 0 1000px rgba(0,0,0,0.45);}
-    .scan-corner{position:absolute;width:20px;height:20px;border-color:inherit;}
-    .scan-corner.tl{top:-2px;left:-2px;border-top:3px solid;border-left:3px solid;border-radius:4px 0 0 0;}
-    .scan-corner.tr{top:-2px;right:-2px;border-top:3px solid;border-right:3px solid;border-radius:0 4px 0 0;}
-    .scan-corner.bl{bottom:-2px;left:-2px;border-bottom:3px solid;border-left:3px solid;border-radius:0 0 0 4px;}
-    .scan-corner.br{bottom:-2px;right:-2px;border-bottom:3px solid;border-right:3px solid;border-radius:0 0 4px 0;}
-    .scan-line{position:absolute;width:80%;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);animation:scanLine 2s linear infinite;left:10%;}
-    @keyframes scanLine{0%{top:10%;}50%{top:85%;}100%{top:10%;}}
-    .cam-off-msg{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0.5rem;color:var(--muted);font-size:0.82rem;text-align:center;padding:1rem;}
-    .cam-off-msg i{font-size:2.5rem;color:#333;}
+    /* ── CAMERA PANEL ── */
+    .camera-panel {
+      padding: 0 20px 0 0;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
 
-    /* ── STATUS CARD ── */
-    .status-card{border-radius:12px;overflow:hidden;margin-bottom:1rem;animation:slideUp 0.25s ease;}
-    @keyframes slideUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
-    .sc-valid{background:rgba(0,255,136,0.07);border:1px solid rgba(0,255,136,0.3);}
-    .sc-used{background:rgba(245,200,66,0.07);border:1px solid rgba(245,200,66,0.3);}
-    .sc-invalid{background:rgba(255,68,68,0.07);border:1px solid rgba(255,68,68,0.3);}
-    .sc-header{display:flex;align-items:center;gap:0.7rem;padding:0.9rem 1.1rem;}
-    .sc-icon{font-size:1.5rem;}
-    .sc-title{font-weight:800;font-size:1rem;letter-spacing:0.5px;}
-    .sc-title.ok{color:var(--success);}
-    .sc-title.warn{color:var(--warn);}
-    .sc-title.err{color:var(--error);}
-    .sc-body{padding:0 1.1rem 1rem;}
-    .sc-row{display:flex;justify-content:space-between;align-items:center;padding:0.3rem 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:0.82rem;}
-    .sc-row:last-child{border:none;}
-    .sc-key{color:#555;font-family:'Space Mono',monospace;font-size:0.62rem;letter-spacing:1px;}
-    .sc-val{color:var(--text);font-weight:600;max-width:55%;text-align:right;}
+    .section-title {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 3px;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    #qr-video-wrap {
+      width: 100%;
+      aspect-ratio: 1;
+      background: #000;
+      border-radius: 12px;
+      overflow: hidden;
+      position: relative;
+      border: 2px solid var(--border);
+    }
+    #qr-video {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .scan-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+    .scan-frame {
+      width: 65%;
+      aspect-ratio: 1;
+      border: 2.5px solid var(--accent);
+      border-radius: 8px;
+      box-shadow: 0 0 0 9999px rgba(0,0,0,0.45);
+      position: relative;
+    }
+    .scan-frame::before, .scan-frame::after {
+      content: '';
+      position: absolute;
+      width: 20px; height: 20px;
+      border-color: var(--accent);
+      border-style: solid;
+    }
+    .scan-frame::before { top: -3px; left: -3px; border-width: 3px 0 0 3px; border-radius: 6px 0 0 0; }
+    .scan-frame::after  { bottom: -3px; right: -3px; border-width: 0 3px 3px 0; border-radius: 0 0 6px 0; }
+
+    .scan-line {
+      position: absolute;
+      left: 4px; right: 4px;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      animation: scanline 2s ease-in-out infinite;
+      top: 0;
+    }
+    @keyframes scanline {
+      0%   { top: 4px; opacity: 1; }
+      50%  { opacity: 0.7; }
+      100% { top: calc(100% - 6px); opacity: 1; }
+    }
+
+    .camera-status {
+      text-align: center;
+      font-size: 12px;
+      color: var(--muted);
+      font-family: 'Space Mono', monospace;
+    }
 
     /* ── MANUAL INPUT ── */
-    .manual-section{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1rem;margin-bottom:1rem;}
-    .sec-title{font-family:'Space Mono',monospace;font-size:0.58rem;letter-spacing:2px;color:#555;margin-bottom:0.7rem;text-transform:uppercase;}
-    .manual-row{display:flex;gap:0.5rem;}
-    .manual-inp{flex:1;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:7px;color:var(--text);font-family:'Space Mono',monospace;font-size:0.82rem;padding:0.65rem 0.85rem;outline:none;letter-spacing:1px;transition:border-color 0.18s;}
-    .manual-inp:focus{border-color:rgba(106,13,173,0.5);}
-    .manual-inp::placeholder{color:#333;font-family:'Outfit',sans-serif;font-size:0.78rem;letter-spacing:0;}
-    .scan-btn{padding:0.65rem 1.2rem;background:var(--accent);border:none;border-radius:7px;color:#fff;font-weight:700;font-size:0.82rem;cursor:pointer;white-space:nowrap;transition:all 0.18s;}
-    .scan-btn:hover{box-shadow:0 0 18px rgba(106,13,173,0.4);}
-    .scan-btn:active{transform:scale(0.97);}
+    .manual-row {
+      display: flex;
+      gap: 8px;
+    }
+    .manual-input {
+      flex: 1;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: var(--white);
+      font-family: 'Space Mono', monospace;
+      font-size: 12px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .manual-input:focus { border-color: var(--accent); }
+    .btn-manual-scan {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 18px;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: opacity 0.2s;
+    }
+    .btn-manual-scan:hover { opacity: 0.85; }
 
-    /* ── CAMERA CONTROLS ── */
-    .cam-controls{display:flex;gap:0.5rem;margin-bottom:1rem;}
-    .cam-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:0.5rem;padding:0.75rem;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:0.82rem;font-weight:600;cursor:pointer;transition:all 0.18s;font-family:'Outfit',sans-serif;}
-    .cam-btn:hover{border-color:rgba(106,13,173,0.35);}
-    .cam-btn.active{background:rgba(106,13,173,0.1);border-color:rgba(106,13,173,0.4);color:#9D4EDD;}
-    .cam-btn i{font-size:1rem;}
+    /* ── RESULT PANEL ── */
+    .result-panel {
+      padding: 0 0 0 24px;
+      border-left: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      min-height: 300px;
+    }
+    @media (max-width: 700px) {
+      .result-panel { padding: 16px 0 0 0; border-left: none; border-top: 1px solid var(--border); }
+      .camera-panel { padding: 0; }
+    }
 
-    /* ── RECENT LOG ── */
-    .log-section{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
-    .log-header{display:flex;align-items:center;justify-content:space-between;padding:0.7rem 1rem;border-bottom:1px solid var(--border);}
-    .log-title{font-family:'Space Mono',monospace;font-size:0.58rem;letter-spacing:2px;color:#555;}
-    .log-count{font-family:'Space Mono',monospace;font-size:0.62rem;color:var(--accent);}
-    .log-list{max-height:200px;overflow-y:auto;}
-    .log-item{display:flex;align-items:center;gap:0.6rem;padding:0.55rem 1rem;border-bottom:1px solid rgba(255,255,255,0.03);font-size:0.75rem;}
-    .log-item:last-child{border:none;}
-    .log-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
-    .log-dot.ok{background:var(--success);}
-    .log-dot.fail{background:var(--error);}
-    .log-dot.warn{background:var(--warn);}
-    .log-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-    .log-time{color:#555;font-family:'Space Mono',monospace;font-size:0.58rem;flex-shrink:0;}
-    .log-empty{padding:1.2rem;text-align:center;color:#444;font-size:0.78rem;}
+    /* ── IDLE STATE ── */
+    .idle-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+      gap: 12px;
+      color: var(--muted);
+      text-align: center;
+      padding: 32px;
+    }
+    .idle-icon {
+      font-size: 48px;
+      opacity: 0.3;
+    }
+    .idle-text {
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
 
-    /* ── VIBRATION/FLASH feedback ── */
-    .flash-ok{animation:flashGreen 0.4s ease;}
-    .flash-fail{animation:flashRed 0.4s ease;}
-    @keyframes flashGreen{0%,100%{box-shadow:none}50%{box-shadow:0 0 60px rgba(0,255,136,0.6) inset;}}
-    @keyframes flashRed{0%,100%{box-shadow:none}50%{box-shadow:0 0 60px rgba(255,68,68,0.6) inset;}}
+    /* ── BOOKING CARD ── */
+    .booking-card {
+      background: var(--card);
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+
+    .booking-card-header {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-weight: 700;
+    }
+    .status-badge.valid {
+      background: rgba(0,230,118,0.12);
+      border: 1px solid rgba(0,230,118,0.35);
+      color: var(--green);
+    }
+    .status-badge.used {
+      background: rgba(255,61,61,0.10);
+      border: 1px solid rgba(255,61,61,0.30);
+      color: var(--red);
+    }
+    .status-badge.partial {
+      background: rgba(255,214,0,0.10);
+      border: 1px solid rgba(255,214,0,0.30);
+      color: var(--yellow);
+    }
+
+    .booking-ref {
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .booking-meta {
+      padding: 12px 16px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .bm-item {}
+    .bm-lbl {
+      font-family: 'Space Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 2px;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 2px;
+    }
+    .bm-val {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--white);
+    }
+    .bm-val.accent { color: var(--accent); }
+
+    /* ── ATTENDEE LIST ── */
+    .attendee-list-header {
+      padding: 12px 16px 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .al-title {
+      font-family: 'Space Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 2.5px;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+    .al-count {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .attendee-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      border-top: 1px solid var(--border);
+      transition: background 0.15s;
+    }
+    .attendee-row:hover { background: rgba(255,255,255,0.02); }
+    .attendee-row.checked-in {
+      opacity: 0.6;
+    }
+
+    .attendee-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #6a0dad, #ff2d78);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 15px;
+      font-weight: 800;
+      flex-shrink: 0;
+      color: #fff;
+    }
+    .attendee-row.checked-in .attendee-avatar {
+      background: #1a2a1a;
+      color: var(--green);
+    }
+
+    .attendee-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .attendee-name {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--white);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .attendee-sub {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 1px;
+    }
+    .attendee-seat {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      color: #c8ff00;
+    }
+
+    .attendee-status {
+      flex-shrink: 0;
+      text-align: right;
+    }
+    .used-tag {
+      font-family: 'Space Mono', monospace;
+      font-size: 9px;
+      color: var(--green);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .used-time {
+      font-size: 10px;
+      color: var(--muted);
+      margin-top: 1px;
+    }
+
+    /* ── CHECKIN BUTTON ── */
+    .btn-checkin {
+      background: rgba(0,230,118,0.12);
+      border: 1px solid rgba(0,230,118,0.4);
+      color: var(--green);
+      border-radius: 6px;
+      padding: 6px 14px;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 600;
+      font-size: 12px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+    .btn-checkin:hover:not(:disabled) {
+      background: rgba(0,230,118,0.22);
+      border-color: var(--green);
+    }
+    .btn-checkin:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+    .btn-checkin.loading {
+      opacity: 0.6;
+      cursor: wait;
+    }
+
+    /* ── CHECK IN ALL BUTTON ── */
+    .checkin-all-wrap {
+      padding: 12px 16px;
+      border-top: 1px solid var(--border);
+    }
+    .btn-checkin-all {
+      width: 100%;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 12px;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      letter-spacing: 0.5px;
+      transition: opacity 0.2s;
+    }
+    .btn-checkin-all:hover:not(:disabled) { opacity: 0.88; }
+    .btn-checkin-all:disabled { opacity: 0.35; cursor: not-allowed; }
+
+    /* ── SCAN AGAIN ── */
+    .btn-scan-again {
+      display: block;
+      width: 100%;
+      text-align: center;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px;
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      color: var(--muted);
+      cursor: pointer;
+      letter-spacing: 1px;
+      transition: border-color 0.2s;
+    }
+    .btn-scan-again:hover { border-color: rgba(255,255,255,0.2); color: var(--white); }
+
+    /* ── TOAST ── */
+    #toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 20px;
+      font-size: 13px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: transform 0.3s ease;
+      z-index: 1000;
+      max-width: 320px;
+      text-align: center;
+      pointer-events: none;
+    }
+    #toast.show { transform: translateX(-50%) translateY(0); }
+    #toast.success { border-color: rgba(0,230,118,0.4); color: var(--green); }
+    #toast.error   { border-color: rgba(255,61,61,0.4);  color: var(--red); }
+    #toast.warn    { border-color: rgba(255,214,0,0.4);  color: var(--yellow); }
   </style>
 </head>
 <body>
-  <div class="topbar">
-    <div class="tb-left">
-      <img src="/img/mee-logo.png" class="tb-logo" alt="MEE"/>
-      <span class="tb-title">QR SCANNER</span>
-    </div>
-    <div class="tb-right">
-      <div class="role-dot"></div>
-      <span class="tb-user">Hi, <strong><%= staffUser.name.split(' ')[0] %></strong></span>
-      <a href="/staff/logout" class="logout-link"><i class="bi bi-box-arrow-right"></i></a>
-    </div>
+
+  <!-- ── HEADER ── -->
+  <div class="header">
+    <div class="header-brand">MEE · QR Scanner</div>
+    <div class="header-user"><%= staffUser.name %></div>
+    <a href="/staff/logout" class="btn-logout">LOGOUT</a>
   </div>
 
+  <!-- ── MAIN ── -->
   <div class="main">
-    <!-- Camera controls -->
-    <div class="cam-controls">
-      <button class="cam-btn active" id="btnStartCam" onclick="startCamera()">
-        <i class="bi bi-camera-video-fill"></i> Start Camera
-      </button>
-      <button class="cam-btn" id="btnStopCam" onclick="stopCamera()" style="display:none;">
-        <i class="bi bi-camera-video-off-fill"></i> Stop
-      </button>
-      <button class="cam-btn" id="btnFlip" onclick="flipCamera()" style="display:none;">
-        <i class="bi bi-arrow-repeat"></i> Flip
-      </button>
-    </div>
 
-    <!-- Camera viewport -->
-    <div class="scan-box" id="scanBox">
-      <video id="scanVideo" autoplay muted playsinline></video>
-      <canvas id="scanCanvas"></canvas>
-      <div class="scan-overlay">
-        <div class="scan-frame" id="scanFrame">
-          <div class="scan-corner tl"></div>
-          <div class="scan-corner tr"></div>
-          <div class="scan-corner bl"></div>
-          <div class="scan-corner br"></div>
-          <div class="scan-line" id="scanLine"></div>
+    <!-- LEFT: Camera + manual input -->
+    <div class="camera-panel">
+      <div class="section-title">Scan Ticket QR</div>
+
+      <div id="qr-video-wrap">
+        <video id="qr-video" playsinline autoplay muted></video>
+        <div class="scan-overlay">
+          <div class="scan-frame">
+            <div class="scan-line"></div>
+          </div>
         </div>
       </div>
-      <div class="cam-off-msg" id="camOffMsg">
-        <i class="bi bi-qr-code"></i>
-        <span>Tap "Start Camera" to begin scanning</span>
-      </div>
-    </div>
 
-    <!-- Result card -->
-    <div id="resultCard" style="display:none;"></div>
+      <div class="camera-status" id="cam-status">Initializing camera…</div>
 
-    <!-- Manual entry -->
-    <div class="manual-section">
-      <div class="sec-title">Manual Ticket Entry</div>
       <div class="manual-row">
-        <input class="manual-inp" id="manualInp" placeholder="Enter Ticket ID (e.g. MEE-XXXXXX)" 
-               style="text-transform:uppercase;" oninput="this.value=this.value.toUpperCase()"
-               onkeydown="if(event.key==='Enter') manualScan()"/>
-        <button class="scan-btn" onclick="manualScan()"><i class="bi bi-search"></i> Verify</button>
+        <input
+          id="manual-input"
+          class="manual-input"
+          type="text"
+          placeholder="Enter Booking Ref or Ticket ID…"
+          autocomplete="off"
+          autocorrect="off"
+          spellcheck="false"
+        />
+        <button class="btn-manual-scan" onclick="handleManualScan()">Scan</button>
       </div>
     </div>
 
-    <!-- Recent scans log -->
-    <div class="log-section">
-      <div class="log-header">
-        <span class="log-title">RECENT SCANS</span>
-        <span class="log-count" id="logCount">0 scans</span>
+    <!-- RIGHT: Result -->
+    <div class="result-panel" id="result-panel">
+      <div class="idle-state" id="idle-state">
+        <div class="idle-icon">📷</div>
+        <div class="idle-text">Scan a QR code<br/>or enter booking ref</div>
       </div>
-      <div class="log-list" id="logList">
-        <div class="log-empty">No scans yet this session.</div>
-      </div>
+      <!-- Booking card injected here -->
     </div>
+
   </div>
 
+  <!-- ── TOAST ── -->
+  <div id="toast"></div>
+
+  <!-- jsQR -->
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+
   <script>
-    let videoStream = null;
-    let scanInterval = null;
-    let lastScanned  = '';
-    let lastScannedTime = 0;
-    let scanning = false;
-    let facingMode = 'environment'; // rear camera
-    let scanLog = [];
+    // ─────────────────────────────────────────────────────────
+    // STATE
+    // ─────────────────────────────────────────────────────────
+    let currentBooking = null;   // last scan result
+    let scanPaused     = false;  // pause QR scanning while showing result
+    let lastScanned    = '';     // debounce duplicate scans
 
-    const video   = document.getElementById('scanVideo');
-    const canvas  = document.getElementById('scanCanvas');
-    const ctx     = canvas.getContext('2d');
-    const frame   = document.getElementById('scanFrame');
-    const scanBox = document.getElementById('scanBox');
-    const camOff  = document.getElementById('camOffMsg');
+    // ─────────────────────────────────────────────────────────
+    // CAMERA
+    // ─────────────────────────────────────────────────────────
+    const video     = document.getElementById('qr-video');
+    const camStatus = document.getElementById('cam-status');
+    const canvas    = document.createElement('canvas');
+    const ctx       = canvas.getContext('2d');
 
-    // ── Start camera ──
     async function startCamera() {
       try {
-        if (videoStream) stopCamera();
         const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode, width: { ideal: 1280 }, height: { ideal: 1280 } }
+          video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 1280 } }
         });
         video.srcObject = stream;
-        videoStream = stream;
-        await video.play();
-        camOff.style.display = 'none';
-        document.getElementById('btnStartCam').style.display = 'none';
-        document.getElementById('btnStopCam').style.display  = '';
-        document.getElementById('btnFlip').style.display     = '';
-        document.getElementById('scanLine').style.display    = '';
-        scanning = true;
-        scanInterval = setInterval(scanFrame, 180);
+        video.play();
+        camStatus.textContent = 'Camera active — aim at QR code';
+        requestAnimationFrame(scanFrame);
       } catch (e) {
-        camOff.innerHTML = `<i class="bi bi-camera-video-off"></i><span>Camera access denied.<br/>Use manual entry below.</span>`;
-        camOff.style.display = 'flex';
+        camStatus.textContent = 'Camera error: ' + e.message;
+        console.error('Camera error:', e);
       }
     }
 
-    function stopCamera() {
-      scanning = false;
-      if (scanInterval) { clearInterval(scanInterval); scanInterval = null; }
-      if (videoStream) { videoStream.getTracks().forEach(t => t.stop()); videoStream = null; }
-      video.srcObject = null;
-      camOff.style.display = 'flex';
-      camOff.innerHTML = '<i class="bi bi-qr-code"></i><span>Camera stopped. Tap "Start Camera" to resume.</span>';
-      document.getElementById('btnStartCam').style.display = '';
-      document.getElementById('btnStopCam').style.display  = 'none';
-      document.getElementById('btnFlip').style.display     = 'none';
-    }
-
-    function flipCamera() {
-      facingMode = facingMode === 'environment' ? 'user' : 'environment';
-      startCamera();
-    }
-
-    // ── Scan frame for QR ──
     function scanFrame() {
-      if (!scanning || video.readyState !== video.HAVE_ENOUGH_DATA) return;
-      canvas.width  = video.videoWidth;
-      canvas.height = video.videoHeight;
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'dontInvert' });
-      if (!code) return;
+      if (!scanPaused && video.readyState === video.HAVE_ENOUGH_DATA) {
+        canvas.width  = video.videoWidth;
+        canvas.height = video.videoHeight;
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const code = jsQR(imageData.data, imageData.width, imageData.height, {
+          inversionAttempts: 'dontInvert',
+        });
+        if (code && code.data && code.data !== lastScanned) {
+          lastScanned = code.data;
+          handleQRData(code.data);
+        }
+      }
+      requestAnimationFrame(scanFrame);
+    }
 
-      const raw = code.data;
-      const now = Date.now();
-      // Debounce: don't re-scan same code within 4 seconds
-      if (raw === lastScanned && now - lastScannedTime < 4000) return;
-      lastScanned = raw;
-      lastScannedTime = now;
+    startCamera();
 
-      // ── Parse QR payload ──
-      let ticketId  = null;
-      let bookingRef = null;
-      let isGroup   = false;
-      let parsedQR  = null;
+    // ─────────────────────────────────────────────────────────
+    // SCAN HANDLERS
+    // ─────────────────────────────────────────────────────────
+    function handleManualScan() {
+      const val = document.getElementById('manual-input').value.trim();
+      if (!val) return;
+      handleQRData(val);
+    }
 
-      try {
-        parsedQR = JSON.parse(raw);
-        // Single ticket: field is 't'
-        ticketId   = parsedQR.t || parsedQR.tid || parsedQR.ticketId || null;
-        // Booking ref: field is 'b'
-        bookingRef = parsedQR.b || parsedQR.bookingRef || null;
-        // Group QR flag
-        isGroup    = !!parsedQR.grp;
-      } catch(e) {
-        // Raw string — treat as ticketId directly
-        ticketId = raw;
+    document.getElementById('manual-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter') handleManualScan();
+    });
+
+    async function handleQRData(raw) {
+      scanPaused = true;
+      let payload = null;
+
+      // Try to parse as JSON
+      try { payload = JSON.parse(raw); } catch {}
+
+      // Determine what to send to the server
+      const body = {};
+      if (payload) {
+        body.qrData = payload;
+      } else {
+        // raw string — could be bookingRef or ticketId
+        if (raw.startsWith('MEE-CASH-') || raw.startsWith('MEE-') && raw.length < 20) {
+          body.bookingRef = raw;
+        } else {
+          body.bookingRef = raw;
+        }
       }
 
-      processTicket({ ticketId, bookingRef, isGroup, raw }, 'camera');
-    }
-
-    // ── Manual scan ──
-    function manualScan() {
-      const val = document.getElementById('manualInp').value.trim().toUpperCase();
-      if (!val) return;
-      // Manual entry is always a raw ticketId string
-      processTicket({ ticketId: val, bookingRef: null, isGroup: false, raw: val }, 'manual');
-      document.getElementById('manualInp').value = '';
-    }
-
-    // ── Core: send to server for verification ──
-    async function processTicket({ ticketId, bookingRef, isGroup, raw }, source) {
-      frame.classList.remove('ok','fail');
-      // Display label — show ticketId or bookingRef or raw
-      const displayId = ticketId || bookingRef || raw || '?';
-
       try {
-        const res = await fetch('/staff/api/scan', {
-          method: 'POST', credentials: 'include',
+        const res  = await fetch('/staff/api/scan', {
+          method:  'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ticketId, bookingRef, isGroup })
+          body:    JSON.stringify(body),
         });
         const data = await res.json();
-        showResult(data, displayId);
-        addToLog(data, displayId);
-
-        if (data.status === 'valid') {
-          frame.classList.add('ok');
-          vibrate([100, 50, 100]);
-          flashBox('ok');
-        } else {
-          frame.classList.add('fail');
-          vibrate([300]);
-          flashBox('fail');
-        }
-        setTimeout(() => frame.classList.remove('ok','fail'), 3000);
-
-      } catch(e) {
-        showResult({ success: false, status: 'error', message: 'Network error. Check connection.' }, displayId);
+        renderResult(data);
+      } catch (err) {
+        showToast('Network error. Try again.', 'error');
+        scanPaused = false;
+        lastScanned = '';
       }
     }
 
-    // ── Show result card ──
-    function showResult(data, displayId) {
-      const card = document.getElementById('resultCard');
-      card.style.display = 'block';
+    // ─────────────────────────────────────────────────────────
+    // RENDER SCAN RESULT
+    // ─────────────────────────────────────────────────────────
+    function renderResult(data) {
+      currentBooking = data.booking || null;
+      const panel = document.getElementById('result-panel');
+      document.getElementById('idle-state').style.display = 'none';
 
-      if (data.status === 'valid') {
-        const isGroup = data.ticket?.groupSize > 1;
-        card.innerHTML = `
-          <div class="status-card sc-valid">
-            <div class="sc-header"><span class="sc-icon">${isGroup ? '✅👥' : '✅'}</span><span class="sc-title ok">${isGroup ? 'GROUP ENTRY GRANTED' : 'ENTRY GRANTED'}</span></div>
-            <div class="sc-body">
-              <div class="sc-row"><span class="sc-key">ATTENDEE${isGroup ? 'S' : ''}</span><span class="sc-val" style="font-size:${isGroup?'0.7rem':'0.82rem'}">${data.ticket?.attendee || '—'}</span></div>
-              <div class="sc-row"><span class="sc-key">TICKET REF</span><span class="sc-val" style="font-family:'Space Mono',monospace;font-size:0.7rem;">${data.ticket?.ticketId || displayId}</span></div>
-              <div class="sc-row"><span class="sc-key">TICKET TYPE</span><span class="sc-val">${(data.ticket?.type||'—').toUpperCase()}</span></div>
-              ${isGroup ? `<div class="sc-row"><span class="sc-key">GROUP SIZE</span><span class="sc-val" style="color:var(--success)">${data.ticket.groupSize} people</span></div>` : ''}
-              ${data.ticket?.seatNumber ? `<div class="sc-row"><span class="sc-key">SEAT</span><span class="sc-val">${data.ticket.seatNumber.toUpperCase()}</span></div>` : ''}
-              ${data.ticket?.seatNumbers?.length ? `<div class="sc-row"><span class="sc-key">SEATS</span><span class="sc-val">${data.ticket.seatNumbers.join(', ').toUpperCase()}</span></div>` : ''}
-              <div class="sc-row"><span class="sc-key">EVENT</span><span class="sc-val">${data.event?.name || '—'}</span></div>
-              <div class="sc-row"><span class="sc-key">SCANNED BY</span><span class="sc-val">${data.scannedBy || '—'}</span></div>
+      if (!data.success && !data.booking) {
+        panel.innerHTML = `
+          <div class="booking-card">
+            <div class="booking-card-header">
+              <span class="status-badge used">✗ &nbsp;${escH(data.status || 'Error')}</span>
+            </div>
+            <div style="padding:20px;text-align:center;color:var(--muted);font-size:13px;">
+              ${escH(data.message || 'Scan failed')}
+            </div>
+            <div style="padding:12px 16px;">
+              <button class="btn-scan-again" onclick="resetScan()">⟳ &nbsp;Scan Next</button>
             </div>
           </div>`;
-      } else if (data.status === 'used') {
-        card.innerHTML = `
-          <div class="status-card sc-used">
-            <div class="sc-header"><span class="sc-icon">⚠️</span><span class="sc-title warn">ALREADY USED</span></div>
-            <div class="sc-body">
-              <div class="sc-row"><span class="sc-key">ATTENDEE</span><span class="sc-val">${data.ticket?.attendee || '—'}</span></div>
-              <div class="sc-row"><span class="sc-key">TICKET REF</span><span class="sc-val" style="font-family:'Space Mono',monospace;font-size:0.7rem;">${data.ticket?.ticketId || displayId}</span></div>
-              <div class="sc-row"><span class="sc-key">STATUS</span><span class="sc-val" style="color:var(--warn)">ENTRY DENIED</span></div>
-            </div>
-          </div>`;
-      } else {
-        card.innerHTML = `
-          <div class="status-card sc-invalid">
-            <div class="sc-header"><span class="sc-icon">❌</span><span class="sc-title err">INVALID TICKET</span></div>
-            <div class="sc-body">
-              <div class="sc-row"><span class="sc-key">REASON</span><span class="sc-val" style="color:var(--error)">${data.message || 'Unknown error'}</span></div>
-              <div class="sc-row"><span class="sc-key">SCANNED ID</span><span class="sc-val" style="font-family:'Space Mono',monospace;font-size:0.68rem;">${displayId}</span></div>
-            </div>
-          </div>`;
-      }
-    }
-
-    // ── Add to recent log ──
-    function addToLog(data, ticketId) {
-      const now = new Date();
-      const timeStr = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-      scanLog.unshift({
-        status: data.status || 'error',
-        name: data.ticket?.attendee || ticketId,
-        time: timeStr,
-      });
-      if (scanLog.length > 50) scanLog.pop();
-      renderLog();
-    }
-
-    function renderLog() {
-      const list = document.getElementById('logList');
-      document.getElementById('logCount').textContent = scanLog.length + ' scan' + (scanLog.length !== 1 ? 's' : '');
-      if (!scanLog.length) {
-        list.innerHTML = '<div class="log-empty">No scans yet this session.</div>';
+        showToast(data.message || 'Invalid QR', 'error');
         return;
       }
-      list.innerHTML = scanLog.map(entry => `
-        <div class="log-item">
-          <div class="log-dot ${entry.status === 'valid' ? 'ok' : entry.status === 'used' ? 'warn' : 'fail'}"></div>
-          <div class="log-name">${entry.name}</div>
-          <div class="log-time">${entry.time}</div>
-        </div>`).join('');
-    }
 
-    function vibrate(pattern) {
-      if (navigator.vibrate) navigator.vibrate(pattern);
-    }
+      const b = data.booking;
+      if (!b) { scanPaused = false; return; }
 
-    function flashBox(type) {
-      scanBox.classList.remove('flash-ok','flash-fail');
-      void scanBox.offsetWidth; // reflow
-      scanBox.classList.add(type === 'ok' ? 'flash-ok' : 'flash-fail');
-    }
+      const totalTickets   = b.tickets.length;
+      const checkedInCount = b.tickets.filter(t => t.isUsed).length;
+      const allDone        = checkedInCount === totalTickets;
+      const noneDone       = checkedInCount === 0;
 
-    // Auto-start camera on load if on mobile
-    window.addEventListener('load', () => {
-      if (/Mobi|Android/i.test(navigator.userAgent)) {
-        startCamera();
+      let statusBadge = '';
+      if (allDone) {
+        statusBadge = `<span class="status-badge used">✓ All Checked In</span>`;
+        showToast('All attendees already checked in', 'warn');
+      } else if (checkedInCount > 0) {
+        statusBadge = `<span class="status-badge partial">⬤ Partial (${checkedInCount}/${totalTickets})</span>`;
+        showToast(`${totalTickets - checkedInCount} attendee(s) pending`, 'warn');
+      } else {
+        statusBadge = `<span class="status-badge valid">● Valid — ${totalTickets} Attendee${totalTickets > 1 ? 's' : ''}</span>`;
+        showToast(data.message || 'Booking found', 'success');
       }
-    });
+
+      const attendeeRowsHtml = b.tickets.map(t => {
+        const initial  = (t.attendee.name || 'G').charAt(0).toUpperCase();
+        const isUsed   = t.isUsed;
+        const usedTime = t.usedAt ? new Date(t.usedAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : '';
+
+        return `
+        <div class="attendee-row ${isUsed ? 'checked-in' : ''}" id="row-${escH(t.ticketId)}">
+          <div class="attendee-avatar">${initial}</div>
+          <div class="attendee-info">
+            <div class="attendee-name">${escH(t.attendee.name)}</div>
+            <div class="attendee-sub">
+              ${t.attendee.age ? `Age ${t.attendee.age}` : ''}
+              ${t.attendee.gender ? ` · ${t.attendee.gender}` : ''}
+            </div>
+            ${t.seatNumber ? `<div class="attendee-seat">${escH(t.seatNumber.toUpperCase())}</div>` : ''}
+          </div>
+          <div class="attendee-status">
+            ${isUsed
+              ? `<div class="used-tag">✓ Checked In</div><div class="used-time">${usedTime}</div>`
+              : `<button
+                  class="btn-checkin"
+                  id="btn-${escH(t.ticketId)}"
+                  onclick="checkInOne('${escH(t.ticketId)}', '${escH(b.bookingRef)}')"
+                >
+                  Check In
+                </button>`
+            }
+          </div>
+        </div>`;
+      }).join('');
+
+      panel.innerHTML = `
+        <div class="booking-card">
+          <div class="booking-card-header">
+            ${statusBadge}
+            <span class="booking-ref">${escH(b.bookingRef)}</span>
+          </div>
+
+          <div class="booking-meta">
+            <div class="bm-item">
+              <div class="bm-lbl">Event</div>
+              <div class="bm-val">${escH(b.event?.name || '—')}</div>
+            </div>
+            <div class="bm-item">
+              <div class="bm-lbl">Category</div>
+              <div class="bm-val accent">${escH((b.ticketType || '').toUpperCase())}</div>
+            </div>
+            <div class="bm-item">
+              <div class="bm-lbl">Date</div>
+              <div class="bm-val">${b.event?.date ? new Date(b.event.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}</div>
+            </div>
+            <div class="bm-item">
+              <div class="bm-lbl">Venue</div>
+              <div class="bm-val">${escH(b.event?.venue || '—')}</div>
+            </div>
+          </div>
+
+          <div class="attendee-list-header">
+            <span class="al-title">Attendees</span>
+            <span class="al-count" id="al-count">${checkedInCount}/${totalTickets} checked in</span>
+          </div>
+
+          ${attendeeRowsHtml}
+
+          <div class="checkin-all-wrap">
+            <button
+              class="btn-checkin-all"
+              id="btn-checkin-all"
+              onclick="checkInAll('${escH(b.bookingRef)}')"
+              ${allDone ? 'disabled' : ''}
+            >
+              ${allDone ? '✓ All Checked In' : `Check In All (${totalTickets - checkedInCount} remaining)`}
+            </button>
+          </div>
+
+          <div style="padding:0 16px 16px;">
+            <button class="btn-scan-again" onclick="resetScan()">⟳ &nbsp;Scan Next Ticket</button>
+          </div>
+        </div>`;
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // CHECK IN ONE ATTENDEE
+    // ─────────────────────────────────────────────────────────
+    async function checkInOne(ticketId, bookingRef) {
+      const btn = document.getElementById('btn-' + ticketId);
+      if (btn) { btn.disabled = true; btn.classList.add('loading'); btn.textContent = '…'; }
+
+      try {
+        const res  = await fetch('/staff/api/scan-ticket', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify({ ticketId, bookingRef }),
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          showToast(`✓ ${data.attendee || 'Attendee'} checked in`, 'success');
+
+          // Update row UI
+          const row = document.getElementById('row-' + ticketId);
+          if (row) {
+            row.classList.add('checked-in');
+            const statusDiv = row.querySelector('.attendee-status');
+            if (statusDiv) {
+              const now = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+              statusDiv.innerHTML = `<div class="used-tag">✓ Checked In</div><div class="used-time">${now}</div>`;
+            }
+          }
+
+          // Update the booking in currentBooking
+          if (currentBooking) {
+            const t = currentBooking.tickets.find(x => x.ticketId === ticketId);
+            if (t) { t.isUsed = true; t.usedAt = new Date().toISOString(); }
+          }
+
+          updateCountAndAllBtn(bookingRef);
+
+        } else {
+          showToast(data.message || 'Check-in failed', data.status === 'used' ? 'warn' : 'error');
+          if (btn) { btn.disabled = false; btn.classList.remove('loading'); btn.textContent = 'Check In'; }
+        }
+      } catch (err) {
+        showToast('Network error', 'error');
+        if (btn) { btn.disabled = false; btn.classList.remove('loading'); btn.textContent = 'Check In'; }
+      }
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // CHECK IN ALL
+    // ─────────────────────────────────────────────────────────
+    async function checkInAll(bookingRef) {
+      const allBtn = document.getElementById('btn-checkin-all');
+      if (allBtn) { allBtn.disabled = true; allBtn.textContent = 'Checking in…'; }
+
+      try {
+        const res  = await fetch('/staff/api/scan', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify({ bookingRef, checkInAll: true }),
+        });
+        const data = await res.json();
+
+        if (data.success && data.booking) {
+          showToast(data.message || 'All checked in!', 'success');
+          renderResult(data);  // re-render with updated state
+        } else {
+          showToast(data.message || 'Failed', 'error');
+          if (allBtn) { allBtn.disabled = false; allBtn.textContent = 'Check In All'; }
+        }
+      } catch (err) {
+        showToast('Network error', 'error');
+        if (allBtn) { allBtn.disabled = false; allBtn.textContent = 'Check In All'; }
+      }
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // UPDATE COUNT + ALL BUTTON
+    // ─────────────────────────────────────────────────────────
+    function updateCountAndAllBtn(bookingRef) {
+      if (!currentBooking) return;
+      const total     = currentBooking.tickets.length;
+      const checkedIn = currentBooking.tickets.filter(t => t.isUsed).length;
+      const remaining = total - checkedIn;
+
+      const countEl = document.getElementById('al-count');
+      if (countEl) countEl.textContent = `${checkedIn}/${total} checked in`;
+
+      const allBtn = document.getElementById('btn-checkin-all');
+      if (allBtn) {
+        if (remaining === 0) {
+          allBtn.disabled = true;
+          allBtn.textContent = '✓ All Checked In';
+        } else {
+          allBtn.textContent = `Check In All (${remaining} remaining)`;
+        }
+      }
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // RESET SCAN
+    // ─────────────────────────────────────────────────────────
+    function resetScan() {
+      currentBooking = null;
+      lastScanned    = '';
+      scanPaused     = false;
+      document.getElementById('manual-input').value = '';
+      const panel = document.getElementById('result-panel');
+      panel.innerHTML = `
+        <div class="idle-state" id="idle-state">
+          <div class="idle-icon">📷</div>
+          <div class="idle-text">Scan a QR code<br/>or enter booking ref</div>
+        </div>`;
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // TOAST
+    // ─────────────────────────────────────────────────────────
+    let toastTimeout;
+    function showToast(msg, type = 'success') {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className   = `show ${type}`;
+      clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => { t.className = ''; }, 3000);
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // UTILS
+    // ─────────────────────────────────────────────────────────
+    function escH(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
   </script>
+
 </body>
 </html>
