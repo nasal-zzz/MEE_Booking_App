@@ -239,10 +239,13 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 3000;
+const HOST = '0.0.0.0'; // Important for Docker
 
-app.listen(PORT, () => {
-  console.log(`\n Melattur Entertainment Events running at http://localhost:${PORT}`);
-  console.log(` Environment: ${process.env.NODE_ENV || 'development'}\n`);
+app.listen(PORT, HOST, () => {
+  console.log(`\n✅ Melattur Entertainment Events`);
+  console.log(`   Server running on ${HOST}:${PORT}`);
+  console.log(`   Environment: ${process.env.NODE_ENV || 'production'}`);
+  console.log(`   Database: ${process.env.MONGODB_URI ? 'Connected' : 'Not configured'}\n`);
 });
 
 module.exports = app;
