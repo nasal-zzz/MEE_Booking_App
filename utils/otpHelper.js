@@ -91,7 +91,7 @@
 //     <tr><td align="center">
 //       <table width="480" cellpadding="0" cellspacing="0" style="background:#14141C;border-radius:12px;overflow:hidden;border:1px solid rgba(106,13,173,0.3);">
 //         <tr><td style="background:#6A0DAD;padding:24px;text-align:center;">
-//           <img src="${process.env.APP_URL}/img/mee-logo.png" alt="MEE" style="height:44px;width:auto;" onerror="this.style.display='none'"/>
+//           <img src="${process.env.APP_URL}/images/brandings/logo.webp" alt="MEE" style="height:44px;width:auto;" onerror="this.style.display='none'"/>
 //         </td></tr>
 //         <tr><td style="padding:32px 36px;">
 //           <p style="color:#B3B3B3;font-size:14px;margin:0 0 8px;">Hi there,</p>
@@ -502,7 +502,7 @@ const sendEmailOTP = async (email, otp) => {
     <tr><td align="center">
       <table width="480" cellpadding="0" cellspacing="0" style="background:#14141C;border-radius:12px;overflow:hidden;border:1px solid rgba(106,13,173,0.3);">
         <tr><td style="background:#6A0DAD;padding:24px;text-align:center;">
-          <img src="${process.env.APP_URL}/img/mee-logo.png" alt="MEE" style="height:44px;width:auto;" onerror="this.style.display='none'"/>
+          <img src="${process.env.APP_URL}/images/brandings/logo.webp" alt="MEE" style="height:44px;width:auto;" onerror="this.style.display='none'"/>
         </td></tr>
         <tr><td style="padding:32px 36px;">
           <p style="color:#B3B3B3;font-size:14px;margin:0 0 8px;">Hi there,</p>

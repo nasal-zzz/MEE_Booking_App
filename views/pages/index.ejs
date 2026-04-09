@@ -7,15 +7,64 @@
     <title>Melattur Events & Entertainments | Premium Musical Experience</title>
     <meta name="description"
         content="Book tickets for the most anticipated musical events by Melattur Events & Entertainments. Premium experience, dynamic performances.">
-    <!-- Google Fonts -->
+
+    <!-- Preconnect to external domains -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+
+    <!-- Preload critical images -->
+    <link rel="preload" as="image" href="/images/herosection/Mee_hero_section_00000.webp">
+    <link rel="preload" as="image" href="/images/herosection/Mee_hero_section_00001.webp">
+    <link rel="preload" as="image" href="/images/herosection/Mee_hero_section_00002.webp">
+
+    <!-- Optimized font loading - swap for instant text display -->
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap"
         rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Anek+Malayalam:wght@100..800&display=swap" rel="stylesheet">
+
     <!-- Global Stylesheet -->
     <link href="/css/style.css" rel="stylesheet">
+
+    <!-- Inline critical loader styles to avoid FOUC -->
+    <style>
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        #page-loader {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background: #000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            transition: opacity 0.6s ease;
+        }
+
+        #page-loader .spinner {
+            width: 48px;
+            height: 48px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-top-color: #d103ef;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        #page-loader p {
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 12px;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            font-family: 'Outfit', sans-serif;
+        }
+    </style>
 </head>
 
 <body
@@ -38,28 +87,10 @@
     </div>
 
     <!-- Page Loader Overlay -->
-    <div id="page-loader" style="
-    position: fixed; inset: 0; z-index: 9999;
-    background: #000;
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    gap: 16px;
-    transition: opacity 0.6s ease;
-">
-        <div
-            style="width: 48px; height: 48px; border: 2px solid rgba(255,255,255,0.1); border-top-color: #d103ef; border-radius: 50%; animation: spin 0.8s linear infinite;">
-        </div>
-        <p
-            style="color: rgba(255,255,255,0.4); font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase; font-family: 'Outfit', sans-serif;">
-            Loading experience...</p>
+    <div id="page-loader">
+        <div class="spinner"></div>
+        <p>Loading experience...</p>
     </div>
-    <style>
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
-    </style>
 
     <!-- Navbar -->
     <%- include('../partials/navbar_home') %>
@@ -188,17 +219,31 @@
                         <div class="sponsors-wrapper">
                             <div class="sponsors-track">
                                 <!-- Two sets of items for seamless looping -->
-                                <div class="sponsor-card"><img src="/images/sponsors/s1.png" alt="Sponsor"></div>
-                                <div class="sponsor-card"><img src="/images/sponsors/s2.png" alt="Sponsor"></div>
-                                <div class="sponsor-card"><img src="/images/sponsors/s3.png" alt="Sponsor"></div>
-                                <div class="sponsor-card"><img src="/images/sponsors/s4.png" alt="Sponsor"></div>
-                                <div class="sponsor-card"><img src="/images/sponsors/s5.png" alt="Sponsor"></div>
+                                <div class="sponsor-card"><img src="/images/sponsors/title_sponsor.webp" alt="Sponsor"
+                                        loading="lazy"></div>
+                                <div class="sponsor-card"><img src="/images/sponsors/s1.webp" alt="Sponsor"
+                                        loading="lazy"></div>
+                                <div class="sponsor-card"><img src="/images/sponsors/s2.webp" alt="Sponsor"
+                                        loading="lazy"></div>
+                                <div class="sponsor-card"><img src="/images/sponsors/s3.webp" alt="Sponsor"
+                                        loading="lazy"></div>
+                                <div class="sponsor-card"><img src="/images/sponsors/s4.webp" alt="Sponsor"
+                                        loading="lazy"></div>
+                                <div class="sponsor-card"><img src="/images/sponsors/s5.webp" alt="Sponsor"
+                                        loading="lazy"></div>
                                 <!-- Second set -->
-                                <div class="sponsor-card"><img src="/images/sponsors/s1.png" alt="Sponsor"></div>
-                                <div class="sponsor-card"><img src="/images/sponsors/s2.png" alt="Sponsor"></div>
-                                <div class="sponsor-card"><img src="/images/sponsors/s3.png" alt="Sponsor"></div>
-                                <div class="sponsor-card"><img src="/images/sponsors/s4.png" alt="Sponsor"></div>
-                                <div class="sponsor-card"><img src="/images/sponsors/s5.png" alt="Sponsor"></div>
+                                <div class="sponsor-card"><img src="/images/sponsors/title_sponsor.webp" alt="Sponsor"
+                                        loading="lazy"></div>
+                                <div class="sponsor-card"><img src="/images/sponsors/s1.webp" alt="Sponsor"
+                                        loading="lazy"></div>
+                                <div class="sponsor-card"><img src="/images/sponsors/s2.webp" alt="Sponsor"
+                                        loading="lazy"></div>
+                                <div class="sponsor-card"><img src="/images/sponsors/s3.webp" alt="Sponsor"
+                                        loading="lazy"></div>
+                                <div class="sponsor-card"><img src="/images/sponsors/s4.webp" alt="Sponsor"
+                                        loading="lazy"></div>
+                                <div class="sponsor-card"><img src="/images/sponsors/s5.webp" alt="Sponsor"
+                                        loading="lazy"></div>
                             </div>
                         </div>
                     </div>
@@ -349,15 +394,12 @@
         <!-- Footer -->
         <%- include('../partials/footer_home') %>
 
+            <!-- GSAP for Animations - Deferred loading -->
+            <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+            <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
 
-
-            <!-- GSAP for Animations -->
-            <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-            <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
-
-            <!-- Custom Animations Script -->
-            <script src="/js/animations.js"></script>
+            <!-- Custom Animations Script - Deferred loading -->
+            <script defer src="/js/animations.js"></script>
 </body>
-
 
 </html>

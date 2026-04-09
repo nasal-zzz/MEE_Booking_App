@@ -36,7 +36,7 @@ const sendBookingConfirmation = async ({ to, name, booking, event }) => {
   const html = `
     <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#08080e;color:#e8e8f0;border-radius:12px;overflow:hidden;">
       <div style="background:linear-gradient(135deg,#0a0a0f,#1a1f00);padding:30px;text-align:center;">
-        <img src="${process.env.APP_URL}/img/mee-logo.png" alt="Melattur Entertainment Events" style="height:52px;width:auto;object-fit:contain;" onerror="this.style.display='none'"/>
+        <img src="${process.env.APP_URL}/images/brandings/logo.webp" alt="Melattur Entertainment Events" style="height:52px;width:auto;object-fit:contain;" onerror="this.style.display='none'"/>
         <h1 style="font-size:1rem;letter-spacing:3px;color:#aaa;margin:6px 0 0;font-weight:400;">MELATTUR ENTERTAINMENT EVENTS</h1>
       </div>
       <div style="padding:30px;">

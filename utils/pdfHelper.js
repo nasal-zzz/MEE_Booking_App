@@ -6,12 +6,12 @@ const path = require('path');
 
 // ─────────────────────────────────────────────────────────────
 // BACKGROUND IMAGE — load as base64 for reliable rendering
-// Place ticket_BG.png (or .jpg) in the same folder as this file,
+// Place ticket_BG.webp (or .jpg) in the same folder as this file,
 // or in an assets/ subfolder.
 // ─────────────────────────────────────────────────────────────
 async function loadBgBase64() {
   const candidates = [
-    path.join(__dirname, '..', 'public', 'img', 'ticket_BG.png'),
+    path.join(__dirname, '..', 'public', 'img', 'ticket_BG.webp'),
     path.join(__dirname, '..', 'public', 'img', 'ticket_BG.jpg'),
   ];
   for (const p of candidates) {
@@ -25,7 +25,7 @@ async function loadBgBase64() {
       return `data:image/jpeg;base64,${buf.toString('base64')}`;
     } catch (_) {
       // sharp not available — return raw file as-is
-      const ext  = path.extname(p).toLowerCase();
+      const ext = path.extname(p).toLowerCase();
       const mime = ext === '.png' ? 'image/png' : 'image/jpeg';
       const data = fs.readFileSync(p);
       return `data:${mime};base64,${data.toString('base64')}`;
@@ -96,12 +96,12 @@ const generateTicketPDF = async ({ booking, event, sponsors = [] }) => {
 
   const bgBase64 = await loadBgBase64();
 
-  const gateNumber     = (booking.gateNumber || 'GATE - 1').toUpperCase();
-  const sharedQRSrc    = await resolveSharedQR(booking.tickets);
-  const eventDateLong  = fmtDate(event.date);
-  const doorsOpen      = event.doorsOpen    || '8:00 PM';
-  const venue          = event.venue        || '';
-  const venueAddr      = event.venueAddress || '';
+  const gateNumber = (booking.gateNumber || 'GATE - 1').toUpperCase();
+  const sharedQRSrc = await resolveSharedQR(booking.tickets);
+  const eventDateLong = fmtDate(event.date);
+  const doorsOpen = event.doorsOpen || '8:00 PM';
+  const venue = event.venue || '';
+  const venueAddr = event.venueAddress || '';
   const pricePerTicket = Math.round(booking.subtotal / booking.quantity);
 
   // ── Resolve seatType from event.ticketTypes matching booking.ticketType ──
@@ -113,14 +113,14 @@ const generateTicketPDF = async ({ booking, event, sponsors = [] }) => {
   // ── One page per ticket / attendee ──
   const pages = booking.tickets.map((t, i) => {
 
-    const rawSeat    = (t.seatNumber || '').trim().toLowerCase();
+    const rawSeat = (t.seatNumber || '').trim().toLowerCase();
     const isStanding = categorySeatType === 'standing'
       || rawSeat === 'standing'
       || rawSeat === 'general';
-    const isSitting  = !isStanding && rawSeat && rawSeat !== 'n/a';
-    const seatDisp   = isStanding ? 'N/A' : isSitting ? esc(t.seatNumber.toUpperCase()) : 'N/A';
+    const isSitting = !isStanding && rawSeat && rawSeat !== 'n/a';
+    const seatDisp = isStanding ? 'N/A' : isSitting ? esc(t.seatNumber.toUpperCase()) : 'N/A';
 
-    const attendee  = t.attendee || {};
+    const attendee = t.attendee || {};
     const genderStr = attendee.gender
       ? attendee.gender.charAt(0).toUpperCase() + attendee.gender.slice(1)
       : '';
@@ -138,8 +138,8 @@ const generateTicketPDF = async ({ booking, event, sponsors = [] }) => {
       <!-- 0. LEFT QR — top-left corner of concert photo -->
       <div class="left-qr">
         ${sharedQRSrc
-          ? `<img class="left-qr-img" src="${sharedQRSrc}" alt="QR"/>`
-          : `<div class="left-qr-ph">QR</div>`}
+        ? `<img class="left-qr-img" src="${sharedQRSrc}" alt="QR"/>`
+        : `<div class="left-qr-ph">QR</div>`}
       </div>
 
       <!-- 1. EVENT NAME + PRICE
@@ -190,8 +190,8 @@ const generateTicketPDF = async ({ booking, event, sponsors = [] }) => {
            <div class="right-panel">
         <div class="qr-zone">
           ${sharedQRSrc
-            ? `<img class="qr-img" src="${sharedQRSrc}" alt="QR"/>`
-            : `<div class="qr-ph">QR CODE</div>`}
+        ? `<img class="qr-img" src="${sharedQRSrc}" alt="QR"/>`
+        : `<div class="qr-ph">QR CODE</div>`}
         </div>
         <div class="bid-block">
           <div class="bid-lbl">BOOKING ID</div>
@@ -246,7 +246,6 @@ body {
   height: 210mm;
   position: relative;
   overflow: hidden;
-  page-break-after: always;
 }
 .page:last-child { page-break-after: avoid; }
 
@@ -538,7 +537,7 @@ body {
   }
 }
 @page {
-  size: A4 landscape;
+   size: 297mm 210mm; 
   margin: 0;
 }
 </style>
@@ -552,23 +551,24 @@ ${pages}
 
 
   const puppeteer = require('puppeteer');
-const browser = await puppeteer.launch({
-  headless: 'new',
-  args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
-});
-try {
-  const page = await browser.newPage();
-  await page.setContent(html, { waitUntil: 'domcontentloaded' });
-  const pdfBuffer = await page.pdf({
-    format: 'A4',
-    landscape: true,
-    printBackground: true,
-    margin: { top: 0, right: 0, bottom: 0, left: 0 },
+  const browser = await puppeteer.launch({
+    headless: 'new',
+    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
   });
-  return pdfBuffer;
-} finally {
-  await browser.close();
-}
+  try {
+    const page = await browser.newPage();
+    await page.setContent(html, { waitUntil: 'domcontentloaded' });
+    const pdfBuffer = await page.pdf({
+      width: '297mm',
+      height: '210mm',
+      landscape: false,
+      printBackground: true,
+      margin: { top: 0, right: 0, bottom: 0, left: 0 },
+    });
+    return pdfBuffer;
+  } finally {
+    await browser.close();
+  }
 
 
 };
