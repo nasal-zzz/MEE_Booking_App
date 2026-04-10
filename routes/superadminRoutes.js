@@ -540,7 +540,7 @@ const Sponsor = require('../models/Sponsor');
 router.get('/referrals', async (req, res) => {
   try {
     const referrals = await Referral.find().sort({ createdAt: -1 }).lean();
-    const appUrl = process.env.APP_URL || 'http://localhost:3000';
+    const appUrl = process.env.APP_URL;
     res.render('superadmin/referrals', { title: 'Referral Links — SuperAdmin', referrals, appUrl });
   } catch (err) { res.status(500).send('Error loading referrals'); }
 });
@@ -617,7 +617,7 @@ router.get('/sponsors', async (req, res) => {
     const Event = require('../models/Event');
     const sponsors = await Sponsor.find().sort({ order: 1, createdAt: -1 }).populate('events', 'name date').lean();
     const events = await Event.find({}, 'name date').sort({ date: -1 }).lean();
-    res.render('admin/sponsors', { title: 'Sponsors — Super Admin', sponsors, events, currentAdmin, isSuperAdmin: true });
+    res.render('mee-admin/sponsors', { title: 'Sponsors — Super Admin', sponsors, events, currentAdmin, isSuperAdmin: true });
   } catch (err) { console.error(err); res.redirect('/superadmin'); }
 });
 

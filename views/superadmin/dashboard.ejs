@@ -60,7 +60,7 @@
         <div class="page-title">SUPER ADMIN</div>
         <div class="page-sub">Full system access — manage staff, coupons, and all operations.</div>
       </div>
-      <!-- <a href="/admin/events/new" style="display:inline-flex;align-items:center;gap:0.5rem;background:var(--accent);color:#fff;padding:0.7rem 1.4rem;border-radius:6px;text-decoration:none;font-weight:700;font-size:0.85rem;letter-spacing:1px;">
+      <!-- <a href="/mee-admin/events/new" style="display:inline-flex;align-items:center;gap:0.5rem;background:var(--accent);color:#fff;padding:0.7rem 1.4rem;border-radius:6px;text-decoration:none;font-weight:700;font-size:0.85rem;letter-spacing:1px;">
         <i class="bi bi-plus-lg"></i> New Event
       </a> -->
 
@@ -78,7 +78,7 @@
     <i class="bi bi-arrow-clockwise" id="refreshIcon"></i> Refresh
   </button>
   <!-- New Event button -->
-  <a href="/admin/events/new" style="display:inline-flex;align-items:center;gap:0.5rem;background:var(--accent);color:#fff;padding:0.7rem 1.4rem;border-radius:6px;text-decoration:none;font-weight:700;font-size:0.85rem;letter-spacing:1px;">
+  <a href="/mee-admin/events/new" style="display:inline-flex;align-items:center;gap:0.5rem;background:var(--accent);color:#fff;padding:0.7rem 1.4rem;border-radius:6px;text-decoration:none;font-weight:700;font-size:0.85rem;letter-spacing:1px;">
     <i class="bi bi-plus-lg"></i> New Event
   </a>
 </div>
@@ -135,7 +135,7 @@
             <div style="font-family:'Poppins',sans-serif;font-size:1.4rem;color:#f5c842;"><%= activeEvent.ticketTypes.reduce((s,t)=>s+(t.totalSeats-t.bookedSeats),0) %></div>
             <div style="font-size:0.65rem;color:var(--muted);letter-spacing:1px;font-family:'Space Mono',monospace;">SEATS LEFT</div>
           </div>
-          <a href="/admin/events/<%= activeEvent._id %>/edit" style="display:inline-flex;align-items:center;gap:0.4rem;padding:0.5rem 1rem;border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:0.8rem;text-decoration:none;transition:all 0.15s;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='#fff'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
+          <a href="/mee-admin/events/<%= activeEvent._id %>/edit" style="display:inline-flex;align-items:center;gap:0.4rem;padding:0.5rem 1rem;border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:0.8rem;text-decoration:none;transition:all 0.15s;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='#fff'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
             <i class="bi bi-pencil-fill"></i> Edit Event
           </a>
         </div>
@@ -228,7 +228,7 @@
     <div class="panel" style="padding:2rem;text-align:center;color:var(--muted);">
       <i class="bi bi-calendar-x" style="font-size:2rem;display:block;margin-bottom:0.8rem;color:#333;"></i>
       No active event right now.
-      <a href="/admin/events/new" style="color:var(--accent);margin-left:0.4rem;">Create one →</a>
+      <a href="/mee-admin/events/new" style="color:var(--accent);margin-left:0.4rem;">Create one →</a>
     </div>
     <% } %>
 
@@ -251,7 +251,7 @@
         <div class="ql-icon"><i class="bi bi-person-lines-fill"></i></div>
         <div><div class="ql-label">Users by Event</div><div class="ql-sub">View attendee lists</div></div>
       </a>
-      <a href="/admin/bookings" class="ql-card">
+      <a href="/mee-admin/bookings" class="ql-card">
         <div class="ql-icon"><i class="bi bi-ticket-perforated-fill"></i></div>
         <div><div class="ql-label">All Bookings</div><div class="ql-sub">View & manage bookings</div></div>
       </a>

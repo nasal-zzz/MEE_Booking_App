@@ -98,6 +98,36 @@
     .special-inp.show{display:block;}
     .special-inp:focus{border-color:rgba(106,13,173,0.35);}
 
+    /* ── TICKET TERMS ── */
+    .terms-card{background:var(--card,#14141C);border:1px solid rgba(255,255,255,0.07);border-radius:10px;overflow:hidden;margin-bottom:1.2rem;}
+    .terms-hd{display:flex;align-items:center;gap:0.65rem;padding:0.9rem 1.2rem;border-bottom:1px solid transparent;cursor:pointer;user-select:none;transition:background 0.18s;}
+    .terms-hd:hover{background:rgba(255,255,255,0.025);}
+    .terms-hd.open{border-bottom-color:rgba(255,255,255,0.06);}
+    .terms-hd-icon{width:30px;height:30px;border-radius:7px;background:rgba(106,13,173,0.15);border:1px solid rgba(106,13,173,0.3);display:flex;align-items:center;justify-content:center;font-size:0.85rem;color:var(--accent);flex-shrink:0;}
+    .terms-hd-title{flex:1;font-family:var(--font-display);font-size:0.85rem;letter-spacing:2px;color:#fff;}
+    .terms-hd-badge{font-family:var(--font-mono);font-size:0.52rem;letter-spacing:1px;background:rgba(106,13,173,0.1);border:1px solid rgba(106,13,173,0.25);color:var(--accent);padding:0.15rem 0.55rem;border-radius:10px;white-space:nowrap;}
+    .terms-chevron{color:#555;font-size:0.8rem;transition:transform 0.28s ease;flex-shrink:0;}
+    .terms-chevron.open{transform:rotate(180deg);}
+    .terms-body{padding:0 1.2rem;max-height:0;overflow:hidden;transition:max-height 0.38s ease, padding 0.25s ease;}
+    .terms-body.open{max-height:700px;padding:1.2rem;}
+    .terms-content{font-size:0.8rem;color:#999;line-height:1.85;white-space:pre-wrap;word-break:break-word;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);border-radius:7px;padding:1rem 1.1rem;max-height:220px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(106,13,173,0.4) transparent;}
+    .terms-content::-webkit-scrollbar{width:4px;}
+    .terms-content::-webkit-scrollbar-track{background:transparent;}
+    .terms-content::-webkit-scrollbar-thumb{background:rgba(106,13,173,0.4);border-radius:2px;}
+    .terms-agree-row{display:flex;align-items:flex-start;gap:0.7rem;margin-top:1rem;padding-top:1rem;border-top:1px solid rgba(255,255,255,0.06);}
+    .terms-checkbox{width:20px;height:20px;border-radius:5px;border:1.5px solid rgba(106,13,173,0.45);background:rgba(106,13,173,0.08);appearance:none;-webkit-appearance:none;cursor:pointer;flex-shrink:0;margin-top:1px;position:relative;transition:all 0.18s;}
+    .terms-checkbox:checked{background:var(--accent);border-color:var(--accent);}
+    .terms-checkbox:checked::after{content:'✓';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:0.7rem;font-weight:800;line-height:1;}
+    .terms-checkbox:focus{outline:2px solid rgba(106,13,173,0.4);outline-offset:2px;}
+    .terms-agree-lbl{font-size:0.79rem;color:#B3B3B3;line-height:1.55;cursor:pointer;flex:1;}
+    .terms-agree-lbl strong{color:#fff;font-weight:600;}
+    .terms-agree-lbl .terms-link{color:var(--accent);border-bottom:1px solid rgba(106,13,173,0.35);}
+    .terms-err{display:none;align-items:center;gap:0.4rem;font-size:0.72rem;color:#FF4444;margin-top:0.6rem;padding:0.5rem 0.75rem;background:rgba(255,68,68,0.06);border:1px solid rgba(255,68,68,0.18);border-radius:6px;}
+    .terms-err.show{display:flex;}
+    /* Must-read indicator strip */
+    .terms-must-read{display:flex;align-items:center;gap:0.5rem;font-size:0.7rem;color:#f5c842;font-family:var(--font-mono);letter-spacing:0.5px;margin-bottom:0.75rem;}
+    .terms-must-read i{font-size:0.75rem;}
+
     /* Order summary */
     .sum-card{background:var(--card,#14141C);border:1px solid rgba(255,255,255,0.07);border-radius:10px;overflow:hidden;}
     .sum-sticky-wrap{position:sticky;top:72px;}
@@ -297,6 +327,38 @@
           <div id="attendeeForms"></div>
         </div>
       </div>
+
+      <!-- ── TERMS & CONDITIONS ── -->
+      <div id="termsSection" style="display:none;">
+        <div class="terms-card">
+          <div class="terms-hd" id="termsHd" onclick="toggleTerms()">
+            <div class="terms-hd-icon"><i class="bi bi-file-earmark-text-fill"></i></div>
+            <div class="terms-hd-title">TERMS & CONDITIONS</div>
+            <span class="terms-hd-badge" id="termsCatBadge"></span>
+            <i class="bi bi-chevron-down terms-chevron" id="termsChevron"></i>
+          </div>
+          <div class="terms-body" id="termsBody">
+            <div class="terms-must-read">
+              <i class="bi bi-exclamation-circle-fill"></i>
+              Please read before proceeding to payment
+            </div>
+            <div class="terms-content" id="termsContent"></div>
+            <div class="terms-agree-row">
+              <input type="checkbox" class="terms-checkbox" id="termsCheckbox" onchange="onTermsChange()"/>
+              <label class="terms-agree-lbl" for="termsCheckbox">
+                I have read and agree to the <strong>terms & conditions</strong> for the
+                <span class="terms-link" id="termsAgreeLabel"></span> ticket.
+              </label>
+            </div>
+            <div class="terms-err" id="termsErr">
+              <i class="bi bi-exclamation-circle-fill"></i>
+              You must accept the terms & conditions before proceeding to payment.
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- /TERMS -->
+
     </div>
 
     <!-- RIGHT — summary -->
@@ -465,6 +527,7 @@
 
     }catch(e){console.warn('Init error:',e);}
     setQtyDisplay(); updateChips(); updateAttendeeForms(); updateSummary();
+    renderTerms(); // ← render terms after everything is ready
   })();
 
   // ─── QTY ─────────────────────────────────────────────────────────
@@ -601,14 +664,10 @@
         inp.classList.add('err');
         var errEl = document.getElementById(errId);
         errEl.classList.add('show');
-        // Update the inner message span if msg provided
-        var msgSpan = errEl.querySelector('span[id^="ae-msg-"]') || errEl.querySelector('span[id^="ne-"]') || null;
-        // For age field specifically
         var ageMsg = document.getElementById('ae-msg-' + n);
         if(msg && ageMsg && errId === 'ae-' + n) ageMsg.textContent = msg;
       }
 
-      // Name validation
       if(nf){
         nf.addEventListener('blur', function(){
           if(nf.value.trim().length >= 2){ clearErr(nf, 'ne-' + n); }
@@ -619,7 +678,6 @@
         });
       }
 
-      // Age validation — checks against ageLimit
       if(af){
         function ageOk(v){ return !isNaN(v) && v >= _minAge && v <= 120; }
         function getAgeErrMsg(v){
@@ -638,7 +696,6 @@
         });
       }
 
-      // Gender validation
       if(gf){
         gf.addEventListener('change', function(){
           if(gf.value){ clearErr(gf, 'ge-' + n); }
@@ -656,7 +713,6 @@
   function updateSummary(){
     const sub = qty * price;
 
-    // ── Bulk discount tiers (new system) + legacy combo fallback ──
     let comboDisc = 0;
     let comboNudgeMsg = '';
     const tiers = (selTicketData && Array.isArray(selTicketData.discountTiers) && selTicketData.discountTiers.length > 0)
@@ -679,7 +735,6 @@
       }
     }
 
-    // Use whichever discount is bigger: bulk tier or coupon
     const disc = Math.max(couponApplied ? discAmt : 0, comboDisc);
     const total = Math.max(sub - disc + CONV_FEE, 0);
 
@@ -710,6 +765,60 @@
       else { if(discRow) discRow.classList.remove('show'); }
     }
     return total;
+  }
+
+  // ─── TERMS & CONDITIONS ───────────────────────────────────────────
+  var _termsOpen = false;
+
+  function renderTerms() {
+    var terms = selTicketData && selTicketData.terms ? selTicketData.terms.trim() : '';
+    var sec   = document.getElementById('termsSection');
+    if (!terms || !sec) return;
+
+    // Populate content
+    document.getElementById('termsContent').textContent = terms;
+    var displayName = (selTicketData.name || selTypeName).toUpperCase();
+    document.getElementById('termsCatBadge').textContent   = displayName;
+    document.getElementById('termsAgreeLabel').textContent = displayName;
+    sec.style.display = 'block';
+
+    // Auto-open after a short delay so the user notices it
+    setTimeout(function () { openTerms(); }, 450);
+  }
+
+  function openTerms() {
+    _termsOpen = true;
+    document.getElementById('termsBody').classList.add('open');
+    document.getElementById('termsChevron').classList.add('open');
+    document.getElementById('termsHd').classList.add('open');
+  }
+
+  function toggleTerms() {
+    _termsOpen = !_termsOpen;
+    document.getElementById('termsBody').classList.toggle('open', _termsOpen);
+    document.getElementById('termsChevron').classList.toggle('open', _termsOpen);
+    document.getElementById('termsHd').classList.toggle('open', _termsOpen);
+  }
+
+  function onTermsChange() {
+    if (document.getElementById('termsCheckbox').checked) {
+      document.getElementById('termsErr').classList.remove('show');
+    }
+  }
+
+  function termsAccepted() {
+    var sec = document.getElementById('termsSection');
+    // No terms shown — nothing to check
+    if (!sec || sec.style.display === 'none') return true;
+    var cb = document.getElementById('termsCheckbox');
+    if (!cb.checked) {
+      document.getElementById('termsErr').classList.add('show');
+      openTerms();
+      cb.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      showToast('Terms & Conditions', 'Please read and accept the terms before paying.', 'warning', 4000);
+      return false;
+    }
+    return true;
   }
 
   // ─── COUPON (live DB validation) ──────────────────────────────────
@@ -790,12 +899,10 @@
       const a  = document.getElementById('a-' + i);
       const g  = document.getElementById('g-' + i);
 
-      // Clear previous errors
       document.getElementById('ne-' + i).classList.remove('show'); n.classList.remove('err');
       document.getElementById('ae-' + i).classList.remove('show'); a.classList.remove('err');
       if(g){ document.getElementById('ge-' + i).classList.remove('show'); g.classList.remove('err'); }
 
-      // Name check
       if(!n.value.trim() || n.value.trim().length < 2){
         n.classList.add('err');
         document.getElementById('ne-' + i).classList.add('show');
@@ -803,13 +910,11 @@
         ok = false;
       }
 
-      // Age check — validates against ageLimit
       const age = parseInt(a.value);
       const ageValid = !isNaN(age) && age >= _minAge && age <= 120;
       if(!a.value || !ageValid){
         a.classList.add('err');
         document.getElementById('ae-' + i).classList.add('show');
-        // Set specific error message
         var ageErrMsg = document.getElementById('ae-msg-' + i);
         if(ageErrMsg){
           if(!a.value || isNaN(age)){
@@ -826,7 +931,6 @@
         ok = false;
       }
 
-      // Gender check
       if(g && !g.value){
         g.classList.add('err');
         document.getElementById('ge-' + i).classList.add('show');
@@ -835,7 +939,6 @@
       }
     }
 
-    // Email — mandatory if not pre-filled
     if(!USER.email){
       const emEl  = document.getElementById('em-1');
       const emErr = document.getElementById('em-err-1');
@@ -850,7 +953,6 @@
       }
     }
 
-    // WhatsApp — mandatory if not pre-filled
     if(!USER.whatsapp){
       const waEl  = document.getElementById('wa-1');
       const waErr = document.getElementById('wa-err-1');
@@ -865,7 +967,6 @@
       }
     }
 
-    // If age limit violated, also show a toast so users understand why payment is blocked
     if(!ok && _minAge > 1){
       const ageViolators = [];
       for(let i = 1; i <= total; i++){
@@ -937,6 +1038,7 @@
   function doPayment(){
     if(!selTypeName){ showToast('Select a ticket type', 'Please choose a ticket category before proceeding.', 'warning'); return; }
     if(!validate()) return;
+    if(!termsAccepted()) return; // ← terms gate
     var attendees = [];
     var total = isMultiEntry ? multiCount : qty;
     for(var i = 1; i <= total; i++){

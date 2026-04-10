@@ -49,7 +49,7 @@ function startFailedCleanupJob(intervalMs = 2 * 60 * 60 * 1000) {
   setInterval(cleanupFailedBookings, intervalMs);
 
   console.log(
-    `⏰ Failed booking cleanup job started (every ${intervalMs / (60 * 60 * 1000)} hours)`
+    `⏰ Unsuccessful booking cleanup job started (every ${intervalMs / (60 * 60 * 1000)} hours)`
   );
 }
 

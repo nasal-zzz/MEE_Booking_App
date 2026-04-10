@@ -69,7 +69,7 @@
   <main class="main">
     <div class="page-header">
       <div class="page-title">DASHBOARD</div>
-      <!-- <a href="/admin/events/new" class="btn-primary"><i class="bi bi-plus-lg"></i> New Event</a> -->
+      <!-- <a href="/mee-admin/events/new" class="btn-primary"><i class="bi bi-plus-lg"></i> New Event</a> -->
 
       <div style="display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap;">
   <!-- Auto-refresh countdown -->
@@ -85,7 +85,7 @@
     <i class="bi bi-arrow-clockwise" id="refreshIcon"></i> Refresh
   </button>
   <!-- New Event button -->
-  <a href="/admin/events/new" style="display:inline-flex;align-items:center;gap:0.5rem;background:var(--accent);color:#fff;padding:0.7rem 1.4rem;border-radius:6px;text-decoration:none;font-weight:700;font-size:0.85rem;letter-spacing:1px;">
+  <a href="/mee-admin/events/new" style="display:inline-flex;align-items:center;gap:0.5rem;background:var(--accent);color:#fff;padding:0.7rem 1.4rem;border-radius:6px;text-decoration:none;font-weight:700;font-size:0.85rem;letter-spacing:1px;">
     <i class="bi bi-plus-lg"></i> New Event
   </a>
 </div>
@@ -235,11 +235,11 @@
     <div class="table-card">
       <div class="table-header">
         <div class="table-title">ALL EVENTS</div>
-        <a href="/admin/events/new" class="btn-primary"><i class="bi bi-plus-lg"></i> Add Event</a>
+        <a href="/mee-admin/events/new" class="btn-primary"><i class="bi bi-plus-lg"></i> Add Event</a>
       </div>
       <% if (events.length === 0) { %>
         <div style="padding:3rem;text-align:center;color:var(--muted);">
-          No events yet. <a href="/admin/events/new" style="color:var(--accent);">Create your first event →</a>
+          No events yet. <a href="/mee-admin/events/new" style="color:var(--accent);">Create your first event →</a>
         </div>
       <% } else { %>
       <table>
@@ -287,7 +287,7 @@
             <td>
               <div class="action-btns">
                 <button class="btn-sm" onclick="viewEvent('<%= ev._id %>')" style="background:rgba(106,13,173,0.1);color:#9D4EDD;border-color:rgba(106,13,173,0.2);"><i class="bi bi-eye-fill"></i> View</button>
-                <a href="/admin/events/<%= ev._id %>/edit" class="btn-sm"><i class="bi bi-pencil-fill"></i> Edit</a>
+                <a href="/mee-admin/events/<%= ev._id %>/edit" class="btn-sm"><i class="bi bi-pencil-fill"></i> Edit</a>
                 <%
                   const allStopped = ev.ticketTypes.length > 0 && ev.ticketTypes.every(t => t.isActive === false);
                   const anyStopped = ev.ticketTypes.some(t => t.isActive === false);
@@ -299,11 +299,11 @@
                   <i class="bi bi-<%= allStopped ? 'play-fill' : 'stop-fill' %>"></i>
                   <%= allStopped ? 'Resume' : 'Stop All' %>
                 </button>
-                <a href="/admin/seatmap/<%= ev._id %>" class="btn-sm" style="background:rgba(0,255,136,0.1);color:#00FF88;border-color:rgba(0,255,136,0.2);"><i class="bi bi-grid-3x3-gap-fill"></i> Seat Map</a>
-                <form method="POST" action="/admin/events/<%= ev._id %>/toggle" style="display:inline;">
+                <a href="/mee-admin/seatmap/<%= ev._id %>" class="btn-sm" style="background:rgba(0,255,136,0.1);color:#00FF88;border-color:rgba(0,255,136,0.2);"><i class="bi bi-grid-3x3-gap-fill"></i> Seat Map</a>
+                <form method="POST" action="/mee-admin/events/<%= ev._id %>/toggle" style="display:inline;">
                   <button type="submit" class="btn-sm"><i class="bi bi-toggle-<%= ev.isActive ? 'on' : 'off' %>"></i> <%= ev.isActive ? 'Hide' : 'Show' %></button>
                 </form>
-                <form method="POST" action="/admin/events/<%= ev._id %>/delete" style="display:inline;" onsubmit="event.preventDefault(); var f=this; meeConfirm('Delete this event? All bookings will remain but the event will be removed.', function(){ f.submit(); }, {title:'DELETE EVENT', btnLabel:'Delete Event'})">
+                <form method="POST" action="/mee-admin/events/<%= ev._id %>/delete" style="display:inline;" onsubmit="event.preventDefault(); var f=this; meeConfirm('Delete this event? All bookings will remain but the event will be removed.', function(){ f.submit(); }, {title:'DELETE EVENT', btnLabel:'Delete Event'})">
                   <button type="submit" class="btn-sm danger"><i class="bi bi-trash-fill"></i> Delete</button>
                 </form>
               </div>
@@ -372,7 +372,7 @@ function viewEvent(id){
   const ev=EVENT_DATA.find(e=>e._id===id);
   if(!ev)return;
   document.getElementById('modalTitle').textContent=ev.name.toUpperCase();
-  document.getElementById('modalEditBtn').href=`/admin/events/${id}/edit`;
+  document.getElementById('modalEditBtn').href=`/mee-admin/events/${id}/edit`;
   const isSoldOut=ev.ticketTypes.length>0&&ev.ticketTypes.every(t=>t.bookedSeats>=t.totalSeats);
   const d=new Date(ev.date).toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
   document.getElementById('modalBody').innerHTML=`
@@ -424,7 +424,7 @@ function viewEvent(id){
     </div>`:''}
     <div style="margin-top:1.2rem;display:flex;gap:0.6rem;">
       <a href="/event/${ev._id}" target="_blank" class="btn-sm" style="color:#9D4EDD;border-color:rgba(106,13,173,0.3);"><i class="bi bi-box-arrow-up-right"></i> View Public Page</a>
-      <a href="/admin/seatmap/${ev._id}" class="btn-sm" style="color:#00FF88;border-color:rgba(0,255,136,0.2);"><i class="bi bi-grid-3x3-gap-fill"></i> Seat Map Builder</a>
+      <a href="/mee-admin/seatmap/${ev._id}" class="btn-sm" style="color:#00FF88;border-color:rgba(0,255,136,0.2);"><i class="bi bi-grid-3x3-gap-fill"></i> Seat Map Builder</a>
       <button onclick="closeModal()" class="btn-sm danger" style="margin-left:auto;"><i class="bi bi-x"></i> Close</button>
     </div>
   `;
@@ -444,7 +444,7 @@ async function toggleAllTickets(eventId, stop, btn) {
   const origHTML = btn.innerHTML;
   btn.innerHTML = '<span style="width:10px;height:10px;border:2px solid rgba(255,255,255,0.2);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:inline-block;"></span>';
   try {
-    const r = await fetch(`/admin/events/${eventId}/stop-all-tickets`, {
+    const r = await fetch(`/mee-admin/events/${eventId}/stop-all-tickets`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ stop: String(stop) }),
@@ -485,7 +485,7 @@ async function toggleAllTickets(eventId, stop, btn) {
 async function toggleTicketCat(eventId, category, el) {
   el.style.opacity='0.5';
   try {
-    const r = await fetch(`/admin/events/${eventId}/ticket-toggle`, {
+    const r = await fetch(`/mee-admin/events/${eventId}/ticket-toggle`, {
       method:'POST', credentials:'include',
       headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ category })

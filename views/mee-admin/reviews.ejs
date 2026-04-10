@@ -96,7 +96,7 @@
             <i class="bi bi-eye<%= rev.isVisible ? '-slash' : '' %>-fill" id="eye-<%= rev._id %>"></i>
             <span id="btntxt-<%= rev._id %>"><%= rev.isVisible ? 'Hide' : 'Show' %></span>
           </button>
-          <form method="POST" action="/admin/reviews/<%= rev._id %>/delete" onsubmit="event.preventDefault(); var f=this; meeConfirm('Permanently delete this review?', function(){ f.submit(); })">
+          <form method="POST" action="/mee-admin/reviews/<%= rev._id %>/delete" onsubmit="event.preventDefault(); var f=this; meeConfirm('Permanently delete this review?', function(){ f.submit(); })">
             <button type="submit" class="btn-sm btn-del"><i class="bi bi-trash3-fill"></i></button>
           </form>
         </div>
@@ -109,7 +109,7 @@
 <script>
 async function toggleRev(id){
   try{
-    const r=await fetch(`/admin/reviews/${id}/toggle`,{method:'POST',credentials:'include'});
+    const r=await fetch(`/mee-admin/reviews/${id}/toggle`,{method:'POST',credentials:'include'});
     const d=await r.json();
     if(d.success){
       const row=document.getElementById('revrow-'+id);

@@ -596,7 +596,7 @@ async function submitForm() {
   const btn = document.getElementById('submitBtn');
   btn.disabled=true; btn.innerHTML='<i class="bi bi-hourglass-split"></i> Saving...';
 
-  const url  = id ? `/admin/sponsors/${id}/edit` : '/admin/sponsors';
+  const url  = id ? `/mee-admin/sponsors/${id}/edit` : '/mee-admin/sponsors';
   const body = JSON.stringify({ name, logo, tier, website, showOnTicket, showOnSite, events: evIds });
 
   try {
@@ -611,14 +611,14 @@ async function submitForm() {
 }
 
 async function toggleSponsor(id) {
-  const r = await fetch(`/admin/sponsors/${id}/toggle`,{method:'POST'});
+  const r = await fetch(`/mee-admin/sponsors/${id}/toggle`,{method:'POST'});
   const d = await r.json();
   if (d.success) { showToast('Updated!'); setTimeout(()=>location.reload(),500); }
 }
 
 async function deleteSponsor(id, btn) {
   if (!confirm('Delete this sponsor?')) return;
-  const r = await fetch(`/admin/sponsors/${id}/delete`,{method:'POST'});
+  const r = await fetch(`/mee-admin/sponsors/${id}/delete`,{method:'POST'});
   const d = await r.json();
   if (d.success) { showToast('Deleted.'); btn.closest('.sponsor-card').remove(); }
 }

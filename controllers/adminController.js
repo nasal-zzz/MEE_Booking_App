@@ -100,7 +100,7 @@
       const currentAdmin  = getCurrentAdmin(req);
       const isSuperAdmin  = req.session.superAdminLoggedIn ||
         (req.session.staffLoggedIn && req.session.staffUser?.role === 'superadmin');
-      res.render('admin/dashboard', {
+      res.render('mee-admin/dashboard', {
         title: 'Admin — MEE',
         events,
         currentAdmin,
@@ -124,57 +124,57 @@
   exports.getNewEvent = (req, res) => {
     const currentAdmin = getCurrentAdmin(req);
     const isSuperAdmin = req.session.superAdminLoggedIn || (req.session.staffLoggedIn && req.session.staffUser?.role === 'superadmin');
-    res.render('admin/event-form', { title: 'New Event — Admin', event: null, error: null, currentAdmin, isSuperAdmin });
+    res.render('mee-admin/event-form', { title: 'New Event — Admin', event: null, error: null, currentAdmin, isSuperAdmin });
   };
 
   exports.postCreateEvent = async (req, res) => {
     try {
       const event = await Event.create(parseEventBody(req.body));
       console.log('✅ Event created:', event.name);
-      return res.redirect('/admin?success=Event+created');
+      return res.redirect('/mee-admin?success=Event+created');
     } catch (err) {
       console.error('postCreateEvent error:', err);
       const currentAdmin = getCurrentAdmin(req);
       const isSuperAdmin = req.session.superAdminLoggedIn || (req.session.staffLoggedIn && req.session.staffUser?.role === 'superadmin');
-      return res.render('admin/event-form', { title: 'New Event', event: null, error: err.message, currentAdmin, isSuperAdmin });
+      return res.render('mee-admin/event-form', { title: 'New Event', event: null, error: err.message, currentAdmin, isSuperAdmin });
     }
   };
 
   exports.getEditEvent = async (req, res) => {
     try {
       const event = await Event.findById(req.params.id);
-      if (!event) return res.redirect('/admin');
+      if (!event) return res.redirect('/mee-admin');
       const currentAdmin = getCurrentAdmin(req);
       const isSuperAdmin = req.session.superAdminLoggedIn || (req.session.staffLoggedIn && req.session.staffUser?.role === 'superadmin');
-      res.render('admin/event-form', { title: 'Edit Event — Admin', event, error: null, currentAdmin, isSuperAdmin });
-    } catch (err) { res.redirect('/admin'); }
+      res.render('mee-admin/event-form', { title: 'Edit Event — Admin', event, error: null, currentAdmin, isSuperAdmin });
+    } catch (err) { res.redirect('/mee-admin'); }
   };
 
   exports.postUpdateEvent = async (req, res) => {
     try {
       await Event.findByIdAndUpdate(req.params.id, parseEventBody(req.body), { new: true });
-      return res.redirect('/admin?success=Event+updated');
+      return res.redirect('/mee-admin?success=Event+updated');
     } catch (err) {
       const event = await Event.findById(req.params.id).catch(() => null);
       const currentAdmin = getCurrentAdmin(req);
       const isSuperAdmin = req.session.superAdminLoggedIn || (req.session.staffLoggedIn && req.session.staffUser?.role === 'superadmin');
-      return res.render('admin/event-form', { title: 'Edit Event', event, error: err.message, currentAdmin, isSuperAdmin });
+      return res.render('mee-admin/event-form', { title: 'Edit Event', event, error: err.message, currentAdmin, isSuperAdmin });
     }
   };
 
   exports.deleteEvent = async (req, res) => {
     try {
       await Event.findByIdAndDelete(req.params.id);
-      res.redirect('/admin?success=Event deleted');
-    } catch (err) { res.redirect('/admin'); }
+      res.redirect('/mee-admin?success=Event deleted');
+    } catch (err) { res.redirect('/mee-admin'); }
   };
 
   exports.toggleEvent = async (req, res) => {
     try {
       const event = await Event.findById(req.params.id);
       if (event) { event.isActive = !event.isActive; await event.save(); }
-      res.redirect('/admin');
-    } catch (err) { res.redirect('/admin'); }
+      res.redirect('/mee-admin');
+    } catch (err) { res.redirect('/mee-admin'); }
   };
 
   exports.getBookings = async (req, res) => {
@@ -186,7 +186,7 @@
         .limit(200);
       const currentAdmin = getCurrentAdmin(req);
       const isSuperAdmin = req.session.superAdminLoggedIn || (req.session.staffLoggedIn && req.session.staffUser?.role === 'superadmin');
-      res.render('admin/bookings', { title: 'Bookings — Admin', bookings, currentAdmin, isSuperAdmin });
+      res.render('mee-admin/bookings', { title: 'Bookings — Admin', bookings, currentAdmin, isSuperAdmin });
     } catch (err) {
       res.status(500).send('Error: ' + err.message);
     }
@@ -195,19 +195,19 @@
   // ── Seat Map ────────────────────────────────────────────────────────────────
   const SeatMap = require('../models/SeatMap');
 
-  // GET /admin/seatmap/:eventId
+  // GET /mee-admin/seatmap/:eventId
   exports.getSeatMap = async (req, res) => {
     try {
       const event   = await Event.findById(req.params.eventId);
-      if (!event) return res.redirect('/admin');
+      if (!event) return res.redirect('/mee-admin');
       const seatMap = await SeatMap.findOne({ event: req.params.eventId }).lean() || null;
-      res.render('admin/seatmap', { title: 'Seat Map Builder', event, seatMap });
+      res.render('mee-admin/seatmap', { title: 'Seat Map Builder', event, seatMap });
     } catch (err) {
       res.status(500).send('Error: ' + err.message);
     }
   };
 
-  // POST /admin/seatmap/:eventId  ← FIXED: explicitly maps every zone field
+  // POST /mee-admin/seatmap/:eventId  ← FIXED: explicitly maps every zone field
   exports.postSeatMap = async (req, res) => {
     try {
       const { eventId, stage, sections, isActive, canvasWidth, canvasHeight, previewImage } = req.body;
@@ -290,7 +290,7 @@
     }
   };
 
-  // GET /admin/seatmap/:eventId/quota — fresh category quotas for sync
+  // GET /mee-admin/seatmap/:eventId/quota — fresh category quotas for sync
   exports.getEventQuota = async (req, res) => {
     try {
       const event = await Event.findById(req.params.eventId).lean();
@@ -310,7 +310,7 @@
     }
   };
 
-  // POST /admin/seatmap/:eventId/toggle
+  // POST /mee-admin/seatmap/:eventId/toggle
   exports.toggleSeatMap = async (req, res) => {
     try {
       const map = await SeatMap.findOne({ event: req.params.eventId });

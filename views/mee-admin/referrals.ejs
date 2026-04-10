@@ -137,7 +137,7 @@
                 <button class="btn-sm" onclick="showQR('<%= r.code %>', '<%= refUrl %>', '<%= r.label %>', '<%= r._id %>')" style="color:#9D4EDD;border-color:rgba(157,78,221,0.3);"><i class="bi bi-qr-code"></i> QR</button>
                 <button class="btn-sm" onclick="viewUsers('<%= r.code %>', '<%= r.label %>', this)"><i class="bi bi-people-fill"></i> Users</button>
                 <button class="btn-sm" id="tog-<%= r._id %>" onclick="toggleRef('<%= r._id %>', this)"><i class="bi bi-toggle-<%= r.isActive ? 'on' : 'off' %>"></i> <%= r.isActive ? 'Pause' : 'Resume' %></button>
-                <form method="POST" action="/admin/referrals/<%= r._id %>/delete" style="display:inline;" onsubmit="return confirm('Delete this referral link?')">
+                <form method="POST" action="/mee-admin/referrals/<%= r._id %>/delete" style="display:inline;" onsubmit="return confirm('Delete this referral link?')">
                   <button type="submit" class="btn-sm danger"><i class="bi bi-trash-fill"></i></button>
                 </form>
               </div>
@@ -192,7 +192,7 @@ async function createReferral() {
   const msg   = document.getElementById('createMsg');
   if (!code || !label) { showMsg(msg, 'Code and label are required.', false); return; }
   try {
-    const r = await fetch('/admin/referrals', {
+    const r = await fetch('/mee-admin/referrals', {
       method: 'POST', credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ code, label, description: desc })
@@ -229,7 +229,7 @@ function showQR(code, url, label, id) {
   document.getElementById('qrUrl').textContent = url;
 
   // Set server-side download link
-  document.getElementById('qrDownloadBtn').href = `/admin/referrals/${id}/qr`;
+  document.getElementById('qrDownloadBtn').href = `/mee-admin/referrals/${id}/qr`;
   document.getElementById('qrDownloadBtn').download = `MEE-QR-${code}.png`;
 
   // Clear previous QR and render new one
@@ -271,7 +271,7 @@ async function toggleRef(id, btn) {
   const origHTML = btn.innerHTML;
   btn.innerHTML = '<span style="width:10px;height:10px;border:2px solid rgba(255,255,255,0.2);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:inline-block;"></span>';
   try {
-    const r = await fetch(`/admin/referrals/${id}/toggle`, {
+    const r = await fetch(`/mee-admin/referrals/${id}/toggle`, {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
@@ -327,7 +327,7 @@ async function viewUsers(code, label, btn) {
   contentDiv.innerHTML = '<div style="color:var(--muted);font-size:0.82rem;">Loading users...</div>';
 
   try {
-    const r = await fetch(`/admin/api/referral-users?code=${encodeURIComponent(code)}`, { credentials: 'include' });
+    const r = await fetch(`/mee-admin/api/referral-users?code=${encodeURIComponent(code)}`, { credentials: 'include' });
     const d = await r.json();
     if (!d.success || d.users.length === 0) {
       contentDiv.innerHTML = `<div style="color:var(--muted);font-size:0.82rem;">No users from <strong>${label}</strong> yet.</div>`;

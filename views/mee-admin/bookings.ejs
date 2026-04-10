@@ -175,7 +175,7 @@
     const orig = btn.innerHTML;
     btn.innerHTML = '<span style="width:10px;height:10px;border:2px solid rgba(157,78,221,0.3);border-top-color:#9D4EDD;border-radius:50%;animation:spin .7s linear infinite;display:inline-block;"></span>';
     try {
-      const r = await fetch(`/admin/bookings/${bookingId}/send-message`, { method:'POST', credentials:'include' });
+      const r = await fetch(`/mee-admin/bookings/${bookingId}/send-message`, { method:'POST', credentials:'include' });
       const d = await r.json();
       if (d.success) {
         btn.innerHTML = '<i class="bi bi-check-circle-fill"></i> Sent';
@@ -196,7 +196,7 @@
     btn.disabled = true;
     btn.innerHTML = '<span style="width:12px;height:12px;border:2px solid rgba(245,200,66,0.3);border-top-color:#f5c842;border-radius:50%;animation:spin .7s linear infinite;display:inline-block;vertical-align:middle;margin-right:6px;"></span> Sending…';
     try {
-      const r = await fetch('/admin/bookings/send-reminders', { method:'POST', credentials:'include' });
+      const r = await fetch('/mee-admin/bookings/send-reminders', { method:'POST', credentials:'include' });
       const d = await r.json();
       if (d.success) {
         btn.innerHTML = `<i class="bi bi-check-circle-fill"></i> Sent ${d.sent24+d.sentImmediate} reminders`;

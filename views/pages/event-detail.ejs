@@ -1,734 +1,1695 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <meta name="theme-color" content="#0B0B0F"/>
-  <title><%= event.name %> — MEE</title>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&family=Space+Mono&display=swap" rel="stylesheet"/>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet"/>
-  <link rel="stylesheet" href="/css/main.css"/>
-  <link rel="stylesheet" href="/css/index.css"/>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#0B0B0F" />
+  <title>
+    <%= event.name %> | Book Tickets
+  </title>
+  <meta name="description" content="<%= event.about %>">
+  <!-- Open Graph (for WhatsApp, Facebook) -->
+  <meta property="og:title" content="<%= event.name %> | Book Tickets">
+  <meta property="og:description" content="<%= event.about %>">
+  <meta property="og:image" content="https://meefuture.com/images/brandings/banner.webp">
+  <meta property="og:url" content="https://meefuture.com/event/<%= event.id %>">
+
+  <!-- Meta Tags for SEO -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Event",
+    "name": "<%= event.name %>",
+    "startDate": "<%= event.date %>",
+    "location": {
+      "@type": "Place",
+      "name": "<%= event.venue %>",
+      "address": "<%= event.venueAddress %>"
+    },
+    "image": "https://meefuture.com/images/brandings/banner.webp",
+    "description": "<%= event.about %>"
+  }
+  </script>
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&family=Space+Mono&display=swap"
+    rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/main.css" />
+  <link rel="stylesheet" href="/css/index.css" />
   <script src="/js/ui.js" defer></script>
   <style>
     :root {
-      --bg:#0B0B0F; --surface:#14141C; --card:#14141C;
-      --border:rgba(255,255,255,0.08); --accent:#6A0DAD;
-      --accent-dim:rgba(106,13,173,0.12); --text:#FFFFFF;
-      --muted:#B3B3B3; --success:#00FF88; --error:#FF4444;
-      --font-display:'Poppins',sans-serif;
-      --font-body:'Poppins',sans-serif;
-      --font-mono:'Space Mono',monospace;
-      --title-max:3rem; --body-max:1rem; --desc-max:0.75rem;
+      --bg: #0B0B0F;
+      --surface: #14141C;
+      --card: #14141C;
+      --border: rgba(255, 255, 255, 0.08);
+      --accent: #6A0DAD;
+      --accent-dim: rgba(106, 13, 173, 0.12);
+      --text: #FFFFFF;
+      --muted: #B3B3B3;
+      --success: #00FF88;
+      --error: #FF4444;
+      --font-display: 'Poppins', sans-serif;
+      --font-body: 'Poppins', sans-serif;
+      --font-mono: 'Space Mono', monospace;
+      --title-max: 3rem;
+      --body-max: 1rem;
+      --desc-max: 0.75rem;
     }
-    *{box-sizing:border-box;margin:0;padding:0;}
-    html{scroll-behavior:smooth;}
-    body{background:var(--bg);color:var(--text);font-family:var(--font-body);min-height:100vh;overflow-x:hidden;}
-    body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(255,255,255,0.012) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.012) 1px,transparent 1px);background-size:50px 50px;pointer-events:none;z-index:0;}
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: linear-gradient(rgba(255, 255, 255, 0.012) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.012) 1px, transparent 1px);
+      background-size: 50px 50px;
+      pointer-events: none;
+      z-index: 0;
+    }
 
     /* HERO */
-    .event-hero{position:relative;width:100%;height:62vh;min-height:340px;max-height:620px;overflow:hidden;background:linear-gradient(135deg,#0a0014,#1a0030,#2a0050);}
-    .event-hero-bg{position:absolute;inset:0;background-size:cover;background-position:center;background-repeat:no-repeat;}
-    @media(max-width:768px){.event-hero{height:58vw;min-height:260px;max-height:380px;}}
-    @media(max-width:480px){.event-hero{height:70vw;min-height:240px;max-height:320px;}}
-    .event-hero-bg::after{content:'';position:absolute;inset:0;background:linear-gradient(to bottom,rgba(8,8,14,.15) 0%,rgba(8,8,14,.35) 50%,rgba(8,8,14,.88) 100%);}
-    @media(max-width:768px){.event-hero-bg::after{background:linear-gradient(to bottom,rgba(8,8,14,.2) 0%,rgba(8,8,14,.5) 55%,rgba(8,8,14,.95) 100%);}}
-    .event-hero-content{position:absolute;bottom:0;left:0;right:0;padding:2.5rem 5vw;z-index:2;}
-    @media(max-width:480px){.event-hero-content{padding:1.5rem 1rem;}}
-    .event-back-btn{display:inline-flex;align-items:center;gap:.4rem;color:rgba(255,255,255,.7);text-decoration:none;font-size:var(--desc-max);font-family:var(--font-mono);letter-spacing:1px;margin-bottom:1.2rem;transition:color .2s;}
-    .event-back-btn:hover{color:#fff;}
-    .event-status-badge{display:inline-flex;align-items:center;gap:.4rem;font-family:var(--font-mono);font-size:var(--desc-max);letter-spacing:1px;padding:.25rem .8rem;border-radius:20px;margin-bottom:.8rem;}
-    .event-status-badge.upcoming{background:rgba(106,13,173,.15);border:1px solid rgba(106,13,173,.4);color:#bf80ff;}
-    .event-status-badge.soldout{background:rgba(255,68,68,.1);border:1px solid rgba(255,68,68,.3);color:var(--error);}
-    .event-hero-name{font-family:var(--font-display);font-size:clamp(1.5rem,5vw,var(--title-max));font-weight:800;color:#fff;line-height:1.05;margin-bottom:.6rem;}
-    .event-hero-name .accent{color:var(--accent);}
-    .event-hero-meta{display:flex;flex-wrap:wrap;gap:1.2rem;align-items:center;}
-    .event-hero-meta-item{display:flex;align-items:center;gap:.4rem;font-size:var(--desc-max);color:rgba(255,255,255,.75);}
-    .event-hero-meta-item i{color:var(--accent);}
+    .event-hero {
+      position: relative;
+      width: 100%;
+      height: 62vh;
+      min-height: 340px;
+      max-height: 620px;
+      overflow: hidden;
+      background: linear-gradient(135deg, #0a0014, #1a0030, #2a0050);
+    }
+
+    .event-hero-bg {
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+    }
+
+    @media(max-width:768px) {
+      .event-hero {
+        height: 58vw;
+        min-height: 260px;
+        max-height: 380px;
+      }
+    }
+
+    @media(max-width:480px) {
+      .event-hero {
+        height: 70vw;
+        min-height: 240px;
+        max-height: 320px;
+      }
+    }
+
+    .event-hero-bg::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to bottom, rgba(8, 8, 14, .15) 0%, rgba(8, 8, 14, .35) 50%, rgba(8, 8, 14, .88) 100%);
+    }
+
+    @media(max-width:768px) {
+      .event-hero-bg::after {
+        background: linear-gradient(to bottom, rgba(8, 8, 14, .2) 0%, rgba(8, 8, 14, .5) 55%, rgba(8, 8, 14, .95) 100%);
+      }
+    }
+
+    .event-hero-content {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 2.5rem 5vw;
+      z-index: 2;
+    }
+
+    @media(max-width:480px) {
+      .event-hero-content {
+        padding: 1.5rem 1rem;
+      }
+    }
+
+    .event-back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: .4rem;
+      color: rgba(255, 255, 255, .7);
+      text-decoration: none;
+      font-size: var(--desc-max);
+      font-family: var(--font-mono);
+      letter-spacing: 1px;
+      margin-bottom: 1.2rem;
+      transition: color .2s;
+    }
+
+    .event-back-btn:hover {
+      color: #fff;
+    }
+
+    .event-status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: .4rem;
+      font-family: var(--font-mono);
+      font-size: var(--desc-max);
+      letter-spacing: 1px;
+      padding: .25rem .8rem;
+      border-radius: 20px;
+      margin-bottom: .8rem;
+    }
+
+    .event-status-badge.upcoming {
+      background: rgba(106, 13, 173, .15);
+      border: 1px solid rgba(106, 13, 173, .4);
+      color: #bf80ff;
+    }
+
+    .event-status-badge.soldout {
+      background: rgba(255, 68, 68, .1);
+      border: 1px solid rgba(255, 68, 68, .3);
+      color: var(--error);
+    }
+
+    .event-hero-name {
+      font-family: var(--font-display);
+      font-size: clamp(1.5rem, 5vw, var(--title-max));
+      font-weight: 800;
+      color: #fff;
+      line-height: 1.05;
+      margin-bottom: .6rem;
+    }
+
+    .event-hero-name .accent {
+      color: var(--accent);
+    }
+
+    .event-hero-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.2rem;
+      align-items: center;
+    }
+
+    .event-hero-meta-item {
+      display: flex;
+      align-items: center;
+      gap: .4rem;
+      font-size: var(--desc-max);
+      color: rgba(255, 255, 255, .75);
+    }
+
+    .event-hero-meta-item i {
+      color: var(--accent);
+    }
 
     /* LAYOUT */
-    .event-layout{max-width:1100px;margin:0 auto;padding:2.5rem 2rem;display:grid;grid-template-columns:1fr 340px;gap:2.5rem;position:relative;z-index:1;}
-    @media(max-width:900px){.event-layout{grid-template-columns:1fr;padding-bottom:6rem;}.event-sidebar{order:1;position:static;}}
-    @media(max-width:600px){.event-layout{padding:1rem .8rem;gap:1.2rem;padding-bottom:6rem;}}
-    @media(max-width:480px){.event-layout{padding:.8rem .7rem;gap:1rem;padding-bottom:6rem;}}
+    .event-layout {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 2.5rem 2rem;
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 2.5rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    @media(max-width:900px) {
+      .event-layout {
+        grid-template-columns: 1fr;
+        padding-bottom: 6rem;
+      }
+
+      .event-sidebar {
+        order: 1;
+        position: static;
+      }
+    }
+
+    @media(max-width:600px) {
+      .event-layout {
+        padding: 1rem .8rem;
+        gap: 1.2rem;
+        padding-bottom: 6rem;
+      }
+    }
+
+    @media(max-width:480px) {
+      .event-layout {
+        padding: .8rem .7rem;
+        gap: 1rem;
+        padding-bottom: 6rem;
+      }
+    }
 
     /* BLOCKS */
-    .artists-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:1rem;margin-top:.8rem;}
-    .artist-card{text-align:center;}
-    .artist-photo{width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid rgba(106,13,173,.5);margin:0 auto .5rem;display:block;background:#14141C;}
-    .artist-photo-placeholder{width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#1a0030,#2a0050);display:flex;align-items:center;justify-content:center;font-size:1.8rem;margin:0 auto .5rem;border:2px solid rgba(106,13,173,.4);}
-    .artist-name{font-family:var(--font-display);font-size:.82rem;letter-spacing:1px;color:#fff;margin-bottom:.2rem;}
-    .artist-designation{font-family:var(--font-mono);font-size:.6rem;color:var(--accent);letter-spacing:1px;}
-    .content-block{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.8rem;margin-bottom:1.4rem;}
-    .content-block:last-child{margin-bottom:0;}
-    @media(max-width:480px){.content-block{padding:1.2rem 1rem;}}
-    .block-title{font-family:var(--font-display);font-weight:700;font-size:1rem;color:#fff;margin-bottom:1.2rem;padding-bottom:.7rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:.5rem;}
-    .block-title i{color:var(--accent);}
-    .event-description{font-size:var(--desc-max);color:var(--muted);line-height:1.85;}
-    .details-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
-    @media(max-width:480px){.details-grid{grid-template-columns:1fr;}}
-    .detail-item{display:flex;flex-direction:column;gap:.25rem;}
-    .detail-lbl{font-family:var(--font-mono);font-size:.58rem;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;}
-    .detail-val{font-size:var(--desc-max);color:#fff;font-weight:500;display:flex;align-items:center;gap:.4rem;}
-    .detail-val i{color:var(--accent);font-size:.85rem;}
+    .artists-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 1rem;
+      margin-top: .8rem;
+    }
+
+    .artist-card {
+      text-align: center;
+    }
+
+    .artist-photo {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid rgba(106, 13, 173, .5);
+      margin: 0 auto .5rem;
+      display: block;
+      background: #14141C;
+    }
+
+    .artist-photo-placeholder {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #1a0030, #2a0050);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.8rem;
+      margin: 0 auto .5rem;
+      border: 2px solid rgba(106, 13, 173, .4);
+    }
+
+    .artist-name {
+      font-family: var(--font-display);
+      font-size: .82rem;
+      letter-spacing: 1px;
+      color: #fff;
+      margin-bottom: .2rem;
+    }
+
+    .artist-designation {
+      font-family: var(--font-mono);
+      font-size: .6rem;
+      color: var(--accent);
+      letter-spacing: 1px;
+    }
+
+    .content-block {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.8rem;
+      margin-bottom: 1.4rem;
+    }
+
+    .content-block:last-child {
+      margin-bottom: 0;
+    }
+
+    @media(max-width:480px) {
+      .content-block {
+        padding: 1.2rem 1rem;
+      }
+    }
+
+    .block-title {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 1rem;
+      color: #fff;
+      margin-bottom: 1.2rem;
+      padding-bottom: .7rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+    }
+
+    .block-title i {
+      color: var(--accent);
+    }
+
+    .event-description {
+      font-size: var(--desc-max);
+      color: var(--muted);
+      line-height: 1.85;
+    }
+
+    .details-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    @media(max-width:480px) {
+      .details-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .detail-item {
+      display: flex;
+      flex-direction: column;
+      gap: .25rem;
+    }
+
+    .detail-lbl {
+      font-family: var(--font-mono);
+      font-size: .58rem;
+      letter-spacing: 1.5px;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+
+    .detail-val {
+      font-size: var(--desc-max);
+      color: #fff;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: .4rem;
+    }
+
+    .detail-val i {
+      color: var(--accent);
+      font-size: .85rem;
+    }
 
     /* OTHER EVENTS */
-    .other-events{display:flex;flex-direction:column;gap:.8rem;}
-    .other-card{display:flex;gap:.9rem;align-items:center;text-decoration:none;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;padding:.8rem 1rem;transition:border-color .2s,background .2s;}
-    .other-card:hover{border-color:rgba(106,13,173,.3);background:rgba(106,13,173,.05);}
-    .other-thumb{width:54px;height:54px;border-radius:8px;flex-shrink:0;background:linear-gradient(135deg,#1a0030,#2d0050);overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:1.4rem;}
-    .other-thumb img{width:100%;height:100%;object-fit:cover;}
-    .other-info{flex:1;min-width:0;}
-    .other-name{font-family:var(--font-display);font-weight:700;font-size:.8rem;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-    .other-date{font-size:.65rem;color:var(--muted);margin-top:.2rem;}
-    .other-price{font-family:var(--font-display);font-size:.85rem;color:var(--accent);flex-shrink:0;}
+    .other-events {
+      display: flex;
+      flex-direction: column;
+      gap: .8rem;
+    }
+
+    .other-card {
+      display: flex;
+      gap: .9rem;
+      align-items: center;
+      text-decoration: none;
+      background: rgba(255, 255, 255, .03);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: .8rem 1rem;
+      transition: border-color .2s, background .2s;
+    }
+
+    .other-card:hover {
+      border-color: rgba(106, 13, 173, .3);
+      background: rgba(106, 13, 173, .05);
+    }
+
+    .other-thumb {
+      width: 54px;
+      height: 54px;
+      border-radius: 8px;
+      flex-shrink: 0;
+      background: linear-gradient(135deg, #1a0030, #2d0050);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+    }
+
+    .other-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .other-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .other-name {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: .8rem;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .other-date {
+      font-size: .65rem;
+      color: var(--muted);
+      margin-top: .2rem;
+    }
+
+    .other-price {
+      font-family: var(--font-display);
+      font-size: .85rem;
+      color: var(--accent);
+      flex-shrink: 0;
+    }
 
     /* SIDEBAR */
-    .event-sidebar{position:sticky;top:80px;align-self:start;}
-    .sidebar-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:1.2rem;}
-    .sidebar-card:last-child{margin-bottom:0;}
-    .sidebar-header{padding:1.4rem 1.5rem 1rem;border-bottom:1px solid var(--border);}
-    .sidebar-price-label{font-family:var(--font-mono);font-size:.6rem;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;margin-bottom:.25rem;}
-    .sidebar-price{font-family:var(--font-display);font-size:2rem;font-weight:800;color:var(--accent);}
-    .sidebar-price small{font-family:var(--font-body);font-size:.7rem;color:var(--muted);font-weight:400;}
-    .sidebar-body{padding:1.2rem 1.5rem;}
-    .btn-book-cta{display:flex;align-items:center;justify-content:center;gap:.6rem;width:100%;padding:.95rem;background:var(--accent);color:#fff;border:none;border-radius:8px;cursor:pointer;font-family:var(--font-body);font-weight:700;font-size:var(--body-max);letter-spacing:.5px;text-decoration:none;transition:box-shadow .2s,transform .15s;box-shadow:0 0 28px rgba(106,13,173,.3);margin-top:1.2rem;}
-    .btn-book-cta:hover{transform:translateY(-2px);box-shadow:0 0 45px rgba(106,13,173,.55);color:#fff;}
-    .btn-book-cta.sold-out{background:rgba(255,255,255,.08);color:var(--muted);cursor:not-allowed;pointer-events:none;box-shadow:none;}
-    .sidebar-trust{display:flex;justify-content:center;gap:1.2rem;margin-top:.9rem;flex-wrap:wrap;}
-    .trust-item{display:flex;align-items:center;gap:.3rem;font-size:.65rem;color:var(--muted);}
-    .trust-item i{color:var(--success);}
-    .share-row{display:flex;gap:.7rem;}
-    .share-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:.4rem;padding:.6rem;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:.78rem;cursor:pointer;transition:border-color .2s,color .2s,background .2s;text-decoration:none;}
-    .share-btn:hover{border-color:rgba(106,13,173,.4);color:#fff;background:rgba(106,13,173,.08);}
+    .event-sidebar {
+      position: sticky;
+      top: 80px;
+      align-self: start;
+    }
+
+    .sidebar-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      margin-bottom: 1.2rem;
+    }
+
+    .sidebar-card:last-child {
+      margin-bottom: 0;
+    }
+
+    .sidebar-header {
+      padding: 1.4rem 1.5rem 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .sidebar-price-label {
+      font-family: var(--font-mono);
+      font-size: .6rem;
+      letter-spacing: 1.5px;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: .25rem;
+    }
+
+    .sidebar-price {
+      font-family: var(--font-display);
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--accent);
+    }
+
+    .sidebar-price small {
+      font-family: var(--font-body);
+      font-size: .7rem;
+      color: var(--muted);
+      font-weight: 400;
+    }
+
+    .sidebar-body {
+      padding: 1.2rem 1.5rem;
+    }
+
+    .btn-book-cta {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: .6rem;
+      width: 100%;
+      padding: .95rem;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: var(--font-body);
+      font-weight: 700;
+      font-size: var(--body-max);
+      letter-spacing: .5px;
+      text-decoration: none;
+      transition: box-shadow .2s, transform .15s;
+      box-shadow: 0 0 28px rgba(106, 13, 173, .3);
+      margin-top: 1.2rem;
+    }
+
+    .btn-book-cta:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 45px rgba(106, 13, 173, .55);
+      color: #fff;
+    }
+
+    .btn-book-cta.sold-out {
+      background: rgba(255, 255, 255, .08);
+      color: var(--muted);
+      cursor: not-allowed;
+      pointer-events: none;
+      box-shadow: none;
+    }
+
+    .sidebar-trust {
+      display: flex;
+      justify-content: center;
+      gap: 1.2rem;
+      margin-top: .9rem;
+      flex-wrap: wrap;
+    }
+
+    .trust-item {
+      display: flex;
+      align-items: center;
+      gap: .3rem;
+      font-size: .65rem;
+      color: var(--muted);
+    }
+
+    .trust-item i {
+      color: var(--success);
+    }
+
+    .share-row {
+      display: flex;
+      gap: .7rem;
+    }
+
+    .share-btn {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: .4rem;
+      padding: .6rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      font-size: .78rem;
+      cursor: pointer;
+      transition: border-color .2s, color .2s, background .2s;
+      text-decoration: none;
+    }
+
+    .share-btn:hover {
+      border-color: rgba(106, 13, 173, .4);
+      color: #fff;
+      background: rgba(106, 13, 173, .08);
+    }
 
     /* REVIEWS */
-    .reviews-list{display:flex;flex-direction:column;gap:.9rem;}
-    .review-card{background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:1rem 1.2rem;}
-    .review-card.dummy{opacity:.7;border-style:dashed;}
-    .review-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem;}
-    .review-name{font-size:.85rem;font-weight:600;color:#fff;}
-    .review-stars{color:#f5c842;font-size:.85rem;letter-spacing:1px;}
-    .review-text{font-size:.82rem;color:var(--muted);line-height:1.55;}
-    .review-badge{font-family:'Space Mono',monospace;font-size:.52rem;letter-spacing:1px;color:#555;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:5px;padding:.1rem .4rem;}
+    .reviews-list {
+      display: flex;
+      flex-direction: column;
+      gap: .9rem;
+    }
+
+    .review-card {
+      background: rgba(255, 255, 255, .025);
+      border: 1px solid rgba(255, 255, 255, .07);
+      border-radius: 10px;
+      padding: 1rem 1.2rem;
+    }
+
+    .review-card.dummy {
+      opacity: .7;
+      border-style: dashed;
+    }
+
+    .review-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: .5rem;
+    }
+
+    .review-name {
+      font-size: .85rem;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .review-stars {
+      color: #f5c842;
+      font-size: .85rem;
+      letter-spacing: 1px;
+    }
+
+    .review-text {
+      font-size: .82rem;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    .review-badge {
+      font-family: 'Space Mono', monospace;
+      font-size: .52rem;
+      letter-spacing: 1px;
+      color: #555;
+      background: rgba(255, 255, 255, .04);
+      border: 1px solid rgba(255, 255, 255, .08);
+      border-radius: 5px;
+      padding: .1rem .4rem;
+    }
 
     /* ═══════════════════════════════════════════════════
-       POLICY ACCORDION
+       POLICY ACCORDION - PROFESSIONAL REDESIGN
     ═══════════════════════════════════════════════════ */
-    .policy-accordion{
-      background:var(--surface);
-      border:1px solid var(--border);
-      border-radius:14px;
-      overflow:hidden;
-      margin-bottom:1.4rem;
-    }
-    .policy-panel{border-bottom:1px solid var(--border);}
-    .policy-panel:last-child{border-bottom:none;}
-
-    /* trigger */
-    .policy-trigger{
-      width:100%;background:transparent;border:none;cursor:pointer;
-      padding:1.15rem 1.5rem;
-      display:flex;align-items:center;justify-content:space-between;gap:.8rem;
-      text-align:left;transition:background .2s;
-      -webkit-tap-highlight-color:transparent;
-    }
-    @media(max-width:480px){.policy-trigger{padding:1rem 1.1rem;}}
-    .policy-trigger:hover{background:rgba(106,13,173,.06);}
-    .policy-trigger.open{background:rgba(106,13,173,.09);}
-
-    .policy-trigger-left{display:flex;align-items:center;gap:.8rem;min-width:0;flex:1;}
-    .policy-icon-wrap{
-      width:40px;height:40px;border-radius:10px;
-      display:flex;align-items:center;justify-content:center;
-      flex-shrink:0;font-size:1.05rem;
-    }
-    @media(max-width:380px){.policy-icon-wrap{width:34px;height:34px;font-size:.9rem;border-radius:8px;}}
-    .policy-icon-wrap.tc{background:rgba(106,13,173,.18);border:1px solid rgba(106,13,173,.35);color:#bf80ff;}
-    .policy-icon-wrap.refund{background:rgba(255,68,68,.1);border:1px solid rgba(255,68,68,.3);color:#ff7070;}
-
-    .policy-trigger-text{min-width:0;flex:1;}
-    .policy-trigger-title{
-      font-family:var(--font-display);font-weight:700;
-      font-size:.9rem;color:#fff;line-height:1.3;
-    }
-    @media(max-width:380px){.policy-trigger-title{font-size:.82rem;}}
-    .policy-trigger-sub{
-      font-family:var(--font-mono);font-size:.54rem;
-      letter-spacing:1px;color:var(--muted);margin-top:.18rem;
+    .policy-accordion {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      overflow: hidden;
+      margin-bottom: 2rem;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
     }
 
-    .policy-chevron{
-      width:28px;height:28px;border-radius:7px;
-      background:rgba(255,255,255,.04);border:1px solid var(--border);
-      display:flex;align-items:center;justify-content:center;flex-shrink:0;
-      transition:transform .35s ease,background .2s,border-color .2s;
-      color:var(--muted);
-    }
-    .policy-trigger.open .policy-chevron{
-      transform:rotate(180deg);
-      background:rgba(106,13,173,.18);
-      border-color:rgba(106,13,173,.4);
-      color:#bf80ff;
+    .policy-panel {
+      border-bottom: 1px solid var(--border);
     }
 
-    /* slide body */
-    .policy-body{max-height:0;overflow:hidden;transition:max-height .5s cubic-bezier(.4,0,.2,1);}
-    .policy-body.open{max-height:6000px;}
-
-    /* inner content padding */
-    .policy-content{
-      padding:0 1.5rem 1.7rem;
-      border-top:1px solid rgba(255,255,255,.04);
-    }
-    @media(max-width:480px){.policy-content{padding:0 1.1rem 1.4rem;}}
-
-    /* date tag */
-    .p-date-row{display:flex;align-items:center;gap:.5rem;margin:1rem 0 .9rem;flex-wrap:wrap;}
-    .p-date-tag{
-      display:inline-flex;align-items:center;gap:.3rem;
-      font-family:var(--font-mono);font-size:.57rem;letter-spacing:1.5px;
-      padding:.22rem .65rem;border-radius:6px;
-    }
-    .p-date-tag.purple{color:#bf80ff;background:rgba(106,13,173,.13);border:1px solid rgba(106,13,173,.28);}
-    .p-date-tag.red{color:#ff8080;background:rgba(255,68,68,.1);border:1px solid rgba(255,68,68,.28);}
-
-    /* intro paragraph */
-    .p-intro{
-      font-size:.8rem;color:rgba(255,255,255,.55);line-height:1.78;
-      margin-bottom:1.1rem;padding-bottom:1rem;
-      border-bottom:1px solid rgba(255,255,255,.05);
+    .policy-panel:last-child {
+      border-bottom: none;
     }
 
-    /* section */
-    .ps{margin-bottom:0;}
-    .ps-divider{height:1px;margin:1rem 0;background:linear-gradient(to right,rgba(106,13,173,.28),transparent);}
-    .ps-divider.red{background:linear-gradient(to right,rgba(255,68,68,.25),transparent);}
-
-    .ps-head{display:flex;align-items:flex-start;gap:.6rem;margin-bottom:.65rem;}
-    .ps-num{
-      font-family:var(--font-mono);font-size:.57rem;font-weight:700;
-      letter-spacing:1px;padding:.18rem .5rem;border-radius:5px;
-      flex-shrink:0;margin-top:.1rem;line-height:1.6;
+    .policy-trigger {
+      width: 100%;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      padding: 1.4rem 1.8rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      text-align: left;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      -webkit-tap-highlight-color: transparent;
     }
-    .ps-num.purple{color:#bf80ff;background:rgba(106,13,173,.15);border:1px solid rgba(106,13,173,.3);}
-    .ps-num.red{color:#ff8080;background:rgba(255,68,68,.1);border:1px solid rgba(255,68,68,.28);}
-    .ps-title{font-family:var(--font-display);font-size:.85rem;font-weight:700;color:#fff;line-height:1.4;}
-    @media(max-width:480px){.ps-title{font-size:.82rem;}}
 
-    /* bullet list */
-    .pb{list-style:none;display:flex;flex-direction:column;gap:.52rem;padding-left:.05rem;}
-    .pb>li{display:flex;align-items:flex-start;gap:.65rem;font-size:.8rem;color:#c5c5c5;line-height:1.72;}
-    @media(max-width:480px){.pb>li{font-size:.78rem;gap:.55rem;}}
-    .pb>li::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--accent);flex-shrink:0;margin-top:.57rem;}
-    .pb>li b{color:#fff;font-weight:600;}
+    @media(max-width:480px) {
+      .policy-trigger {
+        padding: 1.2rem 1.2rem;
+      }
+    }
 
-    /* sub-bullets */
-    .pb-sub{list-style:none;margin-top:.45rem;padding-left:.25rem;display:flex;flex-direction:column;gap:.35rem;}
-    .pb-sub>li{display:flex;align-items:flex-start;gap:.55rem;font-size:.76rem;color:rgba(179,179,179,.8);line-height:1.68;}
-    @media(max-width:480px){.pb-sub>li{font-size:.74rem;}}
-    .pb-sub>li::before{content:'';width:3px;height:3px;border-radius:50%;background:rgba(106,13,173,.7);flex-shrink:0;margin-top:.64rem;}
+    .policy-trigger:hover {
+      background: rgba(255, 255, 255, 0.02);
+    }
 
-    /* alert box */
-    .p-alert{
-      background:rgba(255,68,68,.07);
-      border:1px solid rgba(255,68,68,.2);
-      border-left:3px solid #FF4444;
-      border-radius:0 9px 9px 0;
-      padding:.9rem 1rem;margin:.6rem 0 .9rem;
+    .policy-trigger.open {
+      background: rgba(106, 13, 173, 0.06);
     }
-    .p-alert-label{
-      font-family:var(--font-mono);font-size:.6rem;font-weight:700;
-      letter-spacing:2px;color:#FF5555;margin-bottom:.35rem;line-height:1.5;
-    }
-    @media(max-width:400px){.p-alert-label{font-size:.55rem;letter-spacing:1.5px;}}
-    .p-alert-body{font-size:.78rem;color:rgba(255,255,255,.65);line-height:1.65;}
 
-    /* wristband */
-    .p-wristband{
-      background:rgba(106,13,173,.07);border:1px solid rgba(106,13,173,.2);
-      border-radius:10px;padding:1rem 1.1rem;margin-top:.3rem;
-      font-size:.78rem;color:rgba(255,255,255,.65);line-height:1.72;
+    .policy-trigger-left {
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+      min-width: 0;
+      flex: 1;
     }
-    @media(max-width:480px){.p-wristband{font-size:.76rem;padding:.9rem 1rem;}}
-    .p-wristband b{color:#bf80ff;font-weight:600;}
 
-    /* final box */
-    .p-final{
-      margin-top:1.2rem;padding:1rem 1.2rem;
-      border-radius:10px;text-align:center;
+    .policy-icon-wrap {
+      width: 46px;
+      height: 46px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 1.25rem;
+      transition: transform 0.3s ease;
     }
-    @media(max-width:480px){.p-final{padding:.9rem 1rem;}}
-    .p-final.purple{background:rgba(106,13,173,.08);border:1px solid rgba(106,13,173,.22);}
-    .p-final.red{background:rgba(255,68,68,.06);border:1px solid rgba(255,68,68,.18);}
-    .p-final-title{
-      font-family:var(--font-display);font-size:.8rem;font-weight:700;
-      margin-bottom:.45rem;display:flex;align-items:center;justify-content:center;gap:.4rem;
+
+    .policy-trigger:hover .policy-icon-wrap {
+      transform: scale(1.05);
     }
-    .p-final.purple .p-final-title{color:#bf80ff;}
-    .p-final.red .p-final-title{color:#ff9090;}
-    .p-final-text{font-size:.76rem;color:rgba(179,179,179,.85);line-height:1.68;}
+
+    @media(max-width:380px) {
+      .policy-icon-wrap {
+        width: 40px;
+        height: 40px;
+        font-size: 1.1rem;
+        border-radius: 10px;
+      }
+    }
+
+    .policy-icon-wrap.tc {
+      background: linear-gradient(135deg, rgba(106, 13, 173, 0.25), rgba(106, 13, 173, 0.1));
+      border: 1px solid rgba(106, 13, 173, 0.4);
+      color: #bf80ff;
+    }
+
+    .policy-icon-wrap.refund {
+      background: linear-gradient(135deg, rgba(255, 68, 68, 0.15), rgba(255, 68, 68, 0.05));
+      border: 1px solid rgba(255, 68, 68, 0.35);
+      color: #ff7070;
+    }
+
+    .policy-trigger-title {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 1.05rem;
+      color: #fff;
+      line-height: 1.2;
+      letter-spacing: -0.2px;
+    }
+
+    @media(max-width:380px) {
+      .policy-trigger-title {
+        font-size: 0.95rem;
+      }
+    }
+
+    .policy-trigger-sub {
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      letter-spacing: 1.5px;
+      color: var(--muted);
+      margin-top: 0.25rem;
+      text-transform: uppercase;
+      opacity: 0.8;
+    }
+
+    .policy-chevron {
+      width: 32px;
+      height: 32px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      color: var(--muted);
+    }
+
+    .policy-trigger.open .policy-chevron {
+      transform: rotate(180deg);
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+      box-shadow: 0 0 15px rgba(106, 13, 173, 0.4);
+    }
+
+    .policy-body {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+      background: rgba(0, 0, 0, 0.1);
+    }
+
+    .policy-body.open {
+      max-height: 8000px;
+    }
+
+    .policy-content {
+      padding: 1.5rem 1.8rem 2.5rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    @media(max-width:480px) {
+      .policy-content {
+        padding: 1.2rem 1.2rem 2rem;
+      }
+    }
+
+    .p-date-row {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .p-date-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      letter-spacing: 1px;
+      padding: 0.4rem 0.8rem;
+      border-radius: 8px;
+    }
+
+    .p-date-tag.purple {
+      color: #bf80ff;
+      background: rgba(106, 13, 173, 0.15);
+      border: 1px solid rgba(106, 13, 173, 0.3);
+    }
+
+    .p-date-tag.red {
+      color: #ff8080;
+      background: rgba(255, 68, 68, 0.12);
+      border: 1px solid rgba(255, 68, 68, 0.3);
+    }
+
+    .p-intro {
+      font-size: 0.92rem;
+      color: rgba(255, 255, 255, 0.7);
+      line-height: 1.7;
+      margin-bottom: 2rem;
+      padding-left: 0.2rem;
+    }
+
+    .ps {
+      margin-bottom: 2rem;
+      position: relative;
+    }
+
+    .ps:last-child {
+      margin-bottom: 0;
+    }
+
+    .ps-divider {
+      height: 1px;
+      margin: 2rem 0;
+      background: linear-gradient(to right, var(--border), transparent);
+    }
+
+    .ps-divider.red {
+      background: linear-gradient(to right, rgba(255, 68, 68, 0.2), transparent);
+    }
+
+    .ps-head {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.2rem;
+    }
+
+    .ps-num {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .ps-num.purple {
+      background: var(--accent);
+      color: #fff;
+      box-shadow: 0 0 15px rgba(106, 13, 173, 0.3);
+    }
+
+    .ps-num.red {
+      background: #FF4444;
+      color: #fff;
+      box-shadow: 0 0 15px rgba(255, 68, 68, 0.3);
+    }
+
+    .ps-title {
+      font-family: var(--font-display);
+      font-size: 1rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    @media(max-width:480px) {
+      .ps-title {
+        font-size: 0.95rem;
+      }
+    }
+
+    .pb {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+      padding-left: 0.1rem;
+    }
+
+    .pb>li {
+      position: relative;
+      font-size: 0.9rem;
+      color: rgba(255, 255, 255, 0.65);
+      line-height: 1.75;
+      padding-left: 1.5rem;
+    }
+
+    .pb>li::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0.65rem;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+
+    .ps-num.red~.pb>li::before {
+      background: #FF4444;
+    }
+
+    .pb>li b {
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .pb-sub {
+      list-style: none;
+      margin-top: 0.6rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      padding-left: 0.2rem;
+    }
+
+    .pb-sub>li {
+      position: relative;
+      font-size: 0.85rem;
+      color: rgba(255, 255, 255, 0.5);
+      line-height: 1.6;
+      padding-left: 1.2rem;
+    }
+
+    .pb-sub>li::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0.6rem;
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .p-alert {
+      background: rgba(255, 68, 68, 0.08);
+      border: 1px solid rgba(255, 68, 68, 0.2);
+      border-left: 4px solid #FF4444;
+      border-radius: 4px 12px 12px 4px;
+      padding: 1.2rem 1.5rem;
+      margin: 1rem 0 1.5rem;
+    }
+
+    .p-alert-label {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      font-weight: 800;
+      letter-spacing: 2px;
+      color: #FF5555;
+      margin-bottom: 0.5rem;
+    }
+
+    .p-alert-body {
+      font-size: 0.88rem;
+      color: rgba(255, 255, 255, 0.8);
+      line-height: 1.6;
+    }
+
+    .p-wristband {
+      background: linear-gradient(to right, rgba(106, 13, 173, 0.1), transparent);
+      border: 1px solid rgba(106, 13, 173, 0.2);
+      border-left: 4px solid var(--accent);
+      border-radius: 4px 12px 12px 4px;
+      padding: 1.2rem 1.5rem;
+      margin: 2rem 0;
+      font-size: 0.9rem;
+      color: rgba(255, 255, 255, 0.7);
+      line-height: 1.7;
+    }
+
+    .p-wristband b {
+      color: #bf80ff;
+      font-weight: 700;
+    }
+
+    .p-final {
+      margin-top: 2rem;
+      padding: 1.5rem;
+      border-radius: 14px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .p-final.purple {
+      background: rgba(106, 13, 173, 0.1);
+      border: 1px solid rgba(106, 13, 173, 0.2);
+    }
+
+    .p-final.red {
+      background: rgba(255, 68, 68, 0.08);
+      border: 1px solid rgba(255, 68, 68, 0.2);
+    }
+
+    .p-final-title {
+      font-family: var(--font-display);
+      font-size: 0.95rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .p-final.purple .p-final-title {
+      color: #bf80ff;
+    }
+
+    .p-final.red .p-final-title {
+      color: #ff9090;
+    }
+
+    .p-final-text {
+      font-size: 0.82rem;
+      color: rgba(255, 255, 255, 0.5);
+      line-height: 1.6;
+    }
 
     /* STICKY MOBILE BOOK BAR */
-    .mobile-book-bar{display:none;}
-    @media(max-width:900px){
-      .mobile-book-bar{
-        display:flex;align-items:center;justify-content:space-between;gap:.8rem;
-        position:fixed;bottom:0;left:0;right:0;z-index:999;
-        background:rgba(11,11,15,.94);
-        backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
-        border-top:1px solid rgba(106,13,173,.3);
-        padding:.85rem 1.2rem;
-        padding-bottom:calc(.85rem + env(safe-area-inset-bottom));
-        box-shadow:0 -8px 32px rgba(0,0,0,.55);
-        transition:opacity .25s,transform .25s;
-      }
-      .mobile-book-price-wrap{display:flex;flex-direction:column;flex-shrink:0;}
-      .mobile-book-from{font-family:var(--font-mono);font-size:.5rem;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;}
-      .mobile-book-price{font-family:var(--font-display);font-size:1.25rem;font-weight:800;color:var(--accent);line-height:1.15;}
-      .mobile-book-price small{font-size:.58rem;color:var(--muted);font-weight:400;font-family:var(--font-body);}
-      .mobile-book-btn{
-        flex:1;display:flex;align-items:center;justify-content:center;gap:.5rem;
-        padding:.82rem 1rem;background:var(--accent);color:#fff;
-        border:none;border-radius:10px;font-family:var(--font-body);font-weight:700;
-        font-size:.95rem;letter-spacing:.4px;text-decoration:none;cursor:pointer;
-        box-shadow:0 0 22px rgba(106,13,173,.45);
-        transition:box-shadow .2s,transform .15s;
-        -webkit-tap-highlight-color:transparent;
-      }
-      .mobile-book-btn:hover,.mobile-book-btn:active{transform:translateY(-1px);box-shadow:0 0 36px rgba(106,13,173,.65);color:#fff;}
-      .mobile-book-btn.sold-out{background:rgba(255,255,255,.07);color:var(--muted);cursor:not-allowed;pointer-events:none;box-shadow:none;}
+    .mobile-book-bar {
+      display: none;
     }
 
-    a{color:inherit;}
+    @media(max-width:900px) {
+      .mobile-book-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: .8rem;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 999;
+        background: rgba(11, 11, 15, .94);
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+        border-top: 1px solid rgba(106, 13, 173, .3);
+        padding: .85rem 1.2rem;
+        padding-bottom: calc(.85rem + env(safe-area-inset-bottom));
+        box-shadow: 0 -8px 32px rgba(0, 0, 0, .55);
+        transition: opacity .25s, transform .25s;
+      }
+
+      .mobile-book-price-wrap {
+        display: flex;
+        flex-direction: column;
+        flex-shrink: 0;
+      }
+
+      .mobile-book-from {
+        font-family: var(--font-mono);
+        font-size: .5rem;
+        letter-spacing: 1.5px;
+        color: var(--muted);
+        text-transform: uppercase;
+      }
+
+      .mobile-book-price {
+        font-family: var(--font-display);
+        font-size: 1.25rem;
+        font-weight: 800;
+        color: var(--accent);
+        line-height: 1.15;
+      }
+
+      .mobile-book-price small {
+        font-size: .58rem;
+        color: var(--muted);
+        font-weight: 400;
+        font-family: var(--font-body);
+      }
+
+      .mobile-book-btn {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: .5rem;
+        padding: .82rem 1rem;
+        background: var(--accent);
+        color: #fff;
+        border: none;
+        border-radius: 10px;
+        font-family: var(--font-body);
+        font-weight: 700;
+        font-size: .95rem;
+        letter-spacing: .4px;
+        text-decoration: none;
+        cursor: pointer;
+        box-shadow: 0 0 22px rgba(106, 13, 173, .45);
+        transition: box-shadow .2s, transform .15s;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      .mobile-book-btn:hover,
+      .mobile-book-btn:active {
+        transform: translateY(-1px);
+        box-shadow: 0 0 36px rgba(106, 13, 173, .65);
+        color: #fff;
+      }
+
+      .mobile-book-btn.sold-out {
+        background: rgba(255, 255, 255, .07);
+        color: var(--muted);
+        cursor: not-allowed;
+        pointer-events: none;
+        box-shadow: none;
+      }
+    }
+
+    a {
+      color: inherit;
+    }
   </style>
 </head>
+
 <body>
 
   <%- include('../partials/navbar') %>
 
-  <%
-    const tierColors={standard:'#a0a0a0',silver:'#c0c8d8',gold:'#f5c842',platinum:'#6A0DAD',vip:'#bf80ff',general:'#a0a0a0'};
-    const activeTiers=event.ticketTypes.filter(t=>t.isActive);
-    const availTiers=activeTiers.filter(t=>t.bookedSeats<t.totalSeats);
-    const isHouseFull=activeTiers.length>0&&activeTiers.every(t=>t.bookedSeats>=t.totalSeats);
-    const minPrice=availTiers.length?Math.min(...availTiers.map(t=>t.price)):0;
-    const eventDate=new Date(event.date);
-    const now=new Date();
-    const isPast=eventDate<now;
-    const nameParts=event.name.trim().split(' ');
-    const firstName=nameParts[0]||'';
-    const restName=nameParts.slice(1).join(' ')||'';
-    const otherEvents=(events||[]).filter(e=>e._id.toString()!==event._id.toString()).slice(0,4);
-  %>
+    <% const tierColors={ standard: `#a0a0a0`, silver: `#c0c8d8`, gold: `#f5c842`, platinum: `#6A0DAD`, vip: `#bf80ff`,
+      general: `#a0a0a0` }; const activeTiers=event.ticketTypes.filter(t=> t.isActive);
+      const availTiers = activeTiers.filter(t => t.bookedSeats < t.totalSeats); const isHouseFull=activeTiers.length> 0
+        && activeTiers.every(t => t.bookedSeats >= t.totalSeats);
+        const minPrice = availTiers.length ? Math.min(...availTiers.map(t => t.price)) : 0;
+        const eventDate = new Date(event.date);
+        const now = new Date();
+        const isPast = eventDate < now; const nameParts=event.name.trim().split(` `); const firstName=nameParts[0] ||
+          ``; const restName=nameParts.slice(1).join(` `) || ``; const otherEvents=(locals.events || []).filter(e=>
+          e._id.toString() !== event._id.toString()).slice(0, 4);
+          %>
 
-  <!-- HERO -->
-  <div class="event-hero">
-    <div class="event-hero-bg" id="eventHeroBg"
-      <% if(event.bannerDetail){ %>style="background-image:url('<%= event.bannerDetail %>')"<% } %>
-    ></div>
-    <script>
-    (function(){
-      var bg=document.getElementById('eventHeroBg');if(!bg)return;
-      var m=window.innerWidth<=768;
-      <% if(event.bannerDetailMobile){ %>if(m)bg.style.backgroundImage="url('<%= event.bannerDetailMobile %>')";<% } else if(event.bannerMobile){ %>if(m)bg.style.backgroundImage="url('<%= event.bannerMobile %>')";<% } %>
-    })();
-    </script>
-    <div class="event-hero-content">
-      <a href="/" class="event-back-btn"><i class="bi bi-arrow-left"></i> Back to Events</a>
-      <% if(isHouseFull){ %><div class="event-status-badge soldout"><i class="bi bi-house-fill"></i> House Full</div>
-      <% } else if(isPast){ %><div class="event-status-badge soldout"><i class="bi bi-clock-history"></i> Event Ended</div>
-      <% } else { %><div class="event-status-badge upcoming"><i class="bi bi-lightning-charge-fill"></i> Tickets Available</div><% } %>
-      <div class="event-hero-name"><%= firstName %><% if(restName){ %><br/><span class="accent"><%= restName %></span><% } %></div>
-      <div class="event-hero-meta">
-        <div class="event-hero-meta-item"><i class="bi bi-calendar3"></i> <%= eventDate.toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'}) %></div>
-        <div class="event-hero-meta-item"><i class="bi bi-clock-fill"></i> <%= event.doorsOpen %> – <%= event.endTime %></div>
-        <div class="event-hero-meta-item"><i class="bi bi-geo-alt-fill"></i> <%= event.venue %></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- MAIN -->
-  <div class="event-layout">
-    <div class="event-main">
-
-      <!-- Performers -->
-      <% if(event.artists&&event.artists.length>0){ %>
-      <div class="content-block">
-        <div class="block-title"><i class="bi bi-mic-fill"></i> Performers</div>
-        <div class="artists-grid">
-          <% event.artists.forEach(function(a){ %>
-          <div class="artist-card">
-            <% if(a.photo){ %><img class="artist-photo" src="<%= a.photo %>" alt="<%= a.name %>"/>
-            <% } else { %><div class="artist-photo-placeholder">🎤</div><% } %>
-            <div class="artist-name"><%= a.name %></div>
-            <% if(a.designation){ %><div class="artist-designation"><%= a.designation %></div><% } %>
-          </div>
-          <% }); %>
-        </div>
-      </div>
-      <% } %>
-
-      <!-- About -->
-      <div class="content-block">
-        <div class="block-title"><i class="bi bi-info-circle-fill"></i> About This Event</div>
-        <p class="event-description"><% if(event.description){ %><%= event.description %><% } else { %>Join us for an unforgettable night of music, lights and celebration at <%= event.venue %>. Get your tickets now before they sell out!<% } %></p>
-      </div>
-
-      <!-- Details -->
-      <div class="content-block">
-        <div class="block-title"><i class="bi bi-card-checklist"></i> Event Details</div>
-        <div class="details-grid">
-          <div class="detail-item"><div class="detail-lbl">Date</div><div class="detail-val"><i class="bi bi-calendar3"></i> <%= eventDate.toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'}) %></div></div>
-          <div class="detail-item"><div class="detail-lbl">Time</div><div class="detail-val"><i class="bi bi-clock"></i> <%= event.doorsOpen %> – <%= event.endTime %></div></div>
-          <div class="detail-item"><div class="detail-lbl">Venue</div><div class="detail-val"><i class="bi bi-geo-alt-fill"></i> <%= event.venue %></div></div>
-        </div>
-      </div>
-
-      <!-- ═══════════════════════════════════════
-           POLICY ACCORDION
-      ═══════════════════════════════════════ -->
-      <div class="policy-accordion">
-
-        <!-- PANEL 1 — Terms & Conditions -->
-        <div class="policy-panel">
-          <button class="policy-trigger" id="tcTrigger" onclick="togglePolicy('tc')" aria-expanded="false">
-            <div class="policy-trigger-left">
-              <div class="policy-icon-wrap tc"><i class="bi bi-file-earmark-text-fill"></i></div>
-              <div class="policy-trigger-text">
-                <div class="policy-trigger-title">Terms &amp; Conditions</div>
-                <div class="policy-trigger-sub">TAP TO READ &nbsp;·&nbsp; LEGALLY BINDING</div>
-              </div>
-            </div>
-            <div class="policy-chevron" id="tcChevron"><i class="bi bi-chevron-down" style="font-size:.72rem;"></i></div>
-          </button>
-
-          <div class="policy-body" id="tcBody">
-            <div class="policy-content">
-
-              <div class="p-date-row">
-                <span class="p-date-tag purple"><i class="bi bi-calendar3" style="font-size:.6rem;"></i>&nbsp; Effective Date: May 09</span>
-              </div>
-
-              <p class="p-intro">By purchasing a ticket and/or attending this event, you agree to the following legally binding terms and conditions.</p>
-
-              <!-- 1 -->
-              <div class="ps">
-                <div class="ps-head"><span class="ps-num purple">01</span><span class="ps-title">Ticket Policy</span></div>
-                <ul class="pb">
-                  <li>All tickets are strictly <b>non-transferable</b> and <b>non-refundable</b>.</li>
-                  <li>Entry is permitted only with a valid ticket / QR code issued by the organizer.</li>
-                  <li>Duplicate, tampered, or counterfeit tickets will be cancelled without refund.</li>
-                </ul>
-              </div>
-              <div class="ps-divider"></div>
-
-              <!-- 2 -->
-              <div class="ps">
-                <div class="ps-head"><span class="ps-num purple">02</span><span class="ps-title">Entry &amp; Admission Rights</span></div>
-                <ul class="pb">
-                  <li>The organizer reserves the <b>absolute right to deny entry</b> to any individual without explanation.</li>
-                  <li>Late entry may be restricted depending on the event schedule.</li>
-                  <li><b>No re-entry</b> will be allowed once you exit the venue.</li>
-                </ul>
-              </div>
-              <div class="ps-divider"></div>
-
-              <!-- 3 -->
-              <div class="ps">
-                <div class="ps-head"><span class="ps-num purple">03</span><span class="ps-title">Security &amp; Conduct</span></div>
-                <ul class="pb">
-                  <li>All attendees must undergo <b>mandatory security screening</b>.</li>
-                  <li>Strictly prohibited items include:
-                    <ul class="pb-sub">
-                      <li>Weapons, illegal substances, outside food &amp; beverages</li>
-                      <li>Alcohol, smoking materials and hazardous items</li>
-                    </ul>
-                  </li>
-                  <li>Any misconduct, unruly behaviour, or violation of law will lead to <b>immediate removal without refund</b>.</li>
-                </ul>
-              </div>
-              <div class="ps-divider"></div>
-
-              <!-- 4 -->
-              <div class="ps">
-                <div class="ps-head"><span class="ps-num purple">04</span><span class="ps-title">Event Changes</span></div>
-                <ul class="pb">
-                  <li>The organizer reserves the right to:
-                    <ul class="pb-sub">
-                      <li>Modify the event schedule, performance timings, or artist lineup (including Hannan Shah &amp; Shafi Kollam) if required</li>
-                      <li>Postpone or cancel the event due to unforeseen circumstances such as weather conditions, government restrictions, or safety concerns</li>
-                    </ul>
-                  </li>
-                </ul>
-              </div>
-              <div class="ps-divider"></div>
-
-              <!-- 5 -->
-              <div class="ps">
-                <div class="ps-head"><span class="ps-num purple">05</span><span class="ps-title">Liability Disclaimer</span></div>
-                <ul class="pb">
-                  <li>Entry to the event is at the <b>attendee's own risk</b>.</li>
-                  <li>The organizer is not responsible for:
-                    <ul class="pb-sub">
-                      <li>Any personal injury, loss, theft, or damage to personal belongings</li>
-                      <li>Any incidents arising from crowd behaviour or external factors</li>
-                    </ul>
-                  </li>
-                </ul>
-              </div>
-              <div class="ps-divider"></div>
-
-              <!-- 6 -->
-              <div class="ps">
-                <div class="ps-head"><span class="ps-num purple">06</span><span class="ps-title">Media &amp; Recording</span></div>
-                <ul class="pb">
-                  <li>The event may be recorded, photographed, or broadcasted. By attending, you grant full consent to use your image or likeness for promotional purposes <b>without compensation</b>.</li>
-                </ul>
-              </div>
-              <div class="ps-divider"></div>
-
-              <!-- 7 -->
-              <div class="ps">
-                <div class="ps-head"><span class="ps-num purple">07</span><span class="ps-title">Compliance with Rules</span></div>
-                <ul class="pb">
-                  <li>All attendees must strictly follow venue regulations and organizer instructions.</li>
-                  <li>Non-compliance will result in <b>immediate removal without refund</b>.</li>
-                </ul>
-              </div>
-              <div class="ps-divider"></div>
-
-              <div class="p-wristband">
-                <b>Wristband Policy —</b> All ticket holders will be issued category-specific identification wrist tags, which must be worn at all times. Entry will be permitted only to the sessions corresponding to the assigned category. Any unauthorised entry into other categories will result in removal from the venue, and the Organising Committee holds full authority to enforce this rule.
-              </div>
-
-              <div class="p-final purple">
-                <div class="p-final-title"><i class="bi bi-shield-check-fill" style="font-size:.85rem;"></i> Final Declaration</div>
-                <div class="p-final-text">Purchase and possession of this ticket confirms that you have read, understood, and agreed to all terms and conditions stated above.</div>
-              </div>
-
+          <!-- HERO -->
+          <div class="event-hero">
+            <div class="event-hero-bg" id="eventHeroBg" <% if(event.bannerDetail){ %>style="background-image:url('<%=
+                event.bannerDetail %>')"<% } %>></div>
+            <script>
+              (function () {
+                var bg = document.getElementById('eventHeroBg'); if (!bg) return;
+                var m = window.innerWidth <= 768;
+        <% if (event.bannerDetailMobile) { %>if (m) bg.style.backgroundImage = "url('<%= event.bannerDetailMobile %>')";<% } else if (event.bannerMobile) { %>if (m) bg.style.backgroundImage = "url('<%= event.bannerMobile %>')";<% } %>
+      })();
+            </script>
+            <div class="event-hero-content">
+              <a href="/" class="event-back-btn"><i class="bi bi-arrow-left"></i> Back to Events</a>
+              <% if(isHouseFull){ %>
+                <div class="event-status-badge soldout"><i class="bi bi-house-fill"></i> House Full</div>
+                <% } else if(isPast){ %>
+                  <div class="event-status-badge soldout"><i class="bi bi-clock-history"></i> Event Ended</div>
+                  <% } else { %>
+                    <div class="event-status-badge upcoming"><i class="bi bi-lightning-charge-fill"></i> Tickets
+                      Available</div>
+                    <% } %>
+                      <div class="event-hero-name">
+                        <%= firstName %>
+                          <% if(restName){ %><br /><span class="accent">
+                              <%= restName %>
+                            </span>
+                            <% } %>
+                      </div>
+                      <div class="event-hero-meta">
+                        <div class="event-hero-meta-item"><i class="bi bi-calendar3"></i>
+                          <%= eventDate.toLocaleDateString(`en-IN`, { weekday: `long`, day: `numeric`, month: `long`,
+                            year: `numeric` }) %>
+                        </div>
+                        <div class="event-hero-meta-item"><i class="bi bi-clock-fill"></i>
+                          <%= event.doorsOpen %> – <%= event.endTime %>
+                        </div>
+                        <div class="event-hero-meta-item"><i class="bi bi-geo-alt-fill"></i>
+                          <%= event.venue %>
+                        </div>
+                      </div>
             </div>
           </div>
-        </div><!-- /tc -->
 
-        <!-- PANEL 2 — Cancellation & Refund -->
-        <div class="policy-panel">
-          <button class="policy-trigger" id="refundTrigger" onclick="togglePolicy('refund')" aria-expanded="false">
-            <div class="policy-trigger-left">
-              <div class="policy-icon-wrap refund"><i class="bi bi-x-circle-fill"></i></div>
-              <div class="policy-trigger-text">
-                <div class="policy-trigger-title">Cancellation &amp; Refund Policy</div>
-                <div class="policy-trigger-sub">TAP TO READ &nbsp;·&nbsp; NON-REFUNDABLE</div>
-              </div>
-            </div>
-            <div class="policy-chevron" id="refundChevron"><i class="bi bi-chevron-down" style="font-size:.72rem;"></i></div>
-          </button>
+          <!-- MAIN -->
+          <div class="event-layout">
+            <div class="event-main">
 
-          <div class="policy-body" id="refundBody">
-            <div class="policy-content">
+              <!-- Performers -->
+              <% if(event.artists && event.artists.length> 0){ %>
+                <div class="content-block">
+                  <div class="block-title"><i class="bi bi-mic-fill"></i> Performers</div>
+                  <div class="artists-grid">
+                    <% event.artists.forEach(function(a){ %>
+                      <div class="artist-card">
+                        <% if(a.photo){ %><img class="artist-photo" src="<%= a.photo %>" alt="<%= a.name %>" />
+                          <% } else { %>
+                            <div class="artist-photo-placeholder">🎤</div>
+                            <% } %>
+                              <div class="artist-name">
+                                <%= a.name %>
+                              </div>
+                              <% if(a.designation){ %>
+                                <div class="artist-designation">
+                                  <%= a.designation %>
+                                </div>
+                                <% } %>
+                      </div>
+                      <% }); %>
+                  </div>
+                </div>
+                <% } %>
 
-              <div class="p-date-row">
-                <span class="p-date-tag red"><i class="bi bi-calendar3" style="font-size:.6rem;"></i>&nbsp; Effective Date: May 09</span>
-              </div>
+                  <!-- About -->
+                  <div class="content-block">
+                    <div class="block-title"><i class="bi bi-info-circle-fill"></i> About This Event</div>
+                    <p class="event-description">
+                      <% if(event.description){ %>
+                        <%= event.description %>
+                          <% } else { %>Join us for an unforgettable night of music, lights and celebration at <%=
+                              event.venue %>. Get your tickets now before they sell out!<% } %>
+                    </p>
+                  </div>
 
-              <div class="p-alert">
-                <div class="p-alert-label">⚠ ABSOLUTELY NO CANCELLATIONS &amp; NO REFUNDS</div>
-                <div class="p-alert-body">No refunds will be issued under any circumstances, including:</div>
-              </div>
+                  <!-- Details -->
+                  <div class="content-block">
+                    <div class="block-title"><i class="bi bi-card-checklist"></i> Event Details</div>
+                    <div class="details-grid">
+                      <div class="detail-item">
+                        <div class="detail-lbl">Date</div>
+                        <div class="detail-val"><i class="bi bi-calendar3"></i>
+                          <%= eventDate.toLocaleDateString(`en-IN`, { day: `numeric`, month: `long`, year: `numeric` })
+                            %>
+                        </div>
+                      </div>
+                      <div class="detail-item">
+                        <div class="detail-lbl">Time</div>
+                        <div class="detail-val"><i class="bi bi-clock"></i>
+                          <%= event.doorsOpen %> – <%= event.endTime %>
+                        </div>
+                      </div>
+                      <div class="detail-item">
+                        <div class="detail-lbl">Venue</div>
+                        <div class="detail-val"><i class="bi bi-geo-alt-fill"></i>
+                          <%= event.venue %>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
 
-              <ul class="pb" style="margin-bottom:1rem;">
-                <li>Personal inability to attend</li>
-                <li>Denied entry due to violation of rules</li>
-                <li>Changes in event schedule or artist lineup</li>
-              </ul>
+                  <!-- POLICY ACCORDION -->
+                  <div class="policy-accordion">
+                    <!-- PANEL 1 — Terms & Conditions -->
+                    <div class="policy-panel">
+                      <button class="policy-trigger" id="tcTrigger" onclick="togglePolicy('tc')" aria-expanded="false">
+                        <div class="policy-trigger-left">
+                          <div class="policy-icon-wrap tc"><i class="bi bi-file-earmark-text-fill"></i></div>
+                          <div class="policy-trigger-text">
+                            <div class="policy-trigger-title">Terms &amp; Conditions</div>
+                            <div class="policy-trigger-sub">Legally Binding &nbsp;·&nbsp; Read Carefully</div>
+                          </div>
+                        </div>
+                        <div class="policy-chevron" id="tcChevron"><i class="bi bi-chevron-down"
+                            style="font-size:.72rem;"></i></div>
+                      </button>
+                      <div class="policy-body" id="tcBody">
+                        <div class="policy-content">
+                          <span class="p-date-tag purple"><i class="bi bi-calendar3" style="font-size:.6rem;"></i>&nbsp;
+                            Effective Date: <%= new Date().toLocaleDateString(`en-IN`, { day: `numeric`, month: `short`,
+                              year: `numeric` }) %></span>
+                          <p class="p-intro">By purchasing a ticket and/or attending this event, you agree to the
+                            following legally binding terms and conditions.</p>
 
-              <div class="ps-divider red"></div>
+                          <!-- Sections -->
+                          <div class="ps">
+                            <div class="ps-head"><span class="ps-num purple">01</span><span class="ps-title">Ticket
+                                Policy</span></div>
+                            <ul class="pb">
+                              <li>All tickets are strictly <b>non-transferable</b> and <b>non-refundable</b>.</li>
+                              <li>Entry is permitted only with a valid ticket / QR code issued by the organizer.</li>
+                              <li>Duplicate, tampered, or counterfeit tickets will be cancelled without refund.</li>
+                            </ul>
+                          </div>
+                          <div class="ps-divider"></div>
+                          <div class="ps">
+                            <div class="ps-head"><span class="ps-num purple">02</span><span class="ps-title">Entry
+                                &amp; Admission Rights</span></div>
+                            <ul class="pb">
+                              <li>The organizer reserves the <b>absolute right to deny entry</b> to any individual
+                                without explanation.</li>
+                              <li>Late entry may be restricted depending on the event schedule.</li>
+                              <li><b>No re-entry</b> will be allowed once you exit the venue.</li>
+                            </ul>
+                          </div>
+                          <div class="ps-divider"></div>
+                          <div class="ps">
+                            <div class="ps-head"><span class="ps-num purple">03</span><span class="ps-title">Child
+                                Safety Disclaimer</span></div>
+                            <ul class="pb">
+                              <li><b>Children under 13 must be accompanied by a parent or guardian. The Event
+                                  Organizers are not responsible for any injury or incidents involving minors.</b>
+                              </li>
+                            </ul>
+                          </div>
+                          <div class="ps-divider"></div>
+                          <div class="ps">
+                            <div class="ps-head"><span class="ps-num purple">04</span><span class="ps-title">Security
+                                &amp; Conduct</span></div>
+                            <ul class="pb">
+                              <li>All attendees must undergo <b>mandatory security screening</b>.</li>
+                              <li>Strictly prohibited items include:
+                                <ul class="pb-sub">
+                                  <li>Weapons, illegal substances, outside food &amp; beverages</li>
+                                  <li>Alcohol, smoking materials and hazardous items</li>
+                                </ul>
+                              </li>
+                              <li>Any misconduct, unruly behaviour, or violation of law will lead to <b>immediate
+                                  removal without refund</b>.</li>
+                            </ul>
+                          </div>
+                          <div class="ps-divider"></div>
+                          <div class="ps">
+                            <div class="ps-head"><span class="ps-num purple">05</span><span class="ps-title">Event
+                                Changes</span></div>
+                            <ul class="pb">
+                              <li>The organizer reserves the right to:
+                                <ul class="pb-sub">
+                                  <li>Modify the event schedule, performance timings, or artist lineup if required
+                                  </li>
+                                  <li>Postpone or cancel the event due to unforeseen circumstances</li>
+                                </ul>
+                              </li>
+                            </ul>
+                          </div>
+                          <div class="ps-divider"></div>
+                          <div class="ps">
+                            <div class="ps-head"><span class="ps-num purple">06</span><span class="ps-title">Liability
+                                Disclaimer</span></div>
+                            <ul class="pb">
+                              <li>Entry to the event is at the <b>attendee's own risk</b>.</li>
+                              <li>The organizer is not responsible for any personal injury, loss, theft, or damage to
+                                belongings.</li>
+                            </ul>
+                          </div>
+                          <div class="ps-divider"></div>
+                          <div class="ps">
+                            <div class="ps-head"><span class="ps-num purple">07</span><span class="ps-title">Media
+                                &amp; Recording</span></div>
+                            <ul class="pb">
+                              <li>The event may be recorded. By attending, you grant consent to use your image for
+                                promotional purposes <b>without compensation</b>.</li>
+                            </ul>
+                          </div>
+                          <div class="ps-divider"></div>
+                          <div class="ps">
+                            <div class="ps-head"><span class="ps-num purple">08</span><span class="ps-title">Compliance
+                                with Rules</span></div>
+                            <ul class="pb">
+                              <li>All attendees must strictly follow venue regulations. Non-compliance results in
+                                removal without refund.</li>
+                            </ul>
+                          </div>
+                          <div class="ps-divider"></div>
+                          <div class="p-wristband"><b>Wristband Policy —</b> All ticket holders will be issued
+                            category-specific wrist tags, which must be worn at all times.</div>
+                          <div class="p-final purple">
+                            <div class="p-final-title"><i class="bi bi-shield-check-fill"></i> Policy Agreement</div>
+                            <div class="p-final-text">By proceeding, you verify that you have read and agreed to all
+                              terms.</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
 
-              <!-- 01 -->
-              <div class="ps">
-                <div class="ps-head"><span class="ps-num red">01</span><span class="ps-title">In Case of Event Cancellation</span></div>
-                <ul class="pb">
-                  <li>Refunds (if any) will be issued <b>solely at the discretion of the organizer</b>, subject to deduction of processing and administrative charges.</li>
-                </ul>
-              </div>
-              <div class="ps-divider red"></div>
+                    <!-- PANEL 2 — Cancellation & Refund -->
+                    <div class="policy-panel">
+                      <button class="policy-trigger" id="refundTrigger" onclick="togglePolicy('refund')"
+                        aria-expanded="false">
+                        <div class="policy-trigger-left">
+                          <div class="policy-icon-wrap refund"><i class="bi bi-x-circle-fill"></i></div>
+                          <div class="policy-trigger-text">
+                            <div class="policy-trigger-title">Cancellation &amp; Refund Policy</div>
+                            <div class="policy-trigger-sub">Non-Refundable &nbsp;·&nbsp; Strict Policy</div>
+                          </div>
+                        </div>
+                        <div class="policy-chevron" id="refundChevron"><i class="bi bi-chevron-down"
+                            style="font-size:.72rem;"></i></div>
+                      </button>
+                      <div class="policy-body" id="refundBody">
+                        <div class="policy-content">
+                          <span class="p-date-tag red"><i class="bi bi-calendar3" style="font-size:.6rem;"></i>&nbsp;
+                            Effective Date: <%= new Date().toLocaleDateString(`en-IN`, { day: `numeric`, month: `short`,
+                              year: `numeric` }) %></span>
+                          <div class="p-alert">
+                            <div class="p-alert-label">⚠ ABSOLUTELY NO CANCELLATIONS &amp; NO REFUNDS</div>
+                            <div class="p-alert-body">No refunds will be issued under any circumstances.</div>
+                          </div>
+                          <div class="ps">
+                            <div class="ps-head"><span class="ps-num red">01</span><span class="ps-title">Event
+                                Cancellation</span></div>
+                            <ul class="pb">
+                              <li>Refunds (if any) are solely at the organizer's discretion.</li>
+                            </ul>
+                          </div>
+                          <div class="ps-divider red"></div>
+                          <div class="ps">
+                            <div class="ps-head"><span class="ps-num red">02</span><span class="ps-title">Event
+                                Postponement</span></div>
+                            <ul class="pb">
+                              <li>Tickets remain valid for the new date. No refunds entertained.</li>
+                            </ul>
+                          </div>
+                          <div class="p-final red">
+                            <div class="p-final-title"><i class="bi bi-shield-fill-exclamation"></i> Final Declaration
+                            </div>
+                            <div class="p-final-text">Purchase confirms agreement to these protocols.</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
 
-              <!-- 02 -->
-              <div class="ps">
-                <div class="ps-head"><span class="ps-num red">02</span><span class="ps-title">In Case of Event Postponement</span></div>
-                <ul class="pb">
-                  <li>Tickets will <b>remain valid for the new date</b>. No refund requests will be entertained.</li>
-                </ul>
-              </div>
-              <div class="ps-divider red"></div>
+                  <!-- Other Events -->
+                  <% if(otherEvents.length> 0){ %>
+                    <div class="content-block">
+                      <div class="block-title"><i class="bi bi-calendar-event-fill"></i> Other Events</div>
+                      <div class="other-events">
+                        <% otherEvents.forEach(function(oe){ %>
+                          <% const oeMin=oe.ticketTypes.filter(t=> t.isActive && t.bookedSeats < t.totalSeats); const
+                              oePrice=oeMin.length ? Math.min(...oeMin.map(t=> t.price)) : 0;
+                              %>
+                              <a href="/event/<%= oe._id %>" class="other-card">
+                                <div class="other-thumb">
+                                  <% if(oe.bannerDesktop || oe.bannerMobile){ %>
+                                    <img src="<%= oe.bannerDesktop || oe.bannerMobile %>" alt="<%= oe.name %>" />
+                                    <% } else { %>🎶<% } %>
+                                </div>
+                                <div class="other-info">
+                                  <div class="other-name">
+                                    <%= oe.name %>
+                                  </div>
+                                  <div class="other-date"><i class="bi bi-calendar3"
+                                      style="color:var(--accent);font-size:.65rem;"></i>
+                                    <%= new Date(oe.date).toLocaleDateString(`en-IN`, { day: `numeric`, month: `short`,
+                                      year: `numeric` }) %> · <%= oe.venue %>
+                                  </div>
+                                </div>
+                                <% if(oePrice> 0){ %><div class="other-price">₹<%= oePrice.toLocaleString(`en-IN`) %>
+                                  </div>
+                                  <% } %>
+                              </a>
+                              <% }); %>
+                      </div>
+                    </div>
+                    <% } %>
 
-              <div class="p-final red">
-                <div class="p-final-title"><i class="bi bi-shield-fill-exclamation" style="font-size:.85rem;"></i> Final Declaration</div>
-                <div class="p-final-text">Purchase and possession of this ticket confirms that you have read, understood, and agreed to all terms and conditions stated above.</div>
-              </div>
+            </div><!-- /event-main -->
 
-            </div>
-          </div>
-        </div><!-- /refund -->
+            <!-- SIDEBAR -->
+            <div class="event-sidebar">
+              <div class="sidebar-card">
+                <div class="sidebar-header">
+                  <div class="sidebar-price-label">Starting from</div>
+                  <% if(isHouseFull){ %>
+                    <div class="sidebar-price" style="color:var(--error);">🏠 House Full</div>
+                    <% } else if(availTiers.length===0){ %>
+                      <div class="sidebar-price" style="color:var(--error);">Sold Out</div>
+                      <% } else { %>
+                        <div class="sidebar-price">₹<%= minPrice.toLocaleString(`en-IN`) %> <small>onwards</small>
+                        </div>
+                        <% } %>
+                </div>
+                <div class="sidebar-body">
+                  <% if(isHouseFull){ %>
+                    <div
+                      style="background:rgba(255,68,68,.08);border:1px solid rgba(255,68,68,.25);border-radius:8px;padding:1rem;text-align:center;margin-bottom:1rem;">
+                      <div
+                        style="font-family:'Space Mono',monospace;font-size:.9rem;letter-spacing:3px;color:#FF4444;font-weight:700;">
+                        🏠 HOUSE FULL</div>
+                      <div style="font-size:.78rem;color:#B3B3B3;margin-top:.3rem;">All ticket categories are sold
+                        out.</div>
+                    </div>
+                    <% } else if(activeTiers.length> 0){ %>
+                      <div
+                        style="font-family:var(--font-mono);font-size:.6rem;letter-spacing:1.5px;color:var(--muted);margin-bottom:.6rem;text-transform:uppercase;">
+                        Ticket Categories</div>
+                      <div style="display:flex;flex-direction:column;gap:.4rem;margin-bottom:1.2rem;">
+                        <% activeTiers.forEach(function(t){ %>
+                          <% const avail=t.totalSeats - t.bookedSeats, isOut=avail <=0, tc=tierColors[t.category]
+                            || '#6A0DAD' ; %>
+                            <div
+                              style="display:flex;align-items:center;justify-content:space-between;padding:.6rem .8rem;border-radius:8px;background:<%= isOut?`rgba(255,68,68,.04)`:`rgba(255,255,255,.025)` %>;border:1px solid <%= isOut?`rgba(255,68,68,.2)`:`rgba(255,255,255,.06)` %>;">
+                              <div style="display:flex;align-items:center;gap:.5rem;">
+                                <div
+                                  style="width:8px;height:8px;border-radius:50%;background:<%= isOut?`#555`:tc %>;flex-shrink:0;">
+                                </div>
+                                <div>
+                                  <span
+                                    style="font-size:.82rem;color:<%= isOut?`#666`:`#fff` %>;<%= isOut?`text-decoration:line-through;`:`` %>">
+                                    <%= t.name||t.category.toUpperCase() %>
+                                  </span>
+                                  <% const _ed=(t.discountTiers && t.discountTiers.length> 0) ?
+                                    t.discountTiers.filter(d => d.minQty > 0 && d.discount > 0).sort((a,b) => a.minQty
+                                    - b.minQty) : (t.comboOfferMinQty > 0 && t.comboOfferDiscount > 0 ? [{ minQty:
+                                    t.comboOfferMinQty, discount: t.comboOfferDiscount }] : []);
+                                    if(!isOut && _ed.length > 0){ %>
+                                    <div
+                                      style="font-size:.6rem;color:#f5c842;font-family:var(--font-mono);margin-top:.2rem;">
+                                      🎯 <%= _ed.map(function(d){ return `Buy ${d.minQty}+ → ₹${d.discount} off`;
+                                        }).join(` · `) %>
+                                    </div>
+                                    <% } %>
+                                </div>
+                              </div>
+                              <div style="text-align:right;">
+                                <span
+                                  style="font-family:var(--font-mono);font-size:.85rem;color:<%= tc %>;font-weight:700;">₹
+                                  <%= t.price.toLocaleString(`en-IN`) %>
+                                </span>
+                                <% if(!isOut && avail <=10){ %>
+                                  <div
+                                    style="font-size:.58rem;color:#f5c842;font-family:var(--font-mono);margin-top:.1rem;">
+                                    <%= avail %> left
+                                  </div>
+                                  <% } %>
+                              </div>
+                            </div>
+                            <% }); %>
+                      </div>
+                      <% } %>
 
-      </div><!-- /policy-accordion -->
+                        <% if(isHouseFull){ %>
+                          <button class="btn-book-cta sold-out" disabled><i class="bi bi-house-fill"></i>
+                            House Full</button>
+                          <% } else if(!locals.user){ %>
+                            <a href="/auth/login?next=/booking/seatmap/<%= event._id %>" class="btn-book-cta"><i
+                                class="bi bi-ticket-perforated-fill"></i> Login to
+                              Book</a>
+                            <% } else if(locals.userHasMultipleEntry){ %>
+                              <a href="/booking/seatmap/<%= event._id %>" class="btn-book-cta" id="bookBtn"><i
+                                  class="bi bi-plus-circle-fill"></i> Book Another Ticket</a>
+                              <div
+                                style="font-size:.7rem;color:#f5c842;margin-top:.5rem;text-align:center;font-family:'Space Mono',monospace;">
+                                ✓ You already have an entry.</div>
+                              <% } else { %>
+                                <a href="/booking/seatmap/<%= event._id %>" class="btn-book-cta" id="bookBtn"><i
+                                    class="bi bi-ticket-perforated-fill"></i> Book Now</a>
+                                <% } %>
 
-     
-      <!-- Other Events -->
-      <% if(otherEvents.length>0){ %>
-      <div class="content-block">
-        <div class="block-title"><i class="bi bi-calendar-event-fill"></i> Other Events</div>
-        <div class="other-events">
-          <% otherEvents.forEach(function(oe){ %>
-          <% const oeMin=oe.ticketTypes.filter(t=>t.isActive&&t.bookedSeats<t.totalSeats); const oePrice=oeMin.length?Math.min(...oeMin.map(t=>t.price)):0; %>
-          <a href="/event/<%= oe._id %>" class="other-card">
-            <div class="other-thumb"><% if(oe.bannerDesktop||oe.bannerMobile){ %><img src="<%= oe.bannerDesktop||oe.bannerMobile %>" alt="<%= oe.name %>"/><% } else { %>🎶<% } %></div>
-            <div class="other-info">
-              <div class="other-name"><%= oe.name %></div>
-              <div class="other-date"><i class="bi bi-calendar3" style="color:var(--accent);font-size:.65rem;"></i> <%= new Date(oe.date).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}) %> · <%= oe.venue %></div>
-            </div>
-            <% if(oePrice>0){ %><div class="other-price">₹<%= oePrice.toLocaleString('en-IN') %></div><% } %>
-          </a>
-          <% }); %>
-        </div>
-      </div>
-      <% } %>
-
-    </div><!-- /event-main -->
-
-    <!-- SIDEBAR -->
-    <div class="event-sidebar">
-      <div class="sidebar-card">
-        <div class="sidebar-header">
-          <div class="sidebar-price-label">Starting from</div>
-          <% if(isHouseFull){ %><div class="sidebar-price" style="color:var(--error);">🏠 House Full</div>
-          <% } else if(availTiers.length===0){ %><div class="sidebar-price" style="color:var(--error);">Sold Out</div>
-          <% } else { %><div class="sidebar-price">₹<%= minPrice.toLocaleString('en-IN') %> <small>onwards</small></div><% } %>
-        </div>
-        <div class="sidebar-body">
-          <% if(isHouseFull){ %>
-          <div style="background:rgba(255,68,68,.08);border:1px solid rgba(255,68,68,.25);border-radius:8px;padding:1rem;text-align:center;margin-bottom:1rem;">
-            <div style="font-family:'Space Mono',monospace;font-size:.9rem;letter-spacing:3px;color:#FF4444;font-weight:700;">🏠 HOUSE FULL</div>
-            <div style="font-size:.78rem;color:#B3B3B3;margin-top:.3rem;">All ticket categories are sold out.</div>
-          </div>
-          <% } else if(activeTiers.length>0){ %>
-          <div style="font-family:var(--font-mono);font-size:.6rem;letter-spacing:1.5px;color:var(--muted);margin-bottom:.6rem;text-transform:uppercase;">Ticket Categories</div>
-          <div style="display:flex;flex-direction:column;gap:.4rem;margin-bottom:1.2rem;">
-            <% activeTiers.forEach(function(t){ %>
-            <% const avail=t.totalSeats-t.bookedSeats,isOut=avail<=0,tc=tierColors[t.category]||'#6A0DAD'; %>
-            <div style="display:flex;align-items:center;justify-content:space-between;padding:.6rem .8rem;border-radius:8px;background:<%= isOut?'rgba(255,68,68,.04)':'rgba(255,255,255,.025)' %>;border:1px solid <%= isOut?'rgba(255,68,68,.2)':'rgba(255,255,255,.06)' %>;">
-              <div style="display:flex;align-items:center;gap:.5rem;">
-                <div style="width:8px;height:8px;border-radius:50%;background:<%= isOut?'#555':tc %>;flex-shrink:0;"></div>
-                <div>
-                  <span style="font-size:.82rem;color:<%= isOut?'#666':'#fff' %>;<%= isOut?'text-decoration:line-through;':'' %>"><%= t.name||t.category.toUpperCase() %></span>
-                  <% const _ed=(t.discountTiers&&t.discountTiers.length>0)?t.discountTiers.filter(d=>d.minQty>0&&d.discount>0).sort((a,b)=>a.minQty-b.minQty):(t.comboOfferMinQty>0&&t.comboOfferDiscount>0?[{minQty:t.comboOfferMinQty,discount:t.comboOfferDiscount}]:[]); %>
-                  <% if(!isOut&&_ed.length>0){ %><div style="font-size:.6rem;color:#f5c842;font-family:var(--font-mono);margin-top:.2rem;">🎯 <%= _ed.map(function(d){return 'Buy '+d.minQty+'+ → ₹'+d.discount+' off';}).join(' · ') %></div><% } %>
+                                  <div class="sidebar-trust">
+                                    <div class="trust-item"><i class="bi bi-shield-check-fill"></i> Secure
+                                    </div>
+                                    <div class="trust-item"><i class="bi bi-x-circle-fill"></i> Non-Refundable
+                                    </div>
+                                    <div class="trust-item"><i class="bi bi-qr-code"></i> Instant QR</div>
+                                  </div>
                 </div>
               </div>
-              <% if(isOut){ %><span style="font-family:var(--font-mono);font-size:.58rem;color:#FF4444;letter-spacing:1px;background:rgba(255,68,68,.1);padding:.2rem .5rem;border-radius:5px;border:1px solid rgba(255,68,68,.25);">SOLD OUT</span>
-              <% } else { %>
-              <div style="text-align:right;">
-                <span style="font-family:var(--font-mono);font-size:.85rem;color:<%= tc %>;font-weight:700;">₹<%= t.price.toLocaleString('en-IN') %></span>
-                <% if(avail<=10){ %><div style="font-size:.58rem;color:#f5c842;font-family:var(--font-mono);margin-top:.1rem;"><%= avail %> left</div><% } %>
+
+              <div class="sidebar-card">
+                <div class="sidebar-body" style="padding:1.2rem 1.5rem;">
+                  <div
+                    style="font-family:var(--font-mono);font-size:.6rem;letter-spacing:1.5px;color:var(--muted);margin-bottom:.8rem;text-transform:uppercase;">
+                    Share Event</div>
+                  <div class="share-row">
+                    <a href="https://wa.me/?text=Check+out+<%= encodeURIComponent(event.name) %>+on+MEE!+<%= locals.appUrl||`` %>%2Fevent%2F<%= event._id %>"
+                      target="_blank" class="share-btn"><i class="bi bi-whatsapp"></i> WhatsApp</a>
+                    <a href="https://www.instagram.com/" target="_blank" class="share-btn"><i
+                        class="bi bi-instagram"></i> Instagram</a>
+                    <button onclick="copyLink()" class="share-btn" id="copyBtn"><i class="bi bi-link-45deg"></i>
+                      Copy</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- STICKY MOBILE BAR -->
+          <div class="mobile-book-bar" id="mobileBookBar">
+            <% if(!isHouseFull && availTiers.length> 0){ %>
+              <div class="mobile-book-price-wrap">
+                <div class="mobile-book-from">From</div>
+                <div class="mobile-book-price">₹<%= minPrice.toLocaleString(`en-IN`) %> <small>onward</small>
+                </div>
               </div>
               <% } %>
-            </div>
-            <% }); %>
+                <% if(isHouseFull){ %>
+                  <button class="mobile-book-btn sold-out"
+                    style="background:rgba(255,68,68,0.12);color:#FF4444;box-shadow:none;"><i
+                      class="bi bi-house-fill"></i> House Full</button>
+                  <% } else if(!locals.user){ %>
+                    <a href="/auth/login?next=/booking/seatmap/<%= event._id %>" class="mobile-book-btn"
+                      style="flex:none;padding-left:2rem;padding-right:2rem;"><i
+                        class="bi bi-ticket-perforated-fill"></i> Login to Book</a>
+                    <% } else if(locals.userHasMultipleEntry){ %>
+                      <a href="/booking/seatmap/<%= event._id %>" class="mobile-book-btn"><i
+                          class="bi bi-plus-circle-fill"></i> Book Another</a>
+                      <% } else { %>
+                        <a href="/booking/seatmap/<%= event._id %>" class="mobile-book-btn"><i
+                            class="bi bi-ticket-perforated-fill"></i> Book Now</a>
+                        <% } %>
           </div>
-          <% } %>
 
-          <% if(isHouseFull){ %>
-            <button class="btn-book-cta sold-out" disabled><i class="bi bi-house-fill"></i> House Full</button>
-          <% } else if(!locals.user||!user){ %>
-            <a href="/auth/login?next=/booking/seatmap/<%= event._id %>" class="btn-book-cta"><i class="bi bi-ticket-perforated-fill"></i> Login to Book</a>
-          <% } else if(locals.userHasMultipleEntry){ %>
-            <a href="/booking/seatmap/<%= event._id %>" class="btn-book-cta" id="bookBtn"><i class="bi bi-plus-circle-fill"></i> Book Another Ticket</a>
-            <div style="font-size:.7rem;color:#f5c842;margin-top:.5rem;text-align:center;font-family:'Space Mono',monospace;">✓ You already have a group entry.</div>
-          <% } else { %>
-            <a href="/booking/seatmap/<%= event._id %>" class="btn-book-cta" id="bookBtn"><i class="bi bi-ticket-perforated-fill"></i> Book Now</a>
-          <% } %>
-
-          <div class="sidebar-trust">
-            <div class="trust-item"><i class="bi bi-shield-check-fill"></i> Secure</div>
-            <div class="trust-item"><i class="bi bi-x-circle-fill"></i> Non-Refundable</div>
-            <div class="trust-item"><i class="bi bi-qr-code"></i> Instant QR</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="sidebar-card">
-        <div class="sidebar-body" style="padding:1.2rem 1.5rem;">
-          <div style="font-family:var(--font-mono);font-size:.6rem;letter-spacing:1.5px;color:var(--muted);margin-bottom:.8rem;text-transform:uppercase;">Share Event</div>
-          <div class="share-row">
-            <a href="https://wa.me/?text=Check+out+<%= encodeURIComponent(event.name) %>+on+Melattur+Entertainment+Events!+<%= locals.appUrl||'' %>%2Fevent%2F<%= event._id %>" target="_blank" class="share-btn"><i class="bi bi-whatsapp"></i> WhatsApp</a>
-            <a href="https://www.instagram.com/" target="_blank" class="share-btn"><i class="bi bi-instagram"></i> Instagram</a>
-            <button onclick="copyLink()" class="share-btn" id="copyBtn"><i class="bi bi-link-45deg"></i> Copy</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- STICKY MOBILE BAR -->
-  <div class="mobile-book-bar" id="mobileBookBar">
-    <% if(!isHouseFull&&availTiers.length>0){ %>
-    <div class="mobile-book-price-wrap">
-      <div class="mobile-book-from">From</div>
-      <div class="mobile-book-price">₹<%= minPrice.toLocaleString('en-IN') %> <small>onward</small></div>
-    </div>
-    <% } %>
-    <% if(isHouseFull){ %>
-      <button class="mobile-book-btn sold-out" style="background:rgba(255,68,68,.12);color:#FF4444;box-shadow:none;"><i class="bi bi-house-fill"></i> House Full</button>
-    <% } else if(!locals.user||!user){ %>
-      <a href="/auth/login?next=/booking/seatmap/<%= event._id %>" class="mobile-book-btn" style="flex:none;padding-left:2rem;padding-right:2rem;"><i class="bi bi-ticket-perforated-fill"></i> Login to Book</a>
-    <% } else if(locals.userHasMultipleEntry){ %>
-      <a href="/booking/seatmap/<%= event._id %>" class="mobile-book-btn"><i class="bi bi-plus-circle-fill"></i> Book Another</a>
-    <% } else { %>
-      <a href="/booking/seatmap/<%= event._id %>" class="mobile-book-btn"><i class="bi bi-ticket-perforated-fill"></i> Book Now</a>
-    <% } %>
-  </div>
-
-  <script>
-  function togglePolicy(id){
-    var body=document.getElementById(id+'Body');
-    var trigger=document.getElementById(id+'Trigger');
-    var isOpen=body.classList.contains('open');
-    ['tc','refund'].forEach(function(p){
-      document.getElementById(p+'Body').classList.remove('open');
-      var t=document.getElementById(p+'Trigger');
-      t.classList.remove('open');
-      t.setAttribute('aria-expanded','false');
-    });
-    if(!isOpen){
-      body.classList.add('open');
-      trigger.classList.add('open');
-      trigger.setAttribute('aria-expanded','true');
-      if(window.innerWidth<=900){
-        setTimeout(function(){trigger.scrollIntoView({behavior:'smooth',block:'start'});},60);
-      }
-    }
-  }
-  function copyLink(){
-    navigator.clipboard.writeText(window.location.href).then(function(){
-      var b=document.getElementById('copyBtn');
-      b.innerHTML='<i class="bi bi-check2"></i> Copied!';
-      setTimeout(function(){b.innerHTML='<i class="bi bi-link-45deg"></i> Copy';},2000);
-    });
-  }
-  (function(){
-    var bar=document.getElementById('mobileBookBar');
-    var btn=document.getElementById('bookBtn');
-    if(!bar||!btn)return;
-    var io=new IntersectionObserver(function(en){
-      en.forEach(function(e){
-        bar.style.opacity=e.isIntersecting?'0':'1';
-        bar.style.pointerEvents=e.isIntersecting?'none':'auto';
-        bar.style.transform=e.isIntersecting?'translateY(100%)':'translateY(0)';
-      });
-    },{threshold:.5});
-    io.observe(btn);
-  })();
-  </script>
+          <script>
+            function togglePolicy(id) {
+              var body = document.getElementById(id + 'Body');
+              var trigger = document.getElementById(id + 'Trigger');
+              var isOpen = body.classList.contains('open');
+              ['tc', 'refund'].forEach(function (p) {
+                document.getElementById(p + 'Body').classList.remove('open');
+                var t = document.getElementById(p + 'Trigger');
+                t.classList.remove('open');
+                t.setAttribute('aria-expanded', 'false');
+              });
+              if (!isOpen) {
+                body.classList.add('open');
+                trigger.classList.add('open');
+                trigger.setAttribute('aria-expanded', 'true');
+                if (window.innerWidth <= 900) {
+                  setTimeout(function () { trigger.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 60);
+                }
+              }
+            }
+            function copyLink() {
+              navigator.clipboard.writeText(window.location.href).then(function () {
+                var b = document.getElementById('copyBtn');
+                b.innerHTML = '<i class="bi bi-check2"></i> Copied!';
+                setTimeout(function () { b.innerHTML = '<i class="bi bi-link-45deg"></i> Copy'; }, 2000);
+              });
+            }
+            (function () {
+              var bar = document.getElementById('mobileBookBar');
+              var btn = document.getElementById('bookBtn');
+              if (!bar || !btn) return;
+              var io = new IntersectionObserver(function (en) {
+                en.forEach(function (e) {
+                  bar.style.opacity = e.isIntersecting ? '0' : '1';
+                  bar.style.pointerEvents = e.isIntersecting ? 'none' : 'auto';
+                  bar.style.transform = e.isIntersecting ? 'translateY(100%)' : 'translateY(0)';
+                });
+              }, { threshold: .5 });
+              io.observe(btn);
+            })();
+          </script>
 
 </body>
+
 </html>

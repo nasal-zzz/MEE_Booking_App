@@ -172,7 +172,7 @@ app.use(session({
       app.use('/auth', require('./routes/authRoutes'));
       app.use('/booking', require('./routes/bookingRoutes'));
       app.use('/user', require('./routes/userRoutes'));
-      app.use('/admin', require('./routes/adminRoutes'));
+      app.use('/mee-admin', require('./routes/adminRoutes'));
       app.use('/superadmin', require('./routes/superadminRoutes'));
       app.use('/staff', require('./routes/staffRoutes'));
 
@@ -202,8 +202,8 @@ app.use(session({
           });
         }
 
-        if (routePath.startsWith('/admin')) {
-          return res.status(500).render('admin/error', {
+        if (routePath.startsWith('/mee-admin')) {
+          return res.status(500).render('mee-admin/error', {
             title: 'Error — Admin',
             status: 500,
             errTitle: 'SOMETHING WENT WRONG',

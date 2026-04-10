@@ -13,7 +13,7 @@
     .admin-layout{display:grid;grid-template-columns:220px 1fr;min-height:100vh;}
     .main{padding:2rem;position:relative;z-index:1;overflow-x:hidden;}
 
-    /* Sidebar styles live in partials/admin-sidebar.ejs */
+    /* Sidebar styles live in partials/mee-admin-sidebar.ejs */
 
     .page-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem;}
     .page-title{font-family:'Poppins',sans-serif;font-size:2rem;letter-spacing:2px;}
@@ -352,8 +352,8 @@
             <!-- ACTIONS -->
             <div class="cpn-cell" style="justify-content:flex-end;display:flex;align-items:center;gap:0.3rem;">
               <button class="iab" title="Edit" onclick="openEdit(this)" data-coupon='<%- JSON.stringify({_id:String(c._id),code:c.code,type:c.type||"fixed",value:c.value,minOrder:c.minOrder||0,minTickets:c.minTickets||0,maxUses:c.maxUses||0,validFrom:c.validFrom?new Date(c.validFrom).toISOString().slice(0,10):"",validUntil:c.validUntil?new Date(c.validUntil).toISOString().slice(0,10):"",description:c.description||"",isActive:!!c.isActive,isFeatured:!!c.isFeatured}) %>'><i class="bi bi-pencil"></i></button>
-              <button class="iab <%= act2?'iab-w':'iab-s' %>" title="<%= act2?'Pause':'Enable' %>" onclick="submitForm('/admin/coupons/<%= c._id %>/toggle')"><i class="bi bi-<%= act2?'pause':'play' %>-fill"></i></button>
-              <button class="iab <%= c.isFeatured?'iab-y':'' %>" title="<%= c.isFeatured?'Unfeature':'Feature' %>" onclick="submitForm('/admin/coupons/<%= c._id %>/feature')"><i class="bi bi-star<%= c.isFeatured?'-fill':'' %>"></i></button>
+              <button class="iab <%= act2?'iab-w':'iab-s' %>" title="<%= act2?'Pause':'Enable' %>" onclick="submitForm('/mee-admin/coupons/<%= c._id %>/toggle')"><i class="bi bi-<%= act2?'pause':'play' %>-fill"></i></button>
+              <button class="iab <%= c.isFeatured?'iab-y':'' %>" title="<%= c.isFeatured?'Unfeature':'Feature' %>" onclick="submitForm('/mee-admin/coupons/<%= c._id %>/feature')"><i class="bi bi-star<%= c.isFeatured?'-fill':'' %>"></i></button>
               <button class="iab iab-d" title="Delete" onclick="confDel('<%= c._id %>','<%= c.code %>')"><i class="bi bi-trash3"></i></button>
             </div>
           </div>
@@ -427,7 +427,7 @@
       <button class="mx" onclick="closeMo()"><i class="bi bi-x-lg"></i></button>
     </div>
     <div class="mb">
-      <form id="cpnFm" method="POST" action="/admin/coupons">
+      <form id="cpnFm" method="POST" action="/mee-admin/coupons">
         <div class="fg2">
           <div class="fg"><label class="fl">Coupon Code *</label><input class="fi" name="code" id="f_code" placeholder="e.g. PARTY25" required style="text-transform:uppercase;" oninput="this.value=this.value.toUpperCase()"/></div>
           <div class="fg"><label class="fl">Discount Type *</label>
@@ -573,7 +573,7 @@ function showT(m){
 function openCreate(){
   document.getElementById('mT').textContent   = 'NEW COUPON';
   document.getElementById('mSub').innerHTML   = '<i class="bi bi-check-lg"></i> Create Coupon';
-  document.getElementById('cpnFm').action     = '/admin/coupons';
+  document.getElementById('cpnFm').action     = '/mee-admin/coupons';
   document.getElementById('f_code').value     = '';
   document.getElementById('f_code').disabled  = false;
   document.getElementById('f_type').value     = 'fixed';
@@ -593,7 +593,7 @@ function openEdit(btn){
   var c = JSON.parse(btn.getAttribute('data-coupon'));
   document.getElementById('mT').textContent   = 'EDIT COUPON';
   document.getElementById('mSub').innerHTML   = '<i class="bi bi-check-lg"></i> Save Changes';
-  document.getElementById('cpnFm').action     = '/admin/coupons/'+c._id+'/edit';
+  document.getElementById('cpnFm').action     = '/mee-admin/coupons/'+c._id+'/edit';
   document.getElementById('f_code').value     = c.code;
   document.getElementById('f_code').disabled  = false;
   document.getElementById('f_type').value     = c.type||'fixed';
@@ -620,7 +620,7 @@ function closeMo(){ document.getElementById('cpnMo').classList.remove('open'); }
 
 function confDel(id,code){
   document.getElementById('dcCode').textContent = code;
-  document.getElementById('dcFm').action = '/admin/coupons/'+id+'/delete';
+  document.getElementById('dcFm').action = '/mee-admin/coupons/'+id+'/delete';
   document.getElementById('dcMo').classList.add('open');
 }
 

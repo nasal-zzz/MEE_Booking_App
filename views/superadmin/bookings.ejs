@@ -411,14 +411,16 @@
         </div>
         <p class="page-sub">All bookings across all events — online, cash, paid, pending, and failed.</p>
 
-        <% const totAll=bookings.length; const totPaid=bookings.filter(function(b){return b.paymentStatus==='paid'
-          ;}).length; const totPend=bookings.filter(function(b){return b.paymentStatus==='pending' ;}).length; const
-          totFail=bookings.filter(function(b){return b.paymentStatus==='failed' ;}).length; const
-          totCash=bookings.filter(function(b){return b.paymentMethod==='cash' ;}).length; const
-          totOnline=bookings.filter(function(b){return b.paymentMethod!=='cash' &&b.paymentStatus==='paid' ;}).length;
-          const totRev=bookings.filter(function(b){return b.paymentStatus==='paid' ;}).reduce(function(s,b){return
-          s+(b.totalAmount||0);},0); const cashRev=bookings.filter(function(b){return b.paymentMethod==='cash'
-          &&b.paymentStatus==='paid' ;}).reduce(function(s,b){return s+(b.totalAmount||0);},0); %>
+        <%
+  const totAll    = bookings.length;
+  const totPaid   = bookings.filter(b => b.paymentStatus === 'paid').length;
+  const totPend   = bookings.filter(b => b.paymentStatus === 'pending').length;
+  const totFail   = bookings.filter(b => b.paymentStatus === 'failed').length;
+  const totCash   = bookings.filter(b => b.paymentMethod === 'cash').length;
+  const totOnline = bookings.filter(b => b.paymentMethod !== 'cash' && b.paymentStatus === 'paid').length;
+  const totRev    = bookings.filter(b => b.paymentStatus === 'paid').reduce((s, b) => s + (b.totalAmount || 0), 0);
+  const cashRev   = bookings.filter(b => b.paymentMethod === 'cash' && b.paymentStatus === 'paid').reduce((s, b) => s + (b.totalAmount || 0), 0);
+%>
 
           <div class="stats-row">
             <div class="stat-card">

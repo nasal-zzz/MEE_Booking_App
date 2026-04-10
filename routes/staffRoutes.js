@@ -99,7 +99,7 @@ router.post('/login', async (req, res) => {
 
     let dest = '/staff/dashboard';
     if (member.role === 'superadmin') dest = '/superadmin';
-    else if (member.role === 'admin') dest = '/admin';
+    else if (member.role === 'admin') dest = '/mee-admin';
     else if (member.canSellTickets) dest = '/staff/sell';
     else if (member.canScanQR) dest = '/staff/scanner';
 
@@ -150,7 +150,7 @@ const staffAuth = require('../middleware/staffAuth');
 router.get('/dashboard', staffAuth, (req, res) => {
   const u = req.session.staffUser;
   if (u.role === 'superadmin') return res.redirect('/superadmin');
-  if (u.role === 'admin') return res.redirect('/admin');
+  if (u.role === 'admin') return res.redirect('/mee-admin');
   if (u.canSellTickets) return res.redirect('/staff/sell');
   if (u.canScanQR) return res.redirect('/staff/scanner');
   res.render('staff/dashboard', { title: 'Staff Dashboard — MEE', staffUser: u });

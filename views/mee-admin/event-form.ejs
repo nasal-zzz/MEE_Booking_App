@@ -319,7 +319,7 @@
     </div>
 
     <div class="save-bar">
-      <a href="/admin" class="btn-cancel">Cancel</a>
+      <a href="/mee-admin" class="btn-cancel">Cancel</a>
       <button type="button" class="btn-save" id="saveBtn" onclick="doSubmit()"><i class="bi bi-check-circle-fill"></i> <%= event ? 'Update Event' : 'Create Event' %></button>
     </div>
   </form>
@@ -971,7 +971,7 @@ async function doSubmit() {
   btn.innerHTML = '<span style="width:16px;height:16px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite;display:inline-block;margin-right:6px;vertical-align:middle;"></span> Saving…';
 
   const isEdit = !!('<%= event ? event._id : "" %>'.trim());
-  const url    = isEdit ? '/admin/events/<%= event ? event._id : "" %>' : '/admin/events';
+  const url    = isEdit ? '/mee-admin/events/<%= event ? event._id : "" %>' : '/mee-admin/events';
 
   try {
     const res = await fetch(url, {
@@ -991,11 +991,11 @@ async function doSubmit() {
       const ct = res.headers.get('content-type') || '';
       if (ct.includes('application/json')) {
         const d = await res.json();
-        if (d.success) { window.location.href = '/admin?success=Event+saved'; return; }
+        if (d.success) { window.location.href = '/mee-admin?success=Event+saved'; return; }
         showToast(d.message || 'Save failed.', 'err');
       } else {
         // HTML response (redirect landed) - go to admin
-        window.location.href = '/admin?success=Event+saved';
+        window.location.href = '/mee-admin?success=Event+saved';
       }
     } else {
       const text = await res.text();

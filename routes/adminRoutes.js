@@ -36,7 +36,7 @@
   res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
   res.set('Pragma', 'no-cache');
   res.set('Expires', '0');
-  if (req.session.adminLoggedIn || req.session.staffLoggedIn) return res.redirect('/admin');
+  if (req.session.adminLoggedIn || req.session.staffLoggedIn) return res.redirect('/mee-admin');
   return res.redirect('/staff/login#admin');
 });
 
@@ -46,9 +46,9 @@
     if (checkAdmin(username, password)) {
       req.session.adminLoggedIn = true;
       req.session.adminUser = username;
-      return res.redirect('/admin');
+      return res.redirect('/mee-admin');
     }
-    res.render('admin/login', { title: 'Admin Login', error: 'Incorrect username or password.' });
+    res.render('mee-admin/login', { title: 'Admin Login', error: 'Incorrect username or password.' });
   });
 
 
@@ -75,7 +75,7 @@ router.get('/logout', (req, res) => {
     (req.session.staffLoggedIn && ['admin','superadmin'].includes(req.session.staffUser?.role));
   if (!isAdmin) return res.redirect('/staff/login');
   const currentAdmin = getCurrentAdmin(req);
-  res.render('admin/profile', {
+  res.render('mee-admin/profile', {
       title: 'My Profile — Admin',
       currentAdmin,
       isSuperAdmin,
@@ -140,7 +140,7 @@ router.get('/logout', (req, res) => {
   });
   router.get('/bookings',                 adminController.getBookings);
 
-  // POST /admin/bookings/send-reminders — bulk send pending/failed payment reminders
+  // POST /mee-admin/bookings/send-reminders — bulk send pending/failed payment reminders
   router.post('/bookings/send-reminders', async (req, res) => {
     if (!req.session.adminLoggedIn) return res.json({ success: false, message: 'Not authorised' });
     try {
@@ -197,7 +197,7 @@ router.get('/logout', (req, res) => {
     }
   });
 
-  // ── POST /admin/bookings/:id/send-message — send WhatsApp+email to single pending/failed booking ──
+  // ── POST /mee-admin/bookings/:id/send-message — send WhatsApp+email to single pending/failed booking ──
   router.post('/bookings/:id/send-message', async (req, res) => {
     try {
       const { sendPendingPaymentReminder, sendFailedPaymentNotice } = require('../utils/emailHelper');
@@ -245,8 +245,8 @@ router.get('/logout', (req, res) => {
       const banners = await Banner.find().sort({ order: 1, createdAt: -1 });
       const currentAdmin = getCurrentAdmin(req);
       const isSuperAdmin = req.session.superAdminLoggedIn || (req.session.staffLoggedIn && req.session.staffUser?.role === 'superadmin');
-      res.render('admin/banners', { title: 'Sponsor Banners — Admin', banners, currentAdmin, isSuperAdmin });
-    } catch(err) { res.redirect('/admin'); }
+      res.render('mee-admin/banners', { title: 'Sponsor Banners — Admin', banners, currentAdmin, isSuperAdmin });
+    } catch(err) { res.redirect('/mee-admin'); }
   });
 
   router.post('/banners', async (req, res) => {
@@ -273,9 +273,9 @@ router.get('/logout', (req, res) => {
   });
 
   router.post('/banners/:id/delete', async (req, res) => {
-    if (!req.session.adminLoggedIn && !(req.session.staffLoggedIn && ['admin','superadmin'].includes(req.session.staffUser?.role))) return res.redirect('/admin/banners');
+    if (!req.session.adminLoggedIn && !(req.session.staffLoggedIn && ['admin','superadmin'].includes(req.session.staffUser?.role))) return res.redirect('/mee-admin/banners');
     await Banner.findByIdAndDelete(req.params.id).catch(()=>{});
-    res.redirect('/admin/banners');
+    res.redirect('/mee-admin/banners');
   });
 
 
@@ -290,9 +290,9 @@ router.get('/logout', (req, res) => {
         .sort({ createdAt: -1 });
       const currentAdmin = getCurrentAdmin(req);
       const isSuperAdmin = req.session.superAdminLoggedIn || (req.session.staffLoggedIn && req.session.staffUser?.role === 'superadmin');
-      res.render('admin/reviews', { title: 'Reviews — Admin', reviews, currentAdmin, isSuperAdmin });
+      res.render('mee-admin/reviews', { title: 'Reviews — Admin', reviews, currentAdmin, isSuperAdmin });
     } catch(err) {
-      res.redirect('/admin');
+      res.redirect('/mee-admin');
     }
   });
 
@@ -310,9 +310,9 @@ router.get('/logout', (req, res) => {
   });
 
   router.post('/reviews/:id/delete', async (req, res) => {
-    if (!req.session.adminLoggedIn && !(req.session.staffLoggedIn && ['admin','superadmin'].includes(req.session.staffUser?.role))) return res.redirect('/admin/reviews');
+    if (!req.session.adminLoggedIn && !(req.session.staffLoggedIn && ['admin','superadmin'].includes(req.session.staffUser?.role))) return res.redirect('/mee-admin/reviews');
     await Review.findByIdAndDelete(req.params.id).catch(()=>{});
-    res.redirect('/admin/reviews');
+    res.redirect('/mee-admin/reviews');
   });
 
   // ── Admin: Staff management (admins can create/manage staff-role accounts) ──
@@ -321,8 +321,8 @@ router.get('/logout', (req, res) => {
       const staff = await Staff.find({ role: 'staff' }).sort({ createdAt: -1 });
       const currentAdmin = getCurrentAdmin(req);
       const isSuperAdmin = req.session.superAdminLoggedIn || (req.session.staffLoggedIn && req.session.staffUser?.role === 'superadmin');
-      res.render('admin/staff', { title: 'Staff Management — Admin', staff, currentAdmin, isSuperAdmin });
-    } catch(err) { res.redirect('/admin'); }
+      res.render('mee-admin/staff', { title: 'Staff Management — Admin', staff, currentAdmin, isSuperAdmin });
+    } catch(err) { res.redirect('/mee-admin'); }
   });
 
   router.post('/staff', async (req, res) => {
@@ -365,7 +365,7 @@ router.get('/logout', (req, res) => {
 
   router.post('/staff/:id/delete', async (req, res) => {
     await Staff.findOneAndDelete({ _id: req.params.id, role: 'staff' }).catch(()=>{});
-    res.redirect('/admin/staff');
+    res.redirect('/mee-admin/staff');
   });
 
   // ── Admin error handler — keeps user inside admin context ──
@@ -373,7 +373,7 @@ router.get('/logout', (req, res) => {
     console.error('[ADMIN ERROR]', req.path, err.message);
     const isJson = req.headers['content-type']?.includes('application/json') || req.xhr;
     if (isJson) return res.status(500).json({ success: false, message: err.message });
-    res.status(500).render('admin/error', {
+    res.status(500).render('mee-admin/error', {
       title:      'Error — Admin',
       status:     500,
       errTitle:   'SOMETHING WENT WRONG',
@@ -412,7 +412,7 @@ router.get('/logout', (req, res) => {
   // ── COUPON MANAGEMENT — updated for new coupons.ejs page ──
   // ════════════════════════════════════════════════════════════
 
-  // GET /admin/coupons — loads coupons with full redemption details attached
+  // GET /mee-admin/coupons — loads coupons with full redemption details attached
   router.get('/coupons', async (req, res) => {
     try {
       const currentAdmin = getCurrentAdmin(req);
@@ -443,19 +443,19 @@ router.get('/logout', (req, res) => {
         isExpired: !!(c.validUntil && now > new Date(c.validUntil)),
       }));
 
-      res.render('admin/coupons', { title: 'Coupons — Admin', coupons, events, currentAdmin, isSuperAdmin });
+      res.render('mee-admin/coupons', { title: 'Coupons — Admin', coupons, events, currentAdmin, isSuperAdmin });
     } catch(err) { console.error(err); res.status(500).send('Error loading coupons'); }
   });
 
-  // POST /admin/coupons — create new coupon (form-based, redirects)
+  // POST /mee-admin/coupons — create new coupon (form-based, redirects)
   router.post('/coupons', async (req, res) => {
     try {
       const { code, type, value, minOrder, minTickets, maxUses, validFrom, validUntil, description, isActive, isFeatured } = req.body;
-      if (!code || !code.trim()) return res.redirect('/admin/coupons?err=Code+required');
-      if (!value || parseFloat(value) <= 0) return res.redirect('/admin/coupons?err=Value+must+be+greater+than+0');
+      if (!code || !code.trim()) return res.redirect('/mee-admin/coupons?err=Code+required');
+      if (!value || parseFloat(value) <= 0) return res.redirect('/mee-admin/coupons?err=Value+must+be+greater+than+0');
       const cleanCode = code.toUpperCase().trim();
       const existing = await Coupon.findOne({ code: cleanCode });
-      if (existing) return res.redirect('/admin/coupons?err=' + encodeURIComponent(`Coupon code "${cleanCode}" already exists.`));
+      if (existing) return res.redirect('/mee-admin/coupons?err=' + encodeURIComponent(`Coupon code "${cleanCode}" already exists.`));
       await Coupon.create({
         code:       cleanCode,
         type:       type       || 'fixed',
@@ -469,13 +469,13 @@ router.get('/logout', (req, res) => {
         isActive:   isActive   === 'on' || isActive   === true,
         isFeatured: isFeatured === 'on' || isFeatured === true,
       });
-      res.redirect('/admin/coupons');
+      res.redirect('/mee-admin/coupons');
     } catch(err) {
-      res.redirect('/admin/coupons?err=' + encodeURIComponent(err.code === 11000 ? 'Coupon code already exists.' : err.message));
+      res.redirect('/mee-admin/coupons?err=' + encodeURIComponent(err.code === 11000 ? 'Coupon code already exists.' : err.message));
     }
   });
 
-  // POST /admin/coupons/:id/edit — edit existing coupon
+  // POST /mee-admin/coupons/:id/edit — edit existing coupon
   router.post('/coupons/:id/edit', async (req, res) => {
     try {
       const { code, type, value, minOrder, minTickets, maxUses, validFrom, validUntil, description, isActive, isFeatured } = req.body;
@@ -492,34 +492,34 @@ router.get('/logout', (req, res) => {
         isActive:   isActive   === 'on' || isActive   === true,
         isFeatured: isFeatured === 'on' || isFeatured === true,
       });
-      res.redirect('/admin/coupons');
+      res.redirect('/mee-admin/coupons');
     } catch(err) {
-      res.redirect('/admin/coupons?err=' + encodeURIComponent(err.message));
+      res.redirect('/mee-admin/coupons?err=' + encodeURIComponent(err.message));
     }
   });
 
-  // POST /admin/coupons/:id/toggle — flip isActive
+  // POST /mee-admin/coupons/:id/toggle — flip isActive
   router.post('/coupons/:id/toggle', async (req, res) => {
     try {
       const c = await Coupon.findById(req.params.id);
       if (c) { c.isActive = !c.isActive; await c.save(); }
-      res.redirect('/admin/coupons');
-    } catch(err) { res.redirect('/admin/coupons'); }
+      res.redirect('/mee-admin/coupons');
+    } catch(err) { res.redirect('/mee-admin/coupons'); }
   });
 
-  // POST /admin/coupons/:id/feature — flip isFeatured
+  // POST /mee-admin/coupons/:id/feature — flip isFeatured
   router.post('/coupons/:id/feature', async (req, res) => {
     try {
       const c = await Coupon.findById(req.params.id);
       if (c) { c.isFeatured = !c.isFeatured; await c.save(); }
-      res.redirect('/admin/coupons');
-    } catch(err) { res.redirect('/admin/coupons'); }
+      res.redirect('/mee-admin/coupons');
+    } catch(err) { res.redirect('/mee-admin/coupons'); }
   });
 
-  // POST /admin/coupons/:id/delete
+  // POST /mee-admin/coupons/:id/delete
   router.post('/coupons/:id/delete', async (req, res) => {
-    try { await Coupon.findByIdAndDelete(req.params.id); res.redirect('/admin/coupons'); }
-    catch(err) { res.redirect('/admin/coupons'); }
+    try { await Coupon.findByIdAndDelete(req.params.id); res.redirect('/mee-admin/coupons'); }
+    catch(err) { res.redirect('/mee-admin/coupons'); }
   });
 
 
@@ -538,7 +538,7 @@ router.get('/logout', (req, res) => {
           .sort({ scannedAt: -1 })
           .lean();
       }
-      res.render('admin/participants', { title: 'Staff Activity — Admin', events, logs, selectedId, selectedEvent, currentAdmin, isSuperAdmin });
+      res.render('mee-admin/participants', { title: 'Staff Activity — Admin', events, logs, selectedId, selectedEvent, currentAdmin, isSuperAdmin });
     } catch(err) { console.error(err); res.status(500).send('Error'); }
   });
 
@@ -583,11 +583,11 @@ router.get('/logout', (req, res) => {
             });
           });
         });
-        return res.render('admin/users-by-event', { title: 'Users by Event — Admin', events, bookings, attendees, selectedEvent, selectedEventId, currentAdmin, isSuperAdmin });
+        return res.render('mee-admin/users-by-event', { title: 'Users by Event — Admin', events, bookings, attendees, selectedEvent, selectedEventId, currentAdmin, isSuperAdmin });
       }
-      res.render('admin/users-by-event', { title: 'Users by Event — Admin', events, bookings:[], attendees:[], selectedEvent:null, selectedEventId, currentAdmin, isSuperAdmin });
+      res.render('mee-admin/users-by-event', { title: 'Users by Event — Admin', events, bookings:[], attendees:[], selectedEvent:null, selectedEventId, currentAdmin, isSuperAdmin });
     } catch(err) {
-      console.error('/admin/users-by-event error:', err);
+      console.error('/mee-admin/users-by-event error:', err);
       res.status(500).send('Error loading users by event');
     }
   });
@@ -624,7 +624,7 @@ router.get('/logout', (req, res) => {
           .sort({ scannedAt: -1 })
           .lean();
       }
-      res.render('admin/entered-tickets', { title: 'Entered Tickets — Admin', events, logs, selectedEvent, selectedEventId, currentAdmin, isSuperAdmin });
+      res.render('mee-admin/entered-tickets', { title: 'Entered Tickets — Admin', events, logs, selectedEvent, selectedEventId, currentAdmin, isSuperAdmin });
     } catch(err) { console.error(err); res.status(500).send('Error loading entered tickets'); }
   });
 
@@ -638,7 +638,7 @@ router.get('/logout', (req, res) => {
       const isSuperAdmin = req.session.superAdminLoggedIn || (req.session.staffLoggedIn && req.session.staffUser?.role === 'superadmin');
       const referrals = await Referral.find().sort({ createdAt: -1 }).lean();
       const appUrl = process.env.APP_URL || 'http://localhost:3000';
-      res.render('admin/referrals', { title: 'Referral Links — Admin', referrals, currentAdmin, isSuperAdmin, appUrl });
+      res.render('mee-admin/referrals', { title: 'Referral Links — Admin', referrals, currentAdmin, isSuperAdmin, appUrl });
     } catch(err) { res.status(500).send('Error loading referrals'); }
   });
 
@@ -665,7 +665,7 @@ router.get('/logout', (req, res) => {
 
   router.post('/referrals/:id/delete', async (req, res) => {
     await Referral.findByIdAndDelete(req.params.id).catch(() => {});
-    res.redirect('/admin/referrals');
+    res.redirect('/mee-admin/referrals');
   });
 
   router.get('/api/referral-users', async (req, res) => {
@@ -684,7 +684,7 @@ router.get('/logout', (req, res) => {
   });
 
 
-  // GET /admin/referrals/:id/qr — generate & download QR PNG server-side
+  // GET /mee-admin/referrals/:id/qr — generate & download QR PNG server-side
   router.get('/referrals/:id/qr', async (req, res) => {
     try {
       const referral = await Referral.findById(req.params.id).lean();
@@ -719,8 +719,8 @@ router.get('/logout', (req, res) => {
       const isSuperAdmin = req.session.superAdminLoggedIn || (req.session.staffLoggedIn && req.session.staffUser?.role === 'superadmin');
       const sponsors = await Sponsor.find().sort({ order: 1, createdAt: -1 }).populate('events','name date').lean();
       const events   = await Event.find({}, 'name date').sort({ date: -1 }).lean();
-      res.render('admin/sponsors', { title: 'Sponsors — Admin', sponsors, events, currentAdmin, isSuperAdmin });
-    } catch(err) { console.error(err); res.redirect('/admin'); }
+      res.render('mee-admin/sponsors', { title: 'Sponsors — Admin', sponsors, events, currentAdmin, isSuperAdmin });
+    } catch(err) { console.error(err); res.redirect('/mee-admin'); }
   });
 
   router.post('/sponsors', async (req, res) => {

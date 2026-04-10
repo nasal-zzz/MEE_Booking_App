@@ -92,7 +92,7 @@
   // ── ADMIN / SUPERADMIN USER MANAGEMENT ──
   // ════════════════════════════════════════════════════════════
 
-  // ── GET /admin/users  &  GET /superadmin/users ──
+  // ── GET /mee-admin/users  &  GET /superadmin/users ──
   exports.getUsers = async (req, res) => {
     try {
       const users = await User.aggregate([
@@ -142,7 +142,7 @@
     }
   };
 
-  // ── POST /admin/users/:id/block  &  POST /superadmin/users/:id/block ──
+  // ── POST /mee-admin/users/:id/block  &  POST /superadmin/users/:id/block ──
   exports.blockUser = async (req, res) => {
     try {
       const user = await User.findByIdAndUpdate(
@@ -158,7 +158,7 @@
     }
   };
 
-  // ── POST /admin/users/:id/unblock  &  POST /superadmin/users/:id/unblock ──
+  // ── POST /mee-admin/users/:id/unblock  &  POST /superadmin/users/:id/unblock ──
   exports.unblockUser = async (req, res) => {
     try {
       const user = await User.findByIdAndUpdate(

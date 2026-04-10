@@ -82,7 +82,7 @@
     <div class="page-title">STAFF ACTIVITY</div>
     <p class="page-sub">Scan logs per staff member — who scanned what, when, and how many.</p>
 
-    <form method="GET" action="/admin/participants" class="filter-bar" id="filterForm">
+    <form method="GET" action="/mee-admin/participants" class="filter-bar" id="filterForm">
       <select class="f-sel" name="event" onchange="this.form.submit()">
         <% events.forEach(function(ev){ %>
         <option value="<%= ev._id %>" <%= selectedId===ev._id.toString()?'selected':'' %>>

@@ -110,31 +110,31 @@ function _isActive(page) { return _active === page ? ' active' : ''; }
 
 <!-- Sidebar -->
 <aside class="sidebar" id="adminSidebar">
-  <a href="/admin" class="s-logo">
+  <a href="/mee-admin" class="s-logo">
     <img src="/images/brandings/logo.webp" alt="MEE" style="height:28px;width:auto;object-fit:contain;"/>
   </a>
 
   <div class="s-section">Main</div>
-  <a href="/admin"                 class="s-link<%- _isActive('dashboard') %>"       onclick="closeSidebar()"><i class="bi bi-speedometer2"></i>           Dashboard</a>
-  <a href="/admin/bookings"        class="s-link<%- _isActive('bookings') %>"        onclick="closeSidebar()"><i class="bi bi-ticket-perforated-fill"></i>  Bookings</a>
-  <a href="/admin/users"           class="s-link<%- _isActive('users') %>"           onclick="closeSidebar()"><i class="bi bi-person-lines-fill"></i>       Users</a>
-  <a href="/admin/participants"    class="s-link<%- _isActive('participants') %>"     onclick="closeSidebar()"><i class="bi bi-person-badge-fill"></i>       Staff Activity</a>
-  <a href="/admin/entered-tickets" class="s-link<%- _isActive('entered-tickets') %>" onclick="closeSidebar()"><i class="bi bi-door-open-fill"></i>          Entered Tickets</a>
-  <a href="/admin/users-by-event"  class="s-link<%- _isActive('users-by-event') %>"  onclick="closeSidebar()"><i class="bi bi-people-fill"></i>             Attendees</a>
+  <a href="/mee-admin"                 class="s-link<%- _isActive('dashboard') %>"       onclick="closeSidebar()"><i class="bi bi-speedometer2"></i>           Dashboard</a>
+  <a href="/mee-admin/bookings"        class="s-link<%- _isActive('bookings') %>"        onclick="closeSidebar()"><i class="bi bi-ticket-perforated-fill"></i>  Bookings</a>
+  <a href="/mee-admin/users"           class="s-link<%- _isActive('users') %>"           onclick="closeSidebar()"><i class="bi bi-person-lines-fill"></i>       Users</a>
+  <a href="/mee-admin/participants"    class="s-link<%- _isActive('participants') %>"     onclick="closeSidebar()"><i class="bi bi-person-badge-fill"></i>       Staff Activity</a>
+  <a href="/mee-admin/entered-tickets" class="s-link<%- _isActive('entered-tickets') %>" onclick="closeSidebar()"><i class="bi bi-door-open-fill"></i>          Entered Tickets</a>
+  <a href="/mee-admin/users-by-event"  class="s-link<%- _isActive('users-by-event') %>"  onclick="closeSidebar()"><i class="bi bi-people-fill"></i>             Attendees</a>
 
   <div class="s-section">Events</div>
-  <a href="/admin/events/new" class="s-link<%- _isActive('new-event') %>" onclick="closeSidebar()"><i class="bi bi-plus-circle-fill"></i>  New Event</a>
-  <a href="/admin/reviews"    class="s-link<%- _isActive('reviews') %>"   onclick="closeSidebar()"><i class="bi bi-star-fill"></i>          Reviews</a>
-  <a href="/admin/banners"    class="s-link<%- _isActive('banners') %>"   onclick="closeSidebar()"><i class="bi bi-image-fill"></i>         Banners</a>
-  <a href="/admin/coupons"    class="s-link<%- _isActive('coupons') %>"   onclick="closeSidebar()"><i class="bi bi-tag-fill"></i>           Coupons</a>
-  <a href="/admin/referrals"  class="s-link<%- _isActive('referrals') %>" onclick="closeSidebar()"><i class="bi bi-qr-code"></i>            Referral Links</a>
+  <a href="/mee-admin/events/new" class="s-link<%- _isActive('new-event') %>" onclick="closeSidebar()"><i class="bi bi-plus-circle-fill"></i>  New Event</a>
+  <a href="/mee-admin/reviews"    class="s-link<%- _isActive('reviews') %>"   onclick="closeSidebar()"><i class="bi bi-star-fill"></i>          Reviews</a>
+  <a href="/mee-admin/banners"    class="s-link<%- _isActive('banners') %>"   onclick="closeSidebar()"><i class="bi bi-image-fill"></i>         Banners</a>
+  <a href="/mee-admin/coupons"    class="s-link<%- _isActive('coupons') %>"   onclick="closeSidebar()"><i class="bi bi-tag-fill"></i>           Coupons</a>
+  <a href="/mee-admin/referrals"  class="s-link<%- _isActive('referrals') %>" onclick="closeSidebar()"><i class="bi bi-qr-code"></i>            Referral Links</a>
 
   <div class="s-section">Marketing</div>
-  <a href="/admin/sponsors"   class="s-link<%- _isActive('sponsors') %>"  onclick="closeSidebar()"><i class="bi bi-building-fill"></i>     Sponsors</a>
+  <a href="/mee-admin/sponsors"   class="s-link<%- _isActive('sponsors') %>"  onclick="closeSidebar()"><i class="bi bi-building-fill"></i>     Sponsors</a>
 
   <div class="s-section">Team</div>
-  <a href="/admin/staff"      class="s-link<%- _isActive('staff') %>"     onclick="closeSidebar()"><i class="bi bi-people-fill"></i>        Staff</a>
-  <a href="/admin/profile"    class="s-link<%- _isActive('profile') %>"   onclick="closeSidebar()"><i class="bi bi-person-circle"></i>      My Profile</a>
+  <a href="/mee-admin/staff"      class="s-link<%- _isActive('staff') %>"     onclick="closeSidebar()"><i class="bi bi-people-fill"></i>        Staff</a>
+  <a href="/mee-admin/profile"    class="s-link<%- _isActive('profile') %>"   onclick="closeSidebar()"><i class="bi bi-person-circle"></i>      My Profile</a>
   <a href="/" class="s-link" target="_blank" rel="noopener"><i class="bi bi-box-arrow-up-right"></i> View Site</a>
 
   <% if (_isSA) { %>
@@ -144,7 +144,7 @@ function _isActive(page) { return _active === page ? ' active' : ''; }
   </a>
   <% } %>
 
-  <a href="/admin/logout" class="s-logout">
+  <a href="/mee-admin/logout" class="s-logout">
     <i class="bi bi-box-arrow-right"></i> Logout
   </a>
 </aside>

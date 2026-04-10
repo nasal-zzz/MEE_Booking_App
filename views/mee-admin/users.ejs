@@ -412,7 +412,7 @@
   let currentPage  = 1;
   let filteredRows = [];
   const isSuperAdmin = <%= locals.isSuperAdmin ? 'true' : 'false' %>;
-  const baseUrl = isSuperAdmin ? '/superadmin' : '/admin';
+  const baseUrl = isSuperAdmin ? '/superadmin' : '/mee-admin';
 
   // ── Filters ──
   function filterStatus(status, el) {

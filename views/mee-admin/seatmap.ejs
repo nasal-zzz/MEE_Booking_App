@@ -138,7 +138,7 @@
     <span class="save-status" id="saveStatus"></span>
     <button class="btn btn-amber" onclick="flipLayout()"><i class="bi bi-arrow-down-up"></i> Flip</button>
     <button class="btn btn-outline" id="syncBtn" onclick="syncFromEvent()" title="Reload category quotas from event and redistribute unmapped seats"><i class="bi bi-arrow-repeat"></i> Sync Quotas</button>
-    <button class="btn btn-outline" onclick="location.href='/admin'">← Back</button>
+    <button class="btn btn-outline" onclick="location.href='/mee-admin'">← Back</button>
     <button class="btn btn-red" onclick="clearAll()"><i class="bi bi-trash"></i> Clear</button>
     <button class="btn btn-purple" onclick="saveMap()"><i class="bi bi-floppy"></i> Save</button>
     <button class="btn btn-green" id="activateBtn" onclick="toggleActivate()">
@@ -935,7 +935,7 @@ async function syncFromEvent(){
   const btn=document.getElementById('syncBtn');
   if(btn){ btn.textContent='Loading…'; btn.disabled=true; }
   try {
-    const r = await fetch(`/admin/seatmap/${EVENT_ID}/quota`);
+    const r = await fetch(`/mee-admin/seatmap/${EVENT_ID}/quota`);
     const d = await r.json();
     if(!d.success){ showToast('❌ Could not fetch event quotas','err'); return; }
 
@@ -1096,7 +1096,7 @@ async function saveMap(){
   };
   document.getElementById('saveStatus').textContent='Saving…';
   try{
-    const res=await fetch(`/admin/seatmap/${EVENT_ID}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    const res=await fetch(`/mee-admin/seatmap/${EVENT_ID}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
     const d=await res.json();
     if(d.success){showToast('✅ Saved!','ok');document.getElementById('saveStatus').textContent='Saved ✓';}
     else{showToast('❌ '+d.message,'err');document.getElementById('saveStatus').textContent='';}
