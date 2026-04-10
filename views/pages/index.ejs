@@ -613,7 +613,9 @@
                                                         <div class="about-detail-body">
                                                             <p class="about-detail-label">Date</p>
                                                             <p class="about-detail-value">
-                                                                <%= event.date %>
+                                                                <%= new
+                                                                    Date(event.date).toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'long',year:'numeric'})
+                                                                    %>
                                                             </p>
                                                         </div>
 
