@@ -6,7 +6,7 @@ function hideLoader() {
     if (!loader) return;
     loader.style.opacity = '0';
     loader.style.pointerEvents = 'none';
-    setTimeout(() => loader.remove(), 650);
+    setTimeout(() => loader.remove(), 400);
 }
 
 // --- Optimized image loader with progressive enhancement ---
@@ -52,7 +52,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     const frameCount = 84;
-    const PRIORITY_COUNT = 3; // Load only 3 frames initially (reduced from 10)
+
 
     const currentFrame = index =>
         `/images/herosection/Mee_hero_section_${String(index).padStart(5, '0')}.webp`;
@@ -73,7 +73,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // STEP 1: Load ONLY first 3 frames - super fast initial load
-    const priorityIndices = [0, 1, 2];
+    const priorityIndices = [0];
     const priorityImgs = await loadImageBatch(priorityIndices, currentFrame);
     priorityImgs.forEach((img, i) => { images[priorityIndices[i]] = img; });
 
@@ -85,7 +85,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // STEP 2: Aggressively load remaining frames in larger batches
     const BATCH_SIZE = 20; // Increased from 10 for faster loading
-    const remaining = Array.from({ length: frameCount - PRIORITY_COUNT }, (_, i) => i + PRIORITY_COUNT);
+    const remaining = Array.from({ length: frameCount - 1 }, (_, i) => i + 1);
 
     async function loadRemainingInBatches() {
         for (let i = 0; i < remaining.length; i += BATCH_SIZE) {

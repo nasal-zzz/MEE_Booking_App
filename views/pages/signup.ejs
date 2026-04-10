@@ -567,20 +567,22 @@
             <label class="lbl">WhatsApp Number <span class="req">*</span></label>
             <div class="phone-wrap" id="pw-phone">
               <div class="cc">🇮🇳 +91</div>
-              <input type="tel" class="ph-inp" id="phoneInput" placeholder="98765 43210" maxlength="10"
+              <input type="tel" class="ph-inp" id="phoneInput" placeholder="XXXXX XXXXX" maxlength="10"
                 inputmode="numeric" autocomplete="tel" />
             </div>
             <div class="ferr" id="err-phone"><i class="bi bi-exclamation-circle"></i> Enter a valid 10-digit Indian
               number</div>
           </div>
 
-          <!-- <div class="field-group">
-          <label class="lbl">WhatsApp Number <span style="font-size:0.55rem;color:#555;letter-spacing:1px;">(leave blank if same as phone)</span></label>
-          <div class="phone-wrap" id="pw-wa">
-            <div class="cc">🇮🇳 +91</div>
-            <input type="tel" class="ph-inp" id="waInput" placeholder="Same as phone" maxlength="10" inputmode="numeric"/>
+          <div class="field-group">
+            <label class="lbl">WhatsApp Number <span style="font-size:0.55rem;color:#555;letter-spacing:1px;">(leave
+                blank if same as phone)</span></label>
+            <div class="phone-wrap" id="pw-wa">
+              <div class="cc">🇮🇳 +91</div>
+              <input type="tel" class="ph-inp" id="waInput" placeholder="Same as phone" maxlength="10"
+                inputmode="numeric" />
+            </div>
           </div>
-        </div> -->
 
           <button class="btn-submit" id="submitBtn" onclick="handleSignup()">
             <i class="bi bi-rocket-takeoff-fill" id="btnIcon"></i>
@@ -589,7 +591,8 @@
           </button>
 
           <div class="footer-note">Already have an account? <a href="/auth/login">Log in</a></div>
-          <div class="terms">By signing up you agree to our <a href="#">Terms</a> &amp; <a href="#">Privacy Policy</a>.
+          <div class="terms">By signing up you agree to our <a href="/terms">Terms</a> &amp; <a
+              href="/privacy-policy">Privacy Policy</a>.
           </div>
         </div>
       </div>

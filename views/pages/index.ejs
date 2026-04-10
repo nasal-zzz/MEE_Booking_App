@@ -343,7 +343,7 @@
     <!-- Page Loader Overlay -->
     <div id="page-loader">
         <div class="spinner"></div>
-        <p>Loading experience...</p>
+        <p>Loading ...</p>
     </div>
 
     <!-- Navbar -->
@@ -412,15 +412,6 @@
                                                     <% } %>
                                         </h1>
 
-                                        <div class="slide-venue">
-                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
-                                                stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                                stroke-linejoin="round">
-                                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                                                <circle cx="12" cy="10" r="3"></circle>
-                                            </svg>
-                                            <%= ev.venue %>
-                                        </div>
 
                                         <% if (ev.description) { %>
                                             <p class="slide-desc">
@@ -621,10 +612,11 @@
                                                         </div>
                                                         <div class="about-detail-body">
                                                             <p class="about-detail-label">Date</p>
-                                                            <p class="about-detail-value">9th May 2026</p>
+                                                            <p class="about-detail-value">
+                                                                <%= event.date %>
+                                                            </p>
                                                         </div>
-                                                        <span
-                                                            class="about-detail-badge about-detail-badge--primary">Saturday</span>
+
                                                     </div>
 
                                                     <div class="about-detail-divider"></div>
@@ -641,7 +633,9 @@
                                                         </div>
                                                         <div class="about-detail-body">
                                                             <p class="about-detail-label">Doors Open</p>
-                                                            <p class="about-detail-value">04:00 PM</p>
+                                                            <p class="about-detail-value">
+                                                                <%= event.doorsOpen %>
+                                                            </p>
                                                         </div>
                                                         <span
                                                             class="about-detail-badge about-detail-badge--muted">Onwards</span>
@@ -662,8 +656,12 @@
                                                         </div>
                                                         <div class="about-detail-body">
                                                             <p class="about-detail-label">Venue</p>
-                                                            <p class="about-detail-value">Melattur Stadium</p>
-                                                            <p class="about-detail-sublabel">Melattur, Kerala</p>
+                                                            <p class="about-detail-value">
+                                                                <%= event.venue %>
+                                                            </p>
+                                                            <p class="about-detail-sublabel">
+                                                                <%= event.venueAddress %>
+                                                            </p>
                                                         </div>
                                                     </div>
                                                 </div>
