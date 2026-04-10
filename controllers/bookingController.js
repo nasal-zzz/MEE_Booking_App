@@ -14,144 +14,21 @@ const { sendBookingConfirmation, sendPendingPaymentReminder, sendFailedPaymentNo
 const {
   isStandingCategory,
   assignSeatNumbers,
-  releaseSeatsToPool,
+  releaseSeatsToPool,   // ← replaces your local releaseSeats()
   fetchFreshTtype,
 } = require('../utils/seatHelper');
-
-// ─────────────────────────────────────────────────────────────
-// FIX #2 — INPUT VALIDATION HELPERS
-// Simple, dependency-free validators. We validate before writing
-// to DB or passing to email/WhatsApp helpers so bad data never
-// accumulates and silent send-failures are avoided.
-// ─────────────────────────────────────────────────────────────
-
-/**
- * Returns a normalised email string (trimmed, lowercase) if valid,
- * or null if the value is missing / malformed.
- */
-function validateEmail(raw) {
-  if (!raw || typeof raw !== 'string') return null;
-  const trimmed = raw.trim().toLowerCase();
-  // RFC-5321 practical check: local@domain.tld, max 254 chars
-  const re = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-  return re.test(trimmed) && trimmed.length <= 254 ? trimmed : null;
-}
-
-/**
- * Returns a normalised phone string (digits + leading +, 7–15 digits)
- * or null if the value is missing / invalid.
- */
-function validatePhone(raw) {
-  if (!raw || typeof raw !== 'string') return null;
-  const trimmed = raw.trim();
-  // Strip spaces/dashes/dots for length check, but keep original format
-  const digitsOnly = trimmed.replace(/[\s\-().]/g, '');
-  const re = /^\+?[0-9]{7,15}$/;
-  return re.test(digitsOnly) ? trimmed : null;
-}
 
 // ─────────────────────────────────────────────────────────────
 // HELPERS
 // ─────────────────────────────────────────────────────────────
 
+// Look up the gateNumber for a given booking's ticket category from the event
 function getGateNumber(event, ticketCategory) {
   if (!event || !event.ticketTypes) return '';
   const ttype = event.ticketTypes.find(
     t => (t.category || '').toLowerCase() === (ticketCategory || '').toLowerCase()
   );
   return ttype?.gateNumber || '';
-}
-
-// ─────────────────────────────────────────────────────────────
-// FIX #1 — ZONE CAPACITY GUARD
-//
-// Replaces the bare $inc used previously.  Atomically increments
-// bookedSeats on the matching section ONLY when capacity remains.
-//
-// Returns true  → increment succeeded (seats were available).
-// Returns false → zone is full or not found (caller decides how
-//                 to handle — we treat it as a soft warning since
-//                 seat-level capacity is already enforced on the
-//                 Event ticketTypes; zone overbooking is a data
-//                 consistency issue, not a payment blocker).
-// ─────────────────────────────────────────────────────────────
-
-async function incrementZoneSeats(eventId, zoneName, qty) {
-  if (!zoneName) return true; // no zone selected — nothing to guard
-
-  const result = await SeatMap.updateOne(
-    {
-      event: eventId,
-      sections: {
-        $elemMatch: {
-          name: zoneName,
-          // Only proceed when remaining capacity >= qty.
-          // $expr lets us compare two fields inside $elemMatch.
-          $expr: {
-            $lte: [
-              { $add: ['$$this.bookedSeats', qty] },
-              '$$this.totalSeats',
-            ],
-          },
-        },
-      },
-    },
-    { $inc: { 'sections.$.bookedSeats': qty } }
-  ).catch(() => null);
-
-  // modifiedCount === 1 means the guard passed and the update landed.
-  if (result?.modifiedCount === 1) return true;
-
-  // Fallback: if $expr inside $elemMatch isn't supported by this MongoDB
-  // version (pre-4.4), or totalSeats is 0 (zone has no cap), attempt a
-  // plain increment so we don't silently skip the update entirely.
-  const seatMap = await SeatMap.findOne({ event: eventId, 'sections.name': zoneName })
-    .select('sections.$').lean().catch(() => null);
-  const section = seatMap?.sections?.[0];
-
-  if (!section) return false; // zone doesn't exist
-
-  // If totalSeats is 0 the zone has no configured capacity limit — allow it.
-  if (!section.totalSeats || section.totalSeats === 0) {
-    await SeatMap.updateOne(
-      { event: eventId, 'sections.name': zoneName },
-      { $inc: { 'sections.$.bookedSeats': qty } }
-    ).catch(() => { });
-    return true;
-  }
-
-  // Zone is genuinely full.
-  console.warn(`incrementZoneSeats: zone "${zoneName}" is full (${section.bookedSeats}/${section.totalSeats})`);
-  return false;
-}
-
-// ─────────────────────────────────────────────────────────────
-// FIX #3 — QR GENERATION WRAPPER
-//
-// Wraps generateSharedQR so that a failure:
-//   a) is logged clearly
-//   b) sets qrFailed = true on the booking doc (so a retry job
-//      can find it with: Booking.find({ qrFailed: true, paymentStatus: 'paid' }))
-//   c) does NOT throw — the booking is paid and valid regardless
-//
-// Returns true on success, false on failure.
-// ─────────────────────────────────────────────────────────────
-
-async function safeGenerateQR(tickets, meta, bookingId) {
-  try {
-    await generateSharedQR(tickets, meta);
-    // Clear any previous failure flag in case this is a retry
-    if (bookingId) {
-      await Booking.updateOne({ _id: bookingId }, { $set: { qrFailed: false } }).catch(() => { });
-    }
-    return true;
-  } catch (err) {
-    console.error(`QR generation failed for booking ${bookingId || meta?.bookingRef}:`, err.message);
-    if (bookingId) {
-      await Booking.updateOne({ _id: bookingId }, { $set: { qrFailed: true } }).catch(() => { });
-    }
-    return false;
-  }
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -219,14 +96,6 @@ exports.createOrder = async (req, res) => {
   try {
     const { ticketType, quantity, couponCode, attendees, zone, email, whatsapp } = req.body;
     const qty = parseInt(quantity) || 1;
-
-    // ── FIX #2: validate contact fields before using them ──────────────────
-    const validatedEmail = validateEmail(email);
-    const validatedWhatsapp = validatePhone(whatsapp);
-
-    if (email && !validatedEmail) console.warn(`createOrder: invalid email received: "${email}" — ignoring`);
-    if (whatsapp && !validatedWhatsapp) console.warn(`createOrder: invalid phone received: "${whatsapp}" — ignoring`);
-    // ───────────────────────────────────────────────────────────────────────
 
     const eventId = req.body.eventId || req.session.pendingEventId;
     const event = eventId
@@ -296,8 +165,14 @@ exports.createOrder = async (req, res) => {
       return res.json({ success: false, message: `Only ${left} seat(s) left — not enough for your order of ${effectiveQty}.` });
     }
 
+    // const updatedTtype       = reservedEvent.ticketTypes.id(ttype._id);
+    // const postIncBookedSeats = updatedTtype.bookedSeats;
+
+    // console.log(`✅ Seats reserved atomically: ${effectiveQty} × ${ttype.category} | bookedSeats now: ${postIncBookedSeats}/${updatedTtype.totalSeats}`);
+
     const updatedTtype = reservedEvent.ticketTypes.id(ttype._id);
     console.log(`✅ Seats reserved atomically: ${effectiveQty} × ${ttype.category} | bookedSeats now: ${updatedTtype.bookedSeats}/${updatedTtype.totalSeats}`);
+
 
     // ── Pricing & coupon ──
     const pricePerTicket = ttype.price;
@@ -356,18 +231,16 @@ exports.createOrder = async (req, res) => {
       receipt: 'MEE_' + Date.now(),
     });
 
-    // ── FIX #2: only persist validated contact fields ──────────────────────
     try {
       const updates = {};
-      if (validatedEmail && !req.user.email) updates.email = validatedEmail;
-      if (validatedWhatsapp && !req.user.whatsapp) updates.whatsapp = validatedWhatsapp;
+      if (email && !req.user.email) updates.email = email.trim().toLowerCase();
+      if (whatsapp && !req.user.whatsapp) updates.whatsapp = whatsapp.trim();
       if (Object.keys(updates).length) {
         await User.findByIdAndUpdate(req.user._id, updates);
         if (updates.email) req.user.email = updates.email;
         if (updates.whatsapp) req.user.whatsapp = updates.whatsapp;
       }
     } catch (ue) { console.warn('User update error:', ue.message); }
-    // ───────────────────────────────────────────────────────────────────────
 
     const attendeeList = Array.isArray(attendees) ? attendees : [attendees];
     const standing = isStandingCategory(ttype);
@@ -382,10 +255,6 @@ exports.createOrder = async (req, res) => {
         isStanding: standing,
       });
     }
-
-    // ── FIX #2: use validated contact values when creating the booking ──
-    const contactEmail = validatedEmail || req.user.email || '';
-    const contactWhatsappForSession = validatedWhatsapp || req.user.whatsapp || req.user.phone || '';
 
     const pendingBookingDoc = await Booking.create({
       user: req.user._id,
@@ -403,7 +272,7 @@ exports.createOrder = async (req, res) => {
       paymentStatus: 'pending',
       orderId: order.id,
       contactPhone: req.user.phone || '',
-      contactEmail,
+      contactEmail: email ? email.trim().toLowerCase() : (req.user.email || ''),
       contactName: (req.user.firstName + ' ' + (req.user.lastName || '')).trim(),
     });
 
@@ -424,8 +293,9 @@ exports.createOrder = async (req, res) => {
       gateNumber: ttype.gateNumber || '',
       attendees: attendeeList,
       orderId: order.id,
-      contactEmail,
-      contactWhatsapp: contactWhatsappForSession,
+      contactEmail: email ? email.trim().toLowerCase() : (req.user.email || ''),
+      contactWhatsapp: whatsapp ? whatsapp.trim() : (req.user.whatsapp || req.user.phone || ''),
+      // postIncBookedSeats: postIncBookedSeats,
       isStanding: standing,
     };
 
@@ -441,7 +311,7 @@ exports.createOrder = async (req, res) => {
       currency: 'INR',
       prefill: {
         name: (req.user.firstName + ' ' + (req.user.lastName || '')).trim(),
-        email: contactEmail,
+        email: email || req.user.email || '',
         contact: req.user.phone || '',
       },
     });
@@ -589,6 +459,8 @@ exports.saveFailed = async (req, res) => {
 
 // ─────────────────────────────────────────────────────────────
 // GET /booking/retry/:bookingId
+// FIX RISK 3: If booking is 'failed', its seats were released.
+// Re-reserve atomically before entering the payment flow.
 // ─────────────────────────────────────────────────────────────
 exports.retryPayment = async (req, res) => {
   try {
@@ -605,9 +477,12 @@ exports.retryPayment = async (req, res) => {
     if (!event || !event.isActive) return res.redirect('/booking/my-bookings');
 
     const ttype = event.ticketTypes.find(t => t.category === booking.ticketType);
+
+    // ── FIX RISK 3: re-reserve seats when retrying a failed booking ──
     let postIncBookedSeats = null;
 
     if (booking.paymentStatus === 'failed') {
+      // Seats were released when it failed — reclaim them atomically now
       const maxAllowed = ttype ? (ttype.totalSeats - booking.quantity) : 0;
 
       const reReserved = await Event.findOneAndUpdate(
@@ -633,6 +508,7 @@ exports.retryPayment = async (req, res) => {
       const freshTtype = reReserved.ticketTypes.find(t => t.category === booking.ticketType);
       postIncBookedSeats = freshTtype?.bookedSeats ?? null;
 
+      // Promote booking back to pending so verifyPayment can find and update it
       await Booking.updateOne(
         { _id: booking._id },
         { $set: { paymentStatus: 'pending' } }
@@ -640,6 +516,7 @@ exports.retryPayment = async (req, res) => {
 
       console.log(`✅ retryPayment: re-reserved ${booking.quantity} seats for ${booking.ticketType} | bookedSeats now: ${postIncBookedSeats}`);
     } else {
+      // Still pending — seats already held, just look up current counter
       postIncBookedSeats = ttype?.bookedSeats ?? null;
     }
 
@@ -716,24 +593,23 @@ exports.verifyPayment = async (req, res) => {
 
       const evForSeat = await Event.findById(pending.eventId).lean();
       const ttypeForSeat = evForSeat?.ticketTypes?.find(t => t.category === pending.ticketType);
+      const standing = pending.isStanding ?? isStandingCategory(ttypeForSeat);
       const gateNumber = pending.gateNumber || getGateNumber(evForSeat, pending.ticketType);
 
-      await assignSeatNumbers(pending.eventId, ttypeForSeat, existingBooking.tickets);
+      await assignSeatNumbers(
+        pending.eventId,
+        ttypeForSeat,
+        existingBooking.tickets,
+      );
 
       existingBooking.gateNumber = gateNumber;
 
-      // ── FIX #3: use safeGenerateQR instead of raw generateSharedQR ──────
-      await safeGenerateQR(
-        existingBooking.tickets,
-        {
-          bookingRef: existingBooking.bookingRef,
-          eventId: pending.eventId,
-          paymentId: razorpay_payment_id,
-          ticketType: pending.ticketType,
-        },
-        existingBooking._id
-      );
-      // ────────────────────────────────────────────────────────────────────
+      await generateSharedQR(existingBooking.tickets, {
+        bookingRef: existingBooking.bookingRef,
+        eventId: pending.eventId,
+        paymentId: razorpay_payment_id,
+        ticketType: pending.ticketType,
+      });
 
       const atomicUpdate = await Booking.findOneAndUpdate(
         { _id: existingBooking._id, paymentStatus: { $in: ['pending', 'failed'] } },
@@ -745,8 +621,6 @@ exports.verifyPayment = async (req, res) => {
             signature: razorpay_signature,
             tickets: existingBooking.tickets,
             gateNumber,
-            // persist the qrFailed flag that safeGenerateQR may have set
-            qrFailed: existingBooking.qrFailed ?? false,
           }
         },
         { new: true }
@@ -759,15 +633,12 @@ exports.verifyPayment = async (req, res) => {
         return res.json({ success: true, bookingId: existingBooking._id, bookingRef: existingBooking.bookingRef });
       }
 
-      // ── FIX #1: atomic zone capacity guard ──────────────────────────────
       if (pending.zone) {
-        const zoneOk = await incrementZoneSeats(pending.eventId, pending.zone, pending.quantity);
-        if (!zoneOk) {
-          console.warn(`verifyPayment: zone "${pending.zone}" was full — bookedSeats not incremented (payment still valid)`);
-        }
+        await SeatMap.updateOne(
+          { event: pending.eventId, 'sections.name': pending.zone },
+          { $inc: { 'sections.$.bookedSeats': pending.quantity } }
+        ).catch(() => { });
       }
-      // ────────────────────────────────────────────────────────────────────
-
       if (pending.couponCode) {
         const Coupon = require('../models/Coupon');
         const _userId = req.session?.userId || req.user?._id || null;
@@ -796,10 +667,12 @@ exports.verifyPayment = async (req, res) => {
       return res.json({ success: true, bookingId: existingBooking._id, bookingRef: existingBooking.bookingRef });
     }
 
+
     console.warn('⚠ verifyPayment: no pending booking found — checking for existing orderId before fallback create');
 
     const orphanedBooking = await Booking.findOne({ orderId: razorpay_order_id }).catch(() => null);
     if (orphanedBooking) {
+      // A booking exists (maybe paid by webhook already) — don't create another one
       console.log('verifyPayment: orphaned booking found via orderId, skipping fallback create:', orphanedBooking.bookingRef);
       delete req.session.pendingBooking;
       req.session.save(() => { });
@@ -810,6 +683,7 @@ exports.verifyPayment = async (req, res) => {
 
     const evFallback = await Event.findById(pending.eventId).lean();
     const ttypeFallback = evFallback?.ticketTypes?.find(t => t.category === pending.ticketType);
+    const standingFallback = pending.isStanding ?? isStandingCategory(ttypeFallback);
     const gateNumberFallback = pending.gateNumber || getGateNumber(evFallback, pending.ticketType);
 
     const fbTtypeCheck = evFallback?.ticketTypes?.find(t => t.category === pending.ticketType);
@@ -829,6 +703,8 @@ exports.verifyPayment = async (req, res) => {
       { new: true }
     ).catch(() => null);
 
+    // FIX RISK 2 (also applied here): use the fresh postInc from the
+    // atomic update above, not a stale snapshot from populate
     const fbTtype = fallbackReserved?.ticketTypes?.find(t => t.category === pending.ticketType);
     const fbPostInc = fbTtype?.bookedSeats ?? null;
 
@@ -840,7 +716,7 @@ exports.verifyPayment = async (req, res) => {
       const att = attendees[i] || attendees[0] || { name: req.user.firstName, age: 25 };
       tickets.push({
         ticketId: generateTicketId(i),
-        isStanding: pending.isStanding ?? isStandingCategory(ttypeFallback),
+        isStanding: standingFallback,
         attendee: {
           name: att.name || req.user.firstName,
           age: parseInt(att.age) || 25,
@@ -852,6 +728,7 @@ exports.verifyPayment = async (req, res) => {
       });
     }
 
+    // Assign seat numbers using fresh postInc (pool-first, then counter)
     await assignSeatNumbers(pending.eventId, ttypeFallback, tickets, fbPostInc, pending.quantity);
 
     const booking = await Booking.create({
@@ -875,34 +752,24 @@ exports.verifyPayment = async (req, res) => {
       gateNumber: gateNumberFallback,
     });
 
-    // ── FIX #3: safeGenerateQR for fallback path too ────────────────────────
-    const qrOk = await safeGenerateQR(
-      booking.tickets,
-      {
+    try {
+      await generateSharedQR(booking.tickets, {
         bookingRef: booking.bookingRef,
         eventId: pending.eventId,
         paymentId: razorpay_payment_id,
         ticketType: pending.ticketType,
-      },
-      booking._id
-    );
-    if (qrOk) {
+      });
       await booking.save();
-    } else {
-      // qrFailed flag already set inside safeGenerateQR — just save tickets state
-      await booking.save().catch(() => { });
+    } catch (qrErr) {
+      console.error('QR gen failed (booking still valid):', qrErr.message);
     }
-    // ────────────────────────────────────────────────────────────────────────
 
-    // ── FIX #1: atomic zone capacity guard for fallback path ────────────────
     if (pending.zone) {
-      const zoneOk = await incrementZoneSeats(pending.eventId, pending.zone, pending.quantity);
-      if (!zoneOk) {
-        console.warn(`verifyPayment (fallback): zone "${pending.zone}" was full — bookedSeats not incremented`);
-      }
+      await SeatMap.updateOne(
+        { event: pending.eventId, 'sections.name': pending.zone },
+        { $inc: { 'sections.$.bookedSeats': pending.quantity } }
+      ).catch(() => { });
     }
-    // ────────────────────────────────────────────────────────────────────────
-
     await User.findByIdAndUpdate(req.user._id, { $push: { bookings: booking._id } }).catch(() => { });
 
     if (req.user.referralCode) {
@@ -1023,6 +890,7 @@ exports.getAllEvents = async (req, res) => {
 
 // ─────────────────────────────────────────────────────────────
 // POST /booking/retry-payment-api (JSON endpoint)
+// FIX RISK 3: Same re-reservation logic as retryPayment (page)
 // ─────────────────────────────────────────────────────────────
 exports.retryPaymentApi = async (req, res) => {
   try {
@@ -1039,6 +907,7 @@ exports.retryPaymentApi = async (req, res) => {
     let postIncBookedSeats = null;
 
     if (booking.paymentStatus === 'failed') {
+      // Seats were released when it failed — reclaim them atomically now
       const maxAllowed = ttype ? (ttype.totalSeats - booking.quantity) : 0;
 
       const reReserved = await Event.findOneAndUpdate(
@@ -1063,6 +932,7 @@ exports.retryPaymentApi = async (req, res) => {
       const freshTtype = reReserved.ticketTypes.find(t => t.category === booking.ticketType);
       postIncBookedSeats = freshTtype?.bookedSeats ?? null;
 
+      // Promote back to pending
       await Booking.updateOne({ _id: booking._id }, { $set: { paymentStatus: 'pending' } });
 
       console.log(`✅ retryPaymentApi: re-reserved ${booking.quantity} seats | bookedSeats now: ${postIncBookedSeats}`);
@@ -1145,9 +1015,12 @@ exports.resendWhatsApp = async (req, res) => {
     const { sendWhatsAppPDF } = require('../utils/whatsappHelper');
     await sendWhatsAppPDF({ phone, pdfUrl, bookingRef: booking.bookingRef });
 
+
+
     setTimeout(() => {
       try { if (fs.existsSync(tmpFile)) fs.unlinkSync(tmpFile); } catch (e) { }
     }, 2 * 60 * 1000);
+
 
     return res.json({ success: true });
   } catch (err) {
@@ -1159,6 +1032,7 @@ exports.resendWhatsApp = async (req, res) => {
 
 // ─────────────────────────────────────────────────────────────
 // RAZORPAY WEBHOOK HANDLER
+// FIX RISK 2: fetch fresh ttype from DB before assignSeatNumbers
 // ─────────────────────────────────────────────────────────────
 exports.razorpayWebhook = async (req, res) => {
   try {
@@ -1193,23 +1067,28 @@ exports.razorpayWebhook = async (req, res) => {
       const userDoc = booking.user;
       if (!eventDoc || !userDoc) return res.status(200).json({ status: 'missing_references' });
 
+      // FIX RISK 2: fetch a FRESH ttype snapshot so bookedSeats
+      // is current, not a stale value from the populate above
       const freshTtype = await fetchFreshTtype(eventDoc._id, booking.ticketType);
+      const standing = isStandingCategory(freshTtype);
       const gateNumber = getGateNumber(eventDoc, booking.ticketType);
 
-      await assignSeatNumbers(eventDoc._id, freshTtype, booking.tickets);
+      // postIncBookedSeats from the fresh fetch — accurate counter
+      const postIncBookedSeats = freshTtype?.bookedSeats ?? null;
 
-      // ── FIX #3: safeGenerateQR in webhook path ──────────────────────────
-      await safeGenerateQR(
+
+      await assignSeatNumbers(
+        eventDoc._id,
+        freshTtype,
         booking.tickets,
-        {
-          bookingRef: booking.bookingRef,
-          eventId: eventDoc._id,
-          paymentId,
-          ticketType: booking.ticketType,
-        },
-        booking._id
       );
-      // ────────────────────────────────────────────────────────────────────
+
+      await generateSharedQR(booking.tickets, {
+        bookingRef: booking.bookingRef,
+        eventId: eventDoc._id,
+        paymentId,
+        ticketType: booking.ticketType,
+      });
 
       const webhookFlipped = await Booking.findOneAndUpdate(
         { _id: booking._id, paymentStatus: { $in: ['pending', 'failed'] } },
@@ -1220,7 +1099,6 @@ exports.razorpayWebhook = async (req, res) => {
             orderId,
             tickets: booking.tickets,
             gateNumber,
-            qrFailed: booking.qrFailed ?? false,
           }
         },
         { new: true }
