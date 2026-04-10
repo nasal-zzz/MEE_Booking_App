@@ -100,10 +100,11 @@
       const catColors = {platinum:'#9D4EDD',gold:'#f5c842',silver:'#c0c8d8',vip:'#bf80ff',general:'#a0a0a0',standard:'#a0a0a0',family:'#FF6B6B',fanfit:'#00FF88'};
       const catMap = {};
       activeEvent.ticketTypes.forEach(t => {
-        catMap[t.category] = { name: t.name||t.category, total: t.totalSeats, booked: t.bookedSeats, price: t.price, color: t.color || catColors[t.category] || '#6A0DAD', attendees: [] };
+        catMap[t.category] = { name: t.name||t.category, total: t.totalSeats, booked:0, price: t.price, color: t.color || catColors[t.category] || '#6A0DAD', attendees: [] };
       });
       activeEventBookings.forEach(b => {
         if (catMap[b.ticketType]) {
+              catMap[b.ticketType].booked += b.quantity;
           (b.tickets||[]).forEach(tk => {
             catMap[b.ticketType].attendees.push({ name: tk.attendee?.name||'—', age: tk.attendee?.age||'—', gender: tk.attendee?.gender||'—', phone: b.contactPhone||b.user?.phone||'—', bookingRef: b.bookingRef });
           });

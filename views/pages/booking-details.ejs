@@ -55,6 +55,10 @@
     .tix-chip{background:var(--surface,#14141C);border:1px solid rgba(255,255,255,0.07);border-radius:4px;padding:0.3rem 0.65rem;font-family:var(--font-mono);font-size:0.62rem;color:#B3B3B3;letter-spacing:1px;display:flex;align-items:center;gap:0.35rem;}
     .tix-chip i{color:var(--accent);}
 
+    /* Age limit banner */
+    .age-limit-banner{display:flex;align-items:center;gap:0.55rem;background:rgba(245,200,66,0.07);border:1px solid rgba(245,200,66,0.25);border-radius:8px;padding:0.65rem 0.9rem;margin-bottom:1rem;font-size:0.78rem;color:#f5c842;}
+    .age-limit-banner i{flex-shrink:0;font-size:0.9rem;}
+
     /* Attendee forms */
     .att-card{background:rgba(255,255,255,0.025);border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:1.1rem;margin-bottom:0.8rem;}
     .att-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:0.9rem;}
@@ -272,9 +276,14 @@
       <div class="sec-card">
         <div class="sec-hd"><div class="sec-num">2</div><div class="sec-title">ATTENDEE DETAILS</div></div>
         <div class="sec-body">
-          <div style="display:flex;align-items:flex-start;gap:0.55rem;background:rgba(106,13,173,0.06);border:1px solid rgba(106,13,173,0.14);border-radius:6px;padding:0.75rem;font-size:0.78rem;color:#B3B3B3;margin-bottom:1.3rem;">
+          <div style="display:flex;align-items:flex-start;gap:0.55rem;background:rgba(106,13,173,0.06);border:1px solid rgba(106,13,173,0.14);border-radius:6px;padding:0.75rem;font-size:0.78rem;color:#B3B3B3;margin-bottom:1rem;">
             <i class="bi bi-info-circle-fill" style="color:var(--accent);flex-shrink:0;margin-top:2px;"></i>
             Each ticket requires a name — printed on the QR pass and checked at entry.
+          </div>
+          <!-- Age limit banner — shown dynamically if ticket has ageLimit > 0 -->
+          <div class="age-limit-banner" id="ageLimitBanner" style="display:none;">
+            <i class="bi bi-shield-exclamation"></i>
+            <span id="ageLimitBannerTxt"></span>
           </div>
           </div><!-- /qtySectionWrap -->
           <!-- Group ticket note (hidden by default) -->
@@ -426,6 +435,16 @@
         }
       }
 
+      // ── Show age limit banner if this ticket has an age restriction ──
+      if(selTicketData && selTicketData.ageLimit > 0){
+        const banner = document.getElementById('ageLimitBanner');
+        const bannerTxt = document.getElementById('ageLimitBannerTxt');
+        if(banner && bannerTxt){
+          bannerTxt.textContent = 'Age restriction: All attendees must be ' + selTicketData.ageLimit + ' years or older to attend with this ticket.';
+          banner.style.display = 'flex';
+        }
+      }
+
       // Update max qty hint
       const qtyHint = document.getElementById('qtyHint');
       if(qtyHint && selTicketData && selTicketData.maxPerOrder > 0){
@@ -509,24 +528,34 @@
     while(con.children.length>total)con.removeChild(con.lastChild);
     for(let i=con.children.length+1;i<=total;i++)con.appendChild(mkAtt(i));
   }
+
   function mkAtt(n){
-    const isFirst=n===1,el=document.createElement('div');
-    el.className='att-card';el.id='att-'+n;
-    el.innerHTML=`
+    const isFirst = n === 1;
+    const el = document.createElement('div');
+    el.className = 'att-card';
+    el.id = 'att-' + n;
+
+    // ── Age limit from ticket data ──
+    const minAge = (selTicketData && selTicketData.ageLimit > 0) ? selTicketData.ageLimit : 1;
+    const ageLimitHint = minAge > 1
+      ? ` <span style="color:#f5c842;font-size:0.52rem;letter-spacing:1px;font-family:var(--font-mono);">(${minAge}+)</span>`
+      : '';
+
+    el.innerHTML = `
       <div class="att-hd">
         <div class="att-badge-wrap"><div class="att-num">${n}</div><div class="att-lbl">Attendee ${n}</div></div>
-        ${isFirst?'<span class="you-chip">YOU</span>':''}
+        ${isFirst ? '<span class="you-chip">YOU</span>' : ''}
       </div>
       <div class="att-fields">
         <div>
           <label class="form-label">Full Name *</label>
-          <input type="text" class="form-inp" id="n-${n}" placeholder="Full name" value="${isFirst?USER.name.trim():''}" autocomplete="${isFirst?'name':'off'}"/>
+          <input type="text" class="form-inp" id="n-${n}" placeholder="Full name" value="${isFirst ? USER.name.trim() : ''}" autocomplete="${isFirst ? 'name' : 'off'}"/>
           <div class="field-err" id="ne-${n}"><i class="bi bi-exclamation-circle"></i> Name required</div>
         </div>
         <div>
-          <label class="form-label">Age *</label>
-          <input type="number" class="form-inp" id="a-${n}" placeholder="25" min="0" max="99" inputmode="numeric"/>
-          <div class="field-err" id="ae-${n}"><i class="bi bi-exclamation-circle"></i> Valid age required</div>
+          <label class="form-label">Age *${ageLimitHint}</label>
+          <input type="number" class="form-inp" id="a-${n}" placeholder="${minAge > 1 ? minAge : '25'}" min="${minAge}" max="120" inputmode="numeric"/>
+          <div class="field-err" id="ae-${n}"><i class="bi bi-exclamation-circle"></i> <span id="ae-msg-${n}">Valid age required</span></div>
         </div>
         <div>
           <label class="form-label">Gender *</label>
@@ -538,37 +567,86 @@
           </select>
           <div class="field-err" id="ge-${n}"><i class="bi bi-exclamation-circle"></i> Gender required</div>
         </div>
-        ${isFirst?`
+        ${isFirst ? `
         <div>
           <label class="form-label">Phone</label>
           <input type="tel" class="form-inp" value="${USER.phone}" readonly style="opacity:0.6;cursor:not-allowed;"/>
         </div>
         <div>
-          <label class="form-label">Email ${USER.email?'':'<span style="color:#FF4444;">*</span>'}</label>
-          <input type="email" class="form-inp" id="em-1" placeholder="email@example.com" value="${USER.email}" ${USER.email?'readonly style="opacity:0.6;cursor:not-allowed;"':''}/>
+          <label class="form-label">Email ${USER.email ? '' : '<span style="color:#FF4444;">*</span>'}</label>
+          <input type="email" class="form-inp" id="em-1" placeholder="email@example.com" value="${USER.email}" ${USER.email ? 'readonly style="opacity:0.6;cursor:not-allowed;"' : ''}/>
           <div class="field-err" id="em-err-1"><i class="bi bi-exclamation-circle"></i> Valid email required</div>
         </div>
         <div style="grid-column:1/-1;">
-          <label class="form-label">WhatsApp Number ${USER.whatsapp?'':'<span style="color:#FF4444;">*</span>'}</label>
-          <input type="tel" class="form-inp" id="wa-1" placeholder="91XXXXXXXXXX" value="${USER.whatsapp||USER.phone||''}" ${USER.whatsapp?'readonly style="opacity:0.6;cursor:not-allowed;"':''} inputmode="numeric" maxlength="15"/>
+          <label class="form-label">WhatsApp Number ${USER.whatsapp ? '' : '<span style="color:#FF4444;">*</span>'}</label>
+          <input type="tel" class="form-inp" id="wa-1" placeholder="91XXXXXXXXXX" value="${USER.whatsapp || USER.phone || ''}" ${USER.whatsapp ? 'readonly style="opacity:0.6;cursor:not-allowed;"' : ''} inputmode="numeric" maxlength="15"/>
           <div class="field-err" id="wa-err-1"><i class="bi bi-exclamation-circle"></i> WhatsApp number required</div>
           <div style="font-size:0.68rem;color:#555;margin-top:0.25rem;">Your ticket PDF will be sent here via WhatsApp &amp; email.</div>
-        </div>`:''}
+        </div>` : ''}
       </div>
       <div class="special-toggle" onclick="document.getElementById('sp-${n}').classList.toggle('show')">
         <i class="bi bi-chat-left-text"></i> Add special request
       </div>
       <textarea class="special-inp" id="sp-${n}" rows="2" placeholder="E.g. wheelchair access..."></textarea>`;
+
+    // ── Wire up real-time validation after DOM insertion ──
     setTimeout(function(){
-      var nf = document.getElementById('n-'+n);
-      var af = document.getElementById('a-'+n);
-      var gf = document.getElementById('g-'+n);
+      var nf  = document.getElementById('n-' + n);
+      var af  = document.getElementById('a-' + n);
+      var gf  = document.getElementById('g-' + n);
+      var _minAge = (selTicketData && selTicketData.ageLimit > 0) ? selTicketData.ageLimit : 1;
+
       function clearErr(inp, errId){ inp.classList.remove('err'); document.getElementById(errId).classList.remove('show'); }
-      function showErr(inp, errId){ inp.classList.add('err'); document.getElementById(errId).classList.add('show'); }
-      if(nf){ nf.addEventListener('blur', function(){ if(nf.value.trim().length>=2){ clearErr(nf,'ne-'+n); } else { showErr(nf,'ne-'+n); } }); nf.addEventListener('input', function(){ if(nf.classList.contains('err')&&nf.value.trim().length>=2) clearErr(nf,'ne-'+n); }); }
-      if(af){ af.addEventListener('blur', function(){ var v=parseInt(af.value); if(!isNaN(v)&&v>=1&&v<=120){ clearErr(af,'ae-'+n); } else { showErr(af,'ae-'+n); } }); af.addEventListener('input', function(){ if(af.classList.contains('err')){ var v=parseInt(af.value); if(!isNaN(v)&&v>=1&&v<=120) clearErr(af,'ae-'+n); } }); }
-      if(gf){ gf.addEventListener('change', function(){ if(gf.value){ clearErr(gf,'ge-'+n); } else { showErr(gf,'ge-'+n); } }); }
+      function showErr(inp, errId, msg){
+        inp.classList.add('err');
+        var errEl = document.getElementById(errId);
+        errEl.classList.add('show');
+        // Update the inner message span if msg provided
+        var msgSpan = errEl.querySelector('span[id^="ae-msg-"]') || errEl.querySelector('span[id^="ne-"]') || null;
+        // For age field specifically
+        var ageMsg = document.getElementById('ae-msg-' + n);
+        if(msg && ageMsg && errId === 'ae-' + n) ageMsg.textContent = msg;
+      }
+
+      // Name validation
+      if(nf){
+        nf.addEventListener('blur', function(){
+          if(nf.value.trim().length >= 2){ clearErr(nf, 'ne-' + n); }
+          else { showErr(nf, 'ne-' + n); }
+        });
+        nf.addEventListener('input', function(){
+          if(nf.classList.contains('err') && nf.value.trim().length >= 2) clearErr(nf, 'ne-' + n);
+        });
+      }
+
+      // Age validation — checks against ageLimit
+      if(af){
+        function ageOk(v){ return !isNaN(v) && v >= _minAge && v <= 120; }
+        function getAgeErrMsg(v){
+          if(isNaN(v) || !af.value) return 'Valid age required (1–120)';
+          if(_minAge > 1 && v < _minAge) return 'Must be ' + _minAge + '+ years old for this ticket';
+          if(v > 120) return 'Please enter a valid age';
+          return 'Valid age required';
+        }
+        af.addEventListener('blur', function(){
+          var v = parseInt(af.value);
+          if(ageOk(v)){ clearErr(af, 'ae-' + n); }
+          else { showErr(af, 'ae-' + n, getAgeErrMsg(v)); }
+        });
+        af.addEventListener('input', function(){
+          if(af.classList.contains('err') && ageOk(parseInt(af.value))) clearErr(af, 'ae-' + n);
+        });
+      }
+
+      // Gender validation
+      if(gf){
+        gf.addEventListener('change', function(){
+          if(gf.value){ clearErr(gf, 'ge-' + n); }
+          else { showErr(gf, 'ge-' + n); }
+        });
+      }
     }, 0);
+
     return el;
   }
 
@@ -579,8 +657,6 @@
     const sub = qty * price;
 
     // ── Bulk discount tiers (new system) + legacy combo fallback ──
-    // ✅ FIX: multiply discount by number of groups to match backend logic
-    // e.g. minQty=4, discount=200, qty=8 → Math.floor(8/4) * 200 = ₹400
     let comboDisc = 0;
     let comboNudgeMsg = '';
     const tiers = (selTicketData && Array.isArray(selTicketData.discountTiers) && selTicketData.discountTiers.length > 0)
@@ -590,19 +666,15 @@
           : []);
 
     if (tiers.length > 0) {
-      // Find best applicable tier (highest minQty that qty satisfies)
       const applicable = tiers.filter(d => qty >= d.minQty).sort((a,b) => b.minQty - a.minQty);
       if (applicable.length > 0) {
-        // ✅ KEY FIX: multiply by number of complete groups, matching backend
         const bestTier = applicable[0];
         const groups = Math.floor(qty / bestTier.minQty);
         comboDisc = groups * bestTier.discount;
       }
-      // Next tier nudge — show how much more to unlock the next tier
       const next = tiers.find(d => qty < d.minQty);
       if (next) {
         const need = next.minQty - qty;
-        const nextGroups = Math.floor(next.minQty / next.minQty); // always 1 for first group
         comboNudgeMsg = `Add ${need} more ticket${need>1?'s':''} → unlock ₹${next.discount.toLocaleString('en-IN')} off!`;
       }
     }
@@ -624,13 +696,11 @@
     const comboNudge = document.getElementById('comboOfferNudge');
 
     if (comboDisc > 0) {
-      // Tier discount applied — show it
       if(discRow) discRow.classList.add('show');
       if(discVal){ discVal.textContent = '-₹'+disc.toLocaleString('en-IN'); discVal.style.color='#f5c842'; }
       if(comboNudge) comboNudge.style.display = comboNudgeMsg ? 'flex' : 'none';
       if(comboNudgeMsg){ var cnTxt=comboNudge.querySelector('.cn-text'); if(cnTxt) cnTxt.textContent=comboNudgeMsg; }
     } else if (tiers.length > 0 && comboNudgeMsg) {
-      // Tiers exist but none unlocked yet — show nudge only
       if(comboNudge){ comboNudge.style.display='flex'; var cnTxt2=comboNudge.querySelector('.cn-text'); if(cnTxt2) cnTxt2.textContent=comboNudgeMsg; }
       if(!couponApplied){ if(discRow) discRow.classList.remove('show'); }
       else { if(discRow) discRow.classList.add('show'); if(discVal){ discVal.textContent='-₹'+discAmt.toLocaleString('en-IN'); discVal.style.color='#00FF88'; } }
@@ -710,43 +780,111 @@
 
   // ─── VALIDATE ─────────────────────────────────────────────────────
   function validate(){
-    let ok=true;
-    const total=isMultiEntry?multiCount:qty;
-    for(let i=1;i<=total;i++){
-      const n=document.getElementById('n-'+i),a=document.getElementById('a-'+i);
-      const g=document.getElementById('g-'+i);
-      document.getElementById('ne-'+i).classList.remove('show');n.classList.remove('err');
-      document.getElementById('ae-'+i).classList.remove('show');a.classList.remove('err');
-      if(g){document.getElementById('ge-'+i).classList.remove('show');g.classList.remove('err');}
-      if(!n.value.trim()||n.value.trim().length<2){n.classList.add('err');document.getElementById('ne-'+i).classList.add('show');n.scrollIntoView({behavior:'smooth',block:'center'});ok=false;}
-      const age=parseInt(a.value);
-      if(!a.value||isNaN(age)||age<1||age>120){a.classList.add('err');document.getElementById('ae-'+i).classList.add('show');ok=false;}
-      if(g&&!g.value){g.classList.add('err');document.getElementById('ge-'+i).classList.add('show');if(ok){g.scrollIntoView({behavior:'smooth',block:'center'});}ok=false;}
+    let ok = true;
+    const total = isMultiEntry ? multiCount : qty;
+    const _minAge = (selTicketData && selTicketData.ageLimit > 0) ? selTicketData.ageLimit : 1;
+    let firstErrScrolled = false;
+
+    for(let i = 1; i <= total; i++){
+      const n  = document.getElementById('n-' + i);
+      const a  = document.getElementById('a-' + i);
+      const g  = document.getElementById('g-' + i);
+
+      // Clear previous errors
+      document.getElementById('ne-' + i).classList.remove('show'); n.classList.remove('err');
+      document.getElementById('ae-' + i).classList.remove('show'); a.classList.remove('err');
+      if(g){ document.getElementById('ge-' + i).classList.remove('show'); g.classList.remove('err'); }
+
+      // Name check
+      if(!n.value.trim() || n.value.trim().length < 2){
+        n.classList.add('err');
+        document.getElementById('ne-' + i).classList.add('show');
+        if(!firstErrScrolled){ n.scrollIntoView({behavior:'smooth', block:'center'}); firstErrScrolled = true; }
+        ok = false;
+      }
+
+      // Age check — validates against ageLimit
+      const age = parseInt(a.value);
+      const ageValid = !isNaN(age) && age >= _minAge && age <= 120;
+      if(!a.value || !ageValid){
+        a.classList.add('err');
+        document.getElementById('ae-' + i).classList.add('show');
+        // Set specific error message
+        var ageErrMsg = document.getElementById('ae-msg-' + i);
+        if(ageErrMsg){
+          if(!a.value || isNaN(age)){
+            ageErrMsg.textContent = 'Age is required';
+          } else if(_minAge > 1 && age < _minAge){
+            ageErrMsg.textContent = 'Attendee ' + i + ' must be ' + _minAge + '+ years old for this ticket';
+          } else if(age > 120){
+            ageErrMsg.textContent = 'Please enter a valid age';
+          } else {
+            ageErrMsg.textContent = 'Valid age required';
+          }
+        }
+        if(!firstErrScrolled){ a.scrollIntoView({behavior:'smooth', block:'center'}); firstErrScrolled = true; }
+        ok = false;
+      }
+
+      // Gender check
+      if(g && !g.value){
+        g.classList.add('err');
+        document.getElementById('ge-' + i).classList.add('show');
+        if(!firstErrScrolled){ g.scrollIntoView({behavior:'smooth', block:'center'}); firstErrScrolled = true; }
+        ok = false;
+      }
     }
+
     // Email — mandatory if not pre-filled
     if(!USER.email){
-      const emEl=document.getElementById('em-1'), emErr=document.getElementById('em-err-1');
-      if(emEl&&emErr){
+      const emEl  = document.getElementById('em-1');
+      const emErr = document.getElementById('em-err-1');
+      if(emEl && emErr){
         emErr.classList.remove('show'); emEl.classList.remove('err');
-        const ev=emEl.value.trim();
-        if(!ev||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(ev)){
+        const ev = emEl.value.trim();
+        if(!ev || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(ev)){
           emEl.classList.add('err'); emErr.classList.add('show');
-          emEl.scrollIntoView({behavior:'smooth',block:'center'}); ok=false;
+          if(!firstErrScrolled){ emEl.scrollIntoView({behavior:'smooth', block:'center'}); firstErrScrolled = true; }
+          ok = false;
         }
       }
     }
+
     // WhatsApp — mandatory if not pre-filled
     if(!USER.whatsapp){
-      const waEl=document.getElementById('wa-1'), waErr=document.getElementById('wa-err-1');
-      if(waEl&&waErr){
+      const waEl  = document.getElementById('wa-1');
+      const waErr = document.getElementById('wa-err-1');
+      if(waEl && waErr){
         waErr.classList.remove('show'); waEl.classList.remove('err');
-        const wv=waEl.value.trim();
-        if(!wv||wv.length<10){
+        const wv = waEl.value.trim();
+        if(!wv || wv.length < 10){
           waEl.classList.add('err'); waErr.classList.add('show');
-          waEl.scrollIntoView({behavior:'smooth',block:'center'}); ok=false;
+          if(!firstErrScrolled){ waEl.scrollIntoView({behavior:'smooth', block:'center'}); firstErrScrolled = true; }
+          ok = false;
         }
       }
     }
+
+    // If age limit violated, also show a toast so users understand why payment is blocked
+    if(!ok && _minAge > 1){
+      const ageViolators = [];
+      for(let i = 1; i <= total; i++){
+        const a = document.getElementById('a-' + i);
+        const age = parseInt(a ? a.value : '');
+        if(!isNaN(age) && age < _minAge){
+          ageViolators.push('Attendee ' + i);
+        }
+      }
+      if(ageViolators.length > 0){
+        showToast(
+          'Age restriction',
+          ageViolators.join(', ') + (ageViolators.length === 1 ? ' does' : ' do') + ' not meet the minimum age of ' + _minAge + ' for this ticket.',
+          'warning',
+          6000
+        );
+      }
+    }
+
     return ok;
   }
 
@@ -802,11 +940,11 @@
     var attendees = [];
     var total = isMultiEntry ? multiCount : qty;
     for(var i = 1; i <= total; i++){
-      var gEl = document.getElementById('g-'+i);
-      var spEl = document.getElementById('sp-'+i);
+      var gEl = document.getElementById('g-' + i);
+      var spEl = document.getElementById('sp-' + i);
       attendees.push({
-        name:    document.getElementById('n-'+i).value.trim(),
-        age:     document.getElementById('a-'+i).value,
+        name:    document.getElementById('n-' + i).value.trim(),
+        age:     document.getElementById('a-' + i).value,
         gender:  gEl ? gEl.value : '',
         special: spEl ? spEl.value : ''
       });
@@ -852,31 +990,18 @@
       order_id: data.orderId, prefill: data.prefill,
       theme: { color: '#6A0DAD', backdrop_color: '#0B0B0F' },
       modal: {
-        // ondismiss: function(){
-        //   setTimeout(function(){
-        //     if(_paymentCompleted) return;
-        //     fetch('/booking/save-pending', {
-        //       method: 'POST', headers: { 'Content-Type': 'application/json' },
-        //       credentials: 'include',
-        //       body: JSON.stringify({ orderId: data.orderId })
-        //     }).catch(function(){});
-        //     setLoading(false);
-        //   }, 900);
-        // }
         ondismiss: function(){
-  // If payment.failed already fired, skip save-pending.
-  // save-failed already released seats — save-pending would double-release.
-  if(_paymentCompleted || _paymentFailed) { setLoading(false); return; }
-  setTimeout(function(){
-    if(_paymentCompleted || _paymentFailed) return;
-    fetch('/booking/save-pending', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ orderId: data.orderId })
-    }).catch(function(){});
-    setLoading(false);
-  }, 900);
-}
+          if(_paymentCompleted || _paymentFailed){ setLoading(false); return; }
+          setTimeout(function(){
+            if(_paymentCompleted || _paymentFailed) return;
+            fetch('/booking/save-pending', {
+              method: 'POST', headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
+              body: JSON.stringify({ orderId: data.orderId })
+            }).catch(function(){});
+            setLoading(false);
+          }, 900);
+        }
       },
       handler: function(response){
         _paymentCompleted = true;
@@ -920,9 +1045,9 @@
   }
 
   function setLoading(on){
-    document.getElementById('payBtn').disabled=on;
-    document.getElementById('payBtnTxt').style.display=on?'none':'flex';
-    document.getElementById('paySpinner').style.display=on?'block':'none';
+    document.getElementById('payBtn').disabled = on;
+    document.getElementById('payBtnTxt').style.display = on ? 'none' : 'flex';
+    document.getElementById('paySpinner').style.display = on ? 'block' : 'none';
   }
   </script>
 </body>

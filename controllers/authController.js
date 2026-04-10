@@ -1,4 +1,6 @@
-const User = require('../models/User');
+'use strict';
+
+const User     = require('../models/User');
 const Referral = require('../models/Referral');
 const { createAndSendOTP, createAndSendEmailOTP, verifyOTP } = require('../utils/otpHelper');
 const { signToken } = require('../middleware/auth');
@@ -54,25 +56,21 @@ exports.getOTP = (req, res) => {
 exports.getVerifyEmail = (req, res) => {
   if (!req.session.pendingEmailVerify) return res.redirect('/');
   res.render('pages/verify-email', {
-    title: 'Verify Email — MEE',
-    email: req.session.pendingEmailVerify.email,
+    title:       'Verify Email — MEE',
+    email:       req.session.pendingEmailVerify.email,
+    // ✅ FIX: pass redirectAfterLogin to the view so skip can use it
+    redirectUrl: req.session.redirectAfterLogin || '/',
   });
 };
 
 exports.getVerifyPhone = (req, res) => {
-  // Must be logged in (session.userId set) to reach this page
   if (!req.session.userId) return res.redirect('/auth/login');
   res.render('pages/verify-phone', { title: 'Verify Phone — MEE' });
 };
 
-
-'use strict';
-
 // ─────────────────────────────────────────────
-// FIX: sendLoginOTP — ensure session is fully flushed before responding
-// Replace just this function in authController.js
+// SEND LOGIN OTP
 // ─────────────────────────────────────────────
-
 exports.sendLoginOTP = async (req, res) => {
   try {
     const { phone, next } = req.body;
@@ -83,8 +81,8 @@ exports.sendLoginOTP = async (req, res) => {
     const user = await User.findOne({ phone: fullPhone });
     if (!user)
       return res.json({
-        success: false,
-        message: 'No account found. Please sign up first.',
+        success:  false,
+        message:  'No account found. Please sign up first.',
         redirect: '/auth/signup',
       });
 
@@ -92,14 +90,12 @@ exports.sendLoginOTP = async (req, res) => {
     if (!result.success)
       return res.json({ success: false, message: result.message || 'Failed to send OTP.' });
 
-    // Set session values
     req.session.otpPhone = fullPhone;
     req.session.otpMode  = 'login';
     if (next && !req.session.redirectAfterLogin) {
       req.session.redirectAfterLogin = next;
     }
 
-    // ✅ Save session first, then respond — guarantees cookie is set before redirect
     req.session.save((err) => {
       if (err) {
         console.error('Session save error in sendLoginOTP:', err);
@@ -115,9 +111,8 @@ exports.sendLoginOTP = async (req, res) => {
 };
 
 // ─────────────────────────────────────────────
-// Also fix postSignup for the same reason
+// SIGNUP
 // ─────────────────────────────────────────────
-
 exports.postSignup = async (req, res) => {
   try {
     const { firstName, lastName, email, phone, whatsapp, gender, place, district, next } = req.body;
@@ -133,8 +128,8 @@ exports.postSignup = async (req, res) => {
 
     if (await User.findOne({ phone: fullPhone }))
       return res.json({
-        success: false,
-        message: 'Phone already registered. Please log in.',
+        success:  false,
+        message:  'Phone already registered. Please log in.',
         redirect: '/auth/login',
       });
     if (email && await User.findOne({ email: email.trim().toLowerCase() }))
@@ -161,7 +156,6 @@ exports.postSignup = async (req, res) => {
     if (!result.success)
       return res.json({ success: false, message: result.message || 'Failed to send OTP.' });
 
-    // ✅ Save session first, then respond
     req.session.save((err) => {
       if (err) {
         console.error('Session save error in postSignup:', err);
@@ -176,6 +170,9 @@ exports.postSignup = async (req, res) => {
   }
 };
 
+// ─────────────────────────────────────────────
+// RESEND OTP
+// ─────────────────────────────────────────────
 exports.resendOTP = async (req, res) => {
   try {
     const phone = req.session.otpPhone;
@@ -188,71 +185,9 @@ exports.resendOTP = async (req, res) => {
   }
 };
 
-
-
-exports.postSignup = async (req, res) => {
-  try {
-    const { firstName, lastName, email, phone, whatsapp, gender, place, district, next } = req.body;
- 
-    if (!firstName || !lastName || !phone || !gender || !place || !district)
-      return res.json({ success: false, message: 'Please fill in all required fields.' });
-    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
-      return res.json({ success: false, message: 'Enter a valid email address.' });
-    if (!/^[6-9]\d{9}$/.test(phone))
-      return res.json({ success: false, message: 'Enter a valid 10-digit Indian mobile number.' });
- 
-    const fullPhone = '+91' + phone;
- 
-    if (await User.findOne({ phone: fullPhone }))
-      return res.json({
-        success: false,
-        message: 'Phone already registered. Please log in.',
-        redirect: '/auth/login',
-      });
-    if (email && await User.findOne({ email: email.trim().toLowerCase() }))
-      return res.json({ success: false, message: 'Email already registered with another account.' });
- 
-    const fullWhatsapp = whatsapp && /^[6-9]\d{9}$/.test(whatsapp.trim())
-      ? '+91' + whatsapp.trim()
-      : fullPhone;
- 
-    req.session.pendingUser = {
-      firstName, lastName,
-      email:    email ? email.trim().toLowerCase() : '',
-      phone:    fullPhone,
-      whatsapp: fullWhatsapp,
-      gender, place, district,
-    };
-    req.session.otpPhone = fullPhone;
-    req.session.otpMode  = 'signup';
-    if (next && !req.session.redirectAfterLogin) {
-      req.session.redirectAfterLogin = next;
-    }
- 
-    const result = await createAndSendOTP(fullPhone, 'signup');
-    if (!result.success)
-      return res.json({ success: false, message: result.message || 'Failed to send OTP.' });
- 
-    // ✅ Save session first, then respond
-    req.session.save((err) => {
-      if (err) {
-        console.error('Session save error in postSignup:', err);
-        return res.json({ success: false, message: 'Session error. Please try again.' });
-      }
-      return res.json({ success: true, redirect: '/auth/otp' });
-    });
- 
-  } catch (err) {
-    console.error('postSignup error:', err);
-    res.json({ success: false, message: 'Server error.' });
-  }
-};
-
-
 // ─────────────────────────────────────────────
 // VERIFY PHONE OTP (signup + login)
 // ─────────────────────────────────────────────
-
 exports.verifyOTPHandler = async (req, res) => {
   try {
     const { otp } = req.body;
@@ -283,12 +218,10 @@ exports.verifyOTPHandler = async (req, res) => {
         referralCode: refCode,
       });
 
-      // Increment referral signup counter
       if (refCode) {
         Referral.findOneAndUpdate({ code: refCode }, { $inc: { signups: 1 } }).catch(() => {});
       }
 
-      // Sign in immediately
       const token = signToken(user._id);
       req.session.token  = token;
       req.session.userId = user._id.toString();
@@ -296,25 +229,30 @@ exports.verifyOTPHandler = async (req, res) => {
       delete req.session.otpPhone;
       delete req.session.otpMode;
 
-      const redirectTo = req.session.redirectAfterLogin || '/';
-      delete req.session.redirectAfterLogin;
+      // ✅ FIX: capture redirectAfterLogin BEFORE email verify flow
+      // so it survives into email verify and is used by skip/verify
+      const finalRedirect = req.session.redirectAfterLogin || '/';
 
-      // If no email provided, signal frontend to show email popup
+      // No email — show popup then go to final destination
       if (!user.email) {
         await new Promise(r => req.session.save(r));
-        return res.json({ success: true, redirect: redirectTo, showEmailPopup: true });
+        return res.json({ success: true, redirect: finalRedirect, showEmailPopup: true });
       }
 
       // Has email — send email OTP to verify
       const emailResult = await createAndSendEmailOTP(pending.email, 'email-verify');
       if (emailResult.success) {
         req.session.pendingEmailVerify = { userId: user._id.toString(), email: pending.email };
+        // ✅ FIX: Keep redirectAfterLogin in session — do NOT delete it yet.
+        // It will be consumed by verifyEmailOTP or skipEmail.
         await new Promise(r => req.session.save(r));
         return res.json({ success: true, redirect: '/auth/verify-email' });
       }
 
+      // Email OTP send failed — skip email verify, go straight to destination
+      delete req.session.redirectAfterLogin;
       await new Promise(r => req.session.save(r));
-      return res.json({ success: true, redirect: redirectTo });
+      return res.json({ success: true, redirect: finalRedirect });
     }
 
     // ── LOGIN ──
@@ -344,7 +282,6 @@ exports.verifyOTPHandler = async (req, res) => {
 // ─────────────────────────────────────────────
 // VERIFY EMAIL OTP
 // ─────────────────────────────────────────────
-
 exports.verifyEmailOTP = async (req, res) => {
   try {
     const { otp } = req.body;
@@ -357,6 +294,7 @@ exports.verifyEmailOTP = async (req, res) => {
     await User.findByIdAndUpdate(pending.userId, { emailVerified: true });
     delete req.session.pendingEmailVerify;
 
+    // ✅ FIX: consume redirectAfterLogin here (the correct final destination)
     const redirectTo = req.session.redirectAfterLogin || '/';
     delete req.session.redirectAfterLogin;
     await new Promise(r => req.session.save(r));
@@ -382,7 +320,6 @@ exports.resendEmailOTP = async (req, res) => {
 // ─────────────────────────────────────────────
 // PHONE VERIFY (Google users)
 // ─────────────────────────────────────────────
-
 exports.sendPhoneOTP = async (req, res) => {
   try {
     const { phone } = req.body;
@@ -393,7 +330,6 @@ exports.sendPhoneOTP = async (req, res) => {
     const userId = req.session.userId;
     if (!userId) return res.json({ success: false, message: 'Session expired. Please log in again.', redirect: '/auth/login' });
 
-    // Check uniqueness — not taken by a DIFFERENT user
     const existing = await User.findOne({ phone: fullPhone });
     if (existing && existing._id.toString() !== userId.toString())
       return res.json({ success: false, message: 'This number is already registered with another account.' });
@@ -447,32 +383,25 @@ exports.resendPhoneOTP = async (req, res) => {
 // ─────────────────────────────────────────────
 // GOOGLE CALLBACK
 // ─────────────────────────────────────────────
-
 exports.googleCallback = async (req, res) => {
   try {
-    // req.user is already populated by passport (from passport.js)
     const user = req.user;
     if (!user) return res.redirect('/auth/login?error=google_failed');
 
-    // Sign JWT and set session
     const token = signToken(user._id);
     req.session.token  = token;
     req.session.userId = user._id.toString();
 
-    // Preserve redirectAfterLogin BEFORE saving session
     const redirectTo = req.session.redirectAfterLogin || '/';
 
-    // New Google user (no phone yet) → go to verify-phone
     const needsPhone = !user.phone || user.phone.trim() === '' || !user.isVerified;
     if (needsPhone) {
-      // Keep redirectAfterLogin so after phone verify they end up in the right place
       req.session.redirectAfterLogin = redirectTo;
       await new Promise(r => req.session.save(r));
       return redirectPage(res, '/auth/verify-phone',
         `Welcome, ${user.firstName}! 👋`, 'One more step — add your phone number', '#6A0DAD');
     }
 
-    // Existing verified user → go to destination
     delete req.session.redirectAfterLogin;
     await new Promise(r => req.session.save(r));
     return redirectPage(res, redirectTo,
@@ -486,23 +415,31 @@ exports.googleCallback = async (req, res) => {
 
 // ─────────────────────────────────────────────
 // LOGOUT
+// ✅ FIX: clear 'mee.sid' (the actual session cookie name set in server.js)
+// The old code cleared 'connect.sid' which was wrong — session never actually died,
+// causing back-button to still show protected pages.
 // ─────────────────────────────────────────────
-
 exports.logout = (req, res) => {
+  const clearAndRedirect = () => {
+    res.clearCookie('mee.sid');        // ✅ matches name: 'mee.sid' in server.js
+    res.clearCookie('np_token');       // JWT cookie cleanup
+    res.clearCookie('connect.sid');    // belt-and-suspenders for any old sessions
+    res.redirect('/');
+  };
+
   if (req.logout) {
     req.logout((err) => {
       if (err) console.error('Passport logout error:', err);
-      req.session.destroy(() => { res.clearCookie('np_token'); res.clearCookie('connect.sid'); res.redirect('/'); });
+      req.session.destroy(() => clearAndRedirect());
     });
   } else {
-    req.session.destroy(() => { res.clearCookie('np_token'); res.clearCookie('connect.sid'); res.redirect('/'); });
+    req.session.destroy(() => clearAndRedirect());
   }
 };
 
 // ─────────────────────────────────────────────
 // SAVE EMAIL (from popup after signup)
 // ─────────────────────────────────────────────
-
 exports.saveEmail = async (req, res) => {
   try {
     const userId = req.session.userId;
@@ -510,7 +447,6 @@ exports.saveEmail = async (req, res) => {
     const { email } = req.body;
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
       return res.json({ success: false, message: 'Invalid email.' });
-    // Check not already taken
     const existing = await User.findOne({ email: email.trim().toLowerCase(), _id: { $ne: userId } });
     if (existing) return res.json({ success: false, message: 'Email already in use.' });
     await User.findByIdAndUpdate(userId, { email: email.trim().toLowerCase() });

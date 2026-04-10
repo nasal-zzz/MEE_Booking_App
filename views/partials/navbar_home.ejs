@@ -20,42 +20,45 @@
         <div class="flex items-center space-x-6 mr-4">
           <a href="/"         class="text-gray-300 hover:text-white transition-colors duration-200 text-sm font-medium">Home</a>
           <a href="/#about"   class="text-gray-300 hover:text-white transition-colors duration-200 text-sm font-medium">About Show</a>
-          <a href="/support" class="text-gray-300 hover:text-white transition-colors duration-200 text-sm font-medium">Contact Us</a>
-          <!-- <a href="/support"  class="text-gray-300 hover:text-white transition-colors duration-200 text-sm font-medium">Help & Support</a> -->
+          <a href="/support"  class="text-gray-300 hover:text-white transition-colors duration-200 text-sm font-medium">Contact Us</a>
 
           <% if (locals.user && user) { %>
             <!-- My Tickets (logged in) -->
             <a href="/user/profile/#myBookings" class="text-gray-300 hover:text-white transition-colors duration-200 text-sm font-medium">My Tickets</a>
 
-            <!-- Profile Pill + Dropdown -->
-            <div class="relative" id="npProfileWrap">
-  <div class="flex items-center gap-2 cursor-pointer" onclick="npToggleProfile()">
-    <!-- Circle with initials — matches the navbar's bordered circle style -->
-    <div class="w-9 h-9 rounded-full border border-white/60 flex items-center justify-center text-white text-xs font-bold tracking-wide bg-transparent hover:border-white transition-colors duration-200">
-      <%= user.firstName.charAt(0).toUpperCase() %>
-    </div>
-  </div>
-
-  <!-- Dropdown -->
-  <div id="npProfileDd" class="hidden absolute top-[calc(100%+10px)] right-0 bg-[#13131b] border border-white/10 rounded-xl min-w-[200px] shadow-2xl z-[400] overflow-hidden">
-    <!-- Head -->
-    <div class="flex items-center gap-3 px-4 py-3 bg-primary/5 border-b border-white/7">
-      <div class="w-9 h-9 rounded-full border border-white/60 flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
-        <%= user.firstName.charAt(0).toUpperCase() %>
-      </div>
-      <div>
-        <div class="text-white text-sm font-bold"><%= (user.firstName + ' ' + (user.lastName||'')).trim() %></div>
-        <div class="text-[#777] text-xs font-mono mt-0.5"><%= user.phone && !user.phone.startsWith('GOOGLE_') ? user.phone : (user.email||'') %></div>
-      </div>
-    </div>
-    <!-- Links -->
-    <a href="/user/profile"             class="flex items-center gap-2.5 px-4 py-2.5 text-[#ccc] hover:bg-white/5 hover:text-white text-sm transition-colors"><i class="bi bi-person-fill text-primary w-4"></i> View Profile</a>
-    <a href="/user/profile/#myBookings" class="flex items-center gap-2.5 px-4 py-2.5 text-[#ccc] hover:bg-white/5 hover:text-white text-sm transition-colors"><i class="bi bi-ticket-perforated-fill text-primary w-4"></i> My Tickets</a>
-    <a href="/support"                  class="flex items-center gap-2.5 px-4 py-2.5 text-[#ccc] hover:bg-white/5 hover:text-white text-sm transition-colors"><i class="bi bi-headset text-primary w-4"></i> Contact Us</a>
-    <div class="h-px bg-white/10"></div>
-    <a href="/auth/logout"              class="flex items-center gap-2.5 px-4 py-2.5 text-[#FF4444] hover:bg-red-500/6 text-sm transition-colors"><i class="bi bi-box-arrow-right w-4"></i> Log Out</a>
-  </div>
+          <!-- Profile Pill + Dropdown -->
+<div class="relative" id="npProfileWrap">
+  <!-- ✅ icon + first name -->
+<div
+  class="flex items-center gap-2.5 cursor-pointer bg-primary/10 border border-white/30 hover:border-primary/55 hover:bg-primary/20 rounded-full px-3 py-1.5 transition-all duration-200 self-center"
+  onclick="npToggleProfile()">
+  <i class="bi bi-person-circle text-white text-base" style="line-height:1;display:flex;align-items:center;"></i>
+  <span class="text-white text-sm font-semibold max-w-[90px] truncate leading-none"><%= user.firstName %></span>
 </div>
+
+              <!-- Dropdown -->
+              <div id="npProfileDd" class="hidden absolute top-[calc(100%+10px)] right-0 bg-[#13131b] border border-white/10 rounded-xl min-w-[210px] shadow-2xl z-[400] overflow-hidden">
+                <!-- Head -->
+                <div class="flex items-center gap-3 px-4 py-3 bg-primary/5 border-b border-white/7">
+                  <div class="w-9 h-9 rounded-full bg-gradient-to-br from-[#3a0870] to-[#6A0DAD] border border-primary/50 flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
+                    <%= user.firstName.charAt(0).toUpperCase() %><% if(user.lastName){ %><%= user.lastName.charAt(0).toUpperCase() %><% } %>
+                  </div>
+                  <div>
+                    <div class="text-white text-sm font-bold"><%= (user.firstName + ' ' + (user.lastName||'')).trim() %></div>
+                    <div class="text-[#777] text-xs font-mono mt-0.5"><%= user.phone && !user.phone.startsWith('GOOGLE_') ? user.phone : (user.email||'') %></div>
+                  </div>
+                </div>
+                <!-- Links -->
+                <a href="/user/profile"             class="flex items-center gap-2.5 px-4 py-2.5 text-[#ccc] hover:bg-white/5 hover:text-white text-sm transition-colors"><i class="bi bi-person-fill text-primary w-4"></i> View Profile</a>
+                <!-- ✅ ADDED: name + contact shown only on mobile (md:hidden) -->
+                <div class="md:hidden flex flex-col gap-0.5 px-4 py-2 bg-primary/[0.03] border-b border-white/5" style="padding-left:2.65rem;">
+                  <span class="text-[#ddd] text-sm font-semibold font-['Poppins',sans-serif]"><%= (user.firstName + ' ' + (user.lastName||'')).trim() %></span>
+                  <span class="text-[#777] text-xs font-mono"><%= user.phone && !user.phone.startsWith('GOOGLE_') ? user.phone : (user.email||'') %></span>
+                </div>
+               <div class="h-px bg-white/10"></div>
+                <a href="/auth/logout"              class="flex items-center gap-2.5 px-4 py-2.5 text-[#FF4444] hover:bg-red-500/6 text-sm transition-colors"><i class="bi bi-box-arrow-right w-4"></i> Log Out</a>
+              </div>
+            </div>
 
           <% } else { %>
             <!-- My Tickets (guest) -->
@@ -70,19 +73,25 @@
 
           <div class="h-6 w-[1px] bg-white/20"></div>
         </div>
-        <a href="<% if(locals.user && user){ %>/booking/seatmap/<%= locals.event ? event._id : '' %><% } else { %>/auth/login?next=/booking/seatmap/<%= locals.event ? event._id : '' %><% } %>"
-          class="bg-gradient-premium relative group overflow-hidden text-white font-bold py-2.5 px-6 rounded-full text-sm inline-block shadow-lg shadow-primary/30 transition-transform hover:scale-105 active:scale-95 text-center">
-          <span class="relative z-10">Book Now</span>
-          <div class="absolute inset-0 h-full w-full bg-white/20 transform -skew-x-12 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
-        </a>
+        <% if (locals.event && event) { %>
+  <a href="<% if(locals.user && user){ %>/booking/seatmap/<%= event._id %><% } else { %>/auth/login?next=/booking/seatmap/<%= event._id %><% } %>"
+    class="bg-gradient-premium relative group overflow-hidden text-white font-bold py-2.5 px-6 rounded-full text-sm inline-block shadow-lg shadow-primary/30 transition-transform hover:scale-105 active:scale-95 text-center">
+    <span class="relative z-10">Book Now</span>
+    <div class="absolute inset-0 h-full w-full bg-white/20 transform -skew-x-12 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
+  </a>
+<% } %>
+
       </div>
 
       <!-- Mobile: Book Now + Hamburger -->
       <div class="flex md:hidden items-center gap-3">
-        <a href="<% if(locals.user && user){ %>/booking/seatmap/<%= locals.event ? event._id : '' %><% } else { %>/auth/login?next=/booking/seatmap/<%= locals.event ? event._id : '' %><% } %>"
-          class="bg-gradient-premium text-white font-bold py-1.5 px-4 rounded-full text-xs shadow-lg shadow-primary/20 whitespace-nowrap">
-          Book Now
-        </a>
+        <% if (locals.event && event) { %>
+  <a href="<% if(locals.user && user){ %>/booking/seatmap/<%= event._id %><% } else { %>/auth/login?next=/booking/seatmap/<%= event._id %><% } %>"
+    class="bg-gradient-premium text-white font-bold py-1.5 px-4 rounded-full text-xs shadow-lg shadow-primary/20 whitespace-nowrap">
+    Book Now
+  </a>
+<% } %>
+
         <button
           id="mobile-menu-btn"
           aria-label="Open navigation menu"
@@ -118,14 +127,21 @@
   <!-- Links -->
   <div class="sidebar-body">
     <a href="/"         class="sidebar-link">Home</a>
-    <a href="/#events"  class="sidebar-link">Events</a>
     <a href="/#about"   class="sidebar-link">About Show</a>
-    <a href="/support" class="sidebar-link">Contact Us</a>
-    <!-- <a href="/support"  class="sidebar-link">Help & Support</a> -->
+    <a href="/support"  class="sidebar-link">Contact Us</a>
 
     <% if (locals.user && user) { %>
       <a href="/user/profile/#myBookings" class="sidebar-link">My Tickets</a>
       <a href="/user/profile"             class="sidebar-link">View Profile</a>
+      <!-- ✅ ADDED: name + contact in mobile sidebar below View Profile -->
+      <div style="padding: 0.3rem 1.2rem 0.7rem 0.1rem; margin-top: -0.4rem; border-bottom: 1px solid rgba(255,255,255,0.06);">
+  <div style="font-family:'Poppins',sans-serif; font-size:0.78rem; font-weight:600; color:#ddd;">
+    <%= (user.firstName + ' ' + (user.lastName||'')).trim() %>
+  </div>
+  <div style="font-family:'Space Mono',monospace; font-size:0.62rem; color:#777; margin-top:2px;">
+    <%= user.phone && !user.phone.startsWith('GOOGLE_') ? user.phone : (user.email||'') %>
+  </div>
+</div>
     <% } else { %>
       <a href="/auth/login?next=/user/profile/#myBookings" class="sidebar-link">My Tickets</a>
       <a href="/auth/login" class="sidebar-link sidebar-link--highlight">Login / Signup</a>
@@ -144,8 +160,9 @@
           <i class="bi bi-box-arrow-right"></i> Sign Out
         </a>
       <% } else { %>
-        <a href="<% if(locals.user && user){ %>/booking/seatmap/<%= locals.event ? event._id : '' %><% } else { %>/auth/login?next=/booking/seatmap/<%= locals.event ? event._id : '' %><% } %>" class="sidebar-book-btn">Book Now</a>
-      <% } %>
+<% if (locals.event && event) { %>
+  <a href="<% if(locals.user && user){ %>/booking/seatmap/<%= event._id %><% } else { %>/auth/login?next=/booking/seatmap/<%= event._id %><% } %>" class="sidebar-book-btn">Book Now</a>
+<% } %>      <% } %>
     </div>
   </div>
 
@@ -236,7 +253,6 @@ function npToggleProfile() {
   var dd = document.getElementById('npProfileDd');
   if (!dd) return;
   var isOpen = dd.classList.toggle('hidden');
-  // 'hidden' removed = open; add outside-click listener
   if (!isOpen) {
     setTimeout(function () {
       document.addEventListener('click', _npCloseProfile, { once: true });

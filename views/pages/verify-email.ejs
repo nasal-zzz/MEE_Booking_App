@@ -46,17 +46,32 @@
     <input class="otp-box" maxlength="1" inputmode="numeric" id="o6"/>
   </div>
   <button class="btn" id="verifyBtn" onclick="verifyEmail()">Verify Email</button>
+
+  <%
+    // ✅ FIX: skip goes to the original destination (e.g. seatpicker), not hardcoded '/'
+    const skipDest = (typeof redirectUrl !== 'undefined' && redirectUrl) ? redirectUrl : '/';
+  %>
   <button class="btn-skip" onclick="skipEmail()">Skip for now →</button>
+
   <div class="resend">Didn't receive it? <a onclick="resend()">Resend OTP</a></div>
 </div>
 <script>
+  // ✅ FIX: skip destination passed from server (redirectAfterLogin or '/')
+  const SKIP_DEST = '<%= skipDest %>';
+
   // OTP box auto-advance
   const boxes=[...document.querySelectorAll('.otp-box')];
   boxes.forEach((b,i)=>{
     b.addEventListener('input',()=>{if(b.value.length===1&&boxes[i+1])boxes[i+1].focus();});
     b.addEventListener('keydown',e=>{if(e.key==='Backspace'&&!b.value&&boxes[i-1]){boxes[i-1].focus();}});
-    b.addEventListener('paste',e=>{e.preventDefault();const txt=(e.clipboardData||window.clipboardData).getData('text').replace(/\D/g,'');txt.split('').forEach((c,j)=>{if(boxes[i+j])boxes[i+j].value=c;});if(boxes[Math.min(i+txt.length,5)])boxes[Math.min(i+txt.length,5)].focus();});
+    b.addEventListener('paste',e=>{
+      e.preventDefault();
+      const txt=(e.clipboardData||window.clipboardData).getData('text').replace(/\D/g,'');
+      txt.split('').forEach((c,j)=>{if(boxes[i+j])boxes[i+j].value=c;});
+      if(boxes[Math.min(i+txt.length,5)])boxes[Math.min(i+txt.length,5)].focus();
+    });
   });
+
   function getOTP(){return boxes.map(b=>b.value).join('');}
   function showMsg(txt,type){const m=document.getElementById('msg');m.textContent=txt;m.className='msg '+type;m.style.display='block';}
 
@@ -66,8 +81,14 @@
     document.getElementById('verifyBtn').disabled=true;
     const res=await fetch('/auth/verify-email-otp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({otp})});
     const d=await res.json();
-    if(d.success){showMsg('Email verified! Redirecting…','ok');setTimeout(()=>window.location.href=d.redirect||'/',1000);}
-    else{showMsg(d.message||'Invalid OTP','err');document.getElementById('verifyBtn').disabled=false;}
+    if(d.success){
+      showMsg('Email verified! Redirecting…','ok');
+      // ✅ d.redirect comes from server's redirectAfterLogin (e.g. seatpicker URL)
+      setTimeout(()=>window.location.replace(d.redirect||SKIP_DEST),1000);
+    } else {
+      showMsg(d.message||'Invalid OTP','err');
+      document.getElementById('verifyBtn').disabled=false;
+    }
   }
 
   async function resend(){
@@ -77,7 +98,10 @@
     showMsg(d.message||'OTP resent!', d.success?'ok':'err');
   }
 
-  function skipEmail(){window.location.href='/';}
+  // ✅ FIX: skip now redirects to original destination (e.g. seatpicker), not '/'
+  function skipEmail(){
+    window.location.replace(SKIP_DEST);
+  }
 </script>
 </body>
 </html>

@@ -107,20 +107,21 @@
     </div>
 
     <!-- ── Active Event Panel ── -->
-    <% if (activeEvent) {
-      const catColors = {platinum:'#9D4EDD',gold:'#f5c842',silver:'#c0c8d8',vip:'#bf80ff',general:'#a0a0a0',standard:'#a0a0a0',family:'#FF6B6B',fanfit:'#00FF88'};
-      // Build per-category attendee lists
-      const catMap = {};
-      activeEvent.ticketTypes.forEach(t => { catMap[t.category] = { name: t.name, total: t.totalSeats, booked: t.bookedSeats, price: t.price, color: catColors[t.category]||'#6A0DAD', attendees: [] }; });
-      activeEventBookings.forEach(b => {
-        if (catMap[b.ticketType]) {
-          b.tickets.forEach(tk => {
-            catMap[b.ticketType].attendees.push({ name: tk.attendee?.name||'—', age: tk.attendee?.age||'—', gender: tk.attendee?.gender||'—', phone: b.contactPhone||b.user?.phone||'—', bookingRef: b.bookingRef });
-          });
-        }
+<% if (activeEvent) {
+  const catColors = {platinum:'#9D4EDD',gold:'#f5c842',silver:'#c0c8d8',vip:'#bf80ff',general:'#a0a0a0',standard:'#a0a0a0',family:'#FF6B6B',fanfit:'#00FF88'};
+  // Build per-category attendee lists
+  const catMap = {};
+  activeEvent.ticketTypes.forEach(t => { catMap[t.category] = { name: t.name, total: t.totalSeats, booked: 0, price: t.price, color: catColors[t.category]||'#6A0DAD', attendees: [] }; });
+  activeEventBookings.forEach(b => {
+    if (catMap[b.ticketType]) {
+      catMap[b.ticketType].booked += b.quantity;
+      b.tickets.forEach(tk => {
+        catMap[b.ticketType].attendees.push({ name: tk.attendee?.name||'—', age: tk.attendee?.age||'—', gender: tk.attendee?.gender||'—', phone: b.contactPhone||b.user?.phone||'—', bookingRef: b.bookingRef });
       });
-      const catList = Object.entries(catMap);
-    %>
+    }
+  });
+  const catList = Object.entries(catMap);
+%>
     <div class="table-card" style="margin-bottom:2rem;">
       <div class="table-header" style="flex-wrap:wrap;gap:0.8rem;">
         <div>
@@ -137,7 +138,8 @@
             <div style="font-size:0.7rem;color:var(--muted);">TICKETS SOLD</div>
           </div>
           <div style="text-align:center;">
-            <div style="font-family:'Poppins',sans-serif;font-size:1.4rem;color:#f5c842;"><%= activeEvent.ticketTypes.reduce((s,t)=>s+(t.totalSeats-t.bookedSeats),0) %></div>
+            <div style="font-family:'Poppins',sans-serif;font-size:1.4rem;color:#f5c842;"><%= catList.reduce((s,[cat,info])=>s+(info.total-info.booked),0) %>
+            </div>
             <div style="font-size:0.7rem;color:var(--muted);">SEATS LEFT</div>
           </div>
         </div>

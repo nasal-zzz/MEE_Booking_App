@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title><%= title || 'All Users' %></title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Outfit:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet"/>
+  <style>
+    :root{--bg:#0B0B0F;--surface:#14141C;--surface2:#1A1A24;--border:rgba(255,255,255,0.08);--accent:#6A0DAD;--accent2:#9D4EDD;--text:#fff;--muted:#B3B3B3;--success:#00FF88;--error:#FF4444;--warn:#f5c842;}
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;min-height:100vh;}
+    body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(255,255,255,0.012) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.012) 1px,transparent 1px);background-size:50px 50px;pointer-events:none;z-index:0;}
+    .admin-layout{display:grid;grid-template-columns:220px 1fr;min-height:100vh;}
+    .main{padding:2rem;position:relative;z-index:1;overflow-x:hidden;}
+
+    /* ── Top bar ── */
+    .page-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:1.5rem;}
+    .page-title{font-family:'Poppins',sans-serif;font-size:1.8rem;letter-spacing:2px;line-height:1.1;}
+    .page-title span{font-size:0.9rem;font-family:'Space Mono',monospace;color:var(--muted);letter-spacing:1px;display:block;margin-top:2px;}
+
+    /* ── Summary cards ── */
+    .summary-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:0.75rem;margin-bottom:1.5rem;}
+    .sum-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1rem 1.2rem;}
+    .sum-card .num{font-family:'Space Mono',monospace;font-size:1.5rem;font-weight:700;line-height:1;}
+    .sum-card .lbl{font-size:0.72rem;color:var(--muted);margin-top:4px;letter-spacing:1px;}
+    .sum-card.c-total .num{color:#fff;}
+    .sum-card.c-verified .num{color:var(--success);}
+    .sum-card.c-google .num{color:#4285F4;}
+    .sum-card.c-blocked .num{color:var(--error);}
+    .sum-card.c-new .num{color:var(--warn);}
+
+    /* ── Filter bar ── */
+    .filter-bar{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1rem 1.2rem;margin-bottom:1rem;display:flex;flex-wrap:wrap;gap:0.75rem;align-items:center;}
+    .filter-bar input,.filter-bar select{background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:0.55rem 0.9rem;font-family:'Outfit',sans-serif;font-size:0.85rem;outline:none;transition:border-color 0.15s;}
+    .filter-bar input:focus,.filter-bar select:focus{border-color:var(--accent2);}
+    .filter-bar input{flex:1;min-width:200px;}
+    .filter-bar select{min-width:130px;cursor:pointer;}
+    .filter-bar select option{background:#1a1a24;}
+    .filter-reset{display:inline-flex;align-items:center;gap:0.35rem;padding:0.55rem 1rem;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:0.8rem;font-family:'Space Mono',monospace;cursor:pointer;transition:all 0.15s;white-space:nowrap;}
+    .filter-reset:hover{border-color:rgba(255,255,255,0.2);color:#fff;}
+
+    /* ── Status pills ── */
+    .pills-row{display:flex;gap:0.6rem;flex-wrap:wrap;margin-bottom:1.2rem;}
+    .pill{display:inline-flex;align-items:center;gap:0.4rem;padding:0.4rem 0.85rem;border-radius:20px;font-size:0.75rem;font-weight:700;cursor:pointer;border:1px solid transparent;transition:all 0.15s;font-family:'Space Mono',monospace;letter-spacing:0.5px;}
+    .pill-all{background:rgba(255,255,255,0.05);border-color:rgba(255,255,255,0.1);color:#fff;}
+    .pill-all.active,.pill-all:hover{background:rgba(255,255,255,0.1);border-color:rgba(255,255,255,0.25);}
+    .pill-verified{background:rgba(0,255,136,0.06);border-color:rgba(0,255,136,0.2);color:var(--success);}
+    .pill-verified.active,.pill-verified:hover{background:rgba(0,255,136,0.13);}
+    .pill-unverified{background:rgba(245,200,66,0.06);border-color:rgba(245,200,66,0.25);color:var(--warn);}
+    .pill-unverified.active,.pill-unverified:hover{background:rgba(245,200,66,0.14);}
+    .pill-blocked{background:rgba(255,68,68,0.06);border-color:rgba(255,68,68,0.25);color:var(--error);}
+    .pill-blocked.active,.pill-blocked:hover{background:rgba(255,68,68,0.13);}
+    .pill-google{background:rgba(66,133,244,0.07);border-color:rgba(66,133,244,0.25);color:#4285F4;}
+    .pill-google.active,.pill-google:hover{background:rgba(66,133,244,0.15);}
+
+    /* ── Table ── */
+    .table-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+    .tbl-wrap{overflow-x:auto;}
+    table{width:100%;border-collapse:collapse;min-width:820px;}
+    th{font-family:'Space Mono',monospace;font-size:0.52rem;letter-spacing:2px;color:var(--muted);text-transform:uppercase;padding:0.85rem 1rem;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap;}
+    td{padding:0.8rem 1rem;border-bottom:1px solid rgba(255,255,255,0.04);font-size:0.82rem;vertical-align:middle;}
+    tr:last-child td{border-bottom:none;}
+    tr.is-blocked td{opacity:0.55;}
+    tr:hover td{background:rgba(255,255,255,0.013);}
+
+    /* Avatar */
+    .avatar{width:34px;height:34px;border-radius:50%;object-fit:cover;background:rgba(106,13,173,0.3);border:1px solid rgba(106,13,173,0.3);display:flex;align-items:center;justify-content:center;font-family:'Space Mono',monospace;font-size:0.7rem;font-weight:700;color:var(--accent2);text-transform:uppercase;flex-shrink:0;}
+    .user-cell{display:flex;align-items:center;gap:0.65rem;}
+    .user-name{font-weight:600;color:#fff;line-height:1.2;}
+    .user-sub{font-size:0.68rem;color:var(--muted);font-family:'Space Mono',monospace;margin-top:1px;}
+
+    /* Badges */
+    .badge{font-family:'Space Mono',monospace;font-size:0.52rem;letter-spacing:1px;padding:0.18rem 0.55rem;border-radius:10px;display:inline-block;}
+    .b-verified{background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.25);color:var(--success);}
+    .b-unverified{background:rgba(245,200,66,0.08);border:1px solid rgba(245,200,66,0.3);color:var(--warn);}
+    .b-blocked{background:rgba(255,68,68,0.08);border:1px solid rgba(255,68,68,0.3);color:var(--error);}
+    .b-google{background:rgba(66,133,244,0.08);border:1px solid rgba(66,133,244,0.3);color:#4285F4;}
+    .b-email{background:rgba(157,78,221,0.08);border:1px solid rgba(157,78,221,0.3);color:var(--accent2);}
+
+    /* Booking count */
+    .bk-count{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;font-family:'Space Mono',monospace;font-size:0.72rem;font-weight:700;border:1px solid;}
+    .bk-0{background:rgba(255,255,255,0.03);border-color:rgba(255,255,255,0.08);color:#444;}
+    .bk-low{background:rgba(106,13,173,0.1);border-color:rgba(106,13,173,0.25);color:var(--accent2);}
+    .bk-mid{background:rgba(0,255,136,0.08);border-color:rgba(0,255,136,0.25);color:var(--success);}
+    .bk-high{background:rgba(245,200,66,0.1);border-color:rgba(245,200,66,0.3);color:var(--warn);}
+
+    /* Action buttons */
+    .actions{display:flex;gap:0.4rem;align-items:center;}
+    .btn-act{display:inline-flex;align-items:center;gap:0.3rem;padding:0.3rem 0.6rem;border-radius:5px;font-size:0.68rem;font-weight:700;cursor:pointer;border:1px solid;font-family:inherit;transition:all 0.15s;white-space:nowrap;}
+    .btn-block{border-color:rgba(255,68,68,0.35);background:rgba(255,68,68,0.07);color:var(--error);}
+    .btn-block:hover{background:rgba(255,68,68,0.16);}
+    .btn-unblock{border-color:rgba(0,255,136,0.35);background:rgba(0,255,136,0.07);color:var(--success);}
+    .btn-unblock:hover{background:rgba(0,255,136,0.16);}
+    .btn-delete{border-color:rgba(255,68,68,0.35);background:rgba(255,68,68,0.07);color:var(--error);}
+    .btn-delete:hover{background:rgba(255,68,68,0.2);}
+    .btn-view{border-color:rgba(157,78,221,0.35);background:rgba(157,78,221,0.07);color:var(--accent2);}
+    .btn-view:hover{background:rgba(157,78,221,0.16);}
+    .btn-act:disabled{opacity:0.4;cursor:not-allowed;}
+
+    /* Empty */
+    .empty-state{text-align:center;padding:3.5rem 1rem;color:#444;}
+    .empty-state i{font-size:2.5rem;display:block;margin-bottom:0.75rem;}
+
+    /* Modal */
+    .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:1000;align-items:center;justify-content:center;padding:1rem;}
+    .modal-bg.open{display:flex;}
+    .modal{background:var(--surface);border:1px solid var(--border);border-radius:12px;width:100%;max-width:460px;padding:1.5rem;position:relative;max-height:90vh;overflow-y:auto;}
+    .modal h3{font-family:'Poppins',sans-serif;font-size:1.1rem;margin-bottom:1rem;letter-spacing:1px;}
+    .modal-close{position:absolute;top:1rem;right:1rem;background:none;border:none;color:var(--muted);cursor:pointer;font-size:1.1rem;padding:0.2rem;}
+    .modal-close:hover{color:#fff;}
+    .detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;}
+    .detail-item .lbl{font-family:'Space Mono',monospace;font-size:0.55rem;letter-spacing:2px;color:var(--muted);margin-bottom:3px;}
+    .detail-item .val{font-size:0.85rem;color:#fff;word-break:break-all;}
+    .detail-item.full{grid-column:1/-1;}
+    .modal-divider{border:none;border-top:1px solid var(--border);margin:1rem 0;}
+    .booking-mini{display:flex;flex-direction:column;gap:0.5rem;max-height:200px;overflow-y:auto;}
+    .booking-row{display:flex;align-items:center;justify-content:space-between;padding:0.5rem 0.7rem;background:rgba(255,255,255,0.03);border-radius:6px;font-size:0.78rem;}
+    .booking-row .bref{font-family:'Space Mono',monospace;font-size:0.65rem;color:var(--accent2);}
+
+    /* Confirm modal */
+    .confirm-modal{max-width:380px;}
+    .confirm-modal p{color:var(--muted);font-size:0.88rem;line-height:1.6;margin-bottom:1.2rem;}
+    .confirm-modal strong{color:#fff;}
+    .confirm-actions{display:flex;gap:0.6rem;justify-content:flex-end;}
+    .btn-cancel-modal{padding:0.55rem 1.1rem;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-family:inherit;font-size:0.82rem;}
+    .btn-cancel-modal:hover{color:#fff;border-color:rgba(255,255,255,0.2);}
+    .btn-confirm-action{padding:0.55rem 1.1rem;border-radius:6px;border:1px solid;cursor:pointer;font-family:inherit;font-size:0.82rem;font-weight:700;}
+    .btn-confirm-danger{border-color:rgba(255,68,68,0.5);background:rgba(255,68,68,0.1);color:var(--error);}
+    .btn-confirm-danger:hover{background:rgba(255,68,68,0.2);}
+    .btn-confirm-warn{border-color:rgba(245,200,66,0.5);background:rgba(245,200,66,0.1);color:var(--warn);}
+    .btn-confirm-warn:hover{background:rgba(245,200,66,0.2);}
+    .btn-confirm-success{border-color:rgba(0,255,136,0.5);background:rgba(0,255,136,0.1);color:var(--success);}
+    .btn-confirm-success:hover{background:rgba(0,255,136,0.2);}
+
+    /* Toast */
+    .toast{position:fixed;bottom:1.5rem;right:1.5rem;padding:0.75rem 1.2rem;border-radius:8px;font-size:0.82rem;font-weight:600;z-index:9999;display:none;align-items:center;gap:0.5rem;border:1px solid;animation:slideUp 0.25s ease;}
+    .toast.show{display:flex;}
+    .toast-success{background:rgba(0,255,136,0.1);border-color:rgba(0,255,136,0.35);color:var(--success);}
+    .toast-error{background:rgba(255,68,68,0.1);border-color:rgba(255,68,68,0.35);color:var(--error);}
+    @keyframes slideUp{from{transform:translateY(12px);opacity:0}to{transform:translateY(0);opacity:1}}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .spin{width:12px;height:12px;border:2px solid rgba(255,255,255,0.15);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:inline-block;}
+
+    /* Pagination */
+    .pagination{display:flex;align-items:center;justify-content:space-between;padding:0.85rem 1.2rem;border-top:1px solid var(--border);font-size:0.78rem;color:var(--muted);flex-wrap:wrap;gap:0.5rem;}
+    .pg-btns{display:flex;gap:0.4rem;}
+    .pg-btn{padding:0.3rem 0.7rem;border-radius:5px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-family:'Space Mono',monospace;font-size:0.72rem;transition:all 0.15s;}
+    .pg-btn:hover:not(:disabled){border-color:var(--accent2);color:#fff;}
+    .pg-btn.active{background:rgba(106,13,173,0.15);border-color:rgba(106,13,173,0.35);color:var(--accent2);}
+    .pg-btn:disabled{opacity:0.3;cursor:not-allowed;}
+
+    @media(max-width:900px){.admin-layout{grid-template-columns:1fr;}}
+  </style>
+</head>
+<body>
+<div class="admin-layout">
+  <%
+    var _sidebarPartial = locals.isSuperAdmin ? '../partials/superadmin-sidebar' : '../partials/admin-sidebar';
+  %>
+  <%- include(_sidebarPartial, { activePage: 'users' }) %>
+
+  <main class="main">
+    <div class="page-header">
+      <div class="page-title">
+        ALL USERS
+        <span>REGISTERED ACCOUNTS — <%= users.length %> TOTAL</span>
+      </div>
+    </div>
+
+    <!-- Summary cards -->
+    <div class="summary-row">
+      <div class="sum-card c-total">
+        <div class="num"><%= users.length %></div>
+        <div class="lbl">TOTAL USERS</div>
+      </div>
+      <div class="sum-card c-verified">
+        <div class="num"><%= users.filter(u=>u.isVerified).length %></div>
+        <div class="lbl">VERIFIED</div>
+      </div>
+      <div class="sum-card c-google">
+        <div class="num"><%= users.filter(u=>u.googleId).length %></div>
+        <div class="lbl">GOOGLE LOGIN</div>
+      </div>
+      <div class="sum-card c-blocked">
+        <div class="num"><%= users.filter(u=>!u.isActive).length %></div>
+        <div class="lbl">BLOCKED</div>
+      </div>
+      <div class="sum-card c-new">
+        <div class="num"><%= users.filter(u=>{ let d=new Date(); d.setDate(d.getDate()-7); return new Date(u.createdAt)>d; }).length %></div>
+        <div class="lbl">THIS WEEK</div>
+      </div>
+    </div>
+
+    <!-- Filter bar -->
+    <div class="filter-bar">
+      <input type="text" id="searchInput" placeholder="Search name, phone, email, place…" oninput="applyFilters()"/>
+      <select id="filterGender" onchange="applyFilters()">
+        <option value="">All Genders</option>
+        <option value="male">Male</option>
+        <option value="female">Female</option>
+        <option value="other">Other</option>
+        <option value="prefer_not">Prefer Not</option>
+        <option value="">Not Set</option>
+      </select>
+      <select id="filterDistrict" onchange="applyFilters()">
+        <option value="">All Districts</option>
+        <% [...new Set(users.map(u=>u.district).filter(Boolean))].sort().forEach(d=>{ %>
+        <option value="<%= d %>"><%= d %></option>
+        <% }); %>
+      </select>
+      <select id="filterSort" onchange="applyFilters()">
+        <option value="newest">Newest First</option>
+        <option value="oldest">Oldest First</option>
+        <option value="bookings">Most Bookings</option>
+        <option value="name">Name A–Z</option>
+      </select>
+      <button class="filter-reset" onclick="resetFilters()"><i class="bi bi-x-circle"></i> Reset</button>
+    </div>
+
+    <!-- Status pills -->
+    <div class="pills-row">
+      <div class="pill pill-all active" data-filter="all" onclick="filterStatus('all',this)">
+        <i class="bi bi-people-fill"></i> All
+        <span style="opacity:0.6;font-size:0.65rem;" id="cnt-all">(<%= users.length %>)</span>
+      </div>
+      <div class="pill pill-verified" data-filter="verified" onclick="filterStatus('verified',this)">
+        <i class="bi bi-patch-check-fill"></i> Verified
+        <span style="opacity:0.6;font-size:0.65rem;" id="cnt-verified">(<%= users.filter(u=>u.isVerified).length %>)</span>
+      </div>
+      <div class="pill pill-unverified" data-filter="unverified" onclick="filterStatus('unverified',this)">
+        <i class="bi bi-clock-fill"></i> Unverified
+        <span style="opacity:0.6;font-size:0.65rem;" id="cnt-unverified">(<%= users.filter(u=>!u.isVerified).length %>)</span>
+      </div>
+      <div class="pill pill-blocked" data-filter="blocked" onclick="filterStatus('blocked',this)">
+        <i class="bi bi-slash-circle-fill"></i> Blocked
+        <span style="opacity:0.6;font-size:0.65rem;" id="cnt-blocked">(<%= users.filter(u=>!u.isActive).length %>)</span>
+      </div>
+      <div class="pill pill-google" data-filter="google" onclick="filterStatus('google',this)">
+        <i class="bi bi-google"></i> Google
+        <span style="opacity:0.6;font-size:0.65rem;" id="cnt-google">(<%= users.filter(u=>u.googleId).length %>)</span>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="table-card">
+      <div class="tbl-wrap">
+        <table id="usersTable">
+          <thead><tr>
+            <th>User</th>
+            <th>Contact</th>
+            <th>Location</th>
+            <th>Auth</th>
+            <th>Bookings</th>
+            <th>Joined</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr></thead>
+          <tbody>
+            <% users.forEach(function(u) {
+              var initials = (u.firstName||'?').charAt(0) + ((u.lastName||'').charAt(0)||'');
+              var bkCount  = u.bookings ? u.bookings.length : 0;
+              var bkClass  = bkCount===0?'bk-0':bkCount<3?'bk-low':bkCount<8?'bk-mid':'bk-high';
+              var authType = u.googleId ? 'google' : 'email';
+            %>
+            <tr
+              data-id="<%= u._id %>"
+              data-name="<%= (u.firstName+' '+(u.lastName||'')).trim().toLowerCase() %>"
+              data-phone="<%= (u.phone||'').toLowerCase() %>"
+              data-email="<%= (u.email||'').toLowerCase() %>"
+              data-place="<%= (u.place||'').toLowerCase() %>"
+              data-district="<%= (u.district||'').toLowerCase() %>"
+              data-gender="<%= u.gender||'' %>"
+              data-verified="<%= u.isVerified ? '1':'0' %>"
+              data-active="<%= u.isActive ? '1':'0' %>"
+              data-google="<%= u.googleId ? '1':'0' %>"
+              data-bookings="<%= bkCount %>"
+              data-joined="<%= u.createdAt %>"
+              class="<%= !u.isActive ? 'is-blocked':'' %>"
+            >
+              <td>
+                <div class="user-cell">
+                  <% if(u.avatar){ %>
+                  <img src="<%= u.avatar %>" class="avatar" alt=""/>
+                  <% } else { %>
+                  <div class="avatar"><%= initials.toUpperCase() %></div>
+                  <% } %>
+                  <div>
+                    <div class="user-name"><%= u.firstName %> <%= u.lastName||'' %></div>
+                    <div class="user-sub">#<%= u._id.toString().slice(-6).toUpperCase() %></div>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <% if(u.phone){ %><div style="font-family:'Space Mono',monospace;font-size:0.75rem;"><%= u.phone %></div><% } %>
+                <% if(u.email){ %><div style="font-size:0.72rem;color:var(--muted)"><%= u.email %></div><% } %>
+                <% if(!u.phone&&!u.email){ %><span style="color:#444;font-size:0.75rem;">—</span><% } %>
+              </td>
+              <td>
+                <% if(u.place||u.district){ %>
+                <div style="font-size:0.8rem;"><%= u.place||'' %></div>
+                <div style="font-size:0.7rem;color:var(--muted)"><%= u.district||'' %></div>
+                <% } else { %><span style="color:#444;">—</span><% } %>
+              </td>
+              <td>
+                <% if(u.googleId){ %>
+                <span class="badge b-google"><i class="bi bi-google"></i> GOOGLE</span>
+                <% } else { %>
+                <span class="badge b-email"><i class="bi bi-envelope-fill"></i> EMAIL</span>
+                <% } %>
+              </td>
+              <td style="text-align:center;">
+                <span class="bk-count <%= bkClass %>" title="<%= bkCount %> bookings"><%= bkCount %></span>
+              </td>
+              <td style="color:var(--muted);font-size:0.72rem;white-space:nowrap;">
+                <%= new Date(u.createdAt).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}) %>
+              </td>
+              <td>
+                <% if(!u.isActive){ %>
+                <span class="badge b-blocked">BLOCKED</span>
+                <% } else if(u.isVerified){ %>
+                <span class="badge b-verified">VERIFIED</span>
+                <% } else { %>
+                <span class="badge b-unverified">UNVERIFIED</span>
+                <% } %>
+                <% if(u.emailVerified){ %>
+                <span class="badge b-email" style="margin-top:3px;display:inline-block;">EMAIL ✓</span>
+                <% } %>
+              </td>
+              <td>
+                <div class="actions">
+                  <button class="btn-act btn-view" onclick='openDetail(<%= JSON.stringify({
+                    id: u._id,
+                    name: u.firstName+" "+(u.lastName||""),
+                    phone: u.phone||"—",
+                    whatsapp: u.whatsapp||"—",
+                    email: u.email||"—",
+                    gender: u.gender||"Not set",
+                    place: u.place||"—",
+                    district: u.district||"—",
+                    google: !!u.googleId,
+                    verified: u.isVerified,
+                    emailVerified: u.emailVerified,
+                    active: u.isActive,
+                    referral: u.referralCode||"—",
+                    bookings: bkCount,
+                    joined: new Date(u.createdAt).toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"numeric"})
+                  }) %>)'>
+                    <i class="bi bi-eye-fill"></i>
+                  </button>
+                  <% if(u.isActive){ %>
+                  <button class="btn-act btn-block" id="actbtn-<%= u._id %>" onclick="confirmAction('<%= u._id %>','block','<%= u.firstName %>')">
+                    <i class="bi bi-slash-circle-fill"></i> Block
+                  </button>
+                  <% } else { %>
+                  <button class="btn-act btn-unblock" id="actbtn-<%= u._id %>" onclick="confirmAction('<%= u._id %>','unblock','<%= u.firstName %>')">
+                    <i class="bi bi-check-circle-fill"></i> Unblock
+                  </button>
+                  <% } %>
+                  <% if(locals.isSuperAdmin){ %>
+                  <button class="btn-act btn-delete" onclick="confirmAction('<%= u._id %>','delete','<%= u.firstName %>')">
+                    <i class="bi bi-trash3-fill"></i>
+                  </button>
+                  <% } %>
+                </div>
+              </td>
+            </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+      <div id="emptyState" class="empty-state" style="display:none;">
+        <i class="bi bi-person-x"></i>No users match the current filters.
+      </div>
+      <div class="pagination" id="paginationBar">
+        <span id="paginationInfo"></span>
+        <div class="pg-btns" id="paginationBtns"></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Detail Modal -->
+<div class="modal-bg" id="detailModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('detailModal')"><i class="bi bi-x-lg"></i></button>
+    <h3><i class="bi bi-person-circle" style="color:var(--accent2);margin-right:6px;"></i>USER DETAILS</h3>
+    <div class="detail-grid" id="detailContent"></div>
+  </div>
+</div>
+
+<!-- Confirm Action Modal -->
+<div class="modal-bg" id="confirmModal">
+  <div class="modal confirm-modal">
+    <button class="modal-close" onclick="closeModal('confirmModal')"><i class="bi bi-x-lg"></i></button>
+    <h3 id="confirmTitle"></h3>
+    <p id="confirmBody"></p>
+    <div class="confirm-actions">
+      <button class="btn-cancel-modal" onclick="closeModal('confirmModal')">Cancel</button>
+      <button class="btn-confirm-action" id="confirmBtn" onclick="executeAction()">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+  // ── State ──
+  let currentStatusFilter = 'all';
+  let pendingAction = null; // {userId, action}
+  const PAGE_SIZE = 25;
+  let currentPage  = 1;
+  let filteredRows = [];
+  const isSuperAdmin = <%= locals.isSuperAdmin ? 'true' : 'false' %>;
+  const baseUrl = isSuperAdmin ? '/superadmin' : '/admin';
+
+  // ── Filters ──
+  function filterStatus(status, el) {
+    currentStatusFilter = status;
+    document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+    el.classList.add('active');
+    currentPage = 1;
+    applyFilters();
+  }
+
+  function applyFilters() {
+    const q        = document.getElementById('searchInput').value.toLowerCase().trim();
+    const gender   = document.getElementById('filterGender').value;
+    const district = document.getElementById('filterDistrict').value.toLowerCase();
+    const sort     = document.getElementById('filterSort').value;
+
+    const rows = Array.from(document.querySelectorAll('#usersTable tbody tr'));
+
+    filteredRows = rows.filter(row => {
+      // Status pill filter
+      if (currentStatusFilter === 'verified'   && row.dataset.verified !== '1') return false;
+      if (currentStatusFilter === 'unverified'  && row.dataset.verified !== '0') return false;
+      if (currentStatusFilter === 'blocked'     && row.dataset.active   !== '0') return false;
+      if (currentStatusFilter === 'google'      && row.dataset.google   !== '1') return false;
+      // Gender
+      if (gender && row.dataset.gender !== gender) return false;
+      // District
+      if (district && !row.dataset.district.includes(district)) return false;
+      // Search
+      if (q) {
+        const hay = row.dataset.name + row.dataset.phone + row.dataset.email + row.dataset.place + row.dataset.district;
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+
+    // Sort
+    filteredRows.sort((a, b) => {
+      if (sort === 'newest')   return new Date(b.dataset.joined) - new Date(a.dataset.joined);
+      if (sort === 'oldest')   return new Date(a.dataset.joined) - new Date(b.dataset.joined);
+      if (sort === 'bookings') return parseInt(b.dataset.bookings) - parseInt(a.dataset.bookings);
+      if (sort === 'name')     return a.dataset.name.localeCompare(b.dataset.name);
+      return 0;
+    });
+
+    // Hide all rows, show paginated slice
+    rows.forEach(r => { r.style.display = 'none'; r.style.order = ''; });
+
+    renderPage();
+  }
+
+  function renderPage() {
+    const start = (currentPage - 1) * PAGE_SIZE;
+    const end   = start + PAGE_SIZE;
+    const pageRows = filteredRows.slice(start, end);
+
+    filteredRows.forEach(r => r.style.display = 'none');
+    pageRows.forEach(r => r.style.display = '');
+
+    document.getElementById('emptyState').style.display = filteredRows.length === 0 ? 'block' : 'none';
+    renderPagination();
+  }
+
+  function renderPagination() {
+    const total = filteredRows.length;
+    const pages = Math.ceil(total / PAGE_SIZE);
+    const start = Math.min((currentPage - 1) * PAGE_SIZE + 1, total);
+    const end   = Math.min(currentPage * PAGE_SIZE, total);
+
+    document.getElementById('paginationInfo').textContent =
+      total === 0 ? 'No results' : `Showing ${start}–${end} of ${total} users`;
+
+    const btns = document.getElementById('paginationBtns');
+    btns.innerHTML = '';
+
+    const prev = document.createElement('button');
+    prev.className = 'pg-btn'; prev.textContent = '←'; prev.disabled = currentPage === 1;
+    prev.onclick = () => { currentPage--; renderPage(); };
+    btns.appendChild(prev);
+
+    const maxBtns = 5;
+    let pageStart = Math.max(1, currentPage - 2);
+    let pageEnd   = Math.min(pages, pageStart + maxBtns - 1);
+    if (pageEnd - pageStart < maxBtns - 1) pageStart = Math.max(1, pageEnd - maxBtns + 1);
+
+    for (let i = pageStart; i <= pageEnd; i++) {
+      const b = document.createElement('button');
+      b.className = 'pg-btn' + (i === currentPage ? ' active' : '');
+      b.textContent = i;
+      b.onclick = ((p) => () => { currentPage = p; renderPage(); })(i);
+      btns.appendChild(b);
+    }
+
+    const next = document.createElement('button');
+    next.className = 'pg-btn'; next.textContent = '→'; next.disabled = currentPage >= pages;
+    next.onclick = () => { currentPage++; renderPage(); };
+    btns.appendChild(next);
+  }
+
+  function resetFilters() {
+    document.getElementById('searchInput').value = '';
+    document.getElementById('filterGender').value = '';
+    document.getElementById('filterDistrict').value = '';
+    document.getElementById('filterSort').value = 'newest';
+    currentStatusFilter = 'all';
+    currentPage = 1;
+    document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+    document.querySelector('.pill-all').classList.add('active');
+    applyFilters();
+  }
+
+  // ── Detail Modal ──
+  function openDetail(u) {
+    const grid = document.getElementById('detailContent');
+    const item = (lbl, val) => `<div class="detail-item"><div class="lbl">${lbl}</div><div class="val">${val||'—'}</div></div>`;
+    const full = (lbl, val) => `<div class="detail-item full"><div class="lbl">${lbl}</div><div class="val">${val||'—'}</div></div>`;
+    const badge = (cond, yes, no) => cond
+      ? `<span class="badge b-verified">${yes}</span>`
+      : `<span class="badge b-unverified">${no}</span>`;
+
+    grid.innerHTML = `
+      ${full('FULL NAME', `<strong>${u.name}</strong>`)}
+      ${item('PHONE', u.phone)}
+      ${item('WHATSAPP', u.whatsapp)}
+      ${full('EMAIL', u.email)}
+      ${item('GENDER', u.gender)}
+      ${item('PLACE', u.place)}
+      ${item('DISTRICT', u.district)}
+      ${item('LOGIN TYPE', u.google ? '<span class="badge b-google"><i class="bi bi-google"></i> GOOGLE</span>' : '<span class="badge b-email">EMAIL/PHONE</span>')}
+      ${item('REFERRAL CODE', u.referral)}
+      ${item('JOINED', u.joined)}
+      ${item('PHONE VERIFIED', badge(u.verified,'VERIFIED','UNVERIFIED'))}
+      ${item('EMAIL VERIFIED', badge(u.emailVerified,'VERIFIED','UNVERIFIED'))}
+      ${item('ACCOUNT STATUS', badge(u.active,'ACTIVE','BLOCKED'))}
+      ${item('TOTAL BOOKINGS', `<span class="bk-count ${u.bookings===0?'bk-0':u.bookings<3?'bk-low':u.bookings<8?'bk-mid':'bk-high'}" style="width:auto;padding:0 0.6rem;">${u.bookings}</span>`)}
+    `;
+    document.getElementById('detailModal').classList.add('open');
+  }
+
+  function closeModal(id) {
+    document.getElementById(id).classList.remove('open');
+  }
+  document.querySelectorAll('.modal-bg').forEach(m => {
+    m.addEventListener('click', e => { if(e.target===m) m.classList.remove('open'); });
+  });
+
+  // ── Confirm Action ──
+  function confirmAction(userId, action, name) {
+    pendingAction = { userId, action };
+    const title = document.getElementById('confirmTitle');
+    const body  = document.getElementById('confirmBody');
+    const btn   = document.getElementById('confirmBtn');
+
+    if (action === 'block') {
+      title.textContent = 'Block User';
+      body.innerHTML = `Block <strong>${name}</strong>? They won't be able to log in or make bookings.`;
+      btn.className = 'btn-confirm-action btn-confirm-warn';
+      btn.textContent = 'Block';
+    } else if (action === 'unblock') {
+      title.textContent = 'Unblock User';
+      body.innerHTML = `Restore access for <strong>${name}</strong>?`;
+      btn.className = 'btn-confirm-action btn-confirm-success';
+      btn.textContent = 'Unblock';
+    } else if (action === 'delete') {
+      title.textContent = '⚠ Delete User';
+      body.innerHTML = `Permanently delete <strong>${name}</strong> and all their data? This cannot be undone.`;
+      btn.className = 'btn-confirm-action btn-confirm-danger';
+      btn.textContent = 'Delete Permanently';
+    }
+    document.getElementById('confirmModal').classList.add('open');
+  }
+
+  async function executeAction() {
+    if (!pendingAction) return;
+    const { userId, action } = pendingAction;
+    closeModal('confirmModal');
+
+    const actBtn = document.getElementById('actbtn-' + userId);
+    const origHTML = actBtn ? actBtn.innerHTML : '';
+    if (actBtn) { actBtn.disabled = true; actBtn.innerHTML = '<span class="spin"></span>'; }
+
+    let url, method = 'POST';
+    if (action === 'block')   url = `${baseUrl}/users/${userId}/block`;
+    if (action === 'unblock') url = `${baseUrl}/users/${userId}/unblock`;
+    if (action === 'delete')  { url = `${baseUrl}/users/${userId}`; method = 'DELETE'; }
+
+    try {
+      const r = await fetch(url, { method, credentials: 'include' });
+      const d = await r.json();
+      if (d.success) {
+        showToast('success', action === 'block' ? 'User blocked.' : action === 'unblock' ? 'User unblocked.' : 'User deleted.');
+        // Update row state without full reload
+        const row = document.querySelector(`tr[data-id="${userId}"]`);
+        if (action === 'delete' && row) {
+          row.remove();
+          applyFilters();
+        } else if (row) {
+          const isNowBlocked = action === 'block';
+          row.dataset.active = isNowBlocked ? '0' : '1';
+          row.classList.toggle('is-blocked', isNowBlocked);
+          // Swap badge
+          const badge = row.querySelector('.badge:not(.b-google):not(.b-email)');
+          if (badge) {
+            badge.className = 'badge ' + (isNowBlocked ? 'b-blocked' : (row.dataset.verified==='1'?'b-verified':'b-unverified'));
+            badge.textContent = isNowBlocked ? 'BLOCKED' : (row.dataset.verified==='1' ? 'VERIFIED' : 'UNVERIFIED');
+          }
+          // Swap button
+          if (actBtn) {
+            actBtn.className = 'btn-act ' + (isNowBlocked ? 'btn-unblock' : 'btn-block');
+            actBtn.innerHTML = isNowBlocked
+              ? '<i class="bi bi-check-circle-fill"></i> Unblock'
+              : '<i class="bi bi-slash-circle-fill"></i> Block';
+            actBtn.onclick = () => confirmAction(userId, isNowBlocked ? 'unblock' : 'block', row.dataset.name);
+            actBtn.disabled = false;
+          }
+        }
+      } else {
+        showToast('error', d.message || 'Action failed.');
+        if (actBtn) { actBtn.innerHTML = origHTML; actBtn.disabled = false; }
+      }
+    } catch(e) {
+      showToast('error', 'Network error.');
+      if (actBtn) { actBtn.innerHTML = origHTML; actBtn.disabled = false; }
+    }
+    pendingAction = null;
+  }
+
+  // ── Toast ──
+  function showToast(type, msg) {
+    const t = document.getElementById('toast');
+    t.className = 'toast show toast-' + type;
+    t.innerHTML = `<i class="bi bi-${type==='success'?'check-circle-fill':'x-circle-fill'}"></i> ${msg}`;
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => t.classList.remove('show'), 3500);
+  }
+
+  // Init
+  applyFilters();
+</script>
+</body>
+</html>
