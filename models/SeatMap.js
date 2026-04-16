@@ -49,11 +49,31 @@ const stageSchema = new mongoose.Schema({
   height: { type: Number, default: 120 },
 }, { _id: false });
 
+// ── Overlay (reserved area or POI marker) ──
+const overlaySchema = new mongoose.Schema({
+  type:    { type: String, enum: ['reserved', 'poi'], required: true },
+  label:   { type: String, required: true },
+  note:    { type: String, default: '' },
+  icon:    { type: String, default: '' },
+  color:   { type: String, default: '#9D4EDD' },
+
+  // ─ Visual shape — same options as zone shapes ─
+  shape:   { type: String, enum: ['rect', 'round', 'triangle'], default: 'rect' },
+
+  // Geometry
+  x:       { type: Number, default: 100 },
+  y:       { type: Number, default: 100 },
+  w:       { type: Number, default: 160 },
+  h:       { type: Number, default: 80 },
+  rot:     { type: Number, default: 0 },
+}, { _id: true });
+
 // ── SeatMap ──
 const seatMapSchema = new mongoose.Schema({
   event:        { type: mongoose.Schema.Types.ObjectId, ref: 'Event', required: true, unique: true },
   stage:        { type: stageSchema, default: () => ({}) },
   sections:     [sectionSchema],
+  overlays:     { type: [overlaySchema], default: [] },
   canvasWidth:  { type: Number, default: 960 },
   canvasHeight: { type: Number, default: 760 },
   isActive:     { type: Boolean, default: false },

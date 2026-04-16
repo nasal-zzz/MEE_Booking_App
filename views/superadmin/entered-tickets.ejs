@@ -55,6 +55,36 @@
     @media(max-width:900px){.layout{grid-template-columns:1fr;}.sidebar{display:none;}}
     .btn-back-dash{display:inline-flex;align-items:center;gap:0.3rem;color:var(--muted);text-decoration:none;font-size:0.78rem;font-family:'Space Mono',monospace;letter-spacing:1px;padding:0.35rem 0.75rem;border:1px solid var(--border);border-radius:5px;background:rgba(255,255,255,0.03);margin-bottom:1.5rem;transition:all 0.15s;}
     .btn-back-dash:hover{color:#fff;border-color:rgba(255,255,255,0.2);background:rgba(255,255,255,0.06);}
+  
+    /* ── Export ── */
+    .export-btn{display:inline-flex;align-items:center;gap:0.5rem;padding:0.38rem 0.85rem;background:rgba(0,255,136,0.07);border:1px solid rgba(0,255,136,0.28);border-radius:6px;color:#00FF88;font-family:'Space Mono',monospace;font-size:0.68rem;font-weight:700;cursor:pointer;transition:all 0.2s;letter-spacing:0.5px;white-space:nowrap;}
+    .export-btn:hover{background:rgba(0,255,136,0.15);border-color:rgba(0,255,136,0.5);}
+    .ex-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.78);z-index:2000;align-items:center;justify-content:center;padding:1rem;}
+    .ex-bg.open{display:flex;}
+    .ex-box{background:#14141C;border:1px solid rgba(255,255,255,0.08);border-radius:12px;width:100%;max-width:500px;padding:1.5rem;position:relative;max-height:90vh;overflow-y:auto;}
+    .ex-box h3{font-family:'Poppins',sans-serif;font-size:1rem;margin-bottom:0.25rem;letter-spacing:1px;}
+    .ex-close{position:absolute;top:1rem;right:1rem;background:none;border:none;color:#B3B3B3;cursor:pointer;font-size:1rem;}
+    .ex-close:hover{color:#fff;}
+    .ex-sub{font-size:0.68rem;color:#555;font-family:'Space Mono',monospace;margin-bottom:1rem;}
+    .ex-sec{margin-bottom:1rem;}
+    .ex-sec-ttl{font-family:'Space Mono',monospace;font-size:0.54rem;letter-spacing:2px;color:#555;margin-bottom:0.5rem;text-transform:uppercase;}
+    .ex-fg{display:grid;grid-template-columns:1fr 1fr;gap:0.38rem;}
+    .ex-fld{display:flex;align-items:center;gap:0.42rem;padding:0.4rem 0.62rem;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:5px;cursor:pointer;transition:all 0.15s;user-select:none;}
+    .ex-fld:hover{border-color:rgba(106,13,173,0.3);background:rgba(106,13,173,0.05);}
+    .ex-fld.on{border-color:rgba(106,13,173,0.4);background:rgba(106,13,173,0.1);}
+    .ex-fld input[type=checkbox]{accent-color:#6A0DAD;width:13px;height:13px;cursor:pointer;flex-shrink:0;}
+    .ex-fld span{font-size:0.75rem;color:#ccc;}
+    .ex-op{display:flex;gap:0.45rem;flex-wrap:wrap;}
+    .ex-opl{display:inline-flex;align-items:center;gap:0.3rem;padding:0.35rem 0.78rem;border-radius:20px;font-size:0.68rem;font-weight:700;cursor:pointer;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:#B3B3B3;font-family:'Space Mono',monospace;transition:all 0.15s;}
+    .ex-opl.active{border-color:rgba(106,13,173,0.45);background:rgba(106,13,173,0.12);color:#bf80ff;}
+    .ex-sl{display:flex;gap:0.45rem;margin-bottom:0.5rem;}
+    .ex-lnk{background:none;border:none;color:#6A0DAD;font-size:0.68rem;font-family:'Space Mono',monospace;cursor:pointer;text-decoration:underline;padding:0;}
+    .ex-ft{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;margin-top:1rem;}
+    .ex-cnt{font-size:0.68rem;color:#555;font-family:'Space Mono',monospace;}
+    .ex-dl{display:inline-flex;align-items:center;gap:0.4rem;padding:0.52rem 1.25rem;background:rgba(0,255,136,0.09);border:1px solid rgba(0,255,136,0.35);border-radius:7px;color:#00FF88;font-family:'Space Mono',monospace;font-size:0.74rem;font-weight:700;cursor:pointer;transition:all 0.2s;}
+    .ex-dl:hover{background:rgba(0,255,136,0.17);}
+    .ex-dl:disabled{opacity:0.4;cursor:not-allowed;}
+
   </style>
 </head>
 <body>
@@ -106,8 +136,9 @@
       <div class="stat-box"><i class="bi bi-people-fill" style="color:#f5c842;"></i><div><div class="stat-val"><%= logs.filter(function(l){return l.isGroup;}).length %></div><div class="stat-lbl">Group Entries</div></div></div>
     </div>
 
-    <div class="search-bar">
-      <input class="search-inp" type="text" id="searchInp" placeholder="Search name, ticket ID, ref, staff..." oninput="filterTable(this.value)"/>
+    <div class="search-bar" style="display:flex;align-items:center;gap:0.6rem;">
+      <input class="search-inp" type="text" id="searchInp" placeholder="Search name, ticket ID, ref, staff..." oninput="filterTable(this.value)" style="flex:1;"/>
+      <button class="export-btn" onclick="openEtExport()"><i class="bi bi-file-earmark-spreadsheet-fill"></i> Export Excel</button>
     </div>
     <% } %>
 
@@ -151,6 +182,105 @@
   </main>
 </div>
 <script>
+
+  // ── Entered Tickets Export ──
+var ET_FIELDS = [
+  { key:'num',     label:'#',             get:function(r){ return r.querySelector('td:nth-child(1)')?r.querySelector('td:nth-child(1)').textContent.trim():''; } },
+  { key:'name',    label:'Attendee Name', get:function(r){ return r.querySelector('td:nth-child(2) strong')?r.querySelector('td:nth-child(2) strong').textContent.trim():''; } },
+  { key:'age',     label:'Age',           get:function(r){ return r.querySelector('td:nth-child(3)')?r.querySelector('td:nth-child(3)').textContent.trim():''; } },
+  { key:'gender',  label:'Gender',        get:function(r){ var e=r.querySelector('td:nth-child(4)'); if(!e) return ''; var t=e.textContent.trim(); return t==='—'?'':t; } },
+  { key:'ticket',  label:'Ticket Type',   get:function(r){ var e=r.querySelector('.badge-type'); return e?e.textContent.trim():''; } },
+  { key:'etype',   label:'Entry Type',    get:function(r){ var g=r.querySelector('.badge-grp'); if(g) return g.textContent.replace(/\s+/g,' ').trim(); var s=r.querySelector('.badge-single'); return s?s.textContent.trim():''; } },
+  { key:'ticketid',label:'Ticket ID',     get:function(r){ return r.querySelector('td:nth-child(7)')?r.querySelector('td:nth-child(7)').textContent.trim():''; } },
+  { key:'ref',     label:'Booking Ref',   get:function(r){ return r.querySelector('td:nth-child(8)')?r.querySelector('td:nth-child(8)').textContent.trim():''; } },
+  { key:'staff',   label:'Scanned By',    get:function(r){ return r.querySelector('td:nth-child(9)')?r.querySelector('td:nth-child(9)').textContent.trim():''; } },
+  { key:'time',    label:'Entry Time',    get:function(r){ return r.querySelector('td:nth-child(10)')?r.querySelector('td:nth-child(10)').textContent.trim():''; } },
+];
+var etDefaultOn = ['num','name','age','gender','ticket','etype','ref','staff','time'];
+var etExScope = 'filtered';
+
+function openEtExport(){
+  var grid = document.getElementById('etFieldsGrid');
+  grid.innerHTML = '';
+  ET_FIELDS.forEach(function(f){
+    var on = etDefaultOn.indexOf(f.key) !== -1;
+    var lbl = document.createElement('label');
+    lbl.className = 'ex-fld'+(on?' on':'');
+    lbl.innerHTML = '<input type="checkbox" value="'+f.key+'"'+(on?' checked':'')+'>  <span>'+f.label+'</span>';
+    lbl.querySelector('input').addEventListener('change', function(e){
+      lbl.classList.toggle('on', e.target.checked); updateEtCnt();
+    });
+    grid.appendChild(lbl);
+  });
+  etExScope = 'filtered';
+  document.getElementById('et-scope-filtered').classList.add('active');
+  document.getElementById('et-scope-all').classList.remove('active');
+  updateEtCnt();
+  document.getElementById('etExModal').classList.add('open');
+}
+
+function closeEtExport(){ document.getElementById('etExModal').classList.remove('open'); }
+
+function setEtScope(scope, el){
+  etExScope = scope;
+  document.querySelectorAll('.ex-opl').forEach(function(p){ p.classList.remove('active'); });
+  el.classList.add('active'); updateEtCnt();
+}
+
+function etSelAll(val){
+  document.querySelectorAll('#etFieldsGrid .ex-fld').forEach(function(el){
+    el.classList.toggle('on', val); el.querySelector('input').checked = val;
+  }); updateEtCnt();
+}
+
+function getEtRows(){
+  var all = Array.from(document.querySelectorAll('#etTable tbody tr'));
+  if(etExScope === 'all') return all;
+  return all.filter(function(r){ return r.style.display !== 'none'; });
+}
+
+function updateEtCnt(){
+  var rows = getEtRows();
+  var checked = document.querySelectorAll('#etFieldsGrid input:checked').length;
+  document.getElementById('etExCnt').textContent = rows.length+' entries · '+checked+' fields';
+  document.getElementById('etExBtn').disabled = checked === 0 || rows.length === 0;
+}
+
+function doEtExport(){
+  var rows = getEtRows();
+  var keys = Array.from(document.querySelectorAll('#etFieldsGrid input:checked')).map(function(i){ return i.value; });
+  var fields = ET_FIELDS.filter(function(f){ return keys.indexOf(f.key) !== -1; });
+  if(!fields.length || !rows.length) return;
+
+  var evName = document.querySelector('.ev-name');
+  var sheetName = evName ? evName.textContent.trim().slice(0,28).replace(/[^\w\s]/g,'').trim()||'Gate Log' : 'Gate Log';
+
+  var data = [fields.map(function(f){ return f.label; })];
+  rows.forEach(function(r){ data.push(fields.map(function(f){ return f.get(r)||''; })); });
+
+  function write(){
+    var wb = XLSX.utils.book_new();
+    var ws = XLSX.utils.aoa_to_sheet(data);
+    ws['!cols'] = data[0].map(function(_,i){
+      return { wch: Math.max(14, Math.max.apply(null, data.map(function(r){ return String(r[i]||'').length; }))) };
+    });
+    XLSX.utils.book_append_sheet(wb, ws, sheetName);
+    var evSlug = sheetName.replace(/\s+/g,'-').toLowerCase();
+    XLSX.writeFile(wb, 'gate-log-'+evSlug+'-'+new Date().toISOString().slice(0,10)+'.xlsx');
+    closeEtExport();
+  }
+
+  if(typeof XLSX === 'undefined'){
+    var s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    s.onload = write;
+    document.head.appendChild(s);
+  } else { write(); }
+}
+
+document.getElementById('etExModal').addEventListener('click', function(e){ if(e.target===this) closeEtExport(); });
+
+
 function filterTable(q){
   q = q.toLowerCase();
   document.querySelectorAll('#etTable tbody tr').forEach(function(r){
@@ -241,5 +371,38 @@ function startAR(){
 setLastRefreshed();
 startAR();
 </script>
+
+<!-- Entered Tickets Export Modal -->
+<div class="ex-bg" id="etExModal">
+  <div class="ex-box">
+    <button class="ex-close" onclick="closeEtExport()"><i class="bi bi-x-lg"></i></button>
+    <h3><i class="bi bi-file-earmark-spreadsheet-fill" style="color:#00FF88;margin-right:6px;"></i>EXPORT GATE LOG</h3>
+    <div class="ex-sub">Choose scope and fields for your Excel download</div>
+
+    <div class="ex-sec">
+      <div class="ex-sec-ttl">Which rows to export</div>
+      <div class="ex-op">
+        <div class="ex-opl active" id="et-scope-filtered" onclick="setEtScope('filtered',this)"><i class="bi bi-funnel-fill"></i> Current Search</div>
+        <div class="ex-opl" id="et-scope-all" onclick="setEtScope('all',this)"><i class="bi bi-door-open-fill"></i> All Entries</div>
+      </div>
+    </div>
+
+    <div class="ex-sec">
+      <div class="ex-sec-ttl">Fields to include</div>
+      <div class="ex-sl">
+        <button class="ex-lnk" onclick="etSelAll(true)">Select all</button>
+        <span style="color:#333;">·</span>
+        <button class="ex-lnk" onclick="etSelAll(false)">Clear all</button>
+      </div>
+      <div class="ex-fg" id="etFieldsGrid"></div>
+    </div>
+
+    <div class="ex-ft">
+      <span class="ex-cnt" id="etExCnt">—</span>
+      <button class="ex-dl" id="etExBtn" onclick="doEtExport()"><i class="bi bi-download"></i> Download Excel</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>

@@ -210,10 +210,7 @@
     <img src="/images/brandings/logo.webp" alt="MEE Logo" style="height:38px;width:auto;object-fit:contain;"/>
   </a>
 
-  <!-- <div class="np-search">
-    <i class="bi bi-search np-search-icon"></i>
-    <input type="text" placeholder="Search for events, artists, or venues..." />
-  </div> -->
+
 
   <div class="np-right">
     <% if (locals.user && user) { %>
@@ -266,7 +263,6 @@
 
   <div class="np-drawer-links">
     <a href="/"                    class="np-drawer-link" onclick="npToggleDrawer()"><i class="bi bi-house-fill"></i> Home</a>
-    <a href="/#events"             class="np-drawer-link" onclick="npToggleDrawer()"><i class="bi bi-calendar-event-fill"></i> Events</a>
     <% if(locals.user && user){ %>
     <a href="/user/profile/#myBookings" class="np-drawer-link" onclick="npToggleDrawer()"><i class="bi bi-ticket-perforated-fill"></i> My Tickets</a>
     <% } else { %>

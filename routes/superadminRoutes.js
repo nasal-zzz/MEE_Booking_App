@@ -7,6 +7,7 @@ const Event = require('../models/Event');
 const ScanLog = require('../models/ScanLog');
 const User = require('../models/User');
 
+const adminController = require('../controllers/adminController');
 // ── Default superadmin credentials ──
 const SUPER_ADMIN = {
   username: process.env.SUPER_ADMIN_USER || 'superadmin',
@@ -128,20 +129,74 @@ router.post('/api/validate-coupon', async (req, res) => {
 
 router.use(superAuth);
 
+router.get('/api/revenue-by-date', adminController.getRevenueByDate);
 // ── DASHBOARD ──
+// router.get('/', async (req, res) => {
+//   try {
+//     const Event = require('../models/Event');
+//     const [staffCount, totalBookings, totalRevenueAgg, coupons, totalUsers, events] = await Promise.all([
+//       Staff.countDocuments(),
+//       Booking.countDocuments({ paymentStatus: 'paid' }),
+//       Booking.aggregate([{ $match: { paymentStatus: 'paid' } }, { $group: { _id: null, total: { $sum: '$totalAmount' } } }]),
+//       Coupon.countDocuments(),
+//       User.countDocuments(),
+//       Event.find().sort({ date: -1 }),
+//     ]);
+
+//     // Active event panel — same as admin dashboard
+//     const activeEvent = events.find(e => e.isActive) || null;
+//     let activeEventBookings = [], activeEventRevenue = 0;
+//     if (activeEvent) {
+//       activeEventBookings = await Booking.find({
+//         event: activeEvent._id,
+//         paymentStatus: 'paid',
+//       }).populate('user', 'name phone email').lean();
+//       activeEventRevenue = activeEventBookings.reduce((s, b) => s + (b.totalAmount || 0), 0);
+//     }
+
+//     const currentAdmin = req.session.staffUser || { username: req.session.superAdminUser || 'superadmin', name: 'Super Admin', role: 'superadmin' };
+//     res.render('superadmin/dashboard', {
+//       title: 'Super Admin — MEE',
+//       staffCount, totalBookings,
+//       totalRevenue: totalRevenueAgg[0]?.total || 0,
+//       totalUsers,
+//       coupons,
+//       currentAdmin,
+//       activeEvent,
+//       activeEventBookings,
+//       activeEventRevenue,
+//     });
+//   } catch (err) {
+//     console.error('Superadmin dashboard error:', err);
+//     res.render('superadmin/dashboard', { title: 'Super Admin', staffCount: 0, totalBookings: 0, totalRevenue: 0, totalUsers: 0, coupons: 0, currentAdmin: req.session.staffUser || { name: 'Super Admin', role: 'superadmin' }, activeEvent: null, activeEventBookings: [], activeEventRevenue: 0 });
+//   }
+// });
+
 router.get('/', async (req, res) => {
   try {
     const Event = require('../models/Event');
-    const [staffCount, totalBookings, totalRevenueAgg, coupons, totalUsers, events] = await Promise.all([
+    const [staffCount, totalBookings, revenueAgg, coupons, totalUsers, events] = await Promise.all([
       Staff.countDocuments(),
       Booking.countDocuments({ paymentStatus: 'paid' }),
-      Booking.aggregate([{ $match: { paymentStatus: 'paid' } }, { $group: { _id: null, total: { $sum: '$totalAmount' } } }]),
+      Booking.aggregate([
+        { $match: { paymentStatus: 'paid' } },
+        {
+          $group: {
+            _id: null,
+            grossRevenue:  { $sum: '$totalAmount' },
+            totalDiscount: { $sum: '$discount' },
+          }
+        }
+      ]),
       Coupon.countDocuments(),
       User.countDocuments(),
       Event.find().sort({ date: -1 }),
     ]);
-
-    // Active event panel — same as admin dashboard
+ 
+    const grossRevenue  = revenueAgg[0]?.grossRevenue  || 0;
+    const totalDiscount = revenueAgg[0]?.totalDiscount || 0;
+    const totalRevenue  = grossRevenue - totalDiscount;   // net revenue
+ 
     const activeEvent = events.find(e => e.isActive) || null;
     let activeEventBookings = [], activeEventRevenue = 0;
     if (activeEvent) {
@@ -151,12 +206,15 @@ router.get('/', async (req, res) => {
       }).populate('user', 'name phone email').lean();
       activeEventRevenue = activeEventBookings.reduce((s, b) => s + (b.totalAmount || 0), 0);
     }
-
+ 
     const currentAdmin = req.session.staffUser || { username: req.session.superAdminUser || 'superadmin', name: 'Super Admin', role: 'superadmin' };
     res.render('superadmin/dashboard', {
       title: 'Super Admin — MEE',
-      staffCount, totalBookings,
-      totalRevenue: totalRevenueAgg[0]?.total || 0,
+      staffCount,
+      totalBookings,
+      grossRevenue,
+      totalDiscount,
+      totalRevenue,    // net revenue — green card
       totalUsers,
       coupons,
       currentAdmin,
@@ -166,9 +224,17 @@ router.get('/', async (req, res) => {
     });
   } catch (err) {
     console.error('Superadmin dashboard error:', err);
-    res.render('superadmin/dashboard', { title: 'Super Admin', staffCount: 0, totalBookings: 0, totalRevenue: 0, totalUsers: 0, coupons: 0, currentAdmin: req.session.staffUser || { name: 'Super Admin', role: 'superadmin' }, activeEvent: null, activeEventBookings: [], activeEventRevenue: 0 });
+    res.render('superadmin/dashboard', {
+      title: 'Super Admin',
+      staffCount: 0, totalBookings: 0,
+      grossRevenue: 0, totalDiscount: 0, totalRevenue: 0,
+      totalUsers: 0, coupons: 0,
+      currentAdmin: req.session.staffUser || { name: 'Super Admin', role: 'superadmin' },
+      activeEvent: null, activeEventBookings: [], activeEventRevenue: 0,
+    });
   }
 });
+
 
 // ── STAFF MANAGEMENT ──
 router.get('/staff', async (req, res) => {

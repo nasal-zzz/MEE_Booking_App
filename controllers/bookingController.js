@@ -352,9 +352,9 @@ exports.savePending = async (req, res) => {
       try {
         const eventDoc = await Event.findById(pending.eventId).lean();
         if (eventDoc) {
-          if (email) {
-            sendPendingPaymentReminder({ to: email, name, booking: bookingDoc, event: eventDoc }).catch(() => { });
-          }
+          // if (email) {
+          //   sendPendingPaymentReminder({ to: email, name, booking: bookingDoc, event: eventDoc }).catch(() => { });
+          // }
           if (phone) {
             const { sendWhatsAppPending } = require('../utils/whatsappHelper');
             sendWhatsAppPending({ phone, name, booking: bookingDoc, event: eventDoc }).catch(() => { });
@@ -444,9 +444,11 @@ exports.saveFailed = async (req, res) => {
       const name = req.user?.firstName || 'Customer';
       const email = pending?.contactEmail || req.user?.email || '';
       const phone = pending?.contactWhatsapp || req.user?.whatsapp || req.user?.phone || '';
-      if (email && eventDoc) {
-        sendFailedPaymentNotice({ to: email, name, booking: failedBooking, event: eventDoc }).catch(() => { });
-      }
+
+      // if (email && eventDoc) {
+      //   sendFailedPaymentNotice({ to: email, name, booking: failedBooking, event: eventDoc }).catch(() => { });
+      // }
+      
       if (phone && eventDoc) {
         const { sendWhatsAppPaymentFailed } = require('../utils/whatsappHelper');
         sendWhatsAppPaymentFailed({ phone, name, booking: failedBooking, event: eventDoc }).catch(() => { });
@@ -658,6 +660,7 @@ exports.verifyPayment = async (req, res) => {
         const bookingForNotify = atomicUpdate;
         bookingForNotify.gateNumber = gateNumber;
         if (notifyEmail && evDoc) sendBookingConfirmation({ to: notifyEmail, name: req.user.firstName, booking: bookingForNotify, event: evDoc }).catch(() => { });
+
         if (notifyWhatsapp && evDoc) {
           const { sendWhatsAppTickets } = require('../utils/whatsappHelper');
           sendWhatsAppTickets({ phone: notifyWhatsapp, name: req.user.firstName, booking: bookingForNotify, event: evDoc }).catch(() => { });

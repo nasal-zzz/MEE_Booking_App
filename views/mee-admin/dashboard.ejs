@@ -11,7 +11,6 @@
     body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;min-height:100vh;}
     body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(255,255,255,0.012) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.012) 1px,transparent 1px);background-size:50px 50px;pointer-events:none;}
     .admin-layout{display:grid;grid-template-columns:220px 1fr;min-height:100vh;}
-    /* Sidebar */
     .sidebar{background:var(--surface);border-right:1px solid var(--border);padding:1.5rem 1rem;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:0.3rem;z-index:10;}
     .s-logo{font-family:'Poppins',sans-serif;font-size:1.3rem;letter-spacing:3px;color:#fff;text-decoration:none;display:block;padding:0 0.5rem 1.2rem;border-bottom:1px solid var(--border);margin-bottom:0.8rem;}
     .s-logo span{color:var(--accent);}
@@ -21,7 +20,6 @@
     .s-link i{color:var(--accent);width:18px;}
     .s-logout{margin-top:auto;display:flex;align-items:center;gap:0.7rem;padding:0.7rem 0.8rem;color:var(--error);text-decoration:none;border-radius:6px;font-size:0.85rem;border:1px solid transparent;transition:all 0.15s;}
     .s-logout:hover{background:rgba(255,92,92,0.08);border-color:rgba(255,92,92,0.2);}
-    /* Main */
     .main{padding:2rem;position:relative;z-index:1;overflow-x:hidden;}
     .table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;}
     .page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:2rem;flex-wrap:wrap;gap:1rem;}
@@ -29,10 +27,10 @@
     .btn-primary{display:inline-flex;align-items:center;gap:0.5rem;background:var(--accent);color:#fff;padding:0.7rem 1.4rem;border-radius:6px;text-decoration:none;font-weight:700;font-size:0.85rem;letter-spacing:1px;transition:all 0.2s;border:none;cursor:pointer;}
     .btn-primary:hover{box-shadow:0 0 20px rgba(106,13,173,0.4);color:#000;}
     /* Stats */
-    .stats-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:1rem;margin-bottom:2rem;}
+    .stats-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1rem;margin-bottom:2rem;}
     .stat-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:1.2rem;}
-    .stat-val{font-family:'Poppins',sans-serif;font-size:2rem;color:var(--accent);margin-bottom:0.2rem;}
-    .stat-lbl{font-size:0.78rem;color:var(--muted);}
+    .stat-val{font-family:'Poppins',sans-serif;font-size:1.7rem;color:var(--accent);margin-bottom:0.2rem;}
+    .stat-lbl{font-size:0.72rem;color:var(--muted);}
     /* Flash */
     .flash{background:rgba(144,78,221,0.08);border:1px solid rgba(144,78,221,0.25);border-radius:6px;padding:0.8rem 1.2rem;color:var(--success);font-size:0.85rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:0.5rem;}
     /* Events table */
@@ -55,73 +53,128 @@
     .tier-pill{display:inline-block;font-family:'Space Mono',monospace;font-size:0.55rem;letter-spacing:1px;padding:0.15rem 0.5rem;border-radius:10px;margin-right:2px;margin-bottom:2px;}
     .event-name{font-weight:600;color:#fff;margin-bottom:0.2rem;}
     .event-date{font-size:0.75rem;color:var(--muted);}
+    /* Revenue panel */
+    .rev-input{background:#0B0B0F;border:1px solid var(--border);border-radius:6px;padding:0.4rem 0.7rem;color:#fff;font-size:0.8rem;outline:none;font-family:'Outfit',sans-serif;}
+    .rev-input:focus{border-color:rgba(106,13,173,0.4);}
+    .rev-quick{background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:4px;padding:0.3rem 0.7rem;font-size:0.75rem;cursor:pointer;font-family:'Space Mono',monospace;letter-spacing:0.5px;transition:all 0.15s;}
+    .rev-quick:hover,.rev-quick.active{background:rgba(106,13,173,0.12);border-color:rgba(106,13,173,0.3);color:#fff;}
     @media(max-width:900px){.admin-layout{grid-template-columns:1fr;}.sidebar{display:none;}.stats-grid{grid-template-columns:repeat(2,1fr);}}
- 
-    @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
-@keyframes spin   { to{transform:rotate(360deg);} }
-
- </style>
+    @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
+    @keyframes spin{to{transform:rotate(360deg);}}
+  </style>
 </head>
 <body>
 <div class="admin-layout">
-    <%- include('../partials/admin-sidebar', { activePage: 'dashboard' }) %>
+  <%- include('../partials/admin-sidebar', { activePage: 'dashboard' }) %>
   <%- include('../partials/admin-confirm') %>
   <main class="main">
     <div class="page-header">
       <div class="page-title">DASHBOARD</div>
-      <!-- <a href="/mee-admin/events/new" class="btn-primary"><i class="bi bi-plus-lg"></i> New Event</a> -->
-
       <div style="display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap;">
-  <!-- Auto-refresh countdown -->
-  <div id="refreshCountdown" style="display:inline-flex;align-items:center;gap:0.4rem;font-size:0.72rem;color:var(--muted);padding:0.4rem 0.8rem;border-radius:6px;border:1px solid rgba(255,255,255,0.05);background:rgba(255,255,255,0.02);font-family:'Space Mono',monospace;letter-spacing:1px;">
-    <span style="width:6px;height:6px;border-radius:50%;background:#00FF88;animation:pulse 1.5s ease-in-out infinite;display:inline-block;"></span>
-    <span id="refreshTimer">5:00</span> auto-refresh
-  </div>
-  <!-- Manual refresh button -->
-  <button onclick="doRefresh()" id="refreshBtn"
-    style="display:inline-flex;align-items:center;gap:0.5rem;background:transparent;color:var(--muted);padding:0.65rem 1rem;border-radius:6px;border:1px solid var(--border);font-size:0.82rem;cursor:pointer;font-family:'Outfit',sans-serif;transition:all 0.15s;"
-    onmouseover="this.style.borderColor='rgba(157,78,221,0.35)';this.style.color='#fff'"
-    onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
-    <i class="bi bi-arrow-clockwise" id="refreshIcon"></i> Refresh
-  </button>
-  <!-- New Event button -->
-  <a href="/mee-admin/events/new" style="display:inline-flex;align-items:center;gap:0.5rem;background:var(--accent);color:#fff;padding:0.7rem 1.4rem;border-radius:6px;text-decoration:none;font-weight:700;font-size:0.85rem;letter-spacing:1px;">
-    <i class="bi bi-plus-lg"></i> New Event
-  </a>
-</div>
-
-
+        <div style="display:inline-flex;align-items:center;gap:0.4rem;font-size:0.72rem;color:var(--muted);padding:0.4rem 0.8rem;border-radius:6px;border:1px solid rgba(255,255,255,0.05);background:rgba(255,255,255,0.02);font-family:'Space Mono',monospace;letter-spacing:1px;">
+          <span style="width:6px;height:6px;border-radius:50%;background:#00FF88;animation:pulse 1.5s ease-in-out infinite;display:inline-block;"></span>
+          <span id="refreshTimer">5:00</span> auto-refresh
+        </div>
+        <button onclick="doRefresh()" id="refreshBtn"
+          style="display:inline-flex;align-items:center;gap:0.5rem;background:transparent;color:var(--muted);padding:0.65rem 1rem;border-radius:6px;border:1px solid var(--border);font-size:0.82rem;cursor:pointer;font-family:'Outfit',sans-serif;transition:all 0.15s;"
+          onmouseover="this.style.borderColor='rgba(157,78,221,0.35)';this.style.color='#fff'"
+          onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
+          <i class="bi bi-arrow-clockwise" id="refreshIcon"></i> Refresh
+        </button>
+        <a href="/mee-admin/events/new" style="display:inline-flex;align-items:center;gap:0.5rem;background:var(--accent);color:#fff;padding:0.7rem 1.4rem;border-radius:6px;text-decoration:none;font-weight:700;font-size:0.85rem;letter-spacing:1px;">
+          <i class="bi bi-plus-lg"></i> New Event
+        </a>
+      </div>
     </div>
 
     <% if (locals.query && query && query.success) { %>
       <div class="flash"><i class="bi bi-check-circle-fill"></i> <%= query.success %></div>
     <% } %>
 
-    <!-- Stats -->
+    <!-- Stats — 7 cards: Events, Active, Bookings, Users, Gross, Discount, Net -->
     <div class="stats-grid">
       <div class="stat-card"><div class="stat-val"><%= stats.totalEvents %></div><div class="stat-lbl">Total Events</div></div>
       <div class="stat-card"><div class="stat-val"><%= stats.activeEvents %></div><div class="stat-lbl">Active Events</div></div>
       <div class="stat-card"><div class="stat-val"><%= stats.totalBookings %></div><div class="stat-lbl">Bookings</div></div>
       <div class="stat-card"><div class="stat-val"><%= stats.totalUsers %></div><div class="stat-lbl">Users</div></div>
-      <div class="stat-card"><div class="stat-val">₹<%= (stats.revenue/1000).toFixed(1) %>k</div><div class="stat-lbl">Revenue</div></div>
+      <div class="stat-card">
+        <div class="stat-val" style="color:var(--muted);font-size:1.4rem;">₹<%= (stats.grossRevenue/1000).toFixed(1) %>k</div>
+        <div class="stat-lbl">Gross Revenue</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val" style="color:#FF4444;font-size:1.4rem;">-₹<%= (stats.totalDiscount/1000).toFixed(1) %>k</div>
+        <div class="stat-lbl">Total Discounts</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val" style="color:#00FF88;">₹<%= (stats.revenue/1000).toFixed(1) %>k</div>
+        <div class="stat-lbl">Net Revenue</div>
+      </div>
+    </div>
+
+    <!-- ── Revenue Analytics Panel ── -->
+    <div class="table-card" style="margin-bottom:2rem;padding:1.5rem;">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:1.2rem;">
+        <div class="table-title" style="font-size:1rem;">📊 REVENUE ANALYTICS</div>
+        <div style="display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap;">
+          <span style="font-size:0.75rem;color:var(--muted);">From</span>
+          <input type="date" id="revFrom" class="rev-input" onchange="loadRevChart()"/>
+          <span style="font-size:0.75rem;color:var(--muted);">→</span>
+          <input type="date" id="revTo" class="rev-input" onchange="loadRevChart()"/>
+          <div style="display:flex;gap:0.4rem;flex-wrap:wrap;">
+            <button class="rev-quick active" onclick="revQuick('today',this)">Today</button>
+            <button class="rev-quick" onclick="revQuick('yesterday',this)">Yesterday</button>
+            <button class="rev-quick" onclick="revQuick('week',this)">This week</button>
+            <button class="rev-quick" onclick="revQuick('lastweek',this)">Last week</button>
+            <button class="rev-quick" onclick="revQuick('month',this)">This month</button>
+            <button class="rev-quick" onclick="revQuick('all',this)">All time</button>
+          </div>
+        </div>
+      </div>
+      <!-- Summary row -->
+      <div style="display:flex;gap:2rem;flex-wrap:wrap;margin-bottom:1.2rem;padding-bottom:1.2rem;border-bottom:1px solid var(--border);">
+        <div>
+          <div style="font-size:0.62rem;color:var(--muted);letter-spacing:2px;font-family:'Space Mono',monospace;margin-bottom:0.3rem;">GROSS</div>
+          <div id="rGross" style="font-family:'Poppins',sans-serif;font-size:1.5rem;color:var(--muted);">—</div>
+        </div>
+        <div>
+          <div style="font-size:0.62rem;color:var(--muted);letter-spacing:2px;font-family:'Space Mono',monospace;margin-bottom:0.3rem;">DISCOUNTS</div>
+          <div id="rDisc" style="font-family:'Poppins',sans-serif;font-size:1.5rem;color:#FF4444;">—</div>
+        </div>
+        <div>
+          <div style="font-size:0.62rem;color:var(--muted);letter-spacing:2px;font-family:'Space Mono',monospace;margin-bottom:0.3rem;">NET REVENUE</div>
+          <div id="rNet" style="font-family:'Poppins',sans-serif;font-size:1.5rem;color:#00FF88;">—</div>
+        </div>
+        <div>
+          <div style="font-size:0.62rem;color:var(--muted);letter-spacing:2px;font-family:'Space Mono',monospace;margin-bottom:0.3rem;">BOOKINGS</div>
+          <div id="rBook" style="font-family:'Poppins',sans-serif;font-size:1.5rem;color:#f5c842;">—</div>
+        </div>
+      </div>
+      <!-- Legend -->
+      <div style="display:flex;gap:1.2rem;font-size:0.72rem;color:var(--muted);margin-bottom:0.8rem;font-family:'Space Mono',monospace;">
+        <span style="display:flex;align-items:center;gap:0.4rem;"><span style="width:10px;height:10px;border-radius:2px;background:#00C47B;display:inline-block;"></span>Net Revenue</span>
+        <span style="display:flex;align-items:center;gap:0.4rem;"><span style="width:10px;height:10px;border-radius:2px;background:rgba(255,68,68,0.6);display:inline-block;"></span>Discounts</span>
+      </div>
+      <div style="position:relative;height:240px;">
+        <canvas id="revChart" role="img" aria-label="Day by day stacked bar chart showing net revenue and discounts">Revenue chart loading...</canvas>
+      </div>
+      <div id="revEmpty" style="display:none;text-align:center;padding:3rem 0;color:var(--muted);font-size:0.85rem;">No revenue data for this period</div>
     </div>
 
     <!-- ── Active Event Panel ── -->
-<% if (activeEvent) {
-  const catColors = {platinum:'#9D4EDD',gold:'#f5c842',silver:'#c0c8d8',vip:'#bf80ff',general:'#a0a0a0',standard:'#a0a0a0',family:'#FF6B6B',fanfit:'#00FF88'};
-  // Build per-category attendee lists
-  const catMap = {};
-  activeEvent.ticketTypes.forEach(t => { catMap[t.category] = { name: t.name, total: t.totalSeats, booked: 0, price: t.price, color: catColors[t.category]||'#6A0DAD', attendees: [] }; });
-  activeEventBookings.forEach(b => {
-    if (catMap[b.ticketType]) {
-      catMap[b.ticketType].booked += b.quantity;
-      b.tickets.forEach(tk => {
-        catMap[b.ticketType].attendees.push({ name: tk.attendee?.name||'—', age: tk.attendee?.age||'—', gender: tk.attendee?.gender||'—', phone: b.contactPhone||b.user?.phone||'—', bookingRef: b.bookingRef });
+    <% if (activeEvent) {
+      const catColors = {platinum:'#9D4EDD',gold:'#f5c842',silver:'#c0c8d8',vip:'#bf80ff',general:'#a0a0a0',standard:'#a0a0a0',family:'#FF6B6B',fanfit:'#00FF88'};
+      const catMap = {};
+      activeEvent.ticketTypes.forEach(t => { catMap[t.category] = { name: t.name, total: t.totalSeats, booked: 0, price: t.price, color: catColors[t.category]||'#6A0DAD', attendees: [] }; });
+      activeEventBookings.forEach(b => {
+        if (catMap[b.ticketType]) {
+          catMap[b.ticketType].booked += b.quantity;
+          b.tickets.forEach(tk => {
+            catMap[b.ticketType].attendees.push({ name: tk.attendee?.name||'—', age: tk.attendee?.age||'—', gender: tk.attendee?.gender||'—', phone: b.contactPhone||b.user?.phone||'—', bookingRef: b.bookingRef });
+          });
+        }
       });
-    }
-  });
-  const catList = Object.entries(catMap);
-%>
+      const catList = Object.entries(catMap);
+    %>
     <div class="table-card" style="margin-bottom:2rem;">
       <div class="table-header" style="flex-wrap:wrap;gap:0.8rem;">
         <div>
@@ -138,14 +191,12 @@
             <div style="font-size:0.7rem;color:var(--muted);">TICKETS SOLD</div>
           </div>
           <div style="text-align:center;">
-            <div style="font-family:'Poppins',sans-serif;font-size:1.4rem;color:#f5c842;"><%= catList.reduce((s,[cat,info])=>s+(info.total-info.booked),0) %>
-            </div>
+            <div style="font-family:'Poppins',sans-serif;font-size:1.4rem;color:#f5c842;"><%= catList.reduce((s,[cat,info])=>s+(info.total-info.booked),0) %></div>
             <div style="font-size:0.7rem;color:var(--muted);">SEATS LEFT</div>
           </div>
         </div>
       </div>
 
-      <!-- Category seat balance -->
       <div style="padding:1.2rem 1.5rem;border-bottom:1px solid var(--border);">
         <div style="font-family:'Space Mono',monospace;font-size:0.58rem;letter-spacing:2px;color:var(--muted);margin-bottom:0.8rem;">SEATS BY CATEGORY</div>
         <div style="display:flex;flex-wrap:wrap;gap:0.8rem;">
@@ -169,7 +220,6 @@
         </div>
       </div>
 
-      <!-- Attendee table with search/filter -->
       <div style="padding:1.2rem 1.5rem;">
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.8rem;margin-bottom:1rem;">
           <div style="font-family:'Space Mono',monospace;font-size:0.58rem;letter-spacing:2px;color:var(--muted);">ATTENDEES</div>
@@ -179,9 +229,7 @@
             <select id="attCatFilter" onchange="filterAttendees()"
               style="background:#0B0B0F;border:1px solid var(--border);border-radius:6px;padding:0.4rem 0.8rem;color:#fff;font-size:0.8rem;outline:none;">
               <option value="">All Categories</option>
-              <% catList.forEach(([cat, info]) => { %>
-                <option value="<%= cat %>"><%= info.name %></option>
-              <% }); %>
+              <% catList.forEach(([cat, info]) => { %><option value="<%= cat %>"><%= info.name %></option><% }); %>
             </select>
             <select id="attGenderFilter" onchange="filterAttendees()"
               style="background:#0B0B0F;border:1px solid var(--border);border-radius:6px;padding:0.4rem 0.8rem;color:#fff;font-size:0.8rem;outline:none;">
@@ -195,38 +243,62 @@
         <div class="table-scroll">
           <table id="attTable">
             <thead>
-              <tr>
-                <th>#</th>
-                <th>Name</th>
-                <th>Age</th>
-                <th>Gender</th>
-                <th>Category</th>
-                <th>Phone</th>
-                <th>Booking Ref</th>
-              </tr>
+              <tr><th>#</th><th>Name</th><th>Age</th><th>Gender</th><th>Category</th><th>Phone</th><th>Booking Ref</th></tr>
             </thead>
             <tbody id="attTbody">
-              <% let rowIdx = 0; %>
-              <% catList.forEach(([cat, info]) => { %>
-                <% info.attendees.forEach(att => { rowIdx++; %>
-                <tr class="att-row" data-cat="<%= cat %>" data-gender="<%= att.gender.toLowerCase() %>" data-search="<%= (att.name+' '+att.phone).toLowerCase() %>">
-                  <td style="color:var(--muted);font-size:0.75rem;"><%= rowIdx %></td>
-                  <td style="font-weight:600;"><%= att.name %></td>
-                  <td><%= att.age %></td>
-                  <td style="text-transform:capitalize;"><%= att.gender %></td>
-                  <td><span style="background:rgba(106,13,173,0.1);border:1px solid rgba(106,13,173,0.2);color:<%= info.color %>;border-radius:10px;padding:0.15rem 0.5rem;font-size:0.7rem;font-family:'Space Mono',monospace;"><%= info.name %></span></td>
-                  <td style="font-family:'Space Mono',monospace;font-size:0.75rem;color:var(--muted);"><%= att.phone %></td>
-                  <td style="font-family:'Space Mono',monospace;font-size:0.72rem;color:var(--muted);"><%= att.bookingRef %></td>
-                </tr>
-                <% }); %>
-              <% }); %>
-              <% if (rowIdx === 0) { %>
-                <tr><td colspan="7" style="text-align:center;color:var(--muted);padding:2rem;">No attendees yet</td></tr>
-              <% } %>
-            </tbody>
+  <%
+    // Flatten attendees from bookings already sorted DESC by createdAt
+    const sortedAtts = [];
+    activeEventBookings.forEach(b => {
+      const cat = b.ticketType;
+      const catColors = {platinum:'#9D4EDD',gold:'#f5c842',silver:'#c0c8d8',vip:'#bf80ff',general:'#a0a0a0',standard:'#a0a0a0',family:'#FF6B6B',fanfit:'#00FF88'};
+      const info = catMap[cat] || { name: cat, color: catColors[cat] || '#6A0DAD' };
+      const isNew = (Date.now() - new Date(b.createdAt).getTime()) < 10 * 60 * 1000;
+      b.tickets.forEach(tk => {
+        sortedAtts.push({
+          name:       tk.attendee?.name   || '—',
+          age:        tk.attendee?.age    || '—',
+          gender:     tk.attendee?.gender || '—',
+          phone:      b.contactPhone || b.user?.phone || '—',
+          bookingRef: b.bookingRef,
+          cat,
+          catName:    info.name,
+          catColor:   info.color,
+          isNew,
+        });
+      });
+    });
+  %>
+  <% if (sortedAtts.length === 0) { %>
+    <tr><td colspan="7" style="text-align:center;color:var(--muted);padding:2rem;">No attendees yet</td></tr>
+  <% } %>
+  <% sortedAtts.forEach((att, idx) => { %>
+  <tr class="att-row"
+    data-cat="<%= att.cat %>"
+    data-gender="<%= (att.gender||'').toLowerCase() %>"
+    data-search="<%= (att.name+' '+att.phone).toLowerCase() %>">
+    <td style="color:var(--muted);font-size:0.75rem;"><%= idx+1 %></td>
+    <td style="font-weight:600;">
+      <% if (att.isNew) { %>
+        <span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#00FF88;margin-right:5px;animation:pulse 1.2s ease-in-out infinite;vertical-align:middle;" title="Booked in last 10 min"></span>
+      <% } %>
+      <%= att.name %>
+    </td>
+    <td><%= att.age %></td>
+    <td style="text-transform:capitalize;"><%= att.gender %></td>
+    <td>
+      <span style="background:rgba(106,13,173,0.1);border:1px solid rgba(106,13,173,0.2);color:<%= att.catColor %>;border-radius:10px;padding:0.15rem 0.5rem;font-size:0.7rem;font-family:'Space Mono',monospace;">
+        <%= att.catName %>
+      </span>
+    </td>
+    <td style="font-family:'Space Mono',monospace;font-size:0.75rem;color:var(--muted);"><%= att.phone %></td>
+    <td style="font-family:'Space Mono',monospace;font-size:0.72rem;color:var(--muted);"><%= att.bookingRef %></td>
+  </tr>
+  <% }); %>
+</tbody>
           </table>
         </div>
-        <div id="attCount" style="font-size:0.75rem;color:var(--muted);margin-top:0.8rem;text-align:right;"><%= rowIdx %> attendee(s)</div>
+        <div id="attCount" style="font-size:0.75rem;color:var(--muted);margin-top:0.8rem;text-align:right;"><%= sortedAtts.length %> attendee(s)</div>
       </div>
     </div>
     <% } %>
@@ -244,14 +316,7 @@
       <% } else { %>
       <table>
         <thead>
-          <tr>
-            <th>Event</th>
-            <th>Date</th>
-            <th>Ticket Tiers</th>
-            <th>Bookings</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
+          <tr><th>Event</th><th>Date</th><th>Ticket Tiers</th><th>Bookings</th><th>Status</th><th>Actions</th></tr>
         </thead>
         <tbody>
           <% events.forEach(function(ev) { %>
@@ -294,7 +359,6 @@
                 %>
                 <button class="btn-sm" id="stbtn-<%= ev._id %>"
                   style="<%= allStopped ? 'border-color:rgba(0,255,136,0.3);color:#00FF88;background:rgba(0,255,136,0.07);' : 'border-color:rgba(255,68,68,0.3);color:#FF4444;background:rgba(255,68,68,0.07);' %>"
-                  title="<%= allStopped ? 'Resume all ticket selling' : 'Stop all ticket selling for this event' %>"
                   onclick="toggleAllTickets('<%= ev._id %>', <%= allStopped ? 'false' : 'true' %>, this)">
                   <i class="bi bi-<%= allStopped ? 'play-fill' : 'stop-fill' %>"></i>
                   <%= allStopped ? 'Resume' : 'Stop All' %>
@@ -312,42 +376,10 @@
           <% }); %>
         </tbody>
       </table>
-      </div>
       <% } %>
     </div>
   </main>
 </div>
-<script>
-function filterAttendees() {
-  const search = document.getElementById('attSearch')?.value.toLowerCase() || '';
-  const cat    = document.getElementById('attCatFilter')?.value || '';
-  const gender = document.getElementById('attGenderFilter')?.value || '';
-  let visible  = 0;
-  document.querySelectorAll('.att-row').forEach((row, i) => {
-    const matchSearch = !search || row.dataset.search.includes(search);
-    const matchCat    = !cat    || row.dataset.cat === cat;
-    const matchGender = !gender || row.dataset.gender === gender;
-    const show = matchSearch && matchCat && matchGender;
-    row.style.display = show ? '' : 'none';
-    if (show) { visible++; row.querySelector('td').textContent = visible; }
-  });
-  const countEl = document.getElementById('attCount');
-  if (countEl) countEl.textContent = visible + ' attendee(s)';
-}
-
-  // Pass query params to EJS flash
-  const urlParams = new URLSearchParams(window.location.search);
-  const success = urlParams.get('success');
-  if (success) {
-    const flash = document.querySelector('.flash');
-    if (!flash) {
-      const f = document.createElement('div');
-      f.className = 'flash';
-      f.innerHTML = '<i class="bi bi-check-circle-fill"></i> ' + success;
-      document.querySelector('.main').insertBefore(f, document.querySelector('.stats-grid'));
-    }
-  }
-</script>
 
 <!-- ── Event Detail Modal ── -->
 <div id="evModal" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.7);backdrop-filter:blur(6px);overflow-y:auto;">
@@ -364,18 +396,160 @@ function filterAttendees() {
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script>
-const EVENT_DATA = <%- JSON.stringify(events.map(e=>({_id:e._id,name:e.name,date:e.date,doorsOpen:e.doorsOpen,endTime:e.endTime,venue:e.venue,venueAddress:e.venueAddress,googleMapLink:e.googleMapLink,dressCode:e.dressCode,about:e.about,shortDescription:e.shortDescription,artists:e.artists,ticketTypes:e.ticketTypes,isFeatured:e.isFeatured,isActive:e.isActive,convenienceFee:e.convenienceFee}))) %>;
-const CAT_COLORS={platinum:'#9D4EDD',gold:'#f5c842',silver:'#c0c8d8',fanfit:'#00FF88',family:'#FF6B6B'};
+// ── Attendee filter ──────────────────────────────────────────────────────────
+function filterAttendees() {
+  const search = document.getElementById('attSearch')?.value.toLowerCase() || '';
+  const cat    = document.getElementById('attCatFilter')?.value || '';
+  const gender = document.getElementById('attGenderFilter')?.value || '';
+  let visible  = 0;
+  document.querySelectorAll('.att-row').forEach(row => {
+    const show = (!search || row.dataset.search.includes(search))
+              && (!cat    || row.dataset.cat === cat)
+              && (!gender || row.dataset.gender === gender);
+    row.style.display = show ? '' : 'none';
+    if (show) { visible++; row.querySelector('td').textContent = visible; }
+  });
+  const el = document.getElementById('attCount');
+  if (el) el.textContent = visible + ' attendee(s)';
+}
 
-function viewEvent(id){
-  const ev=EVENT_DATA.find(e=>e._id===id);
-  if(!ev)return;
-  document.getElementById('modalTitle').textContent=ev.name.toUpperCase();
-  document.getElementById('modalEditBtn').href=`/mee-admin/events/${id}/edit`;
-  const isSoldOut=ev.ticketTypes.length>0&&ev.ticketTypes.every(t=>t.bookedSeats>=t.totalSeats);
-  const d=new Date(ev.date).toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-  document.getElementById('modalBody').innerHTML=`
+// ── Flash from query params ──────────────────────────────────────────────────
+const _urlParams = new URLSearchParams(window.location.search);
+if (_urlParams.get('success') && !document.querySelector('.flash')) {
+  const f = document.createElement('div');
+  f.className = 'flash';
+  f.innerHTML = '<i class="bi bi-check-circle-fill"></i> ' + _urlParams.get('success');
+  document.querySelector('.main').insertBefore(f, document.querySelector('.stats-grid'));
+}
+
+// ── Revenue Analytics ────────────────────────────────────────────────────────
+let _revChart;
+const _fmtR = v => '₹' + (v >= 1000 ? (v / 1000).toFixed(1) + 'k' : v);
+const _toISO = d => d.toISOString().split('T')[0];
+
+// IST-aware today string
+function toISTDateString(date) {
+  const ist = new Date(date.getTime() + 5.5 * 60 * 60 * 1000);
+  return ist.toISOString().split('T')[0];
+}
+function todayIST() { return toISTDateString(new Date()); }
+
+function revQuick(mode, btn) {
+  document.querySelectorAll('.rev-quick').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const fi = document.getElementById('revFrom');
+  const ti = document.getElementById('revTo');
+  const today = todayIST();
+
+  if (mode === 'today') {
+    fi.value = today; ti.value = today;
+  } else if (mode === 'yesterday') {
+    const d = new Date(new Date().getTime() + 5.5*60*60*1000);
+    d.setUTCDate(d.getUTCDate() - 1);
+    const y = d.toISOString().split('T')[0];
+    fi.value = y; ti.value = y;
+  } else if (mode === 'week') {
+    const now = new Date(new Date().getTime() + 5.5*60*60*1000);
+    now.setUTCDate(now.getUTCDate() - now.getUTCDay());
+    fi.value = now.toISOString().split('T')[0];
+    ti.value = today;
+  } else if (mode === 'lastweek') {
+    const now = new Date(new Date().getTime() + 5.5*60*60*1000);
+    const thisSun = new Date(now);
+    thisSun.setUTCDate(thisSun.getUTCDate() - thisSun.getUTCDay());
+    const lastSun = new Date(thisSun);
+    lastSun.setUTCDate(lastSun.getUTCDate() - 7);
+    const lastSat = new Date(lastSun);
+    lastSat.setUTCDate(lastSat.getUTCDate() + 6);
+    fi.value = lastSun.toISOString().split('T')[0];
+    ti.value = lastSat.toISOString().split('T')[0];
+  } else if (mode === 'month') {
+    const now = new Date(new Date().getTime() + 5.5*60*60*1000);
+    const first = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+    fi.value = first.toISOString().split('T')[0];
+    ti.value = today;
+  } else {
+    fi.value = ''; ti.value = '';
+  }
+  loadRevChart();
+}
+
+
+async function loadRevChart() {
+  const from = document.getElementById('revFrom').value;
+  const to   = document.getElementById('revTo').value;
+  const qs   = new URLSearchParams();
+  if (from) qs.set('from', from);
+  if (to)   qs.set('to', to);
+  try {
+    const res  = await fetch('/mee-admin/api/revenue-by-date?' + qs, { credentials: 'include' });
+    const json = await res.json();
+    if (!json.success) return;
+    const data = json.data;
+    const gross    = data.reduce((s,r) => s + r.gross, 0);
+    const discount = data.reduce((s,r) => s + r.discount, 0);
+    const net      = gross - discount;
+    const bookings = data.reduce((s,r) => s + r.bookings, 0);
+    document.getElementById('rGross').textContent = _fmtR(gross);
+    document.getElementById('rDisc').textContent  = '-' + _fmtR(discount);
+    document.getElementById('rNet').textContent   = _fmtR(net);
+    document.getElementById('rBook').textContent  = bookings;
+    const canvas  = document.getElementById('revChart');
+    const emptyEl = document.getElementById('revEmpty');
+    if (!data.length) {
+      canvas.style.display = 'none';
+      emptyEl.style.display = 'block';
+      if (_revChart) { _revChart.destroy(); _revChart = null; }
+      return;
+    }
+    canvas.style.display = '';
+    emptyEl.style.display = 'none';
+    const labels = data.map(r => {
+      const [y, m, d] = r.date.split('-').map(Number);
+      return new Date(y, m-1, d).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' });
+    });
+    _revChart = new Chart(canvas, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [
+          { label: 'Net Revenue', data: data.map(r => r.net),      backgroundColor: '#00C47B', borderRadius: 4, stack: 's' },
+          { label: 'Discounts',   data: data.map(r => r.discount), backgroundColor: 'rgba(255,68,68,0.55)', borderRadius: 4, stack: 's' },
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: c => c.dataset.label + ': ' + _fmtR(c.raw) } }
+        },
+        scales: {
+          x: { ticks: { autoSkip: false, maxRotation: 45, color: '#B3B3B3', font: { size: 11 } }, grid: { display: false } },
+          y: { ticks: { callback: _fmtR, color: '#B3B3B3', font: { size: 11 } }, grid: { color: 'rgba(255,255,255,0.05)' } }
+        }
+      }
+    });
+  } catch(e) { console.error('Revenue chart error:', e); }
+}
+
+// Init on load — today
+document.addEventListener('DOMContentLoaded', () => {
+  revQuick('today', document.querySelector('.rev-quick.active'));
+});
+
+// ── Event detail modal ───────────────────────────────────────────────────────
+const EVENT_DATA = <%- JSON.stringify(events.map(e=>({_id:e._id,name:e.name,date:e.date,doorsOpen:e.doorsOpen,endTime:e.endTime,venue:e.venue,venueAddress:e.venueAddress,googleMapLink:e.googleMapLink,dressCode:e.dressCode,about:e.about,shortDescription:e.shortDescription,artists:e.artists,ticketTypes:e.ticketTypes,isFeatured:e.isFeatured,isActive:e.isActive,convenienceFee:e.convenienceFee}))) %>;
+const CAT_COLORS = {platinum:'#9D4EDD',gold:'#f5c842',silver:'#c0c8d8',fanfit:'#00FF88',family:'#FF6B6B'};
+
+function viewEvent(id) {
+  const ev = EVENT_DATA.find(e => e._id === id);
+  if (!ev) return;
+  document.getElementById('modalTitle').textContent = ev.name.toUpperCase();
+  document.getElementById('modalEditBtn').href = `/mee-admin/events/${id}/edit`;
+  const d = new Date(ev.date).toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  document.getElementById('modalBody').innerHTML = `
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;margin-bottom:1.2rem;">
       <div style="background:#0B0B0F;border-radius:8px;padding:1rem;">
         <div style="font-family:'Space Mono',monospace;font-size:0.58rem;letter-spacing:2px;color:#B3B3B3;margin-bottom:0.8rem;">EVENT INFO</div>
@@ -398,16 +572,13 @@ function viewEvent(id){
           ${ev.isFeatured?'<span style="margin-left:0.4rem;padding:0.25rem 0.7rem;border-radius:10px;font-size:0.72rem;background:rgba(106,13,173,0.15);color:#9D4EDD;border:1px solid rgba(106,13,173,0.3);">★ FEATURED</span>':''}
         </div>
         <div style="font-family:'Space Mono',monospace;font-size:0.58rem;letter-spacing:2px;color:#B3B3B3;margin:0.8rem 0 0.4rem;">TICKET CATEGORIES</div>
-        ${ev.ticketTypes.map(t=>{
-          const rem=t.totalSeats-t.bookedSeats;
-          return `<div style="display:flex;align-items:center;justify-content:space-between;padding:0.3rem 0;border-bottom:1px solid rgba(255,255,255,0.04);">
-            <div style="display:flex;align-items:center;gap:0.4rem;font-size:0.8rem;">
-              <div style="width:8px;height:8px;border-radius:50%;background:${CAT_COLORS[t.category]||'#6A0DAD'};"></div>
-              <span>${t.category.toUpperCase()}</span>
-            </div>
-            <div style="font-size:0.75rem;color:#B3B3B3;">₹${t.price} · ${t.bookedSeats}/${t.totalSeats} booked</div>
-          </div>`;
-        }).join('')}
+        ${ev.ticketTypes.map(t=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:0.3rem 0;border-bottom:1px solid rgba(255,255,255,0.04);">
+          <div style="display:flex;align-items:center;gap:0.4rem;font-size:0.8rem;">
+            <div style="width:8px;height:8px;border-radius:50%;background:${CAT_COLORS[t.category]||'#6A0DAD'};"></div>
+            <span>${t.category.toUpperCase()}</span>
+          </div>
+          <div style="font-size:0.75rem;color:#B3B3B3;">₹${t.price} · ${t.bookedSeats}/${t.totalSeats} booked</div>
+        </div>`).join('')}
       </div>
     </div>
     ${(ev.about||ev.shortDescription)?`<div style="background:#0B0B0F;border-radius:8px;padding:1rem;margin-bottom:1rem;font-size:0.85rem;color:#B3B3B3;line-height:1.7;">${ev.about||ev.shortDescription}</div>`:''}
@@ -415,7 +586,7 @@ function viewEvent(id){
       <div style="font-family:'Space Mono',monospace;font-size:0.58rem;letter-spacing:2px;color:#B3B3B3;margin-bottom:0.8rem;">ARTISTS</div>
       <div style="display:flex;flex-wrap:wrap;gap:0.8rem;">
         ${ev.artists.map(a=>`<div style="display:flex;align-items:center;gap:0.6rem;background:#14141C;border-radius:8px;padding:0.5rem 0.8rem;">
-          <div style="width:32px;height:32px;border-radius:50%;background:#1a0a2e;display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:1.1rem;">
+          <div style="width:32px;height:32px;border-radius:50%;background:#1a0a2e;display:flex;align-items:center;justify-content:center;overflow:hidden;">
             ${a.photo?`<img src="${a.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/>`:'🎤'}
           </div>
           <div><div style="font-size:0.82rem;font-weight:700;">${a.name}</div><div style="font-size:0.68rem;color:#B3B3B3;">${a.designation||'ARTIST'}</div></div>
@@ -428,27 +599,25 @@ function viewEvent(id){
       <button onclick="closeModal()" class="btn-sm danger" style="margin-left:auto;"><i class="bi bi-x"></i> Close</button>
     </div>
   `;
-  document.getElementById('evModal').style.display='block';
-  document.body.style.overflow='hidden';
+  document.getElementById('evModal').style.display = 'block';
+  document.body.style.overflow = 'hidden';
 }
 
-function closeModal(){
-  document.getElementById('evModal').style.display='none';
-  document.body.style.overflow='';
+function closeModal() {
+  document.getElementById('evModal').style.display = 'none';
+  document.body.style.overflow = '';
 }
-document.getElementById('evModal').addEventListener('click',e=>{if(e.target===document.getElementById('evModal'))closeModal();});
+document.getElementById('evModal').addEventListener('click', e => { if (e.target === document.getElementById('evModal')) closeModal(); });
 
-// Toggle individual ticket category selling on/off
+// ── Toggle all tickets ───────────────────────────────────────────────────────
 async function toggleAllTickets(eventId, stop, btn) {
   btn.disabled = true;
   const origHTML = btn.innerHTML;
   btn.innerHTML = '<span style="width:10px;height:10px;border:2px solid rgba(255,255,255,0.2);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:inline-block;"></span>';
   try {
     const r = await fetch(`/mee-admin/events/${eventId}/stop-all-tickets`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ stop: String(stop) }),
-      credentials: 'include'
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ stop: String(stop) }), credentials: 'include'
     });
     const d = await r.json();
     if (d.success) {
@@ -456,83 +625,65 @@ async function toggleAllTickets(eventId, stop, btn) {
         btn.innerHTML = '<i class="bi bi-play-fill"></i> Resume';
         btn.style.cssText = 'border-color:rgba(0,255,136,0.3);color:#00FF88;background:rgba(0,255,136,0.07);';
         btn.setAttribute('onclick', `toggleAllTickets('${eventId}', false, this)`);
-        // Update all tier pills to stopped state
         document.querySelectorAll('[id^="tp-' + eventId + '-"]').forEach(el => {
-          el.style.color = '#FF4444';
-          el.style.borderColor = 'rgba(255,68,68,0.3)';
-          const txt = el.textContent.trim().replace(/^✓ /, '');
-          el.textContent = '⛔ ' + txt;
+          el.style.color = '#FF4444'; el.style.borderColor = 'rgba(255,68,68,0.3)';
+          el.textContent = '⛔ ' + el.textContent.trim().replace(/^✓ /, '');
         });
       } else {
         btn.innerHTML = '<i class="bi bi-stop-fill"></i> Stop All';
         btn.style.cssText = 'border-color:rgba(255,68,68,0.3);color:#FF4444;background:rgba(255,68,68,0.07);';
         btn.setAttribute('onclick', `toggleAllTickets('${eventId}', true, this)`);
-        // Update all tier pills to active state
         document.querySelectorAll('[id^="tp-' + eventId + '-"]').forEach(el => {
-          el.style.color = '';
-          el.style.borderColor = '';
-          const txt = el.textContent.trim().replace(/^⛔ /, '');
-          el.textContent = '✓ ' + txt;
+          el.style.color = ''; el.style.borderColor = '';
+          el.textContent = '✓ ' + el.textContent.trim().replace(/^⛔ /, '');
         });
       }
       btn.disabled = false;
-    } else {
-      btn.innerHTML = origHTML; btn.disabled = false;
-    }
+    } else { btn.innerHTML = origHTML; btn.disabled = false; }
   } catch(e) { btn.innerHTML = origHTML; btn.disabled = false; }
 }
 
 async function toggleTicketCat(eventId, category, el) {
-  el.style.opacity='0.5';
+  el.style.opacity = '0.5';
   try {
     const r = await fetch(`/mee-admin/events/${eventId}/ticket-toggle`, {
-      method:'POST', credentials:'include',
-      headers:{'Content-Type':'application/json'},
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ category })
     });
     const d = await r.json();
     if (d.success) {
       if (d.isActive) {
-        el.style.border='1px solid rgba(106,13,173,0.15)';
-        el.style.color='#6A0DAD';
-        el.innerHTML = el.innerHTML.replace('⛔ ','✓ ');
-        el.title = 'Click to stop selling';
+        el.style.border = '1px solid rgba(106,13,173,0.15)'; el.style.color = '#6A0DAD';
+        el.innerHTML = el.innerHTML.replace('⛔ ', '✓ '); el.title = 'Click to stop selling';
       } else {
-        el.style.border='1px solid rgba(255,68,68,0.3)';
-        el.style.color='#FF4444';
-        el.innerHTML = el.innerHTML.replace('✓ ','⛔ ');
-        el.title = 'Selling Stopped — click to resume';
+        el.style.border = '1px solid rgba(255,68,68,0.3)'; el.style.color = '#FF4444';
+        el.innerHTML = el.innerHTML.replace('✓ ', '⛔ '); el.title = 'Selling Stopped — click to resume';
       }
     }
   } catch(e) {}
-  el.style.opacity='1';
+  el.style.opacity = '1';
 }
 
-// ── Refresh logic ──────────────────────────────────────
+// ── Auto-refresh countdown ───────────────────────────────────────────────────
 let _refreshSecs = 300;
-const _timerEl   = document.getElementById('refreshTimer');
-const _refreshBtn = document.getElementById('refreshBtn');
-const _refreshIcon = document.getElementById('refreshIcon');
-
-function _pad(n){ return String(n).padStart(2,'0'); }
-function _tick(){
+const _timerEl = document.getElementById('refreshTimer');
+const _pad = n => String(n).padStart(2, '0');
+function _tick() {
   const m = Math.floor(_refreshSecs/60), s = _refreshSecs%60;
-  _timerEl.textContent = m+':'+_pad(s);
-  if(--_refreshSecs < 0) location.reload();
+  _timerEl.textContent = m + ':' + _pad(s);
+  if (--_refreshSecs < 0) location.reload();
 }
 setInterval(_tick, 1000);
 _tick();
 
-function doRefresh(){
-  _refreshIcon.style.animation = 'spin 0.7s linear infinite';
-  _refreshBtn.disabled = true;
+function doRefresh() {
+  document.getElementById('refreshIcon').style.animation = 'spin 0.7s linear infinite';
+  document.getElementById('refreshBtn').disabled = true;
   setTimeout(() => location.reload(), 300);
 }
-// ───────────────────────────────────────────────────────
-
-
 </script>
 
-  <%- include('../partials/admin-confirm') %>
+<%- include('../partials/admin-confirm') %>
 </body>
 </html>

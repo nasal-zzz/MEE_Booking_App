@@ -125,6 +125,16 @@
     .sync-badge.warn{background:rgba(245,200,66,0.1);color:#f5c842;border:1px solid rgba(245,200,66,0.25);}
     .sync-badge.over{background:rgba(255,68,68,0.1);color:#FF4444;border:1px solid rgba(255,68,68,0.25);}
     .sync-actions{display:flex;gap:0.6rem;margin-top:1rem;justify-content:flex-end;}
+
+    .ol-item{background:#0B0B0F;border:1px solid rgba(255,255,255,0.06);border-radius:6px;padding:0.4rem 0.6rem;display:flex;align-items:center;gap:0.35rem;cursor:pointer;transition:border-color 0.2s;}
+    .ol-item:hover,.ol-item.sel{border-color:rgba(106,13,173,0.45);}
+    .ol-dot{width:9px;height:9px;border-radius:2px;flex-shrink:0;border:1.5px dashed;}
+    .ol-lbl{font-size:0.75rem;font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .ol-type{font-size:0.58rem;color:#555;font-family:'Space Mono',monospace;}
+    .ol-rm{background:none;border:none;color:#FF4444;cursor:pointer;font-size:0.7rem;padding:0.1rem 0.15rem;flex-shrink:0;}
+    .icon-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:0.25rem;margin-bottom:0.45rem;}
+    .icon-btn{padding:0.35rem;border-radius:5px;background:#0B0B0F;border:1.5px solid rgba(255,255,255,0.07);cursor:pointer;font-size:1rem;text-align:center;transition:all 0.18s;line-height:1;}
+    .icon-btn.on,.icon-btn:hover{border-color:#6A0DAD;background:rgba(106,13,173,0.12);}
   </style>
 </head>
 <body>
@@ -137,7 +147,7 @@
   <div class="nav-right">
     <span class="save-status" id="saveStatus"></span>
     <button class="btn btn-amber" onclick="flipLayout()"><i class="bi bi-arrow-down-up"></i> Flip</button>
-    <button class="btn btn-outline" id="syncBtn" onclick="syncFromEvent()" title="Reload category quotas from event and redistribute unmapped seats"><i class="bi bi-arrow-repeat"></i> Sync Quotas</button>
+    <button class="btn btn-outline" id="syncBtn" onclick="syncFromEvent()"><i class="bi bi-arrow-repeat"></i> Sync Quotas</button>
     <button class="btn btn-outline" onclick="location.href='/mee-admin'">← Back</button>
     <button class="btn btn-red" onclick="clearAll()"><i class="bi bi-trash"></i> Clear</button>
     <button class="btn btn-purple" onclick="saveMap()"><i class="bi bi-floppy"></i> Save</button>
@@ -149,7 +159,7 @@
 
 <div class="workspace">
 
-  <!-- ═══ LEFT PANEL ═══ -->
+  <!-- LEFT PANEL -->
   <div class="panel">
 
     <!-- Stage -->
@@ -254,6 +264,60 @@
       <div class="zlist" id="zoneList"><div style="color:#444;font-size:0.73rem;">No zones yet.</div></div>
     </div>
 
+    <!-- OVERLAYS PANEL -->
+    <div class="ps">
+      <div class="pt">📌 Overlays (Reserved & POI)</div>
+      <label class="lbl">Type</label>
+      <div class="sgrid" style="margin-bottom:0.45rem;">
+        <button class="sbtn on" id="ot-reserved" onclick="setOverlayType('reserved',this)"><em>🔒</em>Reserved</button>
+        <button class="sbtn"   id="ot-poi"      onclick="setOverlayType('poi',this)"><em>📌</em>POI Marker</button>
+      </div>
+      <label class="lbl">Shape</label>
+      <div class="sgrid3" style="margin-bottom:0.45rem;">
+        <button class="sbtn on" id="ols-rect"     onclick="setOverlayShape('rect',this)"><em>▬</em>Rect</button>
+        <button class="sbtn"   id="ols-round"    onclick="setOverlayShape('round',this)"><em>⬭</em>Oval</button>
+        <button class="sbtn"   id="ols-triangle" onclick="setOverlayShape('triangle',this)"><em>▲</em>Triangle</button>
+      </div>
+      <label class="lbl">Label</label>
+      <input class="inp" id="olLabel" placeholder="e.g. VIP RESERVED, GATE A"/>
+      <label class="lbl">Note (optional)</label>
+      <input class="inp" id="olNote" placeholder="e.g. 50 reserved seats"/>
+      <label class="lbl" id="olIconLbl">Icon</label>
+      <div class="icon-grid" id="olIconGrid">
+        <button class="icon-btn on" data-icon="🔒" onclick="setOverlayIcon('🔒',this)" title="Reserved">🔒</button>
+        <button class="icon-btn" data-icon="👑" onclick="setOverlayIcon('👑',this)" title="VIP">👑</button>
+        <button class="icon-btn" data-icon="🎭" onclick="setOverlayIcon('🎭',this)" title="Artist">🎭</button>
+        <button class="icon-btn" data-icon="🚪" onclick="setOverlayIcon('🚪',this)" title="Entrance">🚪</button>
+        <button class="icon-btn" data-icon="🚶" onclick="setOverlayIcon('🚶',this)" title="Exit">🚶</button>
+        <button class="icon-btn" data-icon="🍵" onclick="setOverlayIcon('🍵',this)" title="Tea Stall">🍵</button>
+        <button class="icon-btn" data-icon="🍽️" onclick="setOverlayIcon('🍽️',this)" title="Food">🍽️</button>
+        <button class="icon-btn" data-icon="🚻" onclick="setOverlayIcon('🚻',this)" title="Restroom">🚻</button>
+        <button class="icon-btn" data-icon="🅿" onclick="setOverlayIcon('🅿',this)" title="Parking">🅿</button>
+        <button class="icon-btn" data-icon="🚑" onclick="setOverlayIcon('🚑',this)" title="First Aid">🚑</button>
+        <button class="icon-btn" data-icon="📸" onclick="setOverlayIcon('📸',this)" title="Photo Pit">📸</button>
+        <button class="icon-btn" data-icon="🎤" onclick="setOverlayIcon('🎤',this)" title="Sound">🎤</button>
+        <button class="icon-btn" data-icon="🔦" onclick="setOverlayIcon('🔦',this)" title="Security">🔦</button>
+        <button class="icon-btn" data-icon="ℹ️" onclick="setOverlayIcon('ℹ️',this)" title="Info">ℹ️</button>
+        <button class="icon-btn" data-icon="⛔" onclick="setOverlayIcon('⛔',this)" title="No Entry">⛔</button>
+      </div>
+      <label class="lbl">Color</label>
+      <div class="sgrid3" style="margin-bottom:0.45rem;">
+        <button class="sbtn on" id="olc-purple" onclick="setOlColor('#9D4EDD',this)" style="border-color:#9D4EDD;color:#9D4EDD;">Purple</button>
+        <button class="sbtn" id="olc-amber"  onclick="setOlColor('#f5c842',this)" style="color:#f5c842;">Amber</button>
+        <button class="sbtn" id="olc-green"  onclick="setOlColor('#00FF88',this)" style="color:#00FF88;">Green</button>
+        <button class="sbtn" id="olc-red"    onclick="setOlColor('#FF4444',this)" style="color:#FF4444;">Red</button>
+        <button class="sbtn" id="olc-blue"   onclick="setOlColor('#00C8F8',this)" style="color:#00C8F8;">Blue</button>
+        <button class="sbtn" id="olc-white"  onclick="setOlColor('#ffffff',this)" style="color:#aaa;">White</button>
+      </div>
+      <button class="btn btn-purple" style="width:100%;justify-content:center;" onclick="addOverlay()">
+        <i class="bi bi-plus-circle"></i> Add Overlay
+      </button>
+      <div style="margin-top:0.6rem;">
+        <div class="pt" style="margin-bottom:0.35rem;">📋 Overlays (<span id="olCount">0</span>)</div>
+        <div id="olList"><div style="color:#444;font-size:0.73rem;">No overlays yet.</div></div>
+      </div>
+    </div>
+
     <!-- Hints -->
     <div class="ps">
       <div class="hint">
@@ -267,7 +331,7 @@
     </div>
   </div>
 
-  <!-- ═══ CANVAS ═══ -->
+  <!-- CANVAS -->
   <div class="canvas-area">
     <div class="ctoolbar">
       <span style="font-size:0.67rem;color:#666;">Tool:</span>
@@ -286,7 +350,7 @@
     </div>
   </div>
 
-  <!-- ═══ RIGHT PANEL ═══ -->
+  <!-- RIGHT PANEL -->
   <div class="rpanel">
     <div class="rpt">📊 Overview</div>
     <div id="mismatchBanner"></div>
@@ -325,26 +389,14 @@ const EVENT_ID    = '<%= event._id %>';
 const TICKET_CATS = <%- JSON.stringify(event.ticketTypes.map(t=>({category:t.category,price:t.price,totalSeats:t.totalSeats,color:t.color||''}))) %>;
 const EXISTING    = <%- JSON.stringify(seatMap || null) %>;
 
-// ─────────────────────────── COLOR RESOLUTION ───────────────────────────
-// Fallback palette for common preset names
+// ─── COLOR RESOLUTION ───
 const CAT_COLORS = {platinum:'#9D4EDD',gold:'#f5c842',silver:'#c0c8d8',fanfit:'#00FF88',family:'#FF6B6B'};
-
-// ✅ FIX: Build color map from actual event ticket types first,
-// then fall back to the hardcoded preset names, then default purple.
-// This ensures every category — regardless of name — gets its own distinct color.
 const TCAT_COLORS = Object.fromEntries(
-  TICKET_CATS.map(t => [
-    t.category,
-    t.color || CAT_COLORS[t.category] || '#6A0DAD'
-  ])
+  TICKET_CATS.map(t => [t.category, t.color || CAT_COLORS[t.category] || '#6A0DAD'])
 );
+function getCatColor(category){ return TCAT_COLORS[category] || CAT_COLORS[category] || '#6A0DAD'; }
 
-// Helper: get the resolved color for any category
-function getCatColor(category) {
-  return TCAT_COLORS[category] || CAT_COLORS[category] || '#6A0DAD';
-}
-
-// ─────────────────────────── STATE ───────────────────────────
+// ─── STATE ───
 let stageShape    = EXISTING?.stage?.shape || 'rectangle';
 let stageColor    = EXISTING?.stage?.color || '#6A0DAD';
 let zones         = [];
@@ -354,18 +406,30 @@ let currentTool   = 'select';
 let zoomLevel     = 1;
 let sel           = null;
 let stageAtBottom = false;
+let overlays      = [];
+let selOlIdx      = null;
+let newOverlayType  = 'reserved';
+let newOverlayIcon  = '🔒';
+let newOverlayColor = '#9D4EDD';
+let newOverlayShape = 'rect';
+
+// ─── DRAG STATE ───
+let drag      = null;   // zone/stage move
+let resDrag   = null;   // zone/stage resize
+let rotDrag   = null;   // zone rotate
+let olDrag    = null;   // overlay move
+let olResDrag = null;   // overlay resize
+let dialDrag  = null;   // dial widget
 
 const canvas = document.getElementById('seatCanvas');
 const ctx    = canvas.getContext('2d');
 
 let stage = {
-  x:      EXISTING?.stage?.x      ?? 80,
-  y:      EXISTING?.stage?.y      ?? 30,
-  w:      EXISTING?.stage?.width  || 500,
-  h:      EXISTING?.stage?.height || 100,
+  x: EXISTING?.stage?.x      ?? 80,
+  y: EXISTING?.stage?.y      ?? 30,
+  w: EXISTING?.stage?.width  || 500,
+  h: EXISTING?.stage?.height || 100,
 };
-
-let drag=null, resDrag=null, rotDrag=null;
 
 function uid(){ return Math.random().toString(36).slice(2,9); }
 function d2r(d){ return d*Math.PI/180; }
@@ -375,28 +439,44 @@ function normDeg(d){ return ((d%360)+360)%360; }
 // ─── Load saved zones ───
 if(EXISTING?.sections?.length){
   zones = EXISTING.sections.map(s=>({
-    id:         s._id || uid(),
-    name:       s.name,
-    category:   s.category,
-    shape:      s.zoneShape || 'rect',
-    x:          s.x    ?? 80,
-    y:          s.y    ?? 200,
-    w:          s.zoneW > 0 ? s.zoneW : 200,
-    h:          s.zoneH > 0 ? s.zoneH : 100,
-    rot:        s.zoneRot != null ? s.zoneRot : 0,
-    totalSeats: s.totalSeats  || 0,
-    bookedSeats:s.bookedSeats || 0,
-    color:      s.color       || '',
+    id:          s._id || uid(),
+    name:        s.name,
+    category:    s.category,
+    shape:       s.zoneShape || 'rect',
+    x:           s.x    ?? 80,
+    y:           s.y    ?? 200,
+    w:           s.zoneW > 0 ? s.zoneW : 200,
+    h:           s.zoneH > 0 ? s.zoneH : 100,
+    rot:         s.zoneRot != null ? s.zoneRot : 0,
+    totalSeats:  s.totalSeats  || 0,
+    bookedSeats: s.bookedSeats || 0,
+    color:       s.color       || '',
   }));
   if(stage.y > canvas.height/2) stageAtBottom = true;
 }
 
-renderList(); draw(); updateStats(); updateQuota(); checkSeatsHint();
+if(EXISTING?.overlays?.length){
+  overlays = EXISTING.overlays.map(o=>({
+    id:    o._id || uid(),
+    type:  o.type  || 'reserved',
+    label: o.label || '',
+    note:  o.note  || '',
+    icon:  o.icon  || '🔒',
+    color: o.color || '#9D4EDD',
+    shape: o.shape || 'rect',
+    x:     o.x ?? 100,
+    y:     o.y ?? 100,
+    w:     o.w > 0 ? o.w : 160,
+    h:     o.h > 0 ? o.h : 80,
+    rot:   o.rot != null ? o.rot : 0,
+  }));
+}
 
-// ─────────────────────────── DIAL WIDGET ───────────────────────────
+renderList(); renderOlList(); draw(); updateStats(); updateQuota(); checkSeatsHint();
+
+// ─── DIAL WIDGET ───
 const dialEl     = document.getElementById('dialEl');
 const dialNeedle = document.getElementById('dialNeedle');
-let dialDrag = null;
 
 dialEl.addEventListener('mousedown', e=>{
   if(sel===null) return;
@@ -415,25 +495,25 @@ document.addEventListener('mousemove',e=>{
 });
 document.addEventListener('mouseup',()=>{ dialDrag=null; dialEl.classList.remove('grabbing'); });
 
-// ─────────────────────────── ZOOM ───────────────────────────
+// ─── ZOOM ───
 function zoom(d){ zoomLevel=Math.min(2.5,Math.max(0.3,zoomLevel+d)); canvas.style.transform=`scale(${zoomLevel})`; canvas.style.transformOrigin='top left'; document.getElementById('zoomLbl').textContent=Math.round(zoomLevel*100)+'%'; }
 function resetZoom(){ zoomLevel=1; canvas.style.transform='scale(1)'; document.getElementById('zoomLbl').textContent='100%'; }
 
-// ─────────────────────────── STAGE ───────────────────────────
+// ─── STAGE ───
 function setStageShape(s,btn){
   stageShape=s;
   document.querySelectorAll('[data-stage]').forEach(b=>b.classList.remove('on'));
   btn.classList.add('on'); draw();
 }
 
-// ─────────────────────────── ZONE SHAPE ───────────────────────────
+// ─── ZONE SHAPE ───
 function setZoneShape(s,btn){
   newZoneShape=s;
   ['zs-rect','zs-round','zs-triangle'].forEach(id=>document.getElementById(id).classList.remove('on'));
   btn.classList.add('on');
 }
 
-// ─────────────────────────── FLIP ───────────────────────────
+// ─── FLIP ───
 function flipLayout(){
   stageAtBottom=!stageAtBottom;
   if(stageAtBottom){ stage.y=canvas.height-stage.h-30; zones.forEach(z=>{if(z.y+z.h>stage.y-10)z.y=Math.max(30,stage.y-z.h-40);}); }
@@ -441,7 +521,7 @@ function flipLayout(){
   draw(); showToast(stageAtBottom?'⬇ Stage at bottom':'⬆ Stage at top','ok');
 }
 
-// ─────────────────────────── ROTATION ───────────────────────────
+// ─── ROTATION ───
 function setRot(deg){ if(sel===null)return; zones[sel].rot=normDeg(deg); syncRotUI(); draw(); refreshSelInfo(); }
 function nudgeRot(d){ if(sel===null)return; zones[sel].rot=normDeg((zones[sel].rot||0)+d); syncRotUI(); draw(); refreshSelInfo(); }
 function onSlider(v){ if(sel===null)return; zones[sel].rot=parseFloat(v); syncRotUI(); draw(); refreshSelInfo(); }
@@ -454,7 +534,7 @@ function syncRotUI(){
   dialNeedle.style.transform=`rotate(${deg}deg)`;
 }
 
-// ─────────────────────────── SELECTED ZONE EDITS ───────────────────────────
+// ─── SELECTED ZONE EDITS ───
 function updateSelSeats(){
   if(sel===null)return;
   const newVal=parseInt(document.getElementById('selTotalSeats').value)||0;
@@ -492,7 +572,7 @@ function setSelShape(shape,btn){
   draw(); refreshSelInfo();
 }
 
-// ─────────────────────────── ADD ZONE ───────────────────────────
+// ─── ADD ZONE ───
 function checkSeatsHint(){
   const cat=document.getElementById('newCat')?.value;
   const hint=document.getElementById('seatsHint');
@@ -513,10 +593,7 @@ function addZone(){
   if(!totalSeatsRaw||totalSeats<1){showToast('⚠️ Total seats is required (min 1)','err');document.getElementById('newTotalSeats').focus();return;}
   const quota=getCatQuota(cat);
   const alreadyMapped=getMappedSeats(cat);
-  if(alreadyMapped>=quota&&quota>0){
-    showToast(`❌ All ${quota} ${cat.toUpperCase()} seats are already mapped!`,'err');
-    return;
-  }
+  if(alreadyMapped>=quota&&quota>0){showToast(`❌ All ${quota} ${cat.toUpperCase()} seats are already mapped!`,'err');return;}
   const remaining=quota-alreadyMapped;
   if(totalSeats>remaining){
     showToast(`⚠️ Only ${remaining} seats left for ${cat.toUpperCase()} (${alreadyMapped}/${quota} mapped)`,'err');
@@ -534,11 +611,79 @@ function addZone(){
   renderList(); draw(); updateStats(); showSelPanel(); refreshSelInfo(); syncRotUI();
 }
 
-// ─────────────────────────── DRAW ───────────────────────────
+// ─── OVERLAY TYPE / ICON / COLOR ───
+function setOverlayType(t,btn){
+  newOverlayType=t;
+  ['ot-reserved','ot-poi'].forEach(id=>document.getElementById(id)?.classList.remove('on'));
+  btn.classList.add('on');
+  if(t==='poi'&&newOverlayIcon==='🔒'){ setOverlayIcon('🚪',document.querySelector('[data-icon="🚪"]')); }
+  if(t==='reserved'&&newOverlayIcon==='🚪'){ setOverlayIcon('🔒',document.querySelector('[data-icon="🔒"]')); }
+}
+function setOverlayIcon(icon,btn){
+  newOverlayIcon=icon;
+  document.querySelectorAll('.icon-btn').forEach(b=>b.classList.remove('on'));
+  if(btn) btn.classList.add('on');
+}
+function setOlColor(color,btn){
+  newOverlayColor=color;
+  document.querySelectorAll('[id^="olc-"]').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+}
+function setOverlayShape(s,btn){
+  newOverlayShape=s;
+  ['ols-rect','ols-round','ols-triangle'].forEach(id=>document.getElementById(id)?.classList.remove('on'));
+  btn.classList.add('on');
+}
+
+// ─── ADD OVERLAY ───
+function addOverlay(){
+  const label=document.getElementById('olLabel').value.trim().toUpperCase();
+  if(!label){showToast('Enter a label for the overlay','err');document.getElementById('olLabel').focus();return;}
+  const note=document.getElementById('olNote').value.trim();
+  const isPOI=newOverlayType==='poi';
+  const defaultW = newOverlayShape==='round' ? 120 : isPOI ? 60 : 180;
+  const defaultH = newOverlayShape==='round' ? 70  : isPOI ? 60 : 80;
+  overlays.push({
+    id:uid(), type:newOverlayType, label, note,
+    icon:newOverlayIcon, color:newOverlayColor,
+    shape:newOverlayShape,
+    x:120+(overlays.length%3)*200,
+    y:200+overlays.length*30,
+    w:defaultW, h:defaultH, rot:0,
+  });
+  document.getElementById('olLabel').value='';
+  document.getElementById('olNote').value='';
+  selOlIdx=overlays.length-1;
+  renderOlList(); draw();
+  showToast(`✅ ${isPOI?'POI':'Reserved area'} added`,'ok');
+}
+
+// ─── OVERLAY LIST ───
+function renderOlList(){
+  const el=document.getElementById('olList');
+  const cnt=document.getElementById('olCount');
+  if(cnt) cnt.textContent=overlays.length;
+  if(!overlays.length){el.innerHTML='<div style="color:#444;font-size:0.73rem;">No overlays yet.</div>';return;}
+  el.innerHTML=overlays.map((o,i)=>`
+    <div class="ol-item ${i===selOlIdx?'sel':''}" onclick="selectOl(${i})">
+      <span style="font-size:0.9rem;">${o.icon||'📌'}</span>
+      <div class="ol-lbl">${o.label}</div>
+      <div class="ol-type">${o.type}</div>
+      <button class="ol-rm" onclick="event.stopPropagation();delOl(${i})"><i class="bi bi-trash"></i></button>
+    </div>`).join('');
+}
+function selectOl(i){ selOlIdx=i; sel=null; renderOlList(); renderList(); draw(); }
+function delOl(i){
+  if(!confirm(`Remove overlay "${overlays[i].label}"?`)) return;
+  overlays.splice(i,1); selOlIdx=null; renderOlList(); draw();
+}
+
+// ─── DRAW ───
 function draw(){
   ctx.clearRect(0,0,canvas.width,canvas.height);
   drawGrid(); drawStage();
   zones.forEach((z,i)=>drawZone(z,i===sel));
+  overlays.forEach((o,i)=>drawOverlay(o,i===selOlIdx));
 }
 
 function drawGrid(){
@@ -574,55 +719,40 @@ function drawStage(){
   ctx.restore();
 }
 
-function drawZone(z, isSel){
-  const {x,y,w,h,name,category,shape,totalSeats,bookedSeats} = z;
-  const rot = d2r(z.rot || 0);
-
-  // ✅ FIX: Use getCatColor() which resolves from event's own ticket type colors first
-  const color = z.color || getCatColor(category);
-
+function drawZone(z,isSel){
+  const {x,y,w,h,name,category,shape,totalSeats,bookedSeats}=z;
+  const rot=d2r(z.rot||0);
+  const color=z.color||getCatColor(category);
   const cx=x+w/2, cy=y+h/2;
   const catInfo=TICKET_CATS.find(t=>t.category===category);
-
   ctx.save();
-  ctx.translate(cx,cy);
-  ctx.rotate(rot);
-
+  ctx.translate(cx,cy); ctx.rotate(rot);
   if(isSel){ ctx.shadowColor=color; ctx.shadowBlur=22; }
-  ctx.fillStyle   = isSel ? color+'45' : color+'1c';
-  ctx.strokeStyle = isSel ? color      : color+'70';
-  ctx.lineWidth   = isSel ? 2.5 : 1.5;
-
+  ctx.fillStyle=isSel?color+'45':color+'1c';
+  ctx.strokeStyle=isSel?color:color+'70';
+  ctx.lineWidth=isSel?2.5:1.5;
   ctx.beginPath();
   if(shape==='round'){
     ctx.ellipse(0,0,w/2,h/2,0,0,Math.PI*2);
   } else if(shape==='triangle'){
-    ctx.moveTo(0,-h/2);
-    ctx.lineTo( w/2, h/2);
-    ctx.lineTo(-w/2, h/2);
-    ctx.closePath();
+    ctx.moveTo(0,-h/2); ctx.lineTo(w/2,h/2); ctx.lineTo(-w/2,h/2); ctx.closePath();
   } else {
     ctx.roundRect(-w/2,-h/2,w,h,10);
   }
   ctx.fill(); ctx.shadowBlur=0; ctx.stroke();
-
   const fs=Math.max(9,Math.min(14,w/(name.length*0.78)));
   ctx.fillStyle='#fff'; ctx.font=`bold ${fs}px "Poppins",sans-serif`;
   ctx.textAlign='center'; ctx.textBaseline='middle';
-  const labelY = shape==='triangle' ? h*0.1 : -10;
+  const labelY=shape==='triangle'?h*0.1:-10;
   ctx.fillText(name,0,labelY);
-
   ctx.fillStyle=color; ctx.font='600 10px "Poppins",sans-serif';
   ctx.fillText(`${category.toUpperCase()} · ₹${catInfo?.price||''}`,0,labelY+13);
-
   if(totalSeats>0){
     const avail=totalSeats-(bookedSeats||0);
     ctx.fillStyle='rgba(255,255,255,0.6)'; ctx.font='10px "Space Mono",monospace';
     ctx.fillText(`${avail}/${totalSeats} seats`,0,labelY+26);
   }
-
   ctx.restore();
-
   if(isSel){
     drawHandles(x,y,w,h,color);
     drawRotHandle(cx,cy,h/2+26,rot,color);
@@ -654,7 +784,118 @@ function drawRotHandle(cx,cy,dist,rotRad,c){
   ctx.restore();
 }
 
-// ─────────────────────────── HIT TESTING ───────────────────────────
+function drawOverlay(o,isSel){
+  const {x,y,w,h,rot,label,icon,color,type,note}=o;
+  const shape=o.shape||'rect';
+  const rad=d2r(rot||0);
+  const cx=x+w/2, cy=y+h/2;
+
+  function makeShapePath(){
+    ctx.beginPath();
+    if(shape==='round'){
+      ctx.ellipse(0,0,w/2,h/2,0,0,Math.PI*2);
+    } else if(shape==='triangle'){
+      ctx.moveTo(0,-h/2); ctx.lineTo(w/2,h/2); ctx.lineTo(-w/2,h/2); ctx.closePath();
+    } else {
+      ctx.roundRect(-w/2,-h/2,w,h,8);
+    }
+  }
+
+  ctx.save();
+  ctx.translate(cx,cy);
+  ctx.rotate(rad);
+
+  if(type==='reserved'){
+    // Hatch fill via clip
+    ctx.save();
+    makeShapePath();
+    ctx.save();
+    ctx.clip();
+    ctx.strokeStyle=color+'40'; ctx.lineWidth=1.5; ctx.setLineDash([]);
+    for(let hx=-w;hx<w*1.5;hx+=10){
+      ctx.beginPath(); ctx.moveTo(hx-h,-h/2); ctx.lineTo(hx+h,h/2); ctx.stroke();
+    }
+    ctx.restore();
+    // Tint
+    ctx.fillStyle=color+'18';
+    makeShapePath(); ctx.fill();
+    // Dashed border
+    ctx.setLineDash([6,4]);
+    ctx.strokeStyle=isSel?color:color+'99';
+    ctx.lineWidth=isSel?2.5:1.5;
+    if(isSel){ctx.shadowColor=color;ctx.shadowBlur=14;}
+    makeShapePath(); ctx.stroke();
+    ctx.setLineDash([]); ctx.shadowBlur=0;
+    ctx.restore();
+
+    // Icon (skip for triangle — too cramped)
+    if(shape!=='triangle'){
+      ctx.font='14px sans-serif';
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText(icon||'🔒',-w/2+14,-h/2+14);
+    }
+    // Label
+    ctx.fillStyle='#fff';
+    const fs=Math.max(9,Math.min(12,w/(Math.max(label.length,1)*0.9)));
+    ctx.font=`bold ${fs}px "Poppins",sans-serif`;
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    const labelY=shape==='triangle'?h*0.1:(note?-8:0);
+    ctx.fillText(label,0,labelY);
+    if(note&&shape!=='triangle'){
+      ctx.fillStyle='#888'; ctx.font='9px "Space Mono",monospace';
+      ctx.fillText(note,0,labelY+14);
+    }
+    // RESERVED badge (rect only)
+    if(shape==='rect'){
+      ctx.fillStyle=color+'cc'; ctx.font='bold 8px "Space Mono",monospace';
+      ctx.textAlign='right'; ctx.fillText('RESERVED',w/2-6,h/2-6);
+    }
+
+  } else {
+    // POI — use shape
+    ctx.save();
+    makeShapePath();
+    ctx.fillStyle=color+'22'; ctx.fill();
+    if(isSel){ctx.shadowColor=color;ctx.shadowBlur=14;}
+    ctx.strokeStyle=isSel?color:color+'88';
+    ctx.lineWidth=isSel?2.5:1.5;
+    ctx.setLineDash([4,3]); ctx.stroke();
+    ctx.setLineDash([]); ctx.shadowBlur=0;
+    ctx.restore();
+
+    // Icon centred
+    const iconSize=Math.max(14,Math.min(22,Math.min(w,h)*0.4));
+    ctx.font=`${iconSize}px sans-serif`;
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    const iconY=shape==='triangle'?h*0.05:-2;
+    ctx.fillText(icon||'📌',0,iconY);
+
+    // Label below
+    ctx.fillStyle=color; ctx.font='bold 9px "Space Mono",monospace';
+    ctx.textAlign='center'; ctx.textBaseline='top';
+    ctx.fillText(label,0,h/2+4);
+  }
+
+  ctx.restore(); // back to world space — lineDash is guaranteed clean here
+
+  // Selection corner handles (world space, rotation-aware)
+  if(isSel){
+    const cosR=Math.cos(rad), sinR=Math.sin(rad);
+    const hw=w/2, hh=h/2;
+    const corners=[{lx:hw,ly:hh},{lx:hw,ly:-hh},{lx:-hw,ly:-hh},{lx:-hw,ly:hh}];
+    ctx.save();
+    corners.forEach(({lx,ly})=>{
+      const wx=cx+lx*cosR-ly*sinR;
+      const wy=cy+lx*sinR+ly*cosR;
+      ctx.beginPath(); ctx.arc(wx,wy,5.5,0,Math.PI*2);
+      ctx.fillStyle=color; ctx.strokeStyle='#0f0f18'; ctx.lineWidth=1.5;
+      ctx.fill(); ctx.stroke();
+    });
+    ctx.restore();
+  }
+}
+
+// ─── HIT TESTING ───
 function getHandleHit(px,py,x,y,w,h){
   const pts=[{hx:x+w,hy:y+h,id:'br'},{hx:x+w,hy:y+h/2,id:'r'},{hx:x+w/2,hy:y+h,id:'b'},{hx:x,hy:y+h,id:'bl'},{hx:x,hy:y+h/2,id:'l'}];
   for(const p of pts) if(Math.hypot(px-p.hx,py-p.hy)<=9) return p.id;
@@ -674,10 +915,10 @@ function ptInZone(px,py,z){
   const lx=(px-cx)*cos-(py-cy)*sin;
   const ly=(px-cx)*sin+(py-cy)*cos;
   const hw=z.w/2, hh=z.h/2;
-  if(z.shape==='round')  return (lx/hw)**2+(ly/hh)**2<=1;
+  if(z.shape==='round') return (lx/hw)**2+(ly/hh)**2<=1;
   if(z.shape==='triangle'){
     function sign(ax,ay,bx,by,pcx,pcy){ return (ax-pcx)*(by-ay)-(bx-ax)*(ay-pcy); }
-    const d1=sign(0,-hh, hw,hh,lx,ly);
+    const d1=sign(0,-hh,hw,hh,lx,ly);
     const d2=sign(hw,hh,-hw,hh,lx,ly);
     const d3=sign(-hw,hh,0,-hh,lx,ly);
     const neg=d1<0||d2<0||d3<0, pos=d1>0||d2>0||d3>0;
@@ -688,12 +929,44 @@ function ptInZone(px,py,z){
 
 function getZoneAt(px,py){ for(let i=zones.length-1;i>=0;i--) if(ptInZone(px,py,zones[i])) return i; return -1; }
 
-function canvasXY(e){
-  const r=canvas.getBoundingClientRect();
-  return{x:(e.clientX-r.left)/zoomLevel, y:(e.clientY-r.top)/zoomLevel};
+function ptInOverlay(px,py,o){
+  const cx=o.x+o.w/2, cy=o.y+o.h/2;
+  const rot=-d2r(o.rot||0);
+  const cos=Math.cos(rot), sin=Math.sin(rot);
+  const lx=(px-cx)*cos-(py-cy)*sin;
+  const ly=(px-cx)*sin+(py-cy)*cos;
+  if(o.type==='poi'){
+    const r=Math.min(o.w,o.h)/2;
+    return Math.hypot(lx,ly)<=r;
+  }
+  return lx>=-o.w/2&&lx<=o.w/2&&ly>=-o.h/2&&ly<=o.h/2;
 }
 
-// ─────────────────────────── MOUSE ───────────────────────────
+function getOverlayCornerHit(px,py,o){
+  const cx=o.x+o.w/2, cy=o.y+o.h/2;
+  const rad=d2r(o.rot||0);
+  const cosR=Math.cos(rad), sinR=Math.sin(rad);
+  const hw=o.w/2, hh=o.h/2;
+  const corners=[
+    {lx:hw,  ly:hh,  id:'br'},
+    {lx:hw,  ly:-hh, id:'tr'},
+    {lx:-hw, ly:-hh, id:'tl'},
+    {lx:-hw, ly:hh,  id:'bl'},
+  ];
+  for(const c of corners){
+    const wx=cx+c.lx*cosR-c.ly*sinR;
+    const wy=cy+c.lx*sinR+c.ly*cosR;
+    if(Math.hypot(px-wx,py-wy)<=9) return c.id;
+  }
+  return null;
+}
+
+function canvasXY(e){
+  const r=canvas.getBoundingClientRect();
+  return {x:(e.clientX-r.left)/zoomLevel, y:(e.clientY-r.top)/zoomLevel};
+}
+
+// ─── MOUSE DOWN ───
 canvas.addEventListener('mousedown',e=>{
   const {x,y}=canvasXY(e);
 
@@ -705,82 +978,173 @@ canvas.addEventListener('mousedown',e=>{
     return;
   }
 
+  // Rotate handle (zones)
   if(sel!==null){
     const {hx,hy}=getRotHandlePos(zones[sel]);
     if(Math.hypot(x-hx,y-hy)<=12){
       const cx=zones[sel].x+zones[sel].w/2, cy=zones[sel].y+zones[sel].h/2;
-      rotDrag={idx:sel,cx,cy}; canvas.style.cursor='crosshair'; return;
+      rotDrag={idx:sel,cx,cy};
+      canvas.style.cursor='crosshair';
+      return;
     }
   }
 
+  // Overlay corner resize
+  for(let i=overlays.length-1;i>=0;i--){
+    const resHit=getOverlayCornerHit(x,y,overlays[i]);
+    if(resHit){
+      selOlIdx=i; sel=null;
+      const o=overlays[i];
+      olResDrag={idx:i,hid:resHit,sx:x,sy:y,ox:o.x,oy:o.y,ow:o.w,oh:o.h};
+      canvas.style.cursor='nwse-resize';
+      renderOlList(); renderList(); draw();
+      return;
+    }
+  }
+
+  // Overlay body move
+  for(let i=overlays.length-1;i>=0;i--){
+    if(ptInOverlay(x,y,overlays[i])){
+      selOlIdx=i; sel=null;
+      olDrag={idx:i,sx:x,sy:y,ox:overlays[i].x,oy:overlays[i].y};
+      canvas.style.cursor='grabbing';
+      renderOlList(); renderList(); draw();
+      return;
+    }
+  }
+
+  // Zone resize handle
   if(sel!==null){
     const z=zones[sel];
     const hid=getHandleHit(x,y,z.x,z.y,z.w,z.h);
     if(hid){ resDrag={idx:sel,hid,sx:x,sy:y,ox:z.x,oy:z.y,ow:z.w,oh:z.h}; canvas.style.cursor='nwse-resize'; return; }
   }
 
+  // Stage resize handle
   const shid=getHandleHit(x,y,stage.x,stage.y,stage.w,stage.h);
   if(shid){ resDrag={idx:'stage',hid:shid,sx:x,sy:y,ox:stage.x,oy:stage.y,ow:stage.w,oh:stage.h}; canvas.style.cursor='nwse-resize'; return; }
 
+  // Stage move
   if(x>=stage.x&&x<=stage.x+stage.w&&y>=stage.y&&y<=stage.y+stage.h){
-    drag={type:'stage',sx:x,sy:y,ox:stage.x,oy:stage.y}; canvas.style.cursor='grabbing'; return;
+    drag={type:'stage',sx:x,sy:y,ox:stage.x,oy:stage.y};
+    canvas.style.cursor='grabbing';
+    return;
   }
 
+  // Zone move / select
   const zi=getZoneAt(x,y);
   if(zi!==-1){
-    sel=zi; drag={type:'zone',idx:zi,sx:x,sy:y,ox:zones[zi].x,oy:zones[zi].y};
-    canvas.style.cursor='grabbing'; renderList(); draw(); showSelPanel(); refreshSelInfo(); syncRotUI();
+    sel=zi; selOlIdx=null;
+    drag={type:'zone',idx:zi,sx:x,sy:y,ox:zones[zi].x,oy:zones[zi].y};
+    canvas.style.cursor='grabbing';
+    renderList(); draw(); showSelPanel(); refreshSelInfo(); syncRotUI();
   } else {
-    sel=null; renderList(); draw(); hideSelPanel();
+    sel=null; selOlIdx=null;
+    renderList(); renderOlList(); draw(); hideSelPanel();
   }
 });
 
+// ─── MOUSE MOVE ───
 canvas.addEventListener('mousemove',e=>{
   const {x,y}=canvasXY(e);
 
   if(rotDrag){
-    const z=zones[rotDrag.idx];
-    const cx=z.x+z.w/2, cy=z.y+z.h/2;
-    zones[rotDrag.idx].rot=normDeg(r2d(Math.atan2(y-cy,x-cx))+90);
-    syncRotUI(); draw(); refreshSelInfo(); return;
+    const angle=Math.atan2(y-rotDrag.cy,x-rotDrag.cx);
+    zones[rotDrag.idx].rot=normDeg(r2d(angle)+90);
+    syncRotUI(); draw(); refreshSelInfo();
+    return;
   }
 
   if(resDrag){
     const dx=x-resDrag.sx, dy=y-resDrag.sy;
-    const {idx,hid,ox,oy,ow,oh}=resDrag;
-    let nx=ox,ny=oy,nw=ow,nh=oh;
-    if(hid==='br'){nw=Math.max(60,ow+dx);nh=Math.max(40,oh+dy);}
-    else if(hid==='r'){nw=Math.max(60,ow+dx);}
-    else if(hid==='b'){nh=Math.max(40,oh+dy);}
-    else if(hid==='bl'){nx=ox+dx;nw=Math.max(60,ow-dx);nh=Math.max(40,oh+dy);}
-    else if(hid==='l'){nx=ox+dx;nw=Math.max(60,ow-dx);}
-    if(idx==='stage'){stage.x=nx;stage.y=ny;stage.w=nw;stage.h=nh;}
-    else{zones[idx].x=nx;zones[idx].y=ny;zones[idx].w=nw;zones[idx].h=nh;}
-    draw(); if(idx!=='stage')refreshSelInfo(); return;
+    if(resDrag.idx==='stage'){
+      if(resDrag.hid==='br'){ stage.w=Math.max(60,resDrag.ow+dx); stage.h=Math.max(30,resDrag.oh+dy); }
+      else if(resDrag.hid==='r'){ stage.w=Math.max(60,resDrag.ow+dx); }
+      else if(resDrag.hid==='b'){ stage.h=Math.max(30,resDrag.oh+dy); }
+      else if(resDrag.hid==='bl'){ const nw=Math.max(60,resDrag.ow-dx); stage.x=resDrag.ox+(resDrag.ow-nw); stage.w=nw; stage.h=Math.max(30,resDrag.oh+dy); }
+      else if(resDrag.hid==='l'){ const nw=Math.max(60,resDrag.ow-dx); stage.x=resDrag.ox+(resDrag.ow-nw); stage.w=nw; }
+    } else {
+      const z=zones[resDrag.idx];
+      if(resDrag.hid==='br'){ z.w=Math.max(60,resDrag.ow+dx); z.h=Math.max(30,resDrag.oh+dy); }
+      else if(resDrag.hid==='r'){ z.w=Math.max(60,resDrag.ow+dx); }
+      else if(resDrag.hid==='b'){ z.h=Math.max(30,resDrag.oh+dy); }
+      else if(resDrag.hid==='bl'){ const nw=Math.max(60,resDrag.ow-dx); z.x=resDrag.ox+(resDrag.ow-nw); z.w=nw; z.h=Math.max(30,resDrag.oh+dy); }
+      else if(resDrag.hid==='l'){ const nw=Math.max(60,resDrag.ow-dx); z.x=resDrag.ox+(resDrag.ow-nw); z.w=nw; }
+      refreshSelInfo();
+    }
+    draw(); return;
+  }
+
+  if(olResDrag){
+    const dx=x-olResDrag.sx, dy=y-olResDrag.sy;
+    const o=overlays[olResDrag.idx];
+    if(olResDrag.hid==='br'){
+      o.w=Math.max(40,olResDrag.ow+dx);
+      o.h=Math.max(30,olResDrag.oh+dy);
+    } else if(olResDrag.hid==='tr'){
+      o.w=Math.max(40,olResDrag.ow+dx);
+      const nh=Math.max(30,olResDrag.oh-dy);
+      o.y=olResDrag.oy+(olResDrag.oh-nh);
+      o.h=nh;
+    } else if(olResDrag.hid==='tl'){
+      const nw=Math.max(40,olResDrag.ow-dx);
+      const nh=Math.max(30,olResDrag.oh-dy);
+      o.x=olResDrag.ox+(olResDrag.ow-nw);
+      o.y=olResDrag.oy+(olResDrag.oh-nh);
+      o.w=nw; o.h=nh;
+    } else if(olResDrag.hid==='bl'){
+      const nw=Math.max(40,olResDrag.ow-dx);
+      o.x=olResDrag.ox+(olResDrag.ow-nw);
+      o.w=nw;
+      o.h=Math.max(30,olResDrag.oh+dy);
+    }
+    draw(); return;
+  }
+
+  if(olDrag){
+    overlays[olDrag.idx].x=olDrag.ox+(x-olDrag.sx);
+    overlays[olDrag.idx].y=olDrag.oy+(y-olDrag.sy);
+    draw(); return;
   }
 
   if(drag){
-    const dx=x-drag.sx, dy=y-drag.sy;
-    if(drag.type==='stage'){stage.x=Math.max(0,drag.ox+dx);stage.y=Math.max(0,drag.oy+dy);}
-    else{zones[drag.idx].x=Math.max(0,drag.ox+dx);zones[drag.idx].y=Math.max(0,drag.oy+dy);}
-    draw(); if(drag.type!=='stage')refreshSelInfo(); return;
+    if(drag.type==='stage'){
+      stage.x=drag.ox+(x-drag.sx);
+      stage.y=drag.oy+(y-drag.sy);
+    } else {
+      zones[drag.idx].x=drag.ox+(x-drag.sx);
+      zones[drag.idx].y=drag.oy+(y-drag.sy);
+      refreshSelInfo();
+    }
+    draw(); return;
   }
 
-  if(currentTool==='delete'){canvas.style.cursor='not-allowed';return;}
+  // Cursor hover logic
+  if(currentTool==='delete'){ canvas.style.cursor='not-allowed'; return; }
   if(sel!==null){
     const {hx,hy}=getRotHandlePos(zones[sel]);
-    if(Math.hypot(x-hx,y-hy)<=12){canvas.style.cursor='crosshair';return;}
-    if(getHandleHit(x,y,zones[sel].x,zones[sel].y,zones[sel].w,zones[sel].h)){canvas.style.cursor='nwse-resize';return;}
+    if(Math.hypot(x-hx,y-hy)<=12){ canvas.style.cursor='crosshair'; return; }
+    if(getHandleHit(x,y,zones[sel].x,zones[sel].y,zones[sel].w,zones[sel].h)){ canvas.style.cursor='nwse-resize'; return; }
   }
-  if(getHandleHit(x,y,stage.x,stage.y,stage.w,stage.h)){canvas.style.cursor='nwse-resize';return;}
-  if(x>=stage.x&&x<=stage.x+stage.w&&y>=stage.y&&y<=stage.y+stage.h){canvas.style.cursor='grab';return;}
+  for(let i=overlays.length-1;i>=0;i--){
+    if(getOverlayCornerHit(x,y,overlays[i])){ canvas.style.cursor='nwse-resize'; return; }
+    if(ptInOverlay(x,y,overlays[i])){ canvas.style.cursor='grab'; return; }
+  }
+  if(getHandleHit(x,y,stage.x,stage.y,stage.w,stage.h)){ canvas.style.cursor='nwse-resize'; return; }
+  if(x>=stage.x&&x<=stage.x+stage.w&&y>=stage.y&&y<=stage.y+stage.h){ canvas.style.cursor='grab'; return; }
   canvas.style.cursor=getZoneAt(x,y)!==-1?'grab':'default';
 });
 
-canvas.addEventListener('mouseup',()=>{drag=null;resDrag=null;rotDrag=null;if(currentTool==='select')canvas.style.cursor='default';});
-canvas.addEventListener('mouseleave',()=>{drag=null;resDrag=null;rotDrag=null;});
+// ─── MOUSE UP / LEAVE ───
+canvas.addEventListener('mouseup',()=>{
+  drag=null; resDrag=null; rotDrag=null; olDrag=null; olResDrag=null;
+  if(currentTool==='select') canvas.style.cursor='default';
+});
+canvas.addEventListener('mouseleave',()=>{
+  drag=null; resDrag=null; rotDrag=null; olDrag=null; olResDrag=null;
+});
 
-// ─────────────────────────── KEYBOARD ───────────────────────────
+// ─── KEYBOARD ───
 document.addEventListener('keydown',e=>{
   if(sel===null) return;
   const tag=document.activeElement?.tagName;
@@ -795,7 +1159,7 @@ document.addEventListener('keydown',e=>{
   }
 });
 
-// ─────────────────────────── TOOL ───────────────────────────
+// ─── TOOL ───
 function setTool(t){
   currentTool=t;
   document.querySelectorAll('.tbtn').forEach(b=>b.classList.remove('on'));
@@ -803,15 +1167,14 @@ function setTool(t){
   canvas.style.cursor=t==='delete'?'not-allowed':'default';
 }
 
-// ─────────────────────────── ZONE LIST ───────────────────────────
+// ─── ZONE LIST ───
 function renderList(){
   const el=document.getElementById('zoneList');
   document.getElementById('zoneCount').textContent=zones.length;
   if(!zones.length){el.innerHTML='<div style="color:#444;font-size:0.73rem;">No zones yet.</div>';return;}
   const icons={rect:'▬',round:'⬭',triangle:'▲'};
   el.innerHTML=zones.map((z,i)=>{
-    // ✅ FIX: use getCatColor() for zone dot color in list
-    const dotColor = z.color || getCatColor(z.category);
+    const dotColor=z.color||getCatColor(z.category);
     return `
     <div class="zitem ${i===sel?'sel':''}" onclick="selectZone(${i})">
       <div class="zdot" style="background:${dotColor};
@@ -826,7 +1189,7 @@ function renderList(){
   }).join('');
 }
 
-function selectZone(i){ sel=i; renderList(); draw(); showSelPanel(); refreshSelInfo(); syncRotUI(); }
+function selectZone(i){ sel=i; selOlIdx=null; renderList(); renderOlList(); draw(); showSelPanel(); refreshSelInfo(); syncRotUI(); }
 function delZone(i){ if(!confirm(`Delete "${zones[i].name}"?`))return; zones.splice(i,1); sel=null; renderList(); hideSelPanel(); draw(); updateStats(); }
 
 function showSelPanel(){
@@ -852,8 +1215,7 @@ function hideSelPanel(){
 
 function refreshSelInfo(){
   const z=zones[sel]; if(!z) return;
-  // ✅ FIX: use getCatColor() for selected zone info panel
-  const c = z.color || getCatColor(z.category);
+  const c=z.color||getCatColor(z.category);
   const icons={rect:'▬ Rectangle',round:'⬭ Oval',triangle:'▲ Triangle'};
   const avail=(z.totalSeats||0)-(z.bookedSeats||0);
   document.getElementById('selInfoContent').innerHTML=`
@@ -866,16 +1228,9 @@ function refreshSelInfo(){
     <div class="selrow"><span>Available</span><span style="color:#00FF88">${avail}</span></div>`;
 }
 
-function getMappedSeats(cat){
-  return zones.filter(z=>z.category===cat).reduce((s,z)=>s+(z.totalSeats||0),0);
-}
-function getCatQuota(cat){
-  const t=TICKET_CATS.find(t=>t.category===cat);
-  return t?t.totalSeats:0;
-}
-function isCatFull(cat){
-  return getMappedSeats(cat)>=getCatQuota(cat);
-}
+function getMappedSeats(cat){ return zones.filter(z=>z.category===cat).reduce((s,z)=>s+(z.totalSeats||0),0); }
+function getCatQuota(cat){ const t=TICKET_CATS.find(t=>t.category===cat); return t?t.totalSeats:0; }
+function isCatFull(cat){ return getMappedSeats(cat)>=getCatQuota(cat); }
 
 function updateQuota(){
   const el=document.getElementById('quotaList');
@@ -888,8 +1243,7 @@ function updateQuota(){
     const full=mapped>=total&&total>0;
     const over=mapped>total&&total>0;
     const mismatch=!full&&mapped!==total&&total>0;
-    // ✅ FIX: use getCatColor() for quota bar colors
-    const color = getCatColor(t.category);
+    const color=getCatColor(t.category);
     if(mismatch||over) mismatches.push({cat:t.category,mapped,total,over});
     return `<div class="qrow${full?' full':mismatch?' mismatch':''}">
       <div class="qrow-head">
@@ -928,40 +1282,32 @@ function updateQuota(){
   }
 }
 
-// ─────────────────────────── SYNC FROM EVENT ───────────────────────────
-let _pendingSync = null;
+// ─── SYNC FROM EVENT ───
+let _pendingSync=null;
 
 async function syncFromEvent(){
   const btn=document.getElementById('syncBtn');
   if(btn){ btn.textContent='Loading…'; btn.disabled=true; }
   try {
-    const r = await fetch(`/mee-admin/seatmap/${EVENT_ID}/quota`);
-    const d = await r.json();
+    const r=await fetch(`/mee-admin/seatmap/${EVENT_ID}/quota`);
+    const d=await r.json();
     if(!d.success){ showToast('❌ Could not fetch event quotas','err'); return; }
-
     const freshMap={};
     d.categories.forEach(c=>freshMap[c.category]=c);
-
     const changes=[];
     const noChange=[];
-
     d.categories.forEach(cat=>{
-      const newTotal = cat.totalSeats;
-      const catZones = zones.filter(z=>z.category===cat.category);
-      const mapped   = catZones.reduce((s,z)=>s+(z.totalSeats||0),0);
-      const oldQuota = TICKET_CATS.find(t=>t.category===cat.category)?.totalSeats || 0;
-
-      if(newTotal===mapped && newTotal===oldQuota){ noChange.push(cat.category); return; }
-
+      const newTotal=cat.totalSeats;
+      const catZones=zones.filter(z=>z.category===cat.category);
+      const mapped=catZones.reduce((s,z)=>s+(z.totalSeats||0),0);
+      const oldQuota=TICKET_CATS.find(t=>t.category===cat.category)?.totalSeats||0;
+      if(newTotal===mapped&&newTotal===oldQuota){ noChange.push(cat.category); return; }
       if(catZones.length===0){
-        changes.push({ category:cat.category, name:cat.name, color:getCatColor(cat.category),
-          action:'no_zones', oldTotal:oldQuota, newTotal, zones:[] });
+        changes.push({category:cat.category,name:cat.name,color:getCatColor(cat.category),action:'no_zones',oldTotal:oldQuota,newTotal,zones:[]});
         return;
       }
-
       const totalBooked=catZones.reduce((s,z)=>s+(z.bookedSeats||0),0);
       const safeNewTotal=Math.max(newTotal,totalBooked);
-
       const newZoneSeats=[];
       if(catZones.length===1){
         newZoneSeats.push(safeNewTotal);
@@ -969,31 +1315,25 @@ async function syncFromEvent(){
         const totalCurrent=catZones.reduce((s,z)=>s+(z.totalSeats||1),0);
         let assigned=0;
         catZones.forEach((z,i)=>{
-          if(i===catZones.length-1){
-            newZoneSeats.push(safeNewTotal-assigned);
-          } else {
+          if(i===catZones.length-1){ newZoneSeats.push(safeNewTotal-assigned); }
+          else {
             const share=Math.round((z.totalSeats||1)/totalCurrent*safeNewTotal);
             const minAllowed=z.bookedSeats||0;
             const v=Math.max(share,minAllowed);
-            newZoneSeats.push(v);
-            assigned+=v;
+            newZoneSeats.push(v); assigned+=v;
           }
         });
       }
-
       changes.push({
-        category: cat.category, name: cat.name, color: getCatColor(cat.category),
-        action: newTotal===oldQuota ? 'redistribute' : newTotal>oldQuota ? 'increase' : 'decrease',
-        oldTotal: oldQuota, newTotal: safeNewTotal, clampedFromBooked: safeNewTotal>newTotal,
-        zones: catZones.map((z,i)=>({ zoneIdx: zones.indexOf(z), oldSeats: z.totalSeats, newSeats: newZoneSeats[i], name: z.name })),
+        category:cat.category,name:cat.name,color:getCatColor(cat.category),
+        action:newTotal===oldQuota?'redistribute':newTotal>oldQuota?'increase':'decrease',
+        oldTotal:oldQuota,newTotal:safeNewTotal,clampedFromBooked:safeNewTotal>newTotal,
+        zones:catZones.map((z,i)=>({zoneIdx:zones.indexOf(z),oldSeats:z.totalSeats,newSeats:newZoneSeats[i],name:z.name})),
       });
-
       const tc=TICKET_CATS.find(t=>t.category===cat.category);
       if(tc) tc.totalSeats=newTotal;
     });
-
     _pendingSync=changes;
-
     const rowsEl=document.getElementById('syncRows');
     const allGood=changes.length===0;
     if(allGood){
@@ -1002,9 +1342,9 @@ async function syncFromEvent(){
     } else {
       document.getElementById('applySync').style.display='';
       rowsEl.innerHTML=changes.map(c=>{
-        const badge = c.action==='increase'?'ok':c.action==='decrease'?'warn':c.action==='no_zones'?'warn':'ok';
-        const actionText = c.action==='increase'?`↑ ${c.oldTotal}→${c.newTotal}`:c.action==='decrease'?`↓ ${c.oldTotal}→${c.newTotal}`:c.action==='no_zones'?'No zones yet':'Redistribute';
-        const zoneLines = c.zones.map(z=>`<div style="font-size:0.6rem;color:#666;padding-left:1.2rem;">${z.name}: ${z.oldSeats} → <b style="color:#fff;">${z.newSeats}</b></div>`).join('');
+        const badge=c.action==='increase'?'ok':c.action==='decrease'?'warn':c.action==='no_zones'?'warn':'ok';
+        const actionText=c.action==='increase'?`↑ ${c.oldTotal}→${c.newTotal}`:c.action==='decrease'?`↓ ${c.oldTotal}→${c.newTotal}`:c.action==='no_zones'?'No zones yet':'Redistribute';
+        const zoneLines=c.zones.map(z=>`<div style="font-size:0.6rem;color:#666;padding-left:1.2rem;">${z.name}: ${z.oldSeats} → <b style="color:#fff;">${z.newSeats}</b></div>`).join('');
         return `<div class="sync-row">
           <div class="sync-dot" style="background:${c.color};"></div>
           <div style="flex:1;">
@@ -1021,7 +1361,6 @@ async function syncFromEvent(){
         `${changes.length} categor${changes.length===1?'y':'ies'} will be updated. `+
         `<span style="color:#f5c842;">Review zone breakdowns above, then click Apply.</span>`;
     }
-
     document.getElementById('syncOverlay').classList.add('show');
   } catch(e){
     showToast('❌ Sync error: '+e.message,'err');
@@ -1034,7 +1373,7 @@ function applySync(){
   if(!_pendingSync) return;
   _pendingSync.forEach(c=>{
     c.zones.forEach(zChange=>{
-      if(zChange.zoneIdx>=0 && zChange.zoneIdx<zones.length){
+      if(zChange.zoneIdx>=0&&zChange.zoneIdx<zones.length){
         zones[zChange.zoneIdx].totalSeats=zChange.newSeats;
       }
     });
@@ -1045,9 +1384,7 @@ function applySync(){
   _pendingSync=null;
 }
 
-function closeSyncModal(){
-  document.getElementById('syncOverlay').classList.remove('show');
-}
+function closeSyncModal(){ document.getElementById('syncOverlay').classList.remove('show'); }
 
 function updateStats(){
   document.getElementById('statZones').textContent=zones.length;
@@ -1056,7 +1393,7 @@ function updateStats(){
   updateQuota();
 }
 
-// ─────────────────────────── SAVE ───────────────────────────
+// ─── SAVE ───
 async function saveMap(){
   const sections=zones.map(z=>({
     name:        z.name,
@@ -1067,16 +1404,16 @@ async function saveMap(){
     zoneW:       Math.round(z.w),
     zoneH:       Math.round(z.h),
     zoneRot:     z.rot,
-    color:       z.color || '',
-    totalSeats:  z.totalSeats || 0,
-    bookedSeats: z.bookedSeats || 0,
+    color:       z.color||'',
+    totalSeats:  z.totalSeats||0,
+    bookedSeats: z.bookedSeats||0,
     rows:        1,
     seatsPerRow: 1,
     seats:       [],
   }));
 
-  let previewImage = null;
-  try { previewImage = canvas.toDataURL('image/png'); } catch(e) {}
+  let previewImage=null;
+  try { previewImage=canvas.toDataURL('image/png'); } catch(e) {}
 
   const payload={
     eventId: EVENT_ID,
@@ -1089,18 +1426,33 @@ async function saveMap(){
       width:  Math.round(stage.w),
       height: Math.round(stage.h),
     },
-    sections, isActive,
-    canvasWidth: canvas.width,
+    sections,
+    overlays: overlays.map(o=>({
+      type:  o.type,
+      label: o.label,
+      note:  o.note||'',
+      icon:  o.icon||'',
+      color: o.color||'#9D4EDD',
+      shape: o.shape||'rect',
+      x:     Math.round(o.x),
+      y:     Math.round(o.y),
+      w:     Math.round(o.w),
+      h:     Math.round(o.h),
+      rot:   o.rot||0,
+    })),
+    isActive,
+    canvasWidth:  canvas.width,
     canvasHeight: canvas.height,
     previewImage,
   };
+
   document.getElementById('saveStatus').textContent='Saving…';
   try{
     const res=await fetch(`/mee-admin/seatmap/${EVENT_ID}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
     const d=await res.json();
-    if(d.success){showToast('✅ Saved!','ok');document.getElementById('saveStatus').textContent='Saved ✓';}
-    else{showToast('❌ '+d.message,'err');document.getElementById('saveStatus').textContent='';}
-  }catch(err){showToast('❌ '+err.message,'err');document.getElementById('saveStatus').textContent='';}
+    if(d.success){ showToast('✅ Saved!','ok'); document.getElementById('saveStatus').textContent='Saved ✓'; }
+    else{ showToast('❌ '+d.message,'err'); document.getElementById('saveStatus').textContent=''; }
+  }catch(err){ showToast('❌ '+err.message,'err'); document.getElementById('saveStatus').textContent=''; }
 }
 
 async function toggleActivate(){
@@ -1108,10 +1460,19 @@ async function toggleActivate(){
   document.getElementById('activateBtn').textContent=isActive?'✅ Active':'⚡ Activate';
 }
 
-function clearAll(){ if(!confirm('Clear entire map?'))return; zones=[]; sel=null; renderList(); hideSelPanel(); draw(); updateStats(); }
-function showToast(msg,t='ok'){ const el=document.getElementById('toast'); el.textContent=msg; el.className='toast '+t; el.style.display='block'; setTimeout(()=>el.style.display='none',2800); }
+function clearAll(){
+  if(!confirm('Clear entire map?')) return;
+  zones=[]; overlays=[]; sel=null; selOlIdx=null;
+  renderList(); renderOlList(); hideSelPanel(); draw(); updateStats();
+}
+
+function showToast(msg,t='ok'){
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.className='toast '+t; el.style.display='block';
+  setTimeout(()=>el.style.display='none',2800);
+}
+
 document.getElementById('syncOverlay').addEventListener('click',function(e){ if(e.target===this)closeSyncModal(); });
 </script>
 </body>
 </html>
-

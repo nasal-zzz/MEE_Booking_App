@@ -23,11 +23,12 @@
     .page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:2rem;flex-wrap:wrap;gap:1rem;}
     .page-title{font-family:'Poppins',sans-serif;font-size:1.8rem;letter-spacing:2px;}
     .page-sub{font-size:0.78rem;color:var(--muted);}
-    .stats-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:1rem;margin-bottom:2rem;}
+    /* Stats — 7 cards */
+    .stats-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1rem;margin-bottom:2rem;}
     .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1.2rem;}
-    .stat-icon{font-size:1.2rem;margin-bottom:0.5rem;}
-    .stat-val{font-family:'Poppins',sans-serif;font-size:1.8rem;letter-spacing:1px;color:var(--accent);}
-    .stat-lbl{font-size:0.72rem;color:var(--muted);margin-top:0.2rem;}
+    .stat-icon{font-size:1.1rem;margin-bottom:0.4rem;}
+    .stat-val{font-family:'Poppins',sans-serif;font-size:1.6rem;letter-spacing:1px;color:var(--accent);}
+    .stat-lbl{font-size:0.68rem;color:var(--muted);margin-top:0.2rem;}
     /* Active event panel */
     .panel{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:2rem;}
     .panel-header{padding:1.2rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.8rem;}
@@ -45,10 +46,14 @@
     .ql-icon{width:40px;height:40px;border-radius:8px;background:rgba(157,78,221,0.1);border:1px solid rgba(157,78,221,0.2);display:flex;align-items:center;justify-content:center;font-size:1.1rem;color:var(--accent);}
     .ql-label{font-weight:600;font-size:0.88rem;}
     .ql-sub{font-size:0.72rem;color:var(--muted);}
+    /* Revenue panel */
+    .rev-input{background:#0B0B0F;border:1px solid var(--border);border-radius:6px;padding:0.4rem 0.7rem;color:#fff;font-size:0.8rem;outline:none;font-family:'Outfit',sans-serif;}
+    .rev-input:focus{border-color:rgba(157,78,221,0.4);}
+    .rev-quick{background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:4px;padding:0.3rem 0.7rem;font-size:0.75rem;cursor:pointer;font-family:'Space Mono',monospace;letter-spacing:0.5px;transition:all 0.15s;}
+    .rev-quick:hover,.rev-quick.active{background:rgba(157,78,221,0.12);border-color:rgba(157,78,221,0.3);color:#fff;}
     @media(max-width:900px){.layout{grid-template-columns:1fr;}.sidebar{display:none;}.stats-grid{grid-template-columns:repeat(2,1fr);}}
-  @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
-@keyframes spin   { to{transform:rotate(360deg);} }
-  
+    @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
+    @keyframes spin{to{transform:rotate(360deg);}}
   </style>
 </head>
 <body>
@@ -60,39 +65,92 @@
         <div class="page-title">SUPER ADMIN</div>
         <div class="page-sub">Full system access — manage staff, coupons, and all operations.</div>
       </div>
-      <!-- <a href="/mee-admin/events/new" style="display:inline-flex;align-items:center;gap:0.5rem;background:var(--accent);color:#fff;padding:0.7rem 1.4rem;border-radius:6px;text-decoration:none;font-weight:700;font-size:0.85rem;letter-spacing:1px;">
-        <i class="bi bi-plus-lg"></i> New Event
-      </a> -->
-
-<div style="display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap;">
-  <!-- Auto-refresh countdown -->
-  <div id="refreshCountdown" style="display:inline-flex;align-items:center;gap:0.4rem;font-size:0.72rem;color:var(--muted);padding:0.4rem 0.8rem;border-radius:6px;border:1px solid rgba(255,255,255,0.05);background:rgba(255,255,255,0.02);font-family:'Space Mono',monospace;letter-spacing:1px;">
-    <span style="width:6px;height:6px;border-radius:50%;background:#00FF88;animation:pulse 1.5s ease-in-out infinite;display:inline-block;"></span>
-    <span id="refreshTimer">5:00</span> auto-refresh
-  </div>
-  <!-- Manual refresh button -->
-  <button onclick="doRefresh()" id="refreshBtn"
-    style="display:inline-flex;align-items:center;gap:0.5rem;background:transparent;color:var(--muted);padding:0.65rem 1rem;border-radius:6px;border:1px solid var(--border);font-size:0.82rem;cursor:pointer;font-family:'Outfit',sans-serif;transition:all 0.15s;"
-    onmouseover="this.style.borderColor='rgba(157,78,221,0.35)';this.style.color='#fff'"
-    onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
-    <i class="bi bi-arrow-clockwise" id="refreshIcon"></i> Refresh
-  </button>
-  <!-- New Event button -->
-  <a href="/mee-admin/events/new" style="display:inline-flex;align-items:center;gap:0.5rem;background:var(--accent);color:#fff;padding:0.7rem 1.4rem;border-radius:6px;text-decoration:none;font-weight:700;font-size:0.85rem;letter-spacing:1px;">
-    <i class="bi bi-plus-lg"></i> New Event
-  </a>
-</div>
-
-
+      <div style="display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap;">
+        <div style="display:inline-flex;align-items:center;gap:0.4rem;font-size:0.72rem;color:var(--muted);padding:0.4rem 0.8rem;border-radius:6px;border:1px solid rgba(255,255,255,0.05);background:rgba(255,255,255,0.02);font-family:'Space Mono',monospace;letter-spacing:1px;">
+          <span style="width:6px;height:6px;border-radius:50%;background:#00FF88;animation:pulse 1.5s ease-in-out infinite;display:inline-block;"></span>
+          <span id="refreshTimer">5:00</span> auto-refresh
+        </div>
+        <button onclick="doRefresh()" id="refreshBtn"
+          style="display:inline-flex;align-items:center;gap:0.5rem;background:transparent;color:var(--muted);padding:0.65rem 1rem;border-radius:6px;border:1px solid var(--border);font-size:0.82rem;cursor:pointer;font-family:'Outfit',sans-serif;transition:all 0.15s;"
+          onmouseover="this.style.borderColor='rgba(157,78,221,0.35)';this.style.color='#fff'"
+          onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
+          <i class="bi bi-arrow-clockwise" id="refreshIcon"></i> Refresh
+        </button>
+        <a href="/mee-admin/events/new" style="display:inline-flex;align-items:center;gap:0.5rem;background:var(--accent);color:#fff;padding:0.7rem 1.4rem;border-radius:6px;text-decoration:none;font-weight:700;font-size:0.85rem;letter-spacing:1px;">
+          <i class="bi bi-plus-lg"></i> New Event
+        </a>
+      </div>
     </div>
 
-    <!-- Stats -->
+    <!-- Stats — 7 cards -->
     <div class="stats-grid">
       <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-val"><%= staffCount %></div><div class="stat-lbl">Staff & Admins</div></div>
       <div class="stat-card"><div class="stat-icon">🎟️</div><div class="stat-val"><%= totalBookings %></div><div class="stat-lbl">Paid Bookings</div></div>
-      <div class="stat-card"><div class="stat-icon">₹</div><div class="stat-val"><%= (totalRevenue/1000).toFixed(1) %>K</div><div class="stat-lbl">Total Revenue</div></div>
       <div class="stat-card"><div class="stat-icon">🏷️</div><div class="stat-val"><%= coupons %></div><div class="stat-lbl">Coupons</div></div>
       <div class="stat-card"><div class="stat-icon">🧑‍🤝‍🧑</div><div class="stat-val"><%= totalUsers || 0 %></div><div class="stat-lbl">Total Users</div></div>
+      <div class="stat-card">
+        <div class="stat-icon">📦</div>
+        <div class="stat-val" style="color:var(--muted);font-size:1.3rem;">₹<%= (grossRevenue/1000).toFixed(1) %>K</div>
+        <div class="stat-lbl">Gross Revenue</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">🏷️</div>
+        <div class="stat-val" style="color:#FF4444;font-size:1.3rem;">-₹<%= (totalDiscount/1000).toFixed(1) %>K</div>
+        <div class="stat-lbl">Total Discounts</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">₹</div>
+        <div class="stat-val" style="color:#00FF88;font-size:1.3rem;">₹<%= (totalRevenue/1000).toFixed(1) %>K</div>
+        <div class="stat-lbl">Net Revenue</div>
+      </div>
+    </div>
+
+    <!-- ── Revenue Analytics Panel ── -->
+    <div class="panel" style="padding:1.5rem;">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:1.2rem;">
+        <div class="panel-title">📊 REVENUE ANALYTICS</div>
+        <div style="display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap;">
+          <span style="font-size:0.75rem;color:var(--muted);">From</span>
+          <input type="date" id="revFrom" class="rev-input" onchange="loadRevChart()"/>
+          <span style="font-size:0.75rem;color:var(--muted);">→</span>
+          <input type="date" id="revTo" class="rev-input" onchange="loadRevChart()"/>
+          <div style="display:flex;gap:0.4rem;flex-wrap:wrap;">
+            <button class="rev-quick active" onclick="revQuick('today',this)">Today</button>
+            <button class="rev-quick" onclick="revQuick('yesterday',this)">Yesterday</button>
+            <button class="rev-quick" onclick="revQuick('week',this)">This week</button>
+            <button class="rev-quick" onclick="revQuick('lastweek',this)">Last week</button>
+            <button class="rev-quick" onclick="revQuick('month',this)">This month</button>
+            <button class="rev-quick" onclick="revQuick('all',this)">All time</button>
+          </div>
+        </div>
+      </div>
+      <!-- Summary row -->
+      <div style="display:flex;gap:2rem;flex-wrap:wrap;margin-bottom:1.2rem;padding-bottom:1.2rem;border-bottom:1px solid var(--border);">
+        <div>
+          <div style="font-size:0.62rem;color:var(--muted);letter-spacing:2px;font-family:'Space Mono',monospace;margin-bottom:0.3rem;">GROSS</div>
+          <div id="rGross" style="font-family:'Poppins',sans-serif;font-size:1.5rem;color:var(--muted);">—</div>
+        </div>
+        <div>
+          <div style="font-size:0.62rem;color:var(--muted);letter-spacing:2px;font-family:'Space Mono',monospace;margin-bottom:0.3rem;">DISCOUNTS</div>
+          <div id="rDisc" style="font-family:'Poppins',sans-serif;font-size:1.5rem;color:#FF4444;">—</div>
+        </div>
+        <div>
+          <div style="font-size:0.62rem;color:var(--muted);letter-spacing:2px;font-family:'Space Mono',monospace;margin-bottom:0.3rem;">NET REVENUE</div>
+          <div id="rNet" style="font-family:'Poppins',sans-serif;font-size:1.5rem;color:#00FF88;">—</div>
+        </div>
+        <div>
+          <div style="font-size:0.62rem;color:var(--muted);letter-spacing:2px;font-family:'Space Mono',monospace;margin-bottom:0.3rem;">BOOKINGS</div>
+          <div id="rBook" style="font-family:'Poppins',sans-serif;font-size:1.5rem;color:#f5c842;">—</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:1.2rem;font-size:0.72rem;color:var(--muted);margin-bottom:0.8rem;font-family:'Space Mono',monospace;">
+        <span style="display:flex;align-items:center;gap:0.4rem;"><span style="width:10px;height:10px;border-radius:2px;background:#00C47B;display:inline-block;"></span>Net Revenue</span>
+        <span style="display:flex;align-items:center;gap:0.4rem;"><span style="width:10px;height:10px;border-radius:2px;background:rgba(255,68,68,0.6);display:inline-block;"></span>Discounts</span>
+      </div>
+      <div style="position:relative;height:240px;">
+        <canvas id="revChart" role="img" aria-label="Day by day stacked bar chart of net revenue and discounts">Revenue chart loading...</canvas>
+      </div>
+      <div id="revEmpty" style="display:none;text-align:center;padding:3rem 0;color:var(--muted);font-size:0.85rem;">No revenue data for this period</div>
     </div>
 
     <!-- ── Active Event Panel ── -->
@@ -104,7 +162,7 @@
       });
       activeEventBookings.forEach(b => {
         if (catMap[b.ticketType]) {
-              catMap[b.ticketType].booked += b.quantity;
+          catMap[b.ticketType].booked += b.quantity;
           (b.tickets||[]).forEach(tk => {
             catMap[b.ticketType].attendees.push({ name: tk.attendee?.name||'—', age: tk.attendee?.age||'—', gender: tk.attendee?.gender||'—', phone: b.contactPhone||b.user?.phone||'—', bookingRef: b.bookingRef });
           });
@@ -135,13 +193,15 @@
             <div style="font-family:'Poppins',sans-serif;font-size:1.4rem;color:#f5c842;"><%= activeEvent.ticketTypes.reduce((s,t)=>s+(t.totalSeats-t.bookedSeats),0) %></div>
             <div style="font-size:0.65rem;color:var(--muted);letter-spacing:1px;font-family:'Space Mono',monospace;">SEATS LEFT</div>
           </div>
-          <a href="/mee-admin/events/<%= activeEvent._id %>/edit" style="display:inline-flex;align-items:center;gap:0.4rem;padding:0.5rem 1rem;border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:0.8rem;text-decoration:none;transition:all 0.15s;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='#fff'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
+          <a href="/mee-admin/events/<%= activeEvent._id %>/edit"
+            style="display:inline-flex;align-items:center;gap:0.4rem;padding:0.5rem 1rem;border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:0.8rem;text-decoration:none;transition:all 0.15s;"
+            onmouseover="this.style.borderColor='var(--accent)';this.style.color='#fff'"
+            onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
             <i class="bi bi-pencil-fill"></i> Edit Event
           </a>
         </div>
       </div>
 
-      <!-- Seat balance by category -->
       <div style="padding:1.2rem 1.5rem;border-bottom:1px solid var(--border);">
         <div style="font-family:'Space Mono',monospace;font-size:0.58rem;letter-spacing:2px;color:var(--muted);margin-bottom:0.8rem;">SEATS BY CATEGORY</div>
         <div style="display:flex;flex-wrap:wrap;gap:0.8rem;">
@@ -165,7 +225,6 @@
         </div>
       </div>
 
-      <!-- Attendee list with search/filter -->
       <div style="padding:1.2rem 1.5rem;">
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.8rem;margin-bottom:1rem;">
           <div style="font-family:'Space Mono',monospace;font-size:0.58rem;letter-spacing:2px;color:var(--muted);">ATTENDEES</div>
@@ -190,9 +249,7 @@
         <div class="table-scroll">
           <table id="attTable">
             <thead>
-              <tr>
-                <th>#</th><th>Name</th><th>Age</th><th>Gender</th><th>Category</th><th>Phone</th><th>Booking Ref</th>
-              </tr>
+              <tr><th>#</th><th>Name</th><th>Age</th><th>Gender</th><th>Category</th><th>Phone</th><th>Booking Ref</th></tr>
             </thead>
             <tbody id="attTbody">
               <% let rowIdx = 0; %>
@@ -206,11 +263,7 @@
                   <td style="font-weight:600;"><%= att.name %></td>
                   <td><%= att.age %></td>
                   <td style="text-transform:capitalize;"><%= att.gender %></td>
-                  <td>
-                    <span style="background:rgba(106,13,173,0.1);border:1px solid rgba(106,13,173,0.2);color:<%= info.color %>;border-radius:10px;padding:0.15rem 0.5rem;font-size:0.7rem;font-family:'Space Mono',monospace;">
-                      <%= info.name %>
-                    </span>
-                  </td>
+                  <td><span style="background:rgba(106,13,173,0.1);border:1px solid rgba(106,13,173,0.2);color:<%= info.color %>;border-radius:10px;padding:0.15rem 0.5rem;font-size:0.7rem;font-family:'Space Mono',monospace;"><%= info.name %></span></td>
                   <td style="font-family:'Space Mono',monospace;font-size:0.75rem;color:var(--muted);"><%= att.phone %></td>
                   <td style="font-family:'Space Mono',monospace;font-size:0.72rem;color:var(--muted);"><%= att.bookingRef %></td>
                 </tr>
@@ -255,19 +308,19 @@
         <div class="ql-icon"><i class="bi bi-ticket-perforated-fill"></i></div>
         <div><div class="ql-label">All Bookings</div><div class="ql-sub">View & manage bookings</div></div>
       </a>
-     
     </div>
   </main>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script>
+// ── Attendee filter ──────────────────────────────────────────────────────────
 function filterAtt() {
-  const q      = document.getElementById('attSearch').value.toLowerCase();
-  const cat    = document.getElementById('attCat').value;
-  const gender = document.getElementById('attGender').value;
-  const rows   = document.querySelectorAll('.att-row');
+  const q      = document.getElementById('attSearch')?.value.toLowerCase() || '';
+  const cat    = document.getElementById('attCat')?.value || '';
+  const gender = document.getElementById('attGender')?.value || '';
   let visible  = 0;
-  rows.forEach((r, i) => {
+  document.querySelectorAll('.att-row').forEach(r => {
     const show = (!q || r.dataset.search.includes(q))
               && (!cat    || r.dataset.cat    === cat)
               && (!gender || r.dataset.gender === gender);
@@ -279,6 +332,120 @@ function filterAtt() {
 }
 filterAtt();
 
+// ── Revenue Analytics ────────────────────────────────────────────────────────
+let _revChart;
+const _fmtR = v => '₹' + (v >= 1000 ? (v / 1000).toFixed(1) + 'k' : v);
+const _toISO = d => d.toISOString().split('T')[0];
+
+// IST-aware today string
+function toISTDateString(date) {
+  const ist = new Date(date.getTime() + 5.5 * 60 * 60 * 1000);
+  return ist.toISOString().split('T')[0];
+}
+function todayIST() { return toISTDateString(new Date()); }
+
+function revQuick(mode, btn) {
+  document.querySelectorAll('.rev-quick').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const fi = document.getElementById('revFrom');
+  const ti = document.getElementById('revTo');
+  const today = todayIST();
+
+  if (mode === 'today') {
+    fi.value = today; ti.value = today;
+  } else if (mode === 'yesterday') {
+    const d = new Date(new Date().getTime() + 5.5*60*60*1000);
+    d.setUTCDate(d.getUTCDate() - 1);
+    const y = d.toISOString().split('T')[0];
+    fi.value = y; ti.value = y;
+  } else if (mode === 'week') {
+    const now = new Date(new Date().getTime() + 5.5*60*60*1000);
+    now.setUTCDate(now.getUTCDate() - now.getUTCDay());
+    fi.value = now.toISOString().split('T')[0];
+    ti.value = today;
+  } else if (mode === 'lastweek') {
+    const now = new Date(new Date().getTime() + 5.5*60*60*1000);
+    const thisSun = new Date(now);
+    thisSun.setUTCDate(thisSun.getUTCDate() - thisSun.getUTCDay());
+    const lastSun = new Date(thisSun);
+    lastSun.setUTCDate(lastSun.getUTCDate() - 7);
+    const lastSat = new Date(lastSun);
+    lastSat.setUTCDate(lastSat.getUTCDate() + 6);
+    fi.value = lastSun.toISOString().split('T')[0];
+    ti.value = lastSat.toISOString().split('T')[0];
+  } else if (mode === 'month') {
+    const now = new Date(new Date().getTime() + 5.5*60*60*1000);
+    const first = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+    fi.value = first.toISOString().split('T')[0];
+    ti.value = today;
+  } else {
+    fi.value = ''; ti.value = '';
+  }
+  loadRevChart();
+}
+
+async function loadRevChart() {
+  const from = document.getElementById('revFrom').value;
+  const to   = document.getElementById('revTo').value;
+  const qs   = new URLSearchParams();
+  if (from) qs.set('from', from);
+  if (to)   qs.set('to', to);
+  try {
+    const res  = await fetch('/mee-admin/api/revenue-by-date?' + qs, { credentials: 'include' });
+    const json = await res.json();
+    if (!json.success) return;
+    const data = json.data;
+    const gross    = data.reduce((s,r) => s + r.gross, 0);
+    const discount = data.reduce((s,r) => s + r.discount, 0);
+    const net      = gross - discount;
+    const bookings = data.reduce((s,r) => s + r.bookings, 0);
+    document.getElementById('rGross').textContent = _fmtR(gross);
+    document.getElementById('rDisc').textContent  = '-' + _fmtR(discount);
+    document.getElementById('rNet').textContent   = _fmtR(net);
+    document.getElementById('rBook').textContent  = bookings;
+    const canvas  = document.getElementById('revChart');
+    const emptyEl = document.getElementById('revEmpty');
+    if (!data.length) {
+      canvas.style.display = 'none'; emptyEl.style.display = 'block';
+      if (_revChart) { _revChart.destroy(); _revChart = null; }
+      return;
+    }
+    canvas.style.display = ''; emptyEl.style.display = 'none';
+const labels = data.map(r => {
+  const [y, m, d] = r.date.split('-').map(Number);
+  return new Date(y, m-1, d).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' });
+});
+
+if (_revChart) _revChart.destroy();
+    _revChart = new Chart(canvas, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [
+          { label: 'Net Revenue', data: data.map(r => r.net),      backgroundColor: '#00C47B', borderRadius: 4, stack: 's' },
+          { label: 'Discounts',   data: data.map(r => r.discount), backgroundColor: 'rgba(255,68,68,0.55)', borderRadius: 4, stack: 's' },
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: c => c.dataset.label + ': ' + _fmtR(c.raw) } }
+        },
+        scales: {
+          x: { ticks: { autoSkip: false, maxRotation: 45, color: '#B3B3B3', font: { size: 11 } }, grid: { display: false } },
+          y: { ticks: { callback: _fmtR, color: '#B3B3B3', font: { size: 11 } }, grid: { color: 'rgba(255,255,255,0.05)' } }
+        }
+      }
+    });
+  } catch(e) { console.error('Revenue chart error:', e); }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  revQuick('today', document.querySelector('.rev-quick.active'));
+});
+
+// ── superadmin QR repair ─────────────────────────────────────────────────────
 async function repairQR(el) {
   if (!confirm('This will fix all existing bookings that have "PENDING" in their QR codes.\n\nContinue?')) return;
   el.style.opacity = '0.6';
@@ -293,33 +460,27 @@ async function repairQR(el) {
       el.querySelector('.ql-label').textContent = '❌ Failed';
       el.querySelector('.ql-sub').textContent = d.message;
     }
-  } catch(e) {
-    el.querySelector('.ql-label').textContent = '❌ Network error';
-  }
+  } catch(e) { el.querySelector('.ql-label').textContent = '❌ Network error'; }
   el.style.opacity = '1';
 }
 
-// ── Refresh logic ──────────────────────────────────────
+// ── Auto-refresh countdown ───────────────────────────────────────────────────
 let _refreshSecs = 300;
-const _timerEl   = document.getElementById('refreshTimer');
-const _refreshBtn = document.getElementById('refreshBtn');
-const _refreshIcon = document.getElementById('refreshIcon');
-
-function _pad(n){ return String(n).padStart(2,'0'); }
-function _tick(){
+const _timerEl = document.getElementById('refreshTimer');
+const _pad = n => String(n).padStart(2, '0');
+function _tick() {
   const m = Math.floor(_refreshSecs/60), s = _refreshSecs%60;
-  _timerEl.textContent = m+':'+_pad(s);
-  if(--_refreshSecs < 0) location.reload();
+  _timerEl.textContent = m + ':' + _pad(s);
+  if (--_refreshSecs < 0) location.reload();
 }
 setInterval(_tick, 1000);
 _tick();
 
-function doRefresh(){
-  _refreshIcon.style.animation = 'spin 0.7s linear infinite';
-  _refreshBtn.disabled = true;
+function doRefresh() {
+  document.getElementById('refreshIcon').style.animation = 'spin 0.7s linear infinite';
+  document.getElementById('refreshBtn').disabled = true;
   setTimeout(() => location.reload(), 300);
 }
-// ───────────────────────────────────────────────────────
 </script>
 </body>
 </html>

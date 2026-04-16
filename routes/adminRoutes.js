@@ -93,6 +93,7 @@ router.get('/logout', (req, res) => {
   router.use(adminAuth);
 
   router.get('/',                         adminController.getDashboard);
+  router.get('/api/revenue-by-date', adminController.getRevenueByDate);
   router.get('/events/new',               adminController.getNewEvent);
   router.post('/events',                  adminController.postCreateEvent);
   router.get('/events/:id/edit',          adminController.getEditEvent);

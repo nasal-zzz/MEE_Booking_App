@@ -81,6 +81,35 @@
     #toastMsg{position:fixed;bottom:1.5rem;right:1.5rem;background:#1a1a2a;border:1px solid rgba(106,13,173,0.4);color:#fff;padding:0.75rem 1.2rem;border-radius:8px;font-size:0.82rem;z-index:9999;display:none;box-shadow:0 8px 32px rgba(0,0,0,0.5);}
     #toastMsg.show{display:block;}
 
+    /* ── Export ── */
+    .export-btn{display:inline-flex;align-items:center;gap:0.5rem;padding:0.5rem 1.1rem;background:rgba(0,255,136,0.07);border:1px solid rgba(0,255,136,0.28);border-radius:7px;color:#00FF88;font-family:'Space Mono',monospace;font-size:0.72rem;font-weight:700;cursor:pointer;transition:all 0.2s;letter-spacing:0.5px;white-space:nowrap;}
+    .export-btn:hover{background:rgba(0,255,136,0.14);border-color:rgba(0,255,136,0.5);}
+    .ex-modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.78);z-index:1000;align-items:center;justify-content:center;padding:1rem;}
+    .ex-modal-bg.open{display:flex;}
+    .ex-modal{background:#14141C;border:1px solid rgba(255,255,255,0.08);border-radius:12px;width:100%;max-width:500px;padding:1.5rem;position:relative;max-height:90vh;overflow-y:auto;}
+    .ex-modal h3{font-family:'Poppins',sans-serif;font-size:1rem;margin-bottom:0.3rem;letter-spacing:1px;}
+    .ex-modal-close{position:absolute;top:1rem;right:1rem;background:none;border:none;color:#B3B3B3;cursor:pointer;font-size:1rem;}
+    .ex-modal-close:hover{color:#fff;}
+    .ex-sub{font-size:0.7rem;color:#555;font-family:'Space Mono',monospace;margin-bottom:1rem;}
+    .ex-sec{margin-bottom:1rem;}
+    .ex-sec-title{font-family:'Space Mono',monospace;font-size:0.55rem;letter-spacing:2px;color:#555;margin-bottom:0.5rem;text-transform:uppercase;}
+    .ex-fields-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.38rem;}
+    .ex-field{display:flex;align-items:center;gap:0.42rem;padding:0.4rem 0.62rem;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:5px;cursor:pointer;transition:all 0.15s;user-select:none;}
+    .ex-field:hover{border-color:rgba(106,13,173,0.3);background:rgba(106,13,173,0.05);}
+    .ex-field.on{border-color:rgba(106,13,173,0.4);background:rgba(106,13,173,0.1);}
+    .ex-field input[type=checkbox]{accent-color:#6A0DAD;width:13px;height:13px;cursor:pointer;flex-shrink:0;}
+    .ex-field span{font-size:0.75rem;color:#ccc;}
+    .ex-opt-pills{display:flex;gap:0.45rem;flex-wrap:wrap;}
+    .ex-opt-pill{display:inline-flex;align-items:center;gap:0.3rem;padding:0.35rem 0.78rem;border-radius:20px;font-size:0.68rem;font-weight:700;cursor:pointer;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:#B3B3B3;font-family:'Space Mono',monospace;transition:all 0.15s;}
+    .ex-opt-pill.active{border-color:rgba(106,13,173,0.45);background:rgba(106,13,173,0.12);color:#bf80ff;}
+    .ex-sel-links{display:flex;gap:0.45rem;margin-bottom:0.5rem;}
+    .ex-lnk{background:none;border:none;color:#6A0DAD;font-size:0.68rem;font-family:'Space Mono',monospace;cursor:pointer;text-decoration:underline;padding:0;}
+    .ex-footer{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;margin-top:1rem;}
+    .ex-count-lbl{font-size:0.68rem;color:#555;font-family:'Space Mono',monospace;}
+    .ex-dl-btn{display:inline-flex;align-items:center;gap:0.4rem;padding:0.52rem 1.25rem;background:rgba(0,255,136,0.09);border:1px solid rgba(0,255,136,0.35);border-radius:7px;color:#00FF88;font-family:'Space Mono',monospace;font-size:0.74rem;font-weight:700;cursor:pointer;transition:all 0.2s;}
+    .ex-dl-btn:hover{background:rgba(0,255,136,0.17);}
+    .ex-dl-btn:disabled{opacity:0.4;cursor:not-allowed;}
+
     @media(max-width:900px){.layout{grid-template-columns:1fr;}}
   </style>
 </head>
@@ -152,16 +181,17 @@
       <button class="chip"    data-filter="age" data-val="26-35" onclick="setChip('age','26-35',this)">26–35</button>
       <button class="chip"    data-filter="age" data-val="36+"   onclick="setChip('age','36+',this)">36+</button>
     </div>
-
-    <!-- Bulk actions -->
-    <div class="bulk-bar">
-      <span class="bulk-lbl">BULK ACTIONS (visible rows):</span>
+<!-- Bulk actions + Export -->
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.7rem;margin-bottom:1rem;">
+    <div class="bulk-bar" style="margin-bottom:0;">      <span class="bulk-lbl">BULK ACTIONS (visible rows):</span>
       <button class="btn-bulk btn-bulk-wa" onclick="bulkRemind('reminder')">
         <i class="bi bi-whatsapp"></i> WhatsApp Reminder (All)
       </button>
       <button class="btn-bulk btn-bulk-noshow" onclick="bulkRemind('noshow')">
         <i class="bi bi-bell-fill"></i> Remind Not-Entered
       </button>
+    </div>
+    <button class="export-btn" onclick="openAttExport()"><i class="bi bi-file-earmark-spreadsheet-fill"></i> Export Excel</button>
     </div>
 
     <div class="results-count" id="resultsCount"><%= attendees.length %> of <%= attendees.length %> shown</div>
@@ -245,9 +275,132 @@
   </main>
 </div>
 
+<!-- Attendees Export Modal -->
+<div class="ex-modal-bg" id="attExportModal">
+  <div class="ex-modal">
+    <button class="ex-modal-close" onclick="closeAttExport()"><i class="bi bi-x-lg"></i></button>
+    <h3><i class="bi bi-file-earmark-spreadsheet-fill" style="color:#00FF88;margin-right:6px;"></i>EXPORT ATTENDEES</h3>
+    <div class="ex-sub">Choose scope and fields for your Excel download</div>
+
+    <div class="ex-sec">
+      <div class="ex-sec-title">Which attendees to export</div>
+      <div class="ex-opt-pills">
+        <div class="ex-opt-pill active" id="att-scope-filtered" onclick="setAttScope('filtered',this)"><i class="bi bi-funnel-fill"></i> Current Filter</div>
+        <div class="ex-opt-pill" id="att-scope-all" onclick="setAttScope('all',this)"><i class="bi bi-people-fill"></i> All Attendees</div>
+      </div>
+    </div>
+
+    <div class="ex-sec">
+      <div class="ex-sec-title">Fields to include</div>
+      <div class="ex-sel-links">
+        <button class="ex-lnk" onclick="attSelAll(true)">Select all</button>
+        <span style="color:#333;">·</span>
+        <button class="ex-lnk" onclick="attSelAll(false)">Clear all</button>
+      </div>
+      <div class="ex-fields-grid" id="attFieldsGrid"></div>
+    </div>
+
+    <div class="ex-footer">
+      <span class="ex-count-lbl" id="attExCount">—</span>
+      <button class="ex-dl-btn" id="attExBtn" onclick="doAttExport()"><i class="bi bi-download"></i> Download Excel</button>
+    </div>
+  </div>
+</div>
+
 <div id="toastMsg"></div>
 
 <script>
+
+  // ── Attendees Export ──
+var ATT_FIELDS = [
+  { key:'num',     label:'#',             get:function(r){ var e=r.querySelector('.row-num'); return e?e.textContent.trim():''; } },
+  { key:'name',    label:'Name',          get:function(r){ return r.dataset.name||''; } },
+  { key:'email',   label:'Email',         get:function(r){ var e=r.querySelector('td:nth-child(2) div'); return e?e.textContent.trim():''; } },
+  { key:'phone',   label:'Phone',         get:function(r){ return r.dataset.phone||''; } },
+  { key:'age',     label:'Age',           get:function(r){ return r.dataset.age||''; } },
+  { key:'gender',  label:'Gender',        get:function(r){ return r.dataset.gender||''; } },
+  { key:'ticket',  label:'Ticket Type',   get:function(r){ var e=r.querySelector('.b-ticket'); return e?e.textContent.trim():''; } },
+  { key:'seat',    label:'Seat Number',   get:function(r){ var e=r.querySelector('td:nth-child(6)'); return e?e.textContent.trim():''; } },
+  { key:'ref',     label:'Booking Ref',   get:function(r){ var e=r.querySelector('td:nth-child(7)'); return e?e.textContent.trim():''; } },
+  { key:'booked',  label:'Booked On',     get:function(r){ var e=r.querySelector('td:nth-child(8)'); return e?e.textContent.trim():''; } },
+  { key:'entry',   label:'Entry Status',  get:function(r){ return r.dataset.entry==='entered'?'Entered':'Not Entered'; } },
+];
+var attDefaultOn = ['name','phone','age','gender','ticket','seat','ref','booked','entry'];
+var attExScope = 'filtered';
+
+function openAttExport(){
+  var grid = document.getElementById('attFieldsGrid');
+  grid.innerHTML = '';
+  ATT_FIELDS.forEach(function(f){
+    var on = attDefaultOn.indexOf(f.key) !== -1;
+    var lbl = document.createElement('label');
+    lbl.className = 'ex-field' + (on?' on':'');
+    lbl.innerHTML = '<input type="checkbox" value="'+f.key+'"'+(on?' checked':'')+'>  <span>'+f.label+'</span>';
+    lbl.querySelector('input').addEventListener('change', function(e){
+      lbl.classList.toggle('on', e.target.checked); updateAttExCount();
+    });
+    grid.appendChild(lbl);
+  });
+  attExScope = 'filtered';
+  document.getElementById('att-scope-filtered').classList.add('active');
+  document.getElementById('att-scope-all').classList.remove('active');
+  updateAttExCount();
+  document.getElementById('attExportModal').classList.add('open');
+}
+
+function closeAttExport(){ document.getElementById('attExportModal').classList.remove('open'); }
+
+function setAttScope(scope, el){
+  attExScope = scope;
+  document.querySelectorAll('.ex-opt-pill').forEach(function(p){ p.classList.remove('active'); });
+  el.classList.add('active'); updateAttExCount();
+}
+
+function attSelAll(val){
+  document.querySelectorAll('#attFieldsGrid .ex-field').forEach(function(el){
+    el.classList.toggle('on', val); el.querySelector('input').checked = val;
+  }); updateAttExCount();
+}
+
+function getAttExRows(){
+  var all = Array.from(document.querySelectorAll('#attTable tbody tr'));
+  if(attExScope === 'all') return all;
+  return all.filter(function(r){ return r.style.display !== 'none'; });
+}
+
+function updateAttExCount(){
+  var rows = getAttExRows();
+  var checked = document.querySelectorAll('#attFieldsGrid input:checked').length;
+  document.getElementById('attExCount').textContent = rows.length+' attendees · '+checked+' fields';
+  document.getElementById('attExBtn').disabled = checked === 0 || rows.length === 0;
+}
+
+function doAttExport(){
+  var rows = getAttExRows();
+  var keys = Array.from(document.querySelectorAll('#attFieldsGrid input:checked')).map(function(i){ return i.value; });
+  var fields = ATT_FIELDS.filter(function(f){ return keys.indexOf(f.key) !== -1; });
+  if(!fields.length || !rows.length) return;
+  var evName = document.querySelector('.ev-name');
+  var sheetName = evName ? evName.textContent.trim().slice(0,28).replace(/[^\w\s]/g,'') : 'Attendees';
+  var data = [fields.map(function(f){ return f.label; })];
+  rows.forEach(function(r){ data.push(fields.map(function(f){ return f.get(r)||''; })); });
+  function write(){
+    var wb = XLSX.utils.book_new();
+    var ws = XLSX.utils.aoa_to_sheet(data);
+    ws['!cols'] = data[0].map(function(_,i){ return { wch: Math.max(14, Math.max.apply(null, data.map(function(r){ return String(r[i]||'').length; }))) }; });
+    XLSX.utils.book_append_sheet(wb, ws, sheetName||'Attendees');
+    XLSX.writeFile(wb, 'attendees-'+new Date().toISOString().slice(0,10)+'.xlsx');
+    closeAttExport();
+    showToast('Exported '+rows.length+' attendees to Excel.');
+  }
+  if(typeof XLSX === 'undefined'){
+    var s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'; s.onload = write; document.head.appendChild(s);
+  } else { write(); }
+}
+
+document.getElementById('attExportModal').addEventListener('click', function(e){ if(e.target===this) closeAttExport(); });
+
+
 var activeFilters = { gender:'all', entry:'all', age:'all' };
 
 function setChip(filter, val, btn){

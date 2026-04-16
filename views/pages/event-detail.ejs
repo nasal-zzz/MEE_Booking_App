@@ -1199,14 +1199,7 @@
             </script>
             <div class="event-hero-content">
               <a href="/" class="event-back-btn"><i class="bi bi-arrow-left"></i> Back to Events</a>
-              <% if(isHouseFull){ %>
-                <div class="event-status-badge soldout"><i class="bi bi-house-fill"></i> House Full</div>
-                <% } else if(isPast){ %>
-                  <div class="event-status-badge soldout"><i class="bi bi-clock-history"></i> Event Ended</div>
-                  <% } else { %>
-                    <div class="event-status-badge upcoming"><i class="bi bi-lightning-charge-fill"></i> Tickets
-                      Available</div>
-                    <% } %>
+             
                       <div class="event-hero-name">
                         <%= firstName %>
                           <% if(restName){ %><br /><span class="event-hero-name">

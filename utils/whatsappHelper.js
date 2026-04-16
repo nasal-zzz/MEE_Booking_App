@@ -43,7 +43,7 @@ const saveTicketFile = (buffer, bookingRef) => {
       } catch (e) {
         console.warn('PDF cleanup error:', e.message);
       }
-    }, 15 * 60 * 1000); // 15 minutes
+    }, 5 * 60 * 1000); // 5 minutes
 
     return `${APP_URL()}/ticket/${filename}`;
   } catch (e) {

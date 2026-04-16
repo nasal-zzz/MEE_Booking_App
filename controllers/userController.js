@@ -37,34 +37,75 @@
   };
 
   // ── POST /user/profile/update ──
-  exports.updateProfile = async (req, res) => {
-    try {
-      const { firstName, lastName, email, whatsapp, gender, place, district } = req.body;
+  // exports.updateProfile = async (req, res) => {
+  //   try {
+  //     const { firstName, lastName, email, whatsapp, gender, place, district } = req.body;
 
-      if (!firstName || firstName.trim().length < 2)
-        return res.json({ success: false, message: 'First name must be at least 2 characters.' });
+  //     if (!firstName || firstName.trim().length < 2)
+  //       return res.json({ success: false, message: 'First name must be at least 2 characters.' });
 
-      if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
-        return res.json({ success: false, message: 'Enter a valid email address.' });
+  //     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+  //       return res.json({ success: false, message: 'Enter a valid email address.' });
 
-      const fullWa = whatsapp && /^[6-9]\d{9}$/.test(whatsapp.trim()) ? '+91' + whatsapp.trim() : '';
+  //     const fullWa = whatsapp && /^[6-9]\d{9}$/.test(whatsapp.trim()) ? '+91' + whatsapp.trim() : '';
 
-      await User.findByIdAndUpdate(req.user._id, {
-        firstName: firstName.trim(),
-        lastName:  (lastName || '').trim(),
-        email:     (email || '').trim().toLowerCase(),
-        whatsapp:  fullWa || req.user.whatsapp || '',
-        gender:    gender || '',
-        place:     (place || '').trim(),
-        district:  district || '',
-      });
+  //     await User.findByIdAndUpdate(req.user._id, {
+  //       firstName: firstName.trim(),
+  //       lastName:  (lastName || '').trim(),
+  //       email:     (email || '').trim().toLowerCase(),
+  //       whatsapp:  fullWa || req.user.whatsapp || '',
+  //       gender:    gender || '',
+  //       place:     (place || '').trim(),
+  //       district:  district || '',
+  //     });
 
-      return res.json({ success: true, message: 'Profile updated successfully!' });
-    } catch (err) {
-      console.error('updateProfile error:', err);
-      res.json({ success: false, message: 'Failed to update profile.' });
+  //     return res.json({ success: true, message: 'Profile updated successfully!' });
+  //   } catch (err) {
+  //     console.error('updateProfile error:', err);
+  //     res.json({ success: false, message: 'Failed to update profile.' });
+  //   }
+  // };
+
+
+  // Key change: email is no longer accepted here — it is managed exclusively via
+// the /auth/send-email-otp + /auth/verify-email-otp modal flow.
+// ─────────────────────────────────────────────────────────────────────────────
+ 
+exports.updateProfile = async (req, res) => {
+  try {
+    const userId = req.session.userId || req.user?._id;
+    if (!userId) return res.json({ success: false, message: 'Not logged in.' });
+ 
+    // NOTE: 'email' is intentionally excluded — use the email OTP modal to change it.
+    const { firstName, lastName, whatsapp, gender, place, district } = req.body;
+ 
+    const updates = {};
+ 
+    if (firstName !== undefined) {
+      const fn = firstName.trim();
+      if (!fn) return res.json({ success: false, message: 'First name cannot be empty.' });
+      updates.firstName = fn;
     }
-  };
+    if (lastName  !== undefined) updates.lastName  = lastName.trim();
+    if (gender    !== undefined) updates.gender    = gender;
+    if (place     !== undefined) updates.place     = place.trim();
+    if (district  !== undefined) updates.district  = district;
+ 
+    if (whatsapp !== undefined) {
+      const wa = whatsapp.trim().replace(/\D/g, '');
+      if (wa && !/^[6-9]\d{9}$/.test(wa))
+        return res.json({ success: false, message: 'Enter a valid 10-digit WhatsApp number.' });
+      updates.whatsapp = wa ? '+91' + wa : '';
+    }
+ 
+    await User.findByIdAndUpdate(userId, updates);
+    return res.json({ success: true, message: 'Profile updated successfully!' });
+  } catch (err) {
+    console.error('updateProfile error:', err);
+    return res.json({ success: false, message: 'Server error. Please try again.' });
+  }
+};
+ 
 
   // ── DELETE /user/delete-booking/:bookingId ──
   exports.deleteBooking = async (req, res) => {

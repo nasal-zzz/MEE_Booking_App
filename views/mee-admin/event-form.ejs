@@ -536,8 +536,8 @@ function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot
 // ── TICKET CATEGORIES ─────────────────────────────
 let categories = EXISTING_CATS.length ? EXISTING_CATS.map((t,i) => ({
   id:i, name:t.name||t.category||'', color:t.color||'#6A0DAD',
-  price:t.price||0, ageLimit:t.ageLimit||18, ticketType:t.ticketType||'single',
-  totalSeats:t.totalSeats||0, bookedSeats:t.bookedSeats||0, maxPerOrder:t.maxPerOrder||10,
+  price:t.price||0, ageLimit:t.ageLimit||0, ticketType:t.ticketType||'single',
+  totalSeats:t.totalSeats||0, bookedSeats:t.bookedSeats||0, maxPerOrder:t.maxPerOrder,
   terms:t.terms||'', isActive:t.isActive!==false, isCombo:t.isCombo||false, comboCount:t.comboCount||1,
 //   seatType:t.seatType||'standing', seatPrefix:t.seatPrefix||'', seatStart:t.seatStart||1,
 //   discountTiers: Array.isArray(t.discountTiers) ? t.discountTiers : (t.comboOfferMinQty > 0 ? [{minQty:t.comboOfferMinQty, discount:t.comboOfferDiscount}] : []),
@@ -552,7 +552,7 @@ function addCategory() {
   const id = catIdCtr++;
   categories.push({
     id, name:'', color:PRESET_COLORS[categories.length % PRESET_COLORS.length],
-    price:0, ageLimit:18, ticketType:'single', totalSeats:0, bookedSeats:0,
+    price:0, ageLimit:0, ticketType:'single', totalSeats:0, bookedSeats:0,
     maxPerOrder:10, terms:'', isActive:true, isCombo:false, comboCount:1,
     // seatType:'standing', seatPrefix:'', seatStart:1, discountTiers:[],
      seatType:'standing', seatPrefix:'', seatStart:1, gateNumber:'', discountTiers:[]
@@ -641,7 +641,7 @@ function renderCategories() {
           </div>
           <div class="field-group">
             <label class="field-label">Age Limit</label>
-            <input class="field-input" type="number" placeholder="18" value="${cat.ageLimit||18}"
+            <input class="field-input" type="number" placeholder="18" value="${cat.ageLimit||0}"
               oninput="updateCat(${cat.id},'ageLimit',+this.value)"/>
           </div>
         </div>

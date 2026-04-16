@@ -149,6 +149,36 @@
     .pg-btn.active{background:rgba(106,13,173,0.15);border-color:rgba(106,13,173,0.35);color:var(--accent2);}
     .pg-btn:disabled{opacity:0.3;cursor:not-allowed;}
 
+
+
+    /* ── Export Button ── */
+    .export-btn{display:inline-flex;align-items:center;gap:0.5rem;padding:0.6rem 1.2rem;background:rgba(0,255,136,0.07);border:1px solid rgba(0,255,136,0.3);border-radius:8px;color:var(--success);font-family:'Space Mono',monospace;font-size:0.78rem;font-weight:700;cursor:pointer;transition:all 0.2s;letter-spacing:0.5px;}
+    .export-btn:hover{background:rgba(0,255,136,0.14);border-color:rgba(0,255,136,0.5);}
+
+    /* ── Export Modal ── */
+    .export-modal{max-width:520px;}
+    .export-modal h3{margin-bottom:0.4rem;}
+    .export-sub{font-size:0.75rem;color:var(--muted);font-family:'Space Mono',monospace;margin-bottom:1.2rem;}
+    .export-section{margin-bottom:1.2rem;}
+    .export-section-title{font-family:'Space Mono',monospace;font-size:0.6rem;letter-spacing:2px;color:var(--muted);margin-bottom:0.6rem;text-transform:uppercase;}
+    .fields-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.45rem;}
+    .field-check{display:flex;align-items:center;gap:0.5rem;padding:0.45rem 0.7rem;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:6px;cursor:pointer;transition:all 0.15s;user-select:none;}
+    .field-check:hover{border-color:rgba(157,78,221,0.35);background:rgba(157,78,221,0.06);}
+    .field-check.selected{border-color:rgba(157,78,221,0.45);background:rgba(157,78,221,0.1);}
+    .field-check input[type=checkbox]{accent-color:var(--accent2);width:14px;height:14px;cursor:pointer;}
+    .field-check span{font-size:0.78rem;color:#ddd;}
+    .export-options-row{display:flex;gap:0.6rem;flex-wrap:wrap;}
+    .opt-pill{display:inline-flex;align-items:center;gap:0.35rem;padding:0.4rem 0.85rem;border-radius:20px;font-size:0.72rem;font-weight:700;cursor:pointer;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:var(--muted);font-family:'Space Mono',monospace;transition:all 0.15s;}
+    .opt-pill.active{border-color:rgba(157,78,221,0.45);background:rgba(157,78,221,0.12);color:var(--accent2);}
+    .select-all-row{display:flex;gap:0.5rem;margin-bottom:0.6rem;}
+    .link-btn{background:none;border:none;color:var(--accent2);font-size:0.72rem;font-family:'Space Mono',monospace;cursor:pointer;text-decoration:underline;padding:0;}
+    .export-footer{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;margin-top:1.2rem;}
+    .export-count{font-size:0.72rem;color:var(--muted);font-family:'Space Mono',monospace;}
+    .btn-do-export{display:inline-flex;align-items:center;gap:0.5rem;padding:0.6rem 1.4rem;background:rgba(0,255,136,0.1);border:1px solid rgba(0,255,136,0.4);border-radius:7px;color:var(--success);font-family:'Space Mono',monospace;font-size:0.8rem;font-weight:700;cursor:pointer;transition:all 0.2s;}
+    .btn-do-export:hover{background:rgba(0,255,136,0.18);}
+    .btn-do-export:disabled{opacity:0.4;cursor:not-allowed;}
+
+
     @media(max-width:900px){.admin-layout{grid-template-columns:1fr;}}
   </style>
 </head>
@@ -165,6 +195,9 @@
         ALL USERS
         <span>REGISTERED ACCOUNTS — <%= users.length %> TOTAL</span>
       </div>
+         <button class="export-btn" onclick="openExportModal()">
+        <i class="bi bi-file-earmark-spreadsheet-fill"></i> Export Excel
+      </button>
     </div>
 
     <!-- Summary cards -->
@@ -377,6 +410,46 @@
       </div>
     </div>
   </main>
+</div>
+
+<!-- Export Modal -->
+<div class="modal-bg" id="exportModal">
+  <div class="modal export-modal">
+    <button class="modal-close" onclick="closeModal('exportModal')"><i class="bi bi-x-lg"></i></button>
+    <h3><i class="bi bi-file-earmark-spreadsheet-fill" style="color:var(--success);margin-right:6px;"></i>EXPORT USERS</h3>
+    <div class="export-sub">Choose fields and filters for your Excel download</div>
+
+    <!-- Filter scope -->
+    <div class="export-section">
+      <div class="export-section-title">Which users to export</div>
+      <div class="export-options-row">
+        <div class="opt-pill active" id="scope-filtered" onclick="setScope('filtered',this)">
+          <i class="bi bi-funnel-fill"></i> Current Filter
+        </div>
+        <div class="opt-pill" id="scope-all" onclick="setScope('all',this)">
+          <i class="bi bi-people-fill"></i> All Users
+        </div>
+      </div>
+    </div>
+
+    <!-- Field selector -->
+    <div class="export-section">
+      <div class="export-section-title">Fields to include</div>
+      <div class="select-all-row">
+        <button class="link-btn" onclick="selectAllFields(true)">Select all</button>
+        <span style="color:var(--muted);font-size:0.7rem;">·</span>
+        <button class="link-btn" onclick="selectAllFields(false)">Clear all</button>
+      </div>
+      <div class="fields-grid" id="fieldsGrid"></div>
+    </div>
+
+    <div class="export-footer">
+      <span class="export-count" id="exportCount">—</span>
+      <button class="btn-do-export" id="doExportBtn" onclick="doExport()">
+        <i class="bi bi-download"></i> Download Excel
+      </button>
+    </div>
+  </div>
 </div>
 
 <!-- Detail Modal -->
@@ -647,6 +720,120 @@
     t.innerHTML = `<i class="bi bi-${type==='success'?'check-circle-fill':'x-circle-fill'}"></i> ${msg}`;
     clearTimeout(t._timer);
     t._timer = setTimeout(() => t.classList.remove('show'), 3500);
+  }
+
+  // ── Export ──
+  const EXPORT_FIELDS = [
+    { key: 'name',     label: 'Full Name',      get: r => r.dataset.name?.replace(/\b\w/g,c=>c.toUpperCase()) },
+    { key: 'phone',    label: 'Phone',          get: r => r.dataset.phone },
+    { key: 'email',    label: 'Email',          get: r => r.dataset.email },
+    { key: 'place',    label: 'Place',          get: r => r.dataset.place },
+    { key: 'district', label: 'District',       get: r => r.dataset.district },
+    { key: 'gender',   label: 'Gender',         get: r => r.dataset.gender },
+    { key: 'auth',     label: 'Auth Type',      get: r => r.dataset.google === '1' ? 'Google' : 'Email' },
+    { key: 'bookings', label: 'Bookings',       get: r => r.dataset.bookings },
+    { key: 'verified', label: 'Phone Verified', get: r => r.dataset.verified === '1' ? 'Yes' : 'No' },
+    { key: 'active',   label: 'Status',         get: r => r.dataset.active === '0' ? 'Blocked' : 'Active' },
+    { key: 'joined',   label: 'Joined Date',    get: r => r.dataset.joined ? new Date(r.dataset.joined).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}) : '' },
+    { key: 'id',       label: 'User ID (last6)',get: r => r.dataset.id ? r.dataset.id.slice(-6).toUpperCase() : '' },
+  ];
+
+  let exportScope = 'filtered';
+  const defaultOn = ['name','phone','email','place','district','bookings','verified','active','joined'];
+
+  function openExportModal() {
+    // Build fields grid
+    const grid = document.getElementById('fieldsGrid');
+    grid.innerHTML = '';
+    EXPORT_FIELDS.forEach(f => {
+      const on = defaultOn.includes(f.key);
+      const div = document.createElement('label');
+      div.className = 'field-check' + (on ? ' selected' : '');
+      div.dataset.key = f.key;
+      div.innerHTML = `<input type="checkbox" value="${f.key}" ${on?'checked':''}> <span>${f.label}</span>`;
+      div.querySelector('input').addEventListener('change', e => {
+        div.classList.toggle('selected', e.target.checked);
+        updateExportCount();
+      });
+      grid.appendChild(div);
+    });
+    exportScope = 'filtered';
+    document.getElementById('scope-filtered').classList.add('active');
+    document.getElementById('scope-all').classList.remove('active');
+    updateExportCount();
+    document.getElementById('exportModal').classList.add('open');
+  }
+
+  function setScope(scope, el) {
+    exportScope = scope;
+    document.querySelectorAll('.opt-pill').forEach(p => p.classList.remove('active'));
+    el.classList.add('active');
+    updateExportCount();
+  }
+
+  function selectAllFields(val) {
+    document.querySelectorAll('#fieldsGrid .field-check').forEach(el => {
+      el.classList.toggle('selected', val);
+      el.querySelector('input').checked = val;
+    });
+    updateExportCount();
+  }
+
+  function getExportRows() {
+    if (exportScope === 'all') {
+      return Array.from(document.querySelectorAll('#usersTable tbody tr'));
+    }
+    return filteredRows.length > 0 ? filteredRows : Array.from(document.querySelectorAll('#usersTable tbody tr'));
+  }
+
+  function updateExportCount() {
+    const rows = getExportRows();
+    const checked = document.querySelectorAll('#fieldsGrid input:checked').length;
+    document.getElementById('exportCount').textContent = `${rows.length} users · ${checked} fields`;
+    document.getElementById('doExportBtn').disabled = checked === 0;
+  }
+
+  function doExport() {
+    const rows = getExportRows();
+    const checkedKeys = Array.from(document.querySelectorAll('#fieldsGrid input:checked')).map(i => i.value);
+    const fields = EXPORT_FIELDS.filter(f => checkedKeys.includes(f.key));
+
+    if (!fields.length || !rows.length) return;
+
+    // Build data array
+    const header = fields.map(f => f.label);
+    const data = [header, ...rows.map(r => fields.map(f => f.get(r) || ''))];
+
+    // Use SheetJS from CDN
+    if (typeof XLSX === 'undefined') {
+      const s = document.createElement('script');
+      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+      s.onload = () => _writeExcel(data);
+      document.head.appendChild(s);
+    } else {
+      _writeExcel(data);
+    }
+  }
+
+  function _writeExcel(data) {
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet(data);
+
+    // Column widths
+    ws['!cols'] = data[0].map((_, i) => ({ wch: Math.max(14, ...data.map(r => String(r[i]||'').length)) }));
+
+    // Style header row (basic bold via cell metadata — cosmetic)
+    const range = XLSX.utils.decode_range(ws['!ref']);
+    for (let C = range.s.c; C <= range.e.c; C++) {
+      const cell = ws[XLSX.utils.encode_cell({r:0, c:C})];
+      if (cell) { cell.s = { font: { bold: true }, fill: { fgColor: { rgb: 'F3E8FF' } } }; }
+    }
+
+    XLSX.utils.book_append_sheet(wb, ws, 'Users');
+    const date = new Date().toISOString().slice(0,10);
+    XLSX.writeFile(wb, `users-export-${date}.xlsx`);
+    closeModal('exportModal');
+    showToast('success', `Exported ${data.length - 1} users to Excel.`);
   }
 
   // Init

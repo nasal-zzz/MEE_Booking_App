@@ -61,6 +61,30 @@
     @keyframes spin{to{transform:rotate(360deg)}}
     .btn-back-dash{display:inline-flex;align-items:center;gap:0.3rem;color:var(--muted);text-decoration:none;font-size:0.78rem;font-family:'Space Mono',monospace;letter-spacing:1px;padding:0.35rem 0.75rem;border:1px solid var(--border);border-radius:5px;background:rgba(255,255,255,0.03);margin-bottom:1.5rem;transition:all 0.15s;}
     .btn-back-dash:hover{color:#fff;border-color:rgba(255,255,255,0.2);background:rgba(255,255,255,0.06);}
+  
+    /* ── Export ── */
+    .export-btn{display:inline-flex;align-items:center;gap:0.5rem;padding:0.6rem 1.2rem;background:rgba(0,255,136,0.07);border:1px solid rgba(0,255,136,0.28);border-radius:7px;color:#00FF88;font-family:'Space Mono',monospace;font-size:0.72rem;font-weight:700;cursor:pointer;transition:all 0.2s;letter-spacing:0.5px;white-space:nowrap;}
+    .export-btn:hover{background:rgba(0,255,136,0.15);border-color:rgba(0,255,136,0.5);}
+    .ex-sub{font-size:0.72rem;color:#555;font-family:'Space Mono',monospace;margin-bottom:1rem;}
+    .ex-sec{margin-bottom:1rem;}
+    .ex-sec-title{font-family:'Space Mono',monospace;font-size:0.55rem;letter-spacing:2px;color:#555;margin-bottom:0.5rem;text-transform:uppercase;}
+    .fields-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.4rem;}
+    .field-check{display:flex;align-items:center;gap:0.45rem;padding:0.42rem 0.65rem;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:6px;cursor:pointer;transition:all 0.15s;user-select:none;}
+    .field-check:hover{border-color:rgba(157,78,221,0.3);background:rgba(157,78,221,0.05);}
+    .field-check.selected{border-color:rgba(157,78,221,0.4);background:rgba(157,78,221,0.09);}
+    .field-check input[type=checkbox]{accent-color:#9D4EDD;width:13px;height:13px;cursor:pointer;flex-shrink:0;}
+    .field-check span{font-size:0.76rem;color:#ccc;}
+    .opt-pills{display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.8rem;}
+    .opt-pill{display:inline-flex;align-items:center;gap:0.3rem;padding:0.38rem 0.8rem;border-radius:20px;font-size:0.7rem;font-weight:700;cursor:pointer;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:#B3B3B3;font-family:'Space Mono',monospace;transition:all 0.15s;}
+    .opt-pill.active{border-color:rgba(157,78,221,0.45);background:rgba(157,78,221,0.12);color:#c084fc;}
+    .sel-links{display:flex;gap:0.5rem;margin-bottom:0.55rem;}
+    .lnk{background:none;border:none;color:#9D4EDD;font-size:0.7rem;font-family:'Space Mono',monospace;cursor:pointer;text-decoration:underline;padding:0;}
+    .ex-footer{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;margin-top:1rem;}
+    .ex-count{font-size:0.7rem;color:#555;font-family:'Space Mono',monospace;}
+    .btn-do-ex{display:inline-flex;align-items:center;gap:0.45rem;padding:0.55rem 1.3rem;background:rgba(0,255,136,0.09);border:1px solid rgba(0,255,136,0.38);border-radius:7px;color:#00FF88;font-family:'Space Mono',monospace;font-size:0.76rem;font-weight:700;cursor:pointer;transition:all 0.2s;}
+    .btn-do-ex:hover{background:rgba(0,255,136,0.17);}
+    .btn-do-ex:disabled{opacity:0.4;cursor:not-allowed;}
+  
   </style>
 </head>
 <body>
@@ -70,9 +94,15 @@
   <main class="main">
     <div class="page-header">
       <div class="page-title">ALL BOOKINGS (<%= bookings.length %>)</div>
-      <button class="reminder-btn" onclick="sendReminders()">
+      <div style="display:flex;gap:0.6rem;align-items:center;flex-wrap:wrap;">
+        <button class="export-btn" onclick="openExportModal()">
+          <i class="bi bi-file-earmark-spreadsheet-fill"></i> Export Excel
+        </button>
+        <button class="reminder-btn" onclick="sendReminders()">
+
         <i class="bi bi-send-fill"></i> Send Bulk Reminders
       </button>
+    </div>
     </div>
 
     <!-- Status filter pills -->
@@ -147,65 +177,194 @@
     </div>
   </main>
 </div>
-<script>
-  let currentStatus = 'all';
 
-  function filterStatus(status, el) {
+<!-- Export Modal -->
+<div class="modal-bg" id="exportModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.78);z-index:1000;align-items:center;justify-content:center;padding:1rem;">
+  <div style="background:#14141C;border:1px solid rgba(255,255,255,0.08);border-radius:12px;width:100%;max-width:520px;padding:1.5rem;position:relative;max-height:90vh;overflow-y:auto;">
+    <button onclick="closeExportModal()" style="position:absolute;top:1rem;right:1rem;background:none;border:none;color:#B3B3B3;cursor:pointer;font-size:1rem;"><i class="bi bi-x-lg"></i></button>
+    <h3 style="font-family:'Poppins',sans-serif;font-size:1rem;margin-bottom:0.3rem;letter-spacing:1px;"><i class="bi bi-file-earmark-spreadsheet-fill" style="color:#00FF88;margin-right:6px;"></i>EXPORT BOOKINGS</h3>
+    <div class="ex-sub">Choose scope and fields for your Excel download</div>
+    <div class="ex-sec">
+      <div class="ex-sec-title">Which bookings to export</div>
+      <div class="opt-pills">
+        <div class="opt-pill active" id="ex-scope-filtered" onclick="setExScope('filtered',this)"><i class="bi bi-funnel-fill"></i> Current Filter</div>
+        <div class="opt-pill" id="ex-scope-all" onclick="setExScope('all',this)"><i class="bi bi-ticket-perforated-fill"></i> All Bookings</div>
+      </div>
+    </div>
+    <div class="ex-sec">
+      <div class="ex-sec-title">Fields to include</div>
+      <div class="sel-links"><button class="lnk" onclick="exSelAll(true)">Select all</button><span style="color:#333;">·</span><button class="lnk" onclick="exSelAll(false)">Clear all</button></div>
+      <div class="fields-grid" id="exFieldsGrid"></div>
+    </div>
+    <div class="ex-footer">
+      <span class="ex-count" id="exCount">—</span>
+      <button class="btn-do-ex" id="exDoBtn" onclick="doExport()"><i class="bi bi-download"></i> Download Excel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ── Export ──
+  var EX_FIELDS = [
+    { key:'ref',      label:'Booking Ref',    get:function(r){ var el=r.querySelector('.ref'); return el?el.textContent.trim():''; } },
+    { key:'customer', label:'Customer Name',  get:function(r){ var el=r.querySelector('td:nth-child(2) div:first-child'); return el?el.textContent.trim():''; } },
+    { key:'phone',    label:'Phone',          get:function(r){ var el=r.querySelector('td:nth-child(2) div:nth-child(2)'); return el?el.textContent.trim():''; } },
+    { key:'event',    label:'Event',          get:function(r){ var el=r.querySelector('td:nth-child(3) div:first-child'); return el?el.textContent.trim():''; } },
+    { key:'edate',    label:'Event Date',     get:function(r){ var el=r.querySelector('td:nth-child(3) div:nth-child(2)'); return el?el.textContent.trim():''; } },
+    { key:'ticket',   label:'Ticket Type',    get:function(r){ var el=r.querySelector('td:nth-child(4)'); return el?el.textContent.trim():''; } },
+    { key:'qty',      label:'Quantity',       get:function(r){ var el=r.querySelector('td:nth-child(5)'); return el?el.textContent.trim():''; } },
+    { key:'subtotal', label:'Subtotal (₹)',   get:function(r){ var el=r.querySelector('td:nth-child(6)'); return el?el.textContent.replace('₹','').trim():''; } },
+    { key:'discount', label:'Discount (₹)',   get:function(r){ var el=r.querySelector('td:nth-child(7) span'); return el?el.textContent.replace(/[₹\-]/g,'').trim():''; } },
+    { key:'fee',      label:'Conv. Fee (₹)',  get:function(r){ var el=r.querySelector('td:nth-child(8)'); return el?el.textContent.replace('₹','').trim():''; } },
+    { key:'total',    label:'Total (₹)',      get:function(r){ var el=r.querySelector('td:nth-child(9)'); return el?el.textContent.replace('₹','').trim():''; } },
+    { key:'date',     label:'Booking Date',   get:function(r){ var el=r.querySelector('td:nth-child(10)'); return el?el.textContent.trim():''; } },
+    { key:'status',   label:'Payment Status', get:function(r){ return r.dataset.status||''; } },
+  ];
+  var exDefaultOn = ['ref','customer','phone','event','ticket','qty','total','date','status'];
+  var exScope = 'filtered';
+
+  function openExportModal(){
+    var grid = document.getElementById('exFieldsGrid');
+    grid.innerHTML = '';
+    EX_FIELDS.forEach(function(f){
+      var on = exDefaultOn.indexOf(f.key) !== -1;
+      var lbl = document.createElement('label');
+      lbl.className = 'field-check' + (on ? ' selected' : '');
+      lbl.innerHTML = '<input type="checkbox" value="'+f.key+'"'+(on ? ' checked' : '')+'> <span>'+f.label+'</span>';
+      lbl.querySelector('input').addEventListener('change', function(e){
+        lbl.classList.toggle('selected', e.target.checked);
+        updateExCount();
+      });
+      grid.appendChild(lbl);
+    });
+    exScope = 'filtered';
+    document.getElementById('ex-scope-filtered').classList.add('active');
+    document.getElementById('ex-scope-all').classList.remove('active');
+    updateExCount();
+    document.getElementById('exportModal').style.display = 'flex';
+  }
+
+  function closeExportModal(){
+    document.getElementById('exportModal').style.display = 'none';
+  }
+
+  function setExScope(scope, el){
+    exScope = scope;
+    document.querySelectorAll('.opt-pill').forEach(function(p){ p.classList.remove('active'); });
+    el.classList.add('active');
+    updateExCount();
+  }
+
+  function exSelAll(val){
+    document.querySelectorAll('#exFieldsGrid .field-check').forEach(function(el){
+      el.classList.toggle('selected', val);
+      el.querySelector('input').checked = val;
+    });
+    updateExCount();
+  }
+
+  function getExRows(){
+    var all = Array.from(document.querySelectorAll('#bookingsTable tbody tr'));
+    if(exScope === 'all') return all;
+    return all.filter(function(r){ return r.style.display !== 'none'; });
+  }
+
+  function updateExCount(){
+    var rows = getExRows();
+    var checked = document.querySelectorAll('#exFieldsGrid input:checked').length;
+    document.getElementById('exCount').textContent = rows.length + ' bookings · ' + checked + ' fields';
+    document.getElementById('exDoBtn').disabled = (checked === 0 || rows.length === 0);
+  }
+
+  function doExport(){
+    var rows = getExRows();
+    var keys = Array.from(document.querySelectorAll('#exFieldsGrid input:checked')).map(function(i){ return i.value; });
+    var fields = EX_FIELDS.filter(function(f){ return keys.indexOf(f.key) !== -1; });
+    if(!fields.length || !rows.length) return;
+    var data = [fields.map(function(f){ return f.label; })];
+    rows.forEach(function(r){
+      data.push(fields.map(function(f){ return f.get(r) || ''; }));
+    });
+    function write(){
+      var wb = XLSX.utils.book_new();
+      var ws = XLSX.utils.aoa_to_sheet(data);
+      ws['!cols'] = data[0].map(function(_,i){
+        return { wch: Math.max(14, Math.max.apply(null, data.map(function(r){ return String(r[i]||'').length; }))) };
+      });
+      XLSX.utils.book_append_sheet(wb, ws, 'Bookings');
+      XLSX.writeFile(wb, 'bookings-export-' + new Date().toISOString().slice(0,10) + '.xlsx');
+      closeExportModal();
+    }
+    if(typeof XLSX === 'undefined'){
+      var s = document.createElement('script');
+      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+      s.onload = write;
+      document.head.appendChild(s);
+    } else { write(); }
+  }
+
+  document.getElementById('exportModal').addEventListener('click', function(e){
+    if(e.target === this) closeExportModal();
+  });
+
+  // ── Filters ──
+  var currentStatus = 'all';
+
+  function filterStatus(status, el){
     currentStatus = status;
-    document.querySelectorAll('.stat-pill').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.stat-pill').forEach(function(p){ p.classList.remove('active'); });
     el.classList.add('active');
     applyFilters();
   }
 
-  function applyFilters() {
-    const q = document.getElementById('searchInput').value.toLowerCase();
-    let visible = 0;
-    document.querySelectorAll('#bookingsTable tbody tr').forEach(row => {
-      const matchStatus = currentStatus === 'all' || row.dataset.status === currentStatus;
-      const matchSearch = !q || row.textContent.toLowerCase().includes(q);
-      const show = matchStatus && matchSearch;
+  function applyFilters(){
+    var q = document.getElementById('searchInput').value.toLowerCase();
+    var visible = 0;
+    document.querySelectorAll('#bookingsTable tbody tr').forEach(function(row){
+      var matchStatus = currentStatus === 'all' || row.dataset.status === currentStatus;
+      var matchSearch = !q || row.textContent.toLowerCase().includes(q);
+      var show = matchStatus && matchSearch;
       row.style.display = show ? '' : 'none';
-      if (show) visible++;
+      if(show) visible++;
     });
     document.getElementById('emptyMsg').style.display = visible === 0 ? 'block' : 'none';
   }
 
-  async function sendMsg(bookingId, btn) {
+  async function sendMsg(bookingId, btn){
     btn.disabled = true;
-    const orig = btn.innerHTML;
+    var orig = btn.innerHTML;
     btn.innerHTML = '<span style="width:10px;height:10px;border:2px solid rgba(157,78,221,0.3);border-top-color:#9D4EDD;border-radius:50%;animation:spin .7s linear infinite;display:inline-block;"></span>';
     try {
-      const r = await fetch(`/mee-admin/bookings/${bookingId}/send-message`, { method:'POST', credentials:'include' });
-      const d = await r.json();
-      if (d.success) {
+      var r = await fetch('/mee-admin/bookings/'+bookingId+'/send-message', { method:'POST', credentials:'include' });
+      var d = await r.json();
+      if(d.success){
         btn.innerHTML = '<i class="bi bi-check-circle-fill"></i> Sent';
         btn.style.color = '#00FF88'; btn.style.borderColor = 'rgba(0,255,136,0.3)'; btn.style.background = 'rgba(0,255,136,0.07)';
-        setTimeout(() => { btn.innerHTML = orig; btn.style = ''; btn.disabled = false; }, 3000);
+        setTimeout(function(){ btn.innerHTML = orig; btn.style.cssText = ''; btn.disabled = false; }, 3000);
       } else {
         btn.innerHTML = '<i class="bi bi-x-circle-fill"></i> Failed';
         btn.style.color = '#FF4444';
-        setTimeout(() => { btn.innerHTML = orig; btn.style = ''; btn.disabled = false; }, 3000);
+        setTimeout(function(){ btn.innerHTML = orig; btn.style.cssText = ''; btn.disabled = false; }, 3000);
       }
-    } catch(e) {
-      btn.innerHTML = orig; btn.disabled = false;
-    }
+    } catch(e){ btn.innerHTML = orig; btn.disabled = false; }
   }
 
-  async function sendReminders() {
-    const btn = document.querySelector('.reminder-btn');
+  async function sendReminders(){
+    var btn = document.querySelector('.reminder-btn');
     btn.disabled = true;
     btn.innerHTML = '<span style="width:12px;height:12px;border:2px solid rgba(245,200,66,0.3);border-top-color:#f5c842;border-radius:50%;animation:spin .7s linear infinite;display:inline-block;vertical-align:middle;margin-right:6px;"></span> Sending…';
     try {
-      const r = await fetch('/mee-admin/bookings/send-reminders', { method:'POST', credentials:'include' });
-      const d = await r.json();
-      if (d.success) {
-        btn.innerHTML = `<i class="bi bi-check-circle-fill"></i> Sent ${d.sent24+d.sentImmediate} reminders`;
+      var r = await fetch('/mee-admin/bookings/send-reminders', { method:'POST', credentials:'include' });
+      var d = await r.json();
+      if(d.success){
+        btn.innerHTML = '<i class="bi bi-check-circle-fill"></i> Sent '+(d.sent24+d.sentImmediate)+' reminders';
         btn.style.color = '#00FF88'; btn.style.borderColor = 'rgba(0,255,136,0.35)';
-      } else { btn.innerHTML = '<i class="bi bi-x-circle-fill"></i> Error'; btn.style.color='#FF4444'; }
-    } catch(e) { btn.innerHTML = '<i class="bi bi-exclamation-circle-fill"></i> Network Error'; btn.style.color='#FF4444'; }
+      } else { btn.innerHTML = '<i class="bi bi-x-circle-fill"></i> Error'; btn.style.color = '#FF4444'; }
+    } catch(e){ btn.innerHTML = '<i class="bi bi-exclamation-circle-fill"></i> Network Error'; btn.style.color = '#FF4444'; }
     btn.disabled = false;
-    setTimeout(() => { btn.innerHTML = '<i class="bi bi-send-fill"></i> Send Bulk Reminders'; btn.style.color=''; btn.style.borderColor=''; }, 4000);
+    setTimeout(function(){ btn.innerHTML = '<i class="bi bi-send-fill"></i> Send Bulk Reminders'; btn.style.color = ''; btn.style.borderColor = ''; }, 4000);
   }
 </script>
+
 </body>
 </html>

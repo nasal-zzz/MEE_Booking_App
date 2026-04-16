@@ -2,21 +2,25 @@
 
   const nodemailer = require('nodemailer');
 
-  // ── Lazy transporter (avoids crash if SMTP not configured) ──────────────────
+
   let _transporter = null;
-  const getTransporter = () => {
-    if (_transporter) return _transporter;
-    _transporter = nodemailer.createTransport({
-      host:   process.env.SMTP_HOST || 'smtp.gmail.com',
-      port:   parseInt(process.env.SMTP_PORT) || 587,
-      secure: false,
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-      },
-    });
-    return _transporter;
-  };
+const getTransporter = () => {
+  if (_transporter) return _transporter;
+  
+  const port = parseInt(process.env.SMTP_PORT) || 465;
+  
+  _transporter = nodemailer.createTransport({
+    host:   process.env.SMTP_HOST || 'smtpout.secureserver.net',
+    port:   port,
+    secure: port === 465,   // ← true for 465, false for 587
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
+    },
+    tls: { rejectUnauthorized: false },
+  });
+  return _transporter;
+};
 
   // ── 1. Booking Confirmation (with PDF ticket attachment) ────────────────────
   const sendBookingConfirmation = async ({ to, name, booking, event }) => {
@@ -111,13 +115,14 @@
     }
 
     await getTransporter().sendMail({
-      from:        `"Melattur Entertainment Events" <${process.env.SMTP_USER}>`,
+      // from:        `"Melattur Entertainment Events" <${process.env.SMTP_USER}>`,
+      from: `"Melattur Entertainment Events" <${process.env.SMTP_FROM_EMAIL}>`,
       envelope: {
       from: process.env.BOUNCE_EMAIL || process.env.SMTP_USER,  // ← ADD THIS
       to,
     },
       to,
-      subject:     `🎟 Your Tickets — ${event.name} [${booking.bookingRef}]`,
+      subject:     ` Your Tickets — ${event.name} [${booking.bookingRef}]`,
       html,
       attachments: pdfAttachment ? [pdfAttachment] : [],
     });
@@ -132,7 +137,8 @@
       return;
     }
     await getTransporter().sendMail({
-      from:    `"Melattur Entertainment Events" <${process.env.SMTP_USER}>`,
+      // from:    `"Melattur Entertainment Events" <${process.env.SMTP_USER}>`,
+      from: `"Melattur Entertainment Events" <${process.env.SMTP_FROM_EMAIL}>`,
       envelope: {
       from: process.env.BOUNCE_EMAIL || process.env.SMTP_USER,  // ← ADD THIS
       to,
@@ -169,7 +175,8 @@
       return;
     }
     await getTransporter().sendMail({
-      from:    `"Melattur Entertainment Events" <${process.env.SMTP_USER}>`,
+      // from:    `"Melattur Entertainment Events" <${process.env.SMTP_USER}>`,
+      from: `"Melattur Entertainment Events" <${process.env.SMTP_FROM_EMAIL}>`,
       envelope: {
       from: process.env.BOUNCE_EMAIL || process.env.SMTP_USER,  // ← ADD THIS
       to,

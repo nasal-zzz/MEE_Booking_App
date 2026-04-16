@@ -303,11 +303,7 @@
           document.querySelector('.resend-area').style.display = 'none';
           document.getElementById('successAnim').style.display = 'block';
           setTimeout(() => {
-            if (data.showEmailPopup) {
-              showEmailPopup(data.redirect || '/');
-            } else {
-              window.location.replace(data.redirect || '/');
-            }
+            window.location.replace(data.redirect || '/');
           }, 1500);
         } else {
           // Shake and show error
@@ -343,37 +339,6 @@
       }
     }, 1000);
 
-    // async function doResend() {
-    //   resendBtn.textContent = 'Sending...';
-    //   resendBtn.disabled = true;
-    //   try {
-    //     const res = await fetch('/auth/resend-otp', {
-    //       method: 'POST',
-    //       headers: { 'Content-Type': 'application/json' },
-    //     });
-    //     const data = await res.json();
-    //     if (data.success) {
-    //       showStatus('success-msg', 'New OTP sent to your WhatsApp!');
-    //       boxes.forEach(b => { b.value = ''; b.classList.remove('filled', 'has-error', 'is-success'); b.disabled = false; });
-    //       boxes[0].focus();
-    //       // Restart timer
-    //       timeLeft = 30;
-    //       timerCount.textContent = 30;
-    //       timerDisplay.style.display = 'inline';
-    //       resendBtn.classList.remove('visible');
-    //       resendBtn.disabled = false;
-    //       resendBtn.textContent = 'Resend OTP';
-    //     } else {
-    //       showStatus('error', data.message || 'Failed to resend. Try again.');
-    //       resendBtn.disabled = false;
-    //       resendBtn.textContent = 'Resend OTP';
-    //     }
-    //   } catch(e) {
-    //     showStatus('error', 'Network error.');
-    //     resendBtn.disabled = false;
-    //     resendBtn.textContent = 'Resend OTP';
-    //   }
-    // }
 
     async function doResend() {
   resendBtn.textContent = 'Sending...';
@@ -416,102 +381,6 @@
   }
 }
   </script>
-
-<!-- Email Popup (#14) -->
-<div class="email-overlay" id="emailOverlay">
-  <div class="email-popup">
-    <div class="email-popup-bar"></div>
-    <div class="email-popup-inner">
-      <div class="email-popup-icon">📧</div>
-      <div class="email-popup-title">ADD YOUR EMAIL</div>
-      <p class="email-popup-sub">Your phone is verified! Add an email to get your tickets and booking updates.</p>
-      <div class="email-popup-why">
-        <span>Why add email?</span><br/>
-        ✉️ Receive PDF tickets in your inbox<br/>
-        🔔 Get booking confirmation instantly<br/>
-        📅 Event reminders &amp; updates
-      </div>
-      <div class="email-inp-wrap">
-        <input class="email-inp" type="email" id="emailPopupInp" placeholder="you@example.com" autocomplete="email" inputmode="email"/>
-      </div>
-      <div class="email-err" id="emailPopupErr"></div>
-      <div class="email-popup-btns">
-        <button class="btn-save-email" id="saveEmailBtn" onclick="submitEmail()">
-          <i class="bi bi-envelope-check-fill"></i> Save Email &amp; Continue
-        </button>
-        <button class="btn-skip-email" onclick="skipEmail()">Skip for now — I'll add it later</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<script>
-  let _emailRedirect = '/';
-
-  function showEmailPopup(redirectUrl) {
-    _emailRedirect = redirectUrl || '/';
-    document.getElementById('emailOverlay').classList.add('show');
-    setTimeout(() => document.getElementById('emailPopupInp').focus(), 200);
-  }
-
-  async function submitEmail() {
-    const inp    = document.getElementById('emailPopupInp');
-    const errEl  = document.getElementById('emailPopupErr');
-    const btn    = document.getElementById('saveEmailBtn');
-    const email  = inp.value.trim();
-    errEl.textContent = '';
-    inp.classList.remove('has-err');
-
-    if (!email) {
-      errEl.textContent = 'Please enter your email address.';
-      inp.classList.add('has-err');
-      inp.focus();
-      return;
-    }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      errEl.textContent = 'Enter a valid email address.';
-      inp.classList.add('has-err');
-      inp.focus();
-      return;
-    }
-
-    btn.disabled = true;
-    btn.innerHTML = '<span style="width:16px;height:16px;border:2px solid rgba(0,0,0,0.25);border-top-color:#000;border-radius:50%;animation:spin 0.7s linear infinite;display:inline-block;"></span> Saving…';
-
-    try {
-      const res  = await fetch('/auth/save-email', {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        btn.innerHTML = '✓ Saved!';
-        setTimeout(() => window.location.replace(_emailRedirect), 700);
-      } else {
-        errEl.textContent = data.message || 'Could not save email. Try again.';
-        inp.classList.add('has-err');
-        btn.disabled = false;
-        btn.innerHTML = '<i class="bi bi-envelope-check-fill"></i> Save Email & Continue';
-      }
-    } catch(e) {
-      errEl.textContent = 'Network error. Please try again.';
-      btn.disabled = false;
-      btn.innerHTML = '<i class="bi bi-envelope-check-fill"></i> Save Email & Continue';
-    }
-  }
-
-  function skipEmail() {
-    document.getElementById('emailOverlay').classList.remove('show');
-    window.location.replace(_emailRedirect);
-  }
-
-  // Enter key submits
-  document.getElementById('emailPopupInp').addEventListener('keydown', e => {
-    if (e.key === 'Enter') submitEmail();
-  });
-</script>
 
   <script>
     // Back-button guard — if session token exists, go forward not back
