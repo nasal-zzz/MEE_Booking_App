@@ -68,6 +68,7 @@ const bookingSchema = new mongoose.Schema({
   reminderImmediateSentAt: { type: Date, default: null },
   reminder24SentAt: { type: Date, default: null },
   notifiedFailedAt: { type: Date, default: null },
+  confirmationResentAt: { type: Date, default: null },
 }, { timestamps: true });
 
 // ── Index for QR retry jobs: find all paid bookings where QR generation failed ──

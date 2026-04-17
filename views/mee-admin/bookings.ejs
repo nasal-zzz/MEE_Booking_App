@@ -52,17 +52,12 @@
     .b-paid{background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.25);color:#00FF88;}
     .b-pending{background:rgba(245,200,66,0.08);border:1px solid rgba(245,200,66,0.3);color:#f5c842;}
     .b-failed{background:rgba(255,68,68,0.08);border:1px solid rgba(255,68,68,0.3);color:#FF4444;}
-    /* Send msg button */
-    .btn-msg{display:inline-flex;align-items:center;gap:0.3rem;padding:0.3rem 0.65rem;border-radius:5px;font-size:0.7rem;font-weight:700;cursor:pointer;border:1px solid rgba(157,78,221,0.35);background:rgba(157,78,221,0.08);color:#9D4EDD;font-family:inherit;transition:all 0.15s;}
-    .btn-msg:hover{background:rgba(157,78,221,0.18);}
-    .btn-msg:disabled{opacity:0.5;cursor:not-allowed;}
+    /* Notified badge */
+    .notified-badge{display:inline-flex;align-items:center;gap:0.25rem;font-family:'Space Mono',monospace;font-size:0.56rem;letter-spacing:0.5px;padding:0.18rem 0.5rem;border-radius:8px;background:rgba(0,200,255,0.08);border:1px solid rgba(0,200,255,0.22);color:#00c8ff;margin-top:4px;}
     .empty-row{text-align:center;padding:2.5rem;color:#444;}
     @media(max-width:900px){.admin-layout{grid-template-columns:1fr;}.sidebar{display:none;}}
     @keyframes spin{to{transform:rotate(360deg)}}
-    .btn-back-dash{display:inline-flex;align-items:center;gap:0.3rem;color:var(--muted);text-decoration:none;font-size:0.78rem;font-family:'Space Mono',monospace;letter-spacing:1px;padding:0.35rem 0.75rem;border:1px solid var(--border);border-radius:5px;background:rgba(255,255,255,0.03);margin-bottom:1.5rem;transition:all 0.15s;}
-    .btn-back-dash:hover{color:#fff;border-color:rgba(255,255,255,0.2);background:rgba(255,255,255,0.06);}
-  
-    /* ── Export ── */
+    /* Export */
     .export-btn{display:inline-flex;align-items:center;gap:0.5rem;padding:0.6rem 1.2rem;background:rgba(0,255,136,0.07);border:1px solid rgba(0,255,136,0.28);border-radius:7px;color:#00FF88;font-family:'Space Mono',monospace;font-size:0.72rem;font-weight:700;cursor:pointer;transition:all 0.2s;letter-spacing:0.5px;white-space:nowrap;}
     .export-btn:hover{background:rgba(0,255,136,0.15);border-color:rgba(0,255,136,0.5);}
     .ex-sub{font-size:0.72rem;color:#555;font-family:'Space Mono',monospace;margin-bottom:1rem;}
@@ -84,6 +79,76 @@
     .btn-do-ex{display:inline-flex;align-items:center;gap:0.45rem;padding:0.55rem 1.3rem;background:rgba(0,255,136,0.09);border:1px solid rgba(0,255,136,0.38);border-radius:7px;color:#00FF88;font-family:'Space Mono',monospace;font-size:0.76rem;font-weight:700;cursor:pointer;transition:all 0.2s;}
     .btn-do-ex:hover{background:rgba(0,255,136,0.17);}
     .btn-do-ex:disabled{opacity:0.4;cursor:not-allowed;}
+
+    /* ── Reminder Modal ── */
+    .rmodal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.82);backdrop-filter:blur(4px);z-index:2000;align-items:center;justify-content:center;padding:1rem;}
+    .rmodal-bg.open{display:flex;}
+    .rmodal{background:#14141C;border:1px solid rgba(255,255,255,0.08);border-radius:14px;width:100%;max-width:640px;max-height:88vh;display:flex;flex-direction:column;position:relative;overflow:hidden;}
+    .rmodal-head{padding:1.4rem 1.6rem 1rem;border-bottom:1px solid rgba(255,255,255,0.07);flex-shrink:0;}
+    .rmodal-head h3{font-family:'Poppins',sans-serif;font-size:1rem;letter-spacing:1px;margin-bottom:0.2rem;}
+    .rmodal-head p{font-size:0.72rem;color:#666;font-family:'Space Mono',monospace;}
+    .rmodal-close{position:absolute;top:1rem;right:1rem;background:none;border:none;color:#666;cursor:pointer;font-size:1rem;}
+    .rmodal-close:hover{color:#fff;}
+    .rmodal-toolbar{display:flex;align-items:center;gap:0.7rem;padding:0.8rem 1.6rem;border-bottom:1px solid rgba(255,255,255,0.05);flex-shrink:0;flex-wrap:wrap;}
+    .rmodal-search{flex:1;min-width:140px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:6px;color:#fff;padding:0.45rem 0.8rem;font-family:'Outfit',sans-serif;font-size:0.82rem;outline:none;}
+    .rmodal-search:focus{border-color:#9D4EDD;}
+    .rm-sel-lnk{background:none;border:none;color:#9D4EDD;font-size:0.68rem;font-family:'Space Mono',monospace;cursor:pointer;text-decoration:underline;padding:0;white-space:nowrap;}
+    .rmodal-body{overflow-y:auto;flex:1;padding:0.5rem 0;}
+    .ru-row{display:flex;align-items:center;gap:0.8rem;padding:0.7rem 1.6rem;border-bottom:1px solid rgba(255,255,255,0.03);cursor:pointer;transition:background 0.12s;}
+    .ru-row:hover{background:rgba(255,255,255,0.02);}
+    .ru-row:last-child{border-bottom:none;}
+    .ru-check{width:16px;height:16px;accent-color:#9D4EDD;cursor:pointer;flex-shrink:0;}
+    .ru-info{flex:1;min-width:0;}
+    .ru-name{font-size:0.85rem;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .ru-phone{font-family:'Space Mono',monospace;font-size:0.68rem;color:#777;margin-top:1px;}
+    .ru-meta{display:flex;gap:0.5rem;align-items:center;flex-shrink:0;flex-wrap:wrap;}
+    .ru-pill{font-family:'Space Mono',monospace;font-size:0.58rem;padding:0.15rem 0.5rem;border-radius:8px;white-space:nowrap;}
+    .ru-bcount{background:rgba(157,78,221,0.1);border:1px solid rgba(157,78,221,0.25);color:#c084fc;}
+    .ru-notified{background:rgba(0,200,255,0.08);border:1px solid rgba(0,200,255,0.22);color:#00c8ff;}
+    .ru-unsent{background:rgba(255,200,0,0.07);border:1px solid rgba(255,200,0,0.2);color:#f5c842;}
+    .rmodal-foot{padding:1rem 1.6rem;border-top:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;justify-content:space-between;gap:0.8rem;flex-shrink:0;flex-wrap:wrap;}
+    .rfoot-info{font-family:'Space Mono',monospace;font-size:0.68rem;color:#555;}
+    .rm-loading{text-align:center;padding:2.5rem;color:#444;font-size:0.82rem;}
+    .rm-loading i{font-size:1.8rem;display:block;margin-bottom:0.7rem;opacity:0.3;}
+    .btn-send-rm{display:inline-flex;align-items:center;gap:0.45rem;padding:0.55rem 1.3rem;background:rgba(245,200,66,0.1);border:1px solid rgba(245,200,66,0.38);border-radius:7px;color:#f5c842;font-family:'Space Mono',monospace;font-size:0.75rem;font-weight:700;cursor:pointer;transition:all 0.2s;}
+    .btn-send-rm:hover{background:rgba(245,200,66,0.2);}
+    .btn-send-rm:disabled{opacity:0.4;cursor:not-allowed;}
+  
+    /* Resend button */
+.resend-btn{display:inline-flex;align-items:center;gap:0.5rem;padding:0.6rem 1.2rem;background:rgba(157,78,221,0.1);border:1px solid rgba(157,78,221,0.35);border-radius:7px;color:#c084fc;font-size:0.82rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all 0.15s;}
+.resend-btn:hover{background:rgba(157,78,221,0.2);}
+
+/* Resend Modal — reuses rmodal pattern */
+.rsmodal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.82);backdrop-filter:blur(4px);z-index:2100;align-items:center;justify-content:center;padding:1rem;}
+.rsmodal-bg.open{display:flex;}
+.rsmodal{background:#14141C;border:1px solid rgba(255,255,255,0.08);border-radius:14px;width:100%;max-width:700px;max-height:88vh;display:flex;flex-direction:column;position:relative;overflow:hidden;}
+.rsmodal-head{padding:1.4rem 1.6rem 1rem;border-bottom:1px solid rgba(255,255,255,0.07);flex-shrink:0;}
+.rsmodal-head h3{font-family:'Poppins',sans-serif;font-size:1rem;letter-spacing:1px;margin-bottom:0.2rem;}
+.rsmodal-head p{font-size:0.72rem;color:#666;font-family:'Space Mono',monospace;}
+.rsmodal-close{position:absolute;top:1rem;right:1rem;background:none;border:none;color:#666;cursor:pointer;font-size:1rem;}
+.rsmodal-close:hover{color:#fff;}
+.rsmodal-toolbar{display:flex;align-items:center;gap:0.7rem;padding:0.8rem 1.6rem;border-bottom:1px solid rgba(255,255,255,0.05);flex-shrink:0;flex-wrap:wrap;}
+.rsmodal-search{flex:1;min-width:140px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:6px;color:#fff;padding:0.45rem 0.8rem;font-family:'Outfit',sans-serif;font-size:0.82rem;outline:none;}
+.rsmodal-search:focus{border-color:#9D4EDD;}
+.rsmodal-body{overflow-y:auto;flex:1;padding:0.5rem 0;}
+.rs-row{display:flex;align-items:center;gap:0.8rem;padding:0.7rem 1.6rem;border-bottom:1px solid rgba(255,255,255,0.03);cursor:pointer;transition:background 0.12s;}
+.rs-row:hover{background:rgba(255,255,255,0.02);}
+.rs-row:last-child{border-bottom:none;}
+.rs-check{width:16px;height:16px;accent-color:#9D4EDD;cursor:pointer;flex-shrink:0;}
+.rs-info{flex:1;min-width:0;}
+.rs-name{font-size:0.85rem;font-weight:600;color:#fff;}
+.rs-sub{font-family:'Space Mono',monospace;font-size:0.65rem;color:#777;margin-top:2px;}
+.rs-meta{display:flex;gap:0.4rem;align-items:center;flex-shrink:0;flex-wrap:wrap;}
+.rs-pill{font-family:'Space Mono',monospace;font-size:0.56rem;padding:0.15rem 0.5rem;border-radius:8px;white-space:nowrap;}
+.rs-pill-ref{background:rgba(157,78,221,0.1);border:1px solid rgba(157,78,221,0.25);color:#c084fc;}
+.rs-pill-sent{background:rgba(0,200,255,0.08);border:1px solid rgba(0,200,255,0.22);color:#00c8ff;}
+.rsmodal-foot{padding:1rem 1.6rem;border-top:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;justify-content:space-between;gap:0.8rem;flex-shrink:0;flex-wrap:wrap;}
+.rsfoot-info{font-family:'Space Mono',monospace;font-size:0.68rem;color:#555;}
+.btn-send-rs{display:inline-flex;align-items:center;gap:0.45rem;padding:0.55rem 1.3rem;background:rgba(157,78,221,0.1);border:1px solid rgba(157,78,221,0.38);border-radius:7px;color:#c084fc;font-family:'Space Mono',monospace;font-size:0.75rem;font-weight:700;cursor:pointer;transition:all 0.2s;}
+.btn-send-rs:hover{background:rgba(157,78,221,0.2);}
+.btn-send-rs:disabled{opacity:0.4;cursor:not-allowed;}
+.rs-warn{background:rgba(255,68,68,0.06);border:1px solid rgba(255,68,68,0.2);border-radius:8px;padding:0.6rem 1rem;margin:0.5rem 1.6rem;font-size:0.72rem;color:#FF6B6B;font-family:'Space Mono',monospace;display:none;}
+.rs-warn.show{display:block;}
   
   </style>
 </head>
@@ -98,11 +163,13 @@
         <button class="export-btn" onclick="openExportModal()">
           <i class="bi bi-file-earmark-spreadsheet-fill"></i> Export Excel
         </button>
-        <button class="reminder-btn" onclick="sendReminders()">
-
-        <i class="bi bi-send-fill"></i> Send Bulk Reminders
-      </button>
-    </div>
+        <button class="reminder-btn" onclick="openReminderModal()">
+          <i class="bi bi-whatsapp"></i> Send Event Reminders
+        </button>
+        <button class="resend-btn" onclick="openResendModal()">
+  <i class="bi bi-arrow-repeat"></i> Resend Confirmation
+</button>
+      </div>
     </div>
 
     <!-- Status filter pills -->
@@ -128,7 +195,7 @@
       <div style="overflow-x:auto;">
       <table id="bookingsTable">
         <thead><tr>
-          <th>Ref</th><th>User</th><th>Event</th><th>Tier</th><th>Qty</th><th>Subtotal</th><th>Discount</th><th>Fee</th><th>Total</th><th>Date</th><th>Status</th><th>Action</th>
+          <th>Ref</th><th>User</th><th>Event</th><th>Tier</th><th>Qty</th><th>Subtotal</th><th>Discount</th><th>Fee</th><th>Total</th><th>Date</th><th>Status</th><th>Reminder</th>
         </tr></thead>
         <tbody>
           <% bookings.forEach(function(b) { %>
@@ -160,10 +227,13 @@
               <% } %>
             </td>
             <td>
-              <% if(b.paymentStatus === 'pending' || b.paymentStatus === 'failed') { %>
-              <button class="btn-msg" id="msgbtn-<%= b._id %>" onclick="sendMsg('<%= b._id %>',this)">
-                <i class="bi bi-whatsapp"></i> Notify
-              </button>
+              <% if(b.paymentStatus === 'paid'){ %>
+                <% if(b.reminder24SentAt){ %>
+                  <div class="notified-badge"><i class="bi bi-check2-circle"></i> Reminded</div>
+                  <div style="font-size:0.58rem;color:#444;margin-top:3px;font-family:'Space Mono',monospace;"><%= new Date(b.reminder24SentAt).toLocaleDateString('en-IN',{day:'numeric',month:'short'}) %></div>
+                <% } else { %>
+                  <span style="font-size:0.68rem;color:#444;font-family:'Space Mono',monospace;">—</span>
+                <% } %>
               <% } %>
             </td>
           </tr>
@@ -199,6 +269,59 @@
     <div class="ex-footer">
       <span class="ex-count" id="exCount">—</span>
       <button class="btn-do-ex" id="exDoBtn" onclick="doExport()"><i class="bi bi-download"></i> Download Excel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Reminder Modal -->
+<div class="rmodal-bg" id="reminderModal">
+  <div class="rmodal">
+    <div class="rmodal-head">
+      <h3><i class="bi bi-whatsapp" style="color:#25D366;margin-right:6px;"></i>SEND EVENT REMINDERS</h3>
+      <p>Paid bookings grouped by phone — one WhatsApp reminder per number</p>
+      <button class="rmodal-close" onclick="closeReminderModal()"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <div class="rmodal-toolbar">
+      <input class="rmodal-search" id="rmSearch" placeholder="Search name or phone…" oninput="rmFilter()"/>
+      <button class="rm-sel-lnk" onclick="rmSelAll(true)">Select all</button>
+      <span style="color:#333;font-size:0.7rem;">·</span>
+      <button class="rm-sel-lnk" onclick="rmSelAll(false)">Clear all</button>
+      <button class="rm-sel-lnk" onclick="rmSelUnnotified()" style="color:#f5c842;">Unreminded only</button>
+    </div>
+    <div class="rmodal-body" id="rmBody">
+      <div class="rm-loading"><i class="bi bi-arrow-repeat" style="animation:spin 1s linear infinite;"></i>Loading paid bookings…</div>
+    </div>
+    <div class="rmodal-foot">
+      <span class="rfoot-info" id="rmFootInfo">—</span>
+      <button class="btn-send-rm" id="rmSendBtn" onclick="doSendReminders()" disabled>
+        <i class="bi bi-send-fill"></i> Send Reminders
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Resend Confirmation Modal -->
+<div class="rsmodal-bg" id="resendModal">
+  <div class="rsmodal">
+    <div class="rsmodal-head">
+      <h3><i class="bi bi-arrow-repeat" style="color:#c084fc;margin-right:6px;"></i>RESEND BOOKING CONFIRMATION</h3>
+      <p>Select paid bookings to resend WhatsApp confirmation with ticket PDF</p>
+      <button class="rsmodal-close" onclick="closeResendModal()"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <div class="rsmodal-toolbar">
+      <input class="rsmodal-search" id="rsSearch" placeholder="Search name, ref, event, phone…" oninput="rsFilter()"/>
+    </div>
+    <div class="rs-warn" id="rsWarn">
+      <i class="bi bi-exclamation-triangle-fill"></i> You have selected more than 5 bookings. Please confirm you want to resend to all of them.
+    </div>
+    <div class="rsmodal-body" id="rsBody">
+      <div class="rm-loading"><i class="bi bi-arrow-repeat" style="animation:spin 1s linear infinite;"></i>Loading paid bookings…</div>
+    </div>
+    <div class="rsmodal-foot">
+      <span class="rsfoot-info" id="rsFootInfo">—</span>
+      <button class="btn-send-rs" id="rsSendBtn" onclick="doResendConfirmations()" disabled>
+        <i class="bi bi-send-fill"></i> Resend Confirmation
+      </button>
     </div>
   </div>
 </div>
@@ -243,18 +366,13 @@
     updateExCount();
     document.getElementById('exportModal').style.display = 'flex';
   }
-
-  function closeExportModal(){
-    document.getElementById('exportModal').style.display = 'none';
-  }
-
+  function closeExportModal(){ document.getElementById('exportModal').style.display = 'none'; }
   function setExScope(scope, el){
     exScope = scope;
     document.querySelectorAll('.opt-pill').forEach(function(p){ p.classList.remove('active'); });
     el.classList.add('active');
     updateExCount();
   }
-
   function exSelAll(val){
     document.querySelectorAll('#exFieldsGrid .field-check').forEach(function(el){
       el.classList.toggle('selected', val);
@@ -262,35 +380,28 @@
     });
     updateExCount();
   }
-
   function getExRows(){
     var all = Array.from(document.querySelectorAll('#bookingsTable tbody tr'));
     if(exScope === 'all') return all;
     return all.filter(function(r){ return r.style.display !== 'none'; });
   }
-
   function updateExCount(){
     var rows = getExRows();
     var checked = document.querySelectorAll('#exFieldsGrid input:checked').length;
     document.getElementById('exCount').textContent = rows.length + ' bookings · ' + checked + ' fields';
     document.getElementById('exDoBtn').disabled = (checked === 0 || rows.length === 0);
   }
-
   function doExport(){
     var rows = getExRows();
     var keys = Array.from(document.querySelectorAll('#exFieldsGrid input:checked')).map(function(i){ return i.value; });
     var fields = EX_FIELDS.filter(function(f){ return keys.indexOf(f.key) !== -1; });
     if(!fields.length || !rows.length) return;
     var data = [fields.map(function(f){ return f.label; })];
-    rows.forEach(function(r){
-      data.push(fields.map(function(f){ return f.get(r) || ''; }));
-    });
+    rows.forEach(function(r){ data.push(fields.map(function(f){ return f.get(r) || ''; })); });
     function write(){
       var wb = XLSX.utils.book_new();
       var ws = XLSX.utils.aoa_to_sheet(data);
-      ws['!cols'] = data[0].map(function(_,i){
-        return { wch: Math.max(14, Math.max.apply(null, data.map(function(r){ return String(r[i]||'').length; }))) };
-      });
+      ws['!cols'] = data[0].map(function(_,i){ return { wch: Math.max(14, Math.max.apply(null, data.map(function(r){ return String(r[i]||'').length; }))) }; });
       XLSX.utils.book_append_sheet(wb, ws, 'Bookings');
       XLSX.writeFile(wb, 'bookings-export-' + new Date().toISOString().slice(0,10) + '.xlsx');
       closeExportModal();
@@ -302,21 +413,16 @@
       document.head.appendChild(s);
     } else { write(); }
   }
-
-  document.getElementById('exportModal').addEventListener('click', function(e){
-    if(e.target === this) closeExportModal();
-  });
+  document.getElementById('exportModal').addEventListener('click', function(e){ if(e.target === this) closeExportModal(); });
 
   // ── Filters ──
   var currentStatus = 'all';
-
   function filterStatus(status, el){
     currentStatus = status;
     document.querySelectorAll('.stat-pill').forEach(function(p){ p.classList.remove('active'); });
     el.classList.add('active');
     applyFilters();
   }
-
   function applyFilters(){
     var q = document.getElementById('searchInput').value.toLowerCase();
     var visible = 0;
@@ -330,40 +436,273 @@
     document.getElementById('emptyMsg').style.display = visible === 0 ? 'block' : 'none';
   }
 
-  async function sendMsg(bookingId, btn){
-    btn.disabled = true;
-    var orig = btn.innerHTML;
-    btn.innerHTML = '<span style="width:10px;height:10px;border:2px solid rgba(157,78,221,0.3);border-top-color:#9D4EDD;border-radius:50%;animation:spin .7s linear infinite;display:inline-block;"></span>';
+  // ── Reminder Modal ──
+  var rmEntries = [];   // full list from API
+  var rmFiltered = [];  // after search
+
+  async function openReminderModal(){
+    document.getElementById('reminderModal').classList.add('open');
+    document.getElementById('rmBody').innerHTML = '<div class="rm-loading"><i class="bi bi-arrow-repeat" style="animation:spin 1s linear infinite;"></i>Loading paid bookings…</div>';
+    document.getElementById('rmSendBtn').disabled = true;
+    document.getElementById('rmFootInfo').textContent = '—';
+    document.getElementById('rmSearch').value = '';
+
     try {
-      var r = await fetch('/mee-admin/bookings/'+bookingId+'/send-message', { method:'POST', credentials:'include' });
+      var r = await fetch('/mee-admin/bookings/reminder-stats', { credentials: 'include' });
       var d = await r.json();
       if(d.success){
-        btn.innerHTML = '<i class="bi bi-check-circle-fill"></i> Sent';
-        btn.style.color = '#00FF88'; btn.style.borderColor = 'rgba(0,255,136,0.3)'; btn.style.background = 'rgba(0,255,136,0.07)';
-        setTimeout(function(){ btn.innerHTML = orig; btn.style.cssText = ''; btn.disabled = false; }, 3000);
+        rmEntries = d.entries || [];
+        rmFiltered = rmEntries.slice();
+        renderRmList();
       } else {
-        btn.innerHTML = '<i class="bi bi-x-circle-fill"></i> Failed';
-        btn.style.color = '#FF4444';
-        setTimeout(function(){ btn.innerHTML = orig; btn.style.cssText = ''; btn.disabled = false; }, 3000);
+        document.getElementById('rmBody').innerHTML = '<div class="rm-loading"><i class="bi bi-exclamation-circle"></i>Failed to load: ' + (d.message||'Unknown error') + '</div>';
       }
-    } catch(e){ btn.innerHTML = orig; btn.disabled = false; }
+    } catch(e){
+      document.getElementById('rmBody').innerHTML = '<div class="rm-loading"><i class="bi bi-exclamation-circle"></i>Network error.</div>';
+    }
   }
 
-  async function sendReminders(){
-    var btn = document.querySelector('.reminder-btn');
+  function closeReminderModal(){
+    document.getElementById('reminderModal').classList.remove('open');
+  }
+
+  function renderRmList(){
+    if(!rmFiltered.length){
+      document.getElementById('rmBody').innerHTML = '<div class="rm-loading"><i class="bi bi-inbox"></i>No paid bookings found.</div>';
+      updateRmFoot();
+      return;
+    }
+    var html = '';
+    rmFiltered.forEach(function(e){
+      var notifiedHtml = e.notifiedAt
+        ? '<span class="ru-pill ru-notified"><i class="bi bi-check2"></i> Reminded ' + new Date(e.notifiedAt).toLocaleDateString('en-IN',{day:'numeric',month:'short'}) + '</span>'
+        : '<span class="ru-pill ru-unsent"><i class="bi bi-clock"></i> Not reminded</span>';
+      html += '<div class="ru-row" onclick="rmToggle(\''+e.phone+'\',this)">'
+        + '<input type="checkbox" class="ru-check rm-cb" data-phone="'+e.phone+'" onclick="event.stopPropagation();rmToggle(\''+e.phone+'\',this.closest(\'.ru-row\'))">'
+        + '<div class="ru-info"><div class="ru-name">'+escHtml(e.name)+'</div><div class="ru-phone">+91 '+e.phone+'</div></div>'
+        + '<div class="ru-meta">'
+        + '<span class="ru-pill ru-bcount"><i class="bi bi-ticket-perforated"></i> '+e.bookingCount+' booking'+(e.bookingCount>1?'s':'')+'</span>'
+        + notifiedHtml
+        + '</div>'
+        + '</div>';
+    });
+    document.getElementById('rmBody').innerHTML = html;
+    updateRmFoot();
+  }
+
+  function rmToggle(phone, row){
+    var cb = row.querySelector('.rm-cb') || row;
+    if(cb.tagName === 'INPUT'){
+      // toggled via row click, manually flip
+      cb.checked = !cb.checked;
+    }
+    row.style.background = cb.checked ? 'rgba(157,78,221,0.05)' : '';
+    updateRmFoot();
+  }
+
+  function rmSelAll(val){
+    document.querySelectorAll('.rm-cb').forEach(function(cb){
+      cb.checked = val;
+      cb.closest('.ru-row').style.background = val ? 'rgba(157,78,221,0.05)' : '';
+    });
+    updateRmFoot();
+  }
+
+  function rmSelUnnotified(){
+    document.querySelectorAll('.rm-cb').forEach(function(cb){
+      var phone = cb.dataset.phone;
+      var entry = rmEntries.find(function(e){ return e.phone === phone; });
+      var sel = entry && !entry.notifiedAt;
+      cb.checked = sel;
+      cb.closest('.ru-row').style.background = sel ? 'rgba(157,78,221,0.05)' : '';
+    });
+    updateRmFoot();
+  }
+
+  function rmFilter(){
+    var q = document.getElementById('rmSearch').value.toLowerCase().trim();
+    rmFiltered = !q ? rmEntries.slice() : rmEntries.filter(function(e){
+      return e.name.toLowerCase().includes(q) || e.phone.includes(q);
+    });
+    renderRmList();
+  }
+
+  function updateRmFoot(){
+    var checked = document.querySelectorAll('.rm-cb:checked').length;
+    var total   = document.querySelectorAll('.rm-cb').length;
+    document.getElementById('rmFootInfo').textContent = checked + ' of ' + total + ' selected';
+    document.getElementById('rmSendBtn').disabled = checked === 0;
+  }
+
+  async function doSendReminders(){
+    var phones = Array.from(document.querySelectorAll('.rm-cb:checked')).map(function(cb){ return cb.dataset.phone; });
+    if(!phones.length) return;
+
+    var btn = document.getElementById('rmSendBtn');
     btn.disabled = true;
     btn.innerHTML = '<span style="width:12px;height:12px;border:2px solid rgba(245,200,66,0.3);border-top-color:#f5c842;border-radius:50%;animation:spin .7s linear infinite;display:inline-block;vertical-align:middle;margin-right:6px;"></span> Sending…';
+
     try {
-      var r = await fetch('/mee-admin/bookings/send-reminders', { method:'POST', credentials:'include' });
+      var r = await fetch('/mee-admin/bookings/send-bulk-reminder', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phones: phones }),
+      });
       var d = await r.json();
       if(d.success){
-        btn.innerHTML = '<i class="bi bi-check-circle-fill"></i> Sent '+(d.sent24+d.sentImmediate)+' reminders';
-        btn.style.color = '#00FF88'; btn.style.borderColor = 'rgba(0,255,136,0.35)';
-      } else { btn.innerHTML = '<i class="bi bi-x-circle-fill"></i> Error'; btn.style.color = '#FF4444'; }
-    } catch(e){ btn.innerHTML = '<i class="bi bi-exclamation-circle-fill"></i> Network Error'; btn.style.color = '#FF4444'; }
-    btn.disabled = false;
-    setTimeout(function(){ btn.innerHTML = '<i class="bi bi-send-fill"></i> Send Bulk Reminders'; btn.style.color = ''; btn.style.borderColor = ''; }, 4000);
+        btn.innerHTML = '<i class="bi bi-check-circle-fill"></i> Sent ' + d.sent + ' · Skipped ' + d.skipped;
+        btn.style.color = '#00FF88';
+        btn.style.borderColor = 'rgba(0,255,136,0.35)';
+        btn.style.background = 'rgba(0,255,136,0.08)';
+        // Refresh list to update notified status
+        setTimeout(function(){
+          btn.innerHTML = '<i class="bi bi-send-fill"></i> Send Reminders';
+          btn.style.cssText = '';
+          openReminderModal();
+        }, 2500);
+      } else {
+        btn.innerHTML = '<i class="bi bi-x-circle-fill"></i> Error';
+        btn.style.color = '#FF4444';
+        setTimeout(function(){ btn.innerHTML = '<i class="bi bi-send-fill"></i> Send Reminders'; btn.style.cssText = ''; btn.disabled = false; }, 3000);
+      }
+    } catch(e){
+      btn.innerHTML = '<i class="bi bi-exclamation-circle-fill"></i> Network Error';
+      btn.style.color = '#FF4444';
+      setTimeout(function(){ btn.innerHTML = '<i class="bi bi-send-fill"></i> Send Reminders'; btn.style.cssText = ''; btn.disabled = false; }, 3000);
+    }
   }
+
+  document.getElementById('reminderModal').addEventListener('click', function(e){ if(e.target === this) closeReminderModal(); });
+
+  // ── Resend Confirmation Modal ──
+var rsEntries   = [];
+var rsFiltered  = [];
+// Change the prefix below for superadmin: '/superadmin'
+var RS_PREFIX = '/mee-admin';  // ← '/superadmin' in superadmin page
+
+async function openResendModal() {
+  document.getElementById('resendModal').classList.add('open');
+  document.getElementById('rsBody').innerHTML = '<div class="rm-loading"><i class="bi bi-arrow-repeat" style="animation:spin 1s linear infinite;"></i>Loading paid bookings…</div>';
+  document.getElementById('rsSendBtn').disabled = true;
+  document.getElementById('rsFootInfo').textContent = '—';
+  document.getElementById('rsSearch').value = '';
+  document.getElementById('rsWarn').classList.remove('show');
+
+  try {
+    var r = await fetch(RS_PREFIX + '/bookings/resend-stats', { credentials: 'include' });
+    var d = await r.json();
+    if (d.success) {
+      rsEntries  = d.entries || [];
+      rsFiltered = rsEntries.slice();
+      renderRsList();
+    } else {
+      document.getElementById('rsBody').innerHTML = '<div class="rm-loading"><i class="bi bi-exclamation-circle"></i>Failed: ' + (d.message || 'Unknown error') + '</div>';
+    }
+  } catch (e) {
+    document.getElementById('rsBody').innerHTML = '<div class="rm-loading"><i class="bi bi-exclamation-circle"></i>Network error.</div>';
+  }
+}
+
+function closeResendModal() {
+  document.getElementById('resendModal').classList.remove('open');
+}
+
+function renderRsList() {
+  if (!rsFiltered.length) {
+    document.getElementById('rsBody').innerHTML = '<div class="rm-loading"><i class="bi bi-inbox"></i>No paid bookings found.</div>';
+    updateRsFoot();
+    return;
+  }
+  var html = '';
+  rsFiltered.forEach(function(e) {
+    var resentHtml = e.resentAt
+      ? '<span class="rs-pill rs-pill-sent"><i class="bi bi-check2"></i> Resent ' + new Date(e.resentAt).toLocaleDateString('en-IN', { day:'numeric', month:'short' }) + '</span>'
+      : '';
+    html += '<div class="rs-row" onclick="rsToggle(\'' + e.bookingId + '\', this)">'
+      + '<input type="checkbox" class="rs-check rs-cb" data-id="' + e.bookingId + '" onclick="event.stopPropagation();rsToggle(\'' + e.bookingId + '\',this.closest(\'.rs-row\'))">'
+      + '<div class="rs-info">'
+      + '<div class="rs-name">' + escHtml(e.name) + '</div>'
+      + '<div class="rs-sub">'
+      + escHtml(e.eventName) + ' · ' + escHtml(e.ticketType) + ' × ' + e.quantity
+      + (e.phone ? ' · +91 ' + e.phone : '')
+      + '</div>'
+      + '</div>'
+      + '<div class="rs-meta">'
+      + '<span class="rs-pill rs-pill-ref">' + escHtml(e.bookingRef) + '</span>'
+      + resentHtml
+      + '</div>'
+      + '</div>';
+  });
+  document.getElementById('rsBody').innerHTML = html;
+  updateRsFoot();
+}
+
+function rsToggle(id, row) {
+  var cb = row.querySelector('.rs-cb');
+  cb.checked = !cb.checked;
+  row.style.background = cb.checked ? 'rgba(157,78,221,0.06)' : '';
+  updateRsFoot();
+}
+
+function rsFilter() {
+  var q = document.getElementById('rsSearch').value.toLowerCase().trim();
+  rsFiltered = !q ? rsEntries.slice() : rsEntries.filter(function(e) {
+    return (e.name + ' ' + e.bookingRef + ' ' + e.eventName + ' ' + e.phone).toLowerCase().includes(q);
+  });
+  renderRsList();
+}
+
+function updateRsFoot() {
+  var checked = document.querySelectorAll('.rs-cb:checked').length;
+  var total   = document.querySelectorAll('.rs-cb').length;
+  document.getElementById('rsFootInfo').textContent = checked + ' of ' + total + ' selected';
+  document.getElementById('rsSendBtn').disabled = checked === 0;
+  // Warn if more than 5 selected
+  document.getElementById('rsWarn').classList.toggle('show', checked > 5);
+}
+
+async function doResendConfirmations() {
+  var ids = Array.from(document.querySelectorAll('.rs-cb:checked')).map(function(cb) { return cb.dataset.id; });
+  if (!ids.length) return;
+
+  var btn = document.getElementById('rsSendBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span style="width:12px;height:12px;border:2px solid rgba(192,132,252,0.3);border-top-color:#c084fc;border-radius:50%;animation:spin .7s linear infinite;display:inline-block;vertical-align:middle;margin-right:6px;"></span> Sending…';
+
+  try {
+    var r = await fetch(RS_PREFIX + '/bookings/resend-confirmation', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ bookingIds: ids }),
+    });
+    var d = await r.json();
+    if (d.success) {
+      btn.innerHTML = '<i class="bi bi-check-circle-fill"></i> Sent ' + d.sent + (d.failed ? ' · Failed ' + d.failed : '');
+      btn.style.color = '#00FF88';
+      btn.style.borderColor = 'rgba(0,255,136,0.35)';
+      btn.style.background = 'rgba(0,255,136,0.08)';
+      setTimeout(function() {
+        btn.innerHTML = '<i class="bi bi-send-fill"></i> Resend Confirmation';
+        btn.style.cssText = '';
+        openResendModal(); // refresh list to show new resentAt timestamps
+      }, 2500);
+    } else {
+      btn.innerHTML = '<i class="bi bi-x-circle-fill"></i> Error';
+      btn.style.color = '#FF4444';
+      setTimeout(function() { btn.innerHTML = '<i class="bi bi-send-fill"></i> Resend Confirmation'; btn.style.cssText = ''; btn.disabled = false; }, 3000);
+    }
+  } catch (e) {
+    btn.innerHTML = '<i class="bi bi-exclamation-circle-fill"></i> Network Error';
+    btn.style.color = '#FF4444';
+    setTimeout(function() { btn.innerHTML = '<i class="bi bi-send-fill"></i> Resend Confirmation'; btn.style.cssText = ''; btn.disabled = false; }, 3000);
+  }
+}
+
+document.getElementById('resendModal').addEventListener('click', function(e) { if (e.target === this) closeResendModal(); });
+
+  function escHtml(str){ return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 </script>
 
 </body>

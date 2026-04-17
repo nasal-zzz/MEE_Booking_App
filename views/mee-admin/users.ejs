@@ -13,12 +13,11 @@
     .admin-layout{display:grid;grid-template-columns:220px 1fr;min-height:100vh;}
     .main{padding:2rem;position:relative;z-index:1;overflow-x:hidden;}
 
-    /* ── Top bar ── */
     .page-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:1.5rem;}
     .page-title{font-family:'Poppins',sans-serif;font-size:1.8rem;letter-spacing:2px;line-height:1.1;}
     .page-title span{font-size:0.9rem;font-family:'Space Mono',monospace;color:var(--muted);letter-spacing:1px;display:block;margin-top:2px;}
+    .header-actions{display:flex;gap:0.6rem;flex-wrap:wrap;}
 
-    /* ── Summary cards ── */
     .summary-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:0.75rem;margin-bottom:1.5rem;}
     .sum-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1rem 1.2rem;}
     .sum-card .num{font-family:'Space Mono',monospace;font-size:1.5rem;font-weight:700;line-height:1;}
@@ -29,7 +28,6 @@
     .sum-card.c-blocked .num{color:var(--error);}
     .sum-card.c-new .num{color:var(--warn);}
 
-    /* ── Filter bar ── */
     .filter-bar{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1rem 1.2rem;margin-bottom:1rem;display:flex;flex-wrap:wrap;gap:0.75rem;align-items:center;}
     .filter-bar input,.filter-bar select{background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:0.55rem 0.9rem;font-family:'Outfit',sans-serif;font-size:0.85rem;outline:none;transition:border-color 0.15s;}
     .filter-bar input:focus,.filter-bar select:focus{border-color:var(--accent2);}
@@ -39,7 +37,6 @@
     .filter-reset{display:inline-flex;align-items:center;gap:0.35rem;padding:0.55rem 1rem;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:0.8rem;font-family:'Space Mono',monospace;cursor:pointer;transition:all 0.15s;white-space:nowrap;}
     .filter-reset:hover{border-color:rgba(255,255,255,0.2);color:#fff;}
 
-    /* ── Status pills ── */
     .pills-row{display:flex;gap:0.6rem;flex-wrap:wrap;margin-bottom:1.2rem;}
     .pill{display:inline-flex;align-items:center;gap:0.4rem;padding:0.4rem 0.85rem;border-radius:20px;font-size:0.75rem;font-weight:700;cursor:pointer;border:1px solid transparent;transition:all 0.15s;font-family:'Space Mono',monospace;letter-spacing:0.5px;}
     .pill-all{background:rgba(255,255,255,0.05);border-color:rgba(255,255,255,0.1);color:#fff;}
@@ -53,7 +50,6 @@
     .pill-google{background:rgba(66,133,244,0.07);border-color:rgba(66,133,244,0.25);color:#4285F4;}
     .pill-google.active,.pill-google:hover{background:rgba(66,133,244,0.15);}
 
-    /* ── Table ── */
     .table-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
     .tbl-wrap{overflow-x:auto;}
     table{width:100%;border-collapse:collapse;min-width:820px;}
@@ -63,13 +59,11 @@
     tr.is-blocked td{opacity:0.55;}
     tr:hover td{background:rgba(255,255,255,0.013);}
 
-    /* Avatar */
     .avatar{width:34px;height:34px;border-radius:50%;object-fit:cover;background:rgba(106,13,173,0.3);border:1px solid rgba(106,13,173,0.3);display:flex;align-items:center;justify-content:center;font-family:'Space Mono',monospace;font-size:0.7rem;font-weight:700;color:var(--accent2);text-transform:uppercase;flex-shrink:0;}
     .user-cell{display:flex;align-items:center;gap:0.65rem;}
     .user-name{font-weight:600;color:#fff;line-height:1.2;}
     .user-sub{font-size:0.68rem;color:var(--muted);font-family:'Space Mono',monospace;margin-top:1px;}
 
-    /* Badges */
     .badge{font-family:'Space Mono',monospace;font-size:0.52rem;letter-spacing:1px;padding:0.18rem 0.55rem;border-radius:10px;display:inline-block;}
     .b-verified{background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.25);color:var(--success);}
     .b-unverified{background:rgba(245,200,66,0.08);border:1px solid rgba(245,200,66,0.3);color:var(--warn);}
@@ -77,14 +71,12 @@
     .b-google{background:rgba(66,133,244,0.08);border:1px solid rgba(66,133,244,0.3);color:#4285F4;}
     .b-email{background:rgba(157,78,221,0.08);border:1px solid rgba(157,78,221,0.3);color:var(--accent2);}
 
-    /* Booking count */
     .bk-count{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;font-family:'Space Mono',monospace;font-size:0.72rem;font-weight:700;border:1px solid;}
     .bk-0{background:rgba(255,255,255,0.03);border-color:rgba(255,255,255,0.08);color:#444;}
     .bk-low{background:rgba(106,13,173,0.1);border-color:rgba(106,13,173,0.25);color:var(--accent2);}
     .bk-mid{background:rgba(0,255,136,0.08);border-color:rgba(0,255,136,0.25);color:var(--success);}
     .bk-high{background:rgba(245,200,66,0.1);border-color:rgba(245,200,66,0.3);color:var(--warn);}
 
-    /* Action buttons */
     .actions{display:flex;gap:0.4rem;align-items:center;}
     .btn-act{display:inline-flex;align-items:center;gap:0.3rem;padding:0.3rem 0.6rem;border-radius:5px;font-size:0.68rem;font-weight:700;cursor:pointer;border:1px solid;font-family:inherit;transition:all 0.15s;white-space:nowrap;}
     .btn-block{border-color:rgba(255,68,68,0.35);background:rgba(255,68,68,0.07);color:var(--error);}
@@ -97,11 +89,10 @@
     .btn-view:hover{background:rgba(157,78,221,0.16);}
     .btn-act:disabled{opacity:0.4;cursor:not-allowed;}
 
-    /* Empty */
     .empty-state{text-align:center;padding:3.5rem 1rem;color:#444;}
     .empty-state i{font-size:2.5rem;display:block;margin-bottom:0.75rem;}
 
-    /* Modal */
+    /* ── Modals ── */
     .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:1000;align-items:center;justify-content:center;padding:1rem;}
     .modal-bg.open{display:flex;}
     .modal{background:var(--surface);border:1px solid var(--border);border-radius:12px;width:100%;max-width:460px;padding:1.5rem;position:relative;max-height:90vh;overflow-y:auto;}
@@ -113,11 +104,7 @@
     .detail-item .val{font-size:0.85rem;color:#fff;word-break:break-all;}
     .detail-item.full{grid-column:1/-1;}
     .modal-divider{border:none;border-top:1px solid var(--border);margin:1rem 0;}
-    .booking-mini{display:flex;flex-direction:column;gap:0.5rem;max-height:200px;overflow-y:auto;}
-    .booking-row{display:flex;align-items:center;justify-content:space-between;padding:0.5rem 0.7rem;background:rgba(255,255,255,0.03);border-radius:6px;font-size:0.78rem;}
-    .booking-row .bref{font-family:'Space Mono',monospace;font-size:0.65rem;color:var(--accent2);}
 
-    /* Confirm modal */
     .confirm-modal{max-width:380px;}
     .confirm-modal p{color:var(--muted);font-size:0.88rem;line-height:1.6;margin-bottom:1.2rem;}
     .confirm-modal strong{color:#fff;}
@@ -132,7 +119,6 @@
     .btn-confirm-success{border-color:rgba(0,255,136,0.5);background:rgba(0,255,136,0.1);color:var(--success);}
     .btn-confirm-success:hover{background:rgba(0,255,136,0.2);}
 
-    /* Toast */
     .toast{position:fixed;bottom:1.5rem;right:1.5rem;padding:0.75rem 1.2rem;border-radius:8px;font-size:0.82rem;font-weight:600;z-index:9999;display:none;align-items:center;gap:0.5rem;border:1px solid;animation:slideUp 0.25s ease;}
     .toast.show{display:flex;}
     .toast-success{background:rgba(0,255,136,0.1);border-color:rgba(0,255,136,0.35);color:var(--success);}
@@ -141,7 +127,6 @@
     @keyframes spin{to{transform:rotate(360deg)}}
     .spin{width:12px;height:12px;border:2px solid rgba(255,255,255,0.15);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:inline-block;}
 
-    /* Pagination */
     .pagination{display:flex;align-items:center;justify-content:space-between;padding:0.85rem 1.2rem;border-top:1px solid var(--border);font-size:0.78rem;color:var(--muted);flex-wrap:wrap;gap:0.5rem;}
     .pg-btns{display:flex;gap:0.4rem;}
     .pg-btn{padding:0.3rem 0.7rem;border-radius:5px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-family:'Space Mono',monospace;font-size:0.72rem;transition:all 0.15s;}
@@ -149,10 +134,13 @@
     .pg-btn.active{background:rgba(106,13,173,0.15);border-color:rgba(106,13,173,0.35);color:var(--accent2);}
     .pg-btn:disabled{opacity:0.3;cursor:not-allowed;}
 
-
     /* ── Export Button ── */
     .export-btn{display:inline-flex;align-items:center;gap:0.5rem;padding:0.6rem 1.2rem;background:rgba(0,255,136,0.07);border:1px solid rgba(0,255,136,0.3);border-radius:8px;color:var(--success);font-family:'Space Mono',monospace;font-size:0.78rem;font-weight:700;cursor:pointer;transition:all 0.2s;letter-spacing:0.5px;}
     .export-btn:hover{background:rgba(0,255,136,0.14);border-color:rgba(0,255,136,0.5);}
+
+    /* ── Promo Button ── */
+    .promo-btn{display:inline-flex;align-items:center;gap:0.5rem;padding:0.6rem 1.2rem;background:rgba(37,211,102,0.07);border:1px solid rgba(37,211,102,0.35);border-radius:8px;color:#25D366;font-family:'Space Mono',monospace;font-size:0.78rem;font-weight:700;cursor:pointer;transition:all 0.2s;letter-spacing:0.5px;}
+    .promo-btn:hover{background:rgba(37,211,102,0.14);border-color:rgba(37,211,102,0.6);}
 
     /* ── Export Modal ── */
     .export-modal{max-width:520px;}
@@ -177,7 +165,106 @@
     .btn-do-export:hover{background:rgba(0,255,136,0.18);}
     .btn-do-export:disabled{opacity:0.4;cursor:not-allowed;}
 
-    @media(max-width:900px){.admin-layout{grid-template-columns:1fr;}}
+    /* ════════════════════════════════
+       PROMO MODAL STYLES
+    ════════════════════════════════ */
+    .promo-modal{max-width:760px;padding:0;}
+
+    /* Header */
+    .pm-header{padding:1.5rem 1.5rem 1rem;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;}
+    .pm-title{font-family:'Poppins',sans-serif;font-size:1.15rem;letter-spacing:1px;display:flex;align-items:center;gap:0.5rem;}
+    .pm-title i{color:#25D366;}
+    .pm-sub{font-size:0.72rem;color:var(--muted);font-family:'Space Mono',monospace;margin-top:3px;}
+
+    /* Loading state */
+    .pm-loading{padding:3rem;text-align:center;color:var(--muted);}
+    .pm-loading .spin{width:24px;height:24px;border-width:3px;margin:0 auto 1rem;}
+
+    /* Body layout */
+    .pm-body{display:grid;grid-template-columns:1fr 280px;gap:0;min-height:420px;}
+
+    /* Left: user list */
+    .pm-list-panel{border-right:1px solid var(--border);display:flex;flex-direction:column;}
+    .pm-list-toolbar{padding:0.85rem 1rem;border-bottom:1px solid var(--border);display:flex;flex-wrap:wrap;gap:0.5rem;align-items:center;}
+    .pm-search{flex:1;min-width:150px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:0.4rem 0.7rem;font-size:0.8rem;font-family:'Outfit',sans-serif;outline:none;}
+    .pm-search:focus{border-color:var(--accent2);}
+    .pm-filter-select{background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:0.4rem 0.6rem;font-size:0.75rem;font-family:'Outfit',sans-serif;outline:none;cursor:pointer;}
+    .pm-filter-select option{background:#1a1a24;}
+
+    .pm-list-head{padding:0.5rem 1rem;display:flex;align-items:center;gap:0.75rem;border-bottom:1px solid var(--border);background:rgba(255,255,255,0.015);}
+    .pm-list-head label{font-family:'Space Mono',monospace;font-size:0.6rem;letter-spacing:1px;color:var(--muted);cursor:pointer;display:flex;align-items:center;gap:0.4rem;}
+    .pm-sel-count{margin-left:auto;font-family:'Space Mono',monospace;font-size:0.6rem;color:var(--accent2);}
+
+    .pm-user-list{flex:1;overflow-y:auto;max-height:360px;}
+    .pm-user-row{display:flex;align-items:center;gap:0.6rem;padding:0.65rem 1rem;border-bottom:1px solid rgba(255,255,255,0.03);cursor:pointer;transition:background 0.1s;}
+    .pm-user-row:hover{background:rgba(255,255,255,0.02);}
+    .pm-user-row.selected-row{background:rgba(37,211,102,0.04);}
+    .pm-user-row input[type=checkbox]{accent-color:#25D366;flex-shrink:0;}
+    .pm-user-info{flex:1;min-width:0;}
+    .pm-user-name{font-size:0.82rem;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .pm-user-phone{font-family:'Space Mono',monospace;font-size:0.65rem;color:var(--muted);}
+    .pm-sent-badge{flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:1px;}
+    .pm-sent-count{font-family:'Space Mono',monospace;font-size:0.6rem;padding:0.12rem 0.4rem;border-radius:8px;}
+    .pm-sent-0{background:rgba(255,255,255,0.04);color:#555;}
+    .pm-sent-1{background:rgba(37,211,102,0.08);color:#25D366;border:1px solid rgba(37,211,102,0.2);}
+    .pm-sent-2{background:rgba(245,200,66,0.08);color:var(--warn);border:1px solid rgba(245,200,66,0.2);}
+    .pm-sent-3plus{background:rgba(255,68,68,0.08);color:var(--error);border:1px solid rgba(255,68,68,0.2);}
+    .pm-last-sent{font-size:0.55rem;color:#555;font-family:'Space Mono',monospace;}
+
+    .pm-empty{padding:2rem;text-align:center;color:#444;font-size:0.8rem;}
+
+    /* Right: summary + controls */
+    .pm-right-panel{display:flex;flex-direction:column;padding:1.2rem;}
+    .pm-section-title{font-family:'Space Mono',monospace;font-size:0.58rem;letter-spacing:2px;color:var(--muted);margin-bottom:0.6rem;text-transform:uppercase;}
+
+    /* Message preview */
+    .pm-preview{background:rgba(37,211,102,0.04);border:1px solid rgba(37,211,102,0.15);border-radius:8px;padding:0.85rem;margin-bottom:1rem;font-size:0.72rem;line-height:1.65;color:#ccc;position:relative;}
+    .pm-preview::before{content:'WhatsApp Preview';font-family:'Space Mono',monospace;font-size:0.5rem;letter-spacing:1px;color:#25D366;display:block;margin-bottom:0.5rem;}
+
+    /* Stats row */
+    .pm-stats{display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-bottom:1rem;}
+    .pm-stat{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:6px;padding:0.6rem 0.7rem;text-align:center;}
+    .pm-stat .snum{font-family:'Space Mono',monospace;font-size:1.1rem;font-weight:700;}
+    .pm-stat .slbl{font-size:0.6rem;color:var(--muted);margin-top:2px;}
+    .pm-stat.s-total .snum{color:#fff;}
+    .pm-stat.s-unsent .snum{color:#25D366;}
+    .pm-stat.s-sent .snum{color:var(--warn);}
+    .pm-stat.s-multi .snum{color:var(--error);}
+
+    /* Filter chips */
+    .pm-filter-chips{display:flex;flex-wrap:wrap;gap:0.4rem;margin-bottom:1rem;}
+    .pm-chip{display:inline-flex;align-items:center;gap:0.3rem;padding:0.3rem 0.65rem;border-radius:14px;font-family:'Space Mono',monospace;font-size:0.62rem;cursor:pointer;border:1px solid;transition:all 0.15s;}
+    .pm-chip-all{border-color:rgba(255,255,255,0.15);background:rgba(255,255,255,0.06);color:#ddd;}
+    .pm-chip-all.active{border-color:rgba(255,255,255,0.35);background:rgba(255,255,255,0.12);color:#fff;}
+    .pm-chip-unsent{border-color:rgba(37,211,102,0.2);background:rgba(37,211,102,0.05);color:#25D366;}
+    .pm-chip-unsent.active{border-color:rgba(37,211,102,0.5);background:rgba(37,211,102,0.12);}
+    .pm-chip-sent{border-color:rgba(245,200,66,0.2);background:rgba(245,200,66,0.05);color:var(--warn);}
+    .pm-chip-sent.active{border-color:rgba(245,200,66,0.5);background:rgba(245,200,66,0.12);}
+    .pm-chip-multi{border-color:rgba(255,68,68,0.2);background:rgba(255,68,68,0.05);color:var(--error);}
+    .pm-chip-multi.active{border-color:rgba(255,68,68,0.5);background:rgba(255,68,68,0.12);}
+
+    /* Force toggle */
+    .pm-force-row{display:flex;align-items:center;gap:0.5rem;margin-bottom:1rem;padding:0.5rem 0.7rem;background:rgba(245,200,66,0.05);border:1px solid rgba(245,200,66,0.15);border-radius:6px;}
+    .pm-force-row input{accent-color:var(--warn);}
+    .pm-force-row label{font-size:0.72rem;color:var(--warn);cursor:pointer;line-height:1.4;}
+
+    /* Send button */
+    .btn-send-promo{width:100%;display:flex;align-items:center;justify-content:center;gap:0.5rem;padding:0.75rem;background:rgba(37,211,102,0.1);border:1px solid rgba(37,211,102,0.4);border-radius:8px;color:#25D366;font-family:'Space Mono',monospace;font-size:0.82rem;font-weight:700;cursor:pointer;transition:all 0.2s;margin-top:auto;}
+    .btn-send-promo:hover:not(:disabled){background:rgba(37,211,102,0.18);border-color:rgba(37,211,102,0.65);}
+    .btn-send-promo:disabled{opacity:0.35;cursor:not-allowed;}
+
+    /* Result panel */
+    .pm-result{padding:1rem;text-align:center;}
+    .pm-result-nums{display:grid;grid-template-columns:repeat(3,1fr);gap:0.5rem;margin:1rem 0;}
+    .pm-result-num{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:6px;padding:0.7rem;}
+    .pm-result-num .n{font-family:'Space Mono',monospace;font-size:1.4rem;font-weight:700;}
+    .pm-result-num .l{font-size:0.6rem;color:var(--muted);}
+    .pm-result-num.r-sent .n{color:#25D366;}
+    .pm-result-num.r-skip .n{color:var(--warn);}
+    .pm-result-num.r-fail .n{color:var(--error);}
+
+    @media(max-width:900px){.admin-layout{grid-template-columns:1fr;}.pm-body{grid-template-columns:1fr;}.pm-right-panel{border-top:1px solid var(--border);}.pm-list-panel{border-right:none;}}
+    @media(max-width:600px){.pm-body{grid-template-columns:1fr;}}
   </style>
 </head>
 <body>
@@ -193,9 +280,14 @@
         ALL USERS
         <span>REGISTERED ACCOUNTS — <%= users.length %> TOTAL</span>
       </div>
-       <button class="export-btn" onclick="openExportModal()">
-        <i class="bi bi-file-earmark-spreadsheet-fill"></i> Export Excel
-      </button>
+      <div class="header-actions">
+        <button class="promo-btn" onclick="openPromoModal()">
+          <i class="bi bi-whatsapp"></i> Bulk Promo
+        </button>
+        <button class="export-btn" onclick="openExportModal()">
+          <i class="bi bi-file-earmark-spreadsheet-fill"></i> Export Excel
+        </button>
+      </div>
     </div>
 
     <!-- Summary cards -->
@@ -410,27 +502,116 @@
   </main>
 </div>
 
+<!-- ══════════════════════════════════════════════════════════
+     BULK PROMO MODAL
+══════════════════════════════════════════════════════════ -->
+<div class="modal-bg" id="promoModal">
+  <div class="modal promo-modal" style="max-width:760px;">
+    <div class="pm-header">
+      <div>
+        <div class="pm-title"><i class="bi bi-whatsapp"></i> BULK PROMO MESSAGE</div>
+        <div class="pm-sub">Send ticket offer to users with no paid bookings</div>
+      </div>
+      <button class="modal-close" style="position:static;margin-top:0;" onclick="closeModal('promoModal')"><i class="bi bi-x-lg"></i></button>
+    </div>
+
+    <!-- Loading -->
+    <div class="pm-loading" id="pmLoading">
+      <div class="spin"></div>
+      <div>Fetching users &amp; active event…</div>
+    </div>
+
+    <!-- Main body (hidden until loaded) -->
+    <div class="pm-body" id="pmBody" style="display:none;">
+
+      <!-- LEFT: user list -->
+      <div class="pm-list-panel">
+        <div class="pm-list-toolbar">
+          <input class="pm-search" id="pmSearch" placeholder="Search name or phone…" oninput="pmFilterUsers()"/>
+          <select class="pm-filter-select" id="pmSentFilter" onchange="pmFilterUsers()">
+            <option value="all">All</option>
+            <option value="0">Never sent</option>
+            <option value="1">Sent once</option>
+            <option value="2">Sent 2x</option>
+            <option value="3">Sent 3+</option>
+          </select>
+        </div>
+        <div class="pm-list-head">
+          <input type="checkbox" id="pmSelectAll" onchange="pmToggleAll(this.checked)"/>
+          <label for="pmSelectAll">SELECT ALL VISIBLE</label>
+          <span class="pm-sel-count" id="pmSelCount">0 selected</span>
+        </div>
+        <div class="pm-user-list" id="pmUserList">
+          <!-- populated by JS -->
+        </div>
+      </div>
+
+      <!-- RIGHT: controls -->
+      <div class="pm-right-panel">
+
+        <!-- Stats -->
+        <div class="pm-section-title">AUDIENCE STATS</div>
+        <div class="pm-stats">
+          <div class="pm-stat s-total"><div class="snum" id="pmStatTotal">0</div><div class="slbl">TOTAL</div></div>
+          <div class="pm-stat s-unsent"><div class="snum" id="pmStatUnsent">0</div><div class="slbl">NEVER SENT</div></div>
+          <div class="pm-stat s-sent"><div class="snum" id="pmStatSent">0</div><div class="slbl">SENT ONCE</div></div>
+          <div class="pm-stat s-multi"><div class="snum" id="pmStatMulti">0</div><div class="slbl">SENT 2+</div></div>
+        </div>
+
+        <!-- Quick filters -->
+        <div class="pm-section-title">QUICK SELECT</div>
+        <div class="pm-filter-chips">
+          <div class="pm-chip pm-chip-all active" onclick="pmQuickSelect('all',this)"><i class="bi bi-people-fill"></i> All</div>
+          <div class="pm-chip pm-chip-unsent" onclick="pmQuickSelect('unsent',this)"><i class="bi bi-send-fill"></i> Never sent</div>
+          <div class="pm-chip pm-chip-sent" onclick="pmQuickSelect('sent1',this)"><i class="bi bi-1-circle-fill"></i> Sent once</div>
+          <div class="pm-chip pm-chip-multi" onclick="pmQuickSelect('multi',this)"><i class="bi bi-arrow-repeat"></i> Sent 2+</div>
+        </div>
+
+        <!-- Message preview -->
+        <div class="pm-section-title">MESSAGE PREVIEW</div>
+        <div class="pm-preview" id="pmPreview">
+          Loading event details…
+        </div>
+
+        <!-- Force re-send toggle -->
+        <div class="pm-force-row">
+          <input type="checkbox" id="pmForce"/>
+          <label for="pmForce">Re-send to already-messaged users</label>
+        </div>
+
+        <button class="btn-send-promo" id="pmSendBtn" onclick="pmSendPromo()" disabled>
+          <i class="bi bi-whatsapp"></i> Send to <span id="pmSendCount">0</span> Users
+        </button>
+      </div>
+    </div>
+
+    <!-- Result panel (shown after send) -->
+    <div class="pm-result" id="pmResult" style="display:none;">
+      <div style="font-family:'Poppins',sans-serif;font-size:1.1rem;margin-bottom:0.5rem;">✅ Messages Dispatched</div>
+      <div class="pm-result-nums">
+        <div class="pm-result-num r-sent"><div class="n" id="pmResSent">0</div><div class="l">SENT</div></div>
+        <div class="pm-result-num r-skip"><div class="n" id="pmResSkip">0</div><div class="l">SKIPPED</div></div>
+        <div class="pm-result-num r-fail"><div class="n" id="pmResFail">0</div><div class="l">FAILED</div></div>
+      </div>
+      <button class="btn-cancel-modal" style="margin-top:0.5rem;" onclick="pmResetAndReload()">Send Another Batch</button>
+    </div>
+
+  </div>
+</div>
+
 <!-- Export Modal -->
 <div class="modal-bg" id="exportModal">
   <div class="modal export-modal">
     <button class="modal-close" onclick="closeModal('exportModal')"><i class="bi bi-x-lg"></i></button>
     <h3><i class="bi bi-file-earmark-spreadsheet-fill" style="color:var(--success);margin-right:6px;"></i>EXPORT USERS</h3>
     <div class="export-sub">Choose fields and filters for your Excel download</div>
-
-    <!-- Filter scope -->
     <div class="export-section">
       <div class="export-section-title">Which users to export</div>
       <div class="export-options-row">
-        <div class="opt-pill active" id="scope-filtered" onclick="setScope('filtered',this)">
-          <i class="bi bi-funnel-fill"></i> Current Filter
-        </div>
-        <div class="opt-pill" id="scope-all" onclick="setScope('all',this)">
-          <i class="bi bi-people-fill"></i> All Users
-        </div>
+        <div class="opt-pill active" id="scope-filtered" onclick="setScope('filtered',this)"><i class="bi bi-funnel-fill"></i> Current Filter</div>
+        <div class="opt-pill" id="scope-all" onclick="setScope('all',this)"><i class="bi bi-people-fill"></i> All Users</div>
       </div>
     </div>
-
-    <!-- Field selector -->
     <div class="export-section">
       <div class="export-section-title">Fields to include</div>
       <div class="select-all-row">
@@ -440,16 +621,12 @@
       </div>
       <div class="fields-grid" id="fieldsGrid"></div>
     </div>
-
     <div class="export-footer">
       <span class="export-count" id="exportCount">—</span>
-      <button class="btn-do-export" id="doExportBtn" onclick="doExport()">
-        <i class="bi bi-download"></i> Download Excel
-      </button>
+      <button class="btn-do-export" id="doExportBtn" onclick="doExport()"><i class="bi bi-download"></i> Download Excel</button>
     </div>
   </div>
 </div>
-
 
 <!-- Detail Modal -->
 <div class="modal-bg" id="detailModal">
@@ -479,7 +656,7 @@
 <script>
   // ── State ──
   let currentStatusFilter = 'all';
-  let pendingAction = null; // {userId, action}
+  let pendingAction = null;
   const PAGE_SIZE = 25;
   let currentPage  = 1;
   let filteredRows = [];
@@ -500,28 +677,20 @@
     const gender   = document.getElementById('filterGender').value;
     const district = document.getElementById('filterDistrict').value.toLowerCase();
     const sort     = document.getElementById('filterSort').value;
-
     const rows = Array.from(document.querySelectorAll('#usersTable tbody tr'));
-
     filteredRows = rows.filter(row => {
-      // Status pill filter
       if (currentStatusFilter === 'verified'   && row.dataset.verified !== '1') return false;
       if (currentStatusFilter === 'unverified'  && row.dataset.verified !== '0') return false;
       if (currentStatusFilter === 'blocked'     && row.dataset.active   !== '0') return false;
       if (currentStatusFilter === 'google'      && row.dataset.google   !== '1') return false;
-      // Gender
       if (gender && row.dataset.gender !== gender) return false;
-      // District
       if (district && !row.dataset.district.includes(district)) return false;
-      // Search
       if (q) {
         const hay = row.dataset.name + row.dataset.phone + row.dataset.email + row.dataset.place + row.dataset.district;
         if (!hay.includes(q)) return false;
       }
       return true;
     });
-
-    // Sort
     filteredRows.sort((a, b) => {
       if (sort === 'newest')   return new Date(b.dataset.joined) - new Date(a.dataset.joined);
       if (sort === 'oldest')   return new Date(a.dataset.joined) - new Date(b.dataset.joined);
@@ -529,21 +698,15 @@
       if (sort === 'name')     return a.dataset.name.localeCompare(b.dataset.name);
       return 0;
     });
-
-    // Hide all rows, show paginated slice
-    rows.forEach(r => { r.style.display = 'none'; r.style.order = ''; });
-
+    rows.forEach(r => { r.style.display = 'none'; });
     renderPage();
   }
 
   function renderPage() {
     const start = (currentPage - 1) * PAGE_SIZE;
     const end   = start + PAGE_SIZE;
-    const pageRows = filteredRows.slice(start, end);
-
     filteredRows.forEach(r => r.style.display = 'none');
-    pageRows.forEach(r => r.style.display = '');
-
+    filteredRows.slice(start, end).forEach(r => r.style.display = '');
     document.getElementById('emptyState').style.display = filteredRows.length === 0 ? 'block' : 'none';
     renderPagination();
   }
@@ -553,23 +716,18 @@
     const pages = Math.ceil(total / PAGE_SIZE);
     const start = Math.min((currentPage - 1) * PAGE_SIZE + 1, total);
     const end   = Math.min(currentPage * PAGE_SIZE, total);
-
     document.getElementById('paginationInfo').textContent =
       total === 0 ? 'No results' : `Showing ${start}–${end} of ${total} users`;
-
     const btns = document.getElementById('paginationBtns');
     btns.innerHTML = '';
-
     const prev = document.createElement('button');
     prev.className = 'pg-btn'; prev.textContent = '←'; prev.disabled = currentPage === 1;
     prev.onclick = () => { currentPage--; renderPage(); };
     btns.appendChild(prev);
-
     const maxBtns = 5;
     let pageStart = Math.max(1, currentPage - 2);
     let pageEnd   = Math.min(pages, pageStart + maxBtns - 1);
     if (pageEnd - pageStart < maxBtns - 1) pageStart = Math.max(1, pageEnd - maxBtns + 1);
-
     for (let i = pageStart; i <= pageEnd; i++) {
       const b = document.createElement('button');
       b.className = 'pg-btn' + (i === currentPage ? ' active' : '');
@@ -577,7 +735,6 @@
       b.onclick = ((p) => () => { currentPage = p; renderPage(); })(i);
       btns.appendChild(b);
     }
-
     const next = document.createElement('button');
     next.className = 'pg-btn'; next.textContent = '→'; next.disabled = currentPage >= pages;
     next.onclick = () => { currentPage++; renderPage(); };
@@ -601,10 +758,7 @@
     const grid = document.getElementById('detailContent');
     const item = (lbl, val) => `<div class="detail-item"><div class="lbl">${lbl}</div><div class="val">${val||'—'}</div></div>`;
     const full = (lbl, val) => `<div class="detail-item full"><div class="lbl">${lbl}</div><div class="val">${val||'—'}</div></div>`;
-    const badge = (cond, yes, no) => cond
-      ? `<span class="badge b-verified">${yes}</span>`
-      : `<span class="badge b-unverified">${no}</span>`;
-
+    const badge = (cond, yes, no) => cond ? `<span class="badge b-verified">${yes}</span>` : `<span class="badge b-unverified">${no}</span>`;
     grid.innerHTML = `
       ${full('FULL NAME', `<strong>${u.name}</strong>`)}
       ${item('PHONE', u.phone)}
@@ -637,7 +791,6 @@
     const title = document.getElementById('confirmTitle');
     const body  = document.getElementById('confirmBody');
     const btn   = document.getElementById('confirmBtn');
-
     if (action === 'block') {
       title.textContent = 'Block User';
       body.innerHTML = `Block <strong>${name}</strong>? They won't be able to log in or make bookings.`;
@@ -661,42 +814,32 @@
     if (!pendingAction) return;
     const { userId, action } = pendingAction;
     closeModal('confirmModal');
-
     const actBtn = document.getElementById('actbtn-' + userId);
     const origHTML = actBtn ? actBtn.innerHTML : '';
     if (actBtn) { actBtn.disabled = true; actBtn.innerHTML = '<span class="spin"></span>'; }
-
     let url, method = 'POST';
     if (action === 'block')   url = `${baseUrl}/users/${userId}/block`;
     if (action === 'unblock') url = `${baseUrl}/users/${userId}/unblock`;
     if (action === 'delete')  { url = `${baseUrl}/users/${userId}`; method = 'DELETE'; }
-
     try {
       const r = await fetch(url, { method, credentials: 'include' });
       const d = await r.json();
       if (d.success) {
         showToast('success', action === 'block' ? 'User blocked.' : action === 'unblock' ? 'User unblocked.' : 'User deleted.');
-        // Update row state without full reload
         const row = document.querySelector(`tr[data-id="${userId}"]`);
-        if (action === 'delete' && row) {
-          row.remove();
-          applyFilters();
-        } else if (row) {
+        if (action === 'delete' && row) { row.remove(); applyFilters(); }
+        else if (row) {
           const isNowBlocked = action === 'block';
           row.dataset.active = isNowBlocked ? '0' : '1';
           row.classList.toggle('is-blocked', isNowBlocked);
-          // Swap badge
           const badge = row.querySelector('.badge:not(.b-google):not(.b-email)');
           if (badge) {
             badge.className = 'badge ' + (isNowBlocked ? 'b-blocked' : (row.dataset.verified==='1'?'b-verified':'b-unverified'));
             badge.textContent = isNowBlocked ? 'BLOCKED' : (row.dataset.verified==='1' ? 'VERIFIED' : 'UNVERIFIED');
           }
-          // Swap button
           if (actBtn) {
             actBtn.className = 'btn-act ' + (isNowBlocked ? 'btn-unblock' : 'btn-block');
-            actBtn.innerHTML = isNowBlocked
-              ? '<i class="bi bi-check-circle-fill"></i> Unblock'
-              : '<i class="bi bi-slash-circle-fill"></i> Block';
+            actBtn.innerHTML = isNowBlocked ? '<i class="bi bi-check-circle-fill"></i> Unblock' : '<i class="bi bi-slash-circle-fill"></i> Block';
             actBtn.onclick = () => confirmAction(userId, isNowBlocked ? 'unblock' : 'block', row.dataset.name);
             actBtn.disabled = false;
           }
@@ -721,7 +864,240 @@
     t._timer = setTimeout(() => t.classList.remove('show'), 3500);
   }
 
-  // ── Export ──
+  // ════════════════════════════════════════════════════════════════
+  //  PROMO MODAL LOGIC
+  // ════════════════════════════════════════════════════════════════
+  let pmAllUsers  = [];   // raw entries from API
+  let pmVisible   = [];   // after search/filter
+  let pmSelected  = new Set(); // userId strings
+  let pmActiveFilter = 'all'; // for promo list filter
+
+  async function openPromoModal() {
+    document.getElementById('promoModal').classList.add('open');
+    document.getElementById('pmLoading').style.display = 'block';
+    document.getElementById('pmBody').style.display    = 'none';
+    document.getElementById('pmResult').style.display  = 'none';
+    pmAllUsers = []; pmVisible = []; pmSelected = new Set();
+
+    try {
+      const r = await fetch(`${baseUrl}/users/promo-stats`, { credentials: 'include' });
+      const d = await r.json();
+      if (!d.success) throw new Error(d.message || 'Failed to load');
+
+      pmAllUsers = d.entries || [];
+      pmUpdateStats();
+      pmFilterUsers();
+      pmRenderPreview(d.eventName || '', d.categories || []);
+
+      document.getElementById('pmLoading').style.display = 'none';
+      document.getElementById('pmBody').style.display    = 'grid';
+    } catch(e) {
+      document.getElementById('pmLoading').innerHTML =
+        `<i class="bi bi-exclamation-triangle" style="font-size:1.5rem;color:var(--error);display:block;margin-bottom:0.5rem;"></i>${e.message}`;
+    }
+  }
+
+  function pmUpdateStats() {
+    const total  = pmAllUsers.length;
+    const unsent = pmAllUsers.filter(u => u.sentCount === 0).length;
+    const sent1  = pmAllUsers.filter(u => u.sentCount === 1).length;
+    const multi  = pmAllUsers.filter(u => u.sentCount >= 2).length;
+    document.getElementById('pmStatTotal').textContent  = total;
+    document.getElementById('pmStatUnsent').textContent = unsent;
+    document.getElementById('pmStatSent').textContent   = sent1;
+    document.getElementById('pmStatMulti').textContent  = multi;
+  }
+
+  function pmFilterUsers() {
+    const q    = (document.getElementById('pmSearch')?.value || '').toLowerCase().trim();
+    const sent = document.getElementById('pmSentFilter')?.value || 'all';
+
+    pmVisible = pmAllUsers.filter(u => {
+      if (q) {
+        const hay = (u.name + u.phone + u.email).toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      if (sent !== 'all') {
+        const cnt = u.sentCount || 0;
+        if (sent === '0' && cnt !== 0) return false;
+        if (sent === '1' && cnt !== 1) return false;
+        if (sent === '2' && cnt !== 2) return false;
+        if (sent === '3' && cnt < 3)  return false;
+      }
+      return true;
+    });
+
+    pmRenderList();
+  }
+
+  function pmRenderList() {
+    const list = document.getElementById('pmUserList');
+    if (!pmVisible.length) {
+      list.innerHTML = '<div class="pm-empty"><i class="bi bi-person-x" style="font-size:1.5rem;display:block;margin-bottom:0.5rem;"></i>No users match</div>';
+      pmUpdateSendBtn();
+      return;
+    }
+
+    list.innerHTML = pmVisible.map(u => {
+      const checked = pmSelected.has(String(u.userId));
+      const cnt = u.sentCount || 0;
+      const badgeClass = cnt === 0 ? 'pm-sent-0' : cnt === 1 ? 'pm-sent-1' : cnt === 2 ? 'pm-sent-2' : 'pm-sent-3plus';
+      const badgeLabel = cnt === 0 ? 'Never sent' : `Sent ${cnt}×`;
+      const lastSent = u.lastSentAt
+        ? new Date(u.lastSentAt).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})
+        : '';
+
+      return `<div class="pm-user-row ${checked ? 'selected-row' : ''}" onclick="pmToggleUser('${u.userId}',this)">
+        <input type="checkbox" ${checked ? 'checked' : ''} onclick="event.stopPropagation();pmToggleUser('${u.userId}',this.closest('.pm-user-row'))"/>
+        <div class="pm-user-info">
+          <div class="pm-user-name">${u.name}</div>
+          <div class="pm-user-phone">${u.phone}${u.email ? ' · ' + u.email : ''}</div>
+        </div>
+        <div class="pm-sent-badge">
+          <span class="pm-sent-count ${badgeClass}">${badgeLabel}</span>
+          ${lastSent ? `<span class="pm-last-sent">${lastSent}</span>` : ''}
+        </div>
+      </div>`;
+    }).join('');
+
+    pmUpdateSendBtn();
+    // Sync select-all checkbox
+    const allVis = pmVisible.every(u => pmSelected.has(String(u.userId)));
+    document.getElementById('pmSelectAll').checked = allVis && pmVisible.length > 0;
+    document.getElementById('pmSelCount').textContent = `${pmSelected.size} selected`;
+  }
+
+  function pmToggleUser(userId, row) {
+    const id = String(userId);
+    if (pmSelected.has(id)) { pmSelected.delete(id); row.classList.remove('selected-row'); }
+    else { pmSelected.add(id); row.classList.add('selected-row'); }
+    const cb = row.querySelector('input[type=checkbox]');
+    if (cb) cb.checked = pmSelected.has(id);
+    const allVis = pmVisible.every(u => pmSelected.has(String(u.userId)));
+    document.getElementById('pmSelectAll').checked = allVis && pmVisible.length > 0;
+    document.getElementById('pmSelCount').textContent = `${pmSelected.size} selected`;
+    pmUpdateSendBtn();
+  }
+
+  function pmToggleAll(checked) {
+    pmVisible.forEach(u => {
+      const id = String(u.userId);
+      if (checked) pmSelected.add(id);
+      else pmSelected.delete(id);
+    });
+    pmRenderList();
+    pmUpdateSendBtn();
+  }
+
+  function pmQuickSelect(type, el) {
+    document.querySelectorAll('.pm-chip').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    pmSelected = new Set();
+    pmAllUsers.forEach(u => {
+      const cnt = u.sentCount || 0;
+      let match = false;
+      if (type === 'all')    match = true;
+      if (type === 'unsent') match = cnt === 0;
+      if (type === 'sent1')  match = cnt === 1;
+      if (type === 'multi')  match = cnt >= 2;
+      if (match) pmSelected.add(String(u.userId));
+    });
+    pmRenderList();
+    pmUpdateSendBtn();
+  }
+
+  function pmUpdateSendBtn() {
+    const btn = document.getElementById('pmSendBtn');
+    const n = pmSelected.size;
+    document.getElementById('pmSendCount').textContent = n;
+    document.getElementById('pmSelCount').textContent = `${n} selected`;
+    btn.disabled = n === 0;
+  }
+
+  function pmRenderPreview(eventName, categories) {
+    // If the route returns event name + categories in promo-stats, great.
+    // Otherwise we fall back to a generic preview.
+    const catLines = (categories || [])
+      .filter(c => c.isActive !== false)
+      .slice(0, 5)
+      .map(c => `• ${c.name || c.category} – ₹${(c.price || 0).toLocaleString('en-IN')}`)
+      .join('\n');
+
+    const preview = `Hi [Customer Name],
+
+Get ready for an unforgettable musical experience at Melattur Paattu – Live in Concert featuring Hanan Sha &amp; Shafi Kollam!
+
+🎟️ Available Ticket Categories:
+${catLines || '• Loading categories…'}
+
+Seats are filling fast ⏳ Don't miss your chance to be part of this amazing live show!
+
+📞 Need help? +91 99958 43003`;
+
+    document.getElementById('pmPreview').innerText = preview;
+  }
+
+  async function pmSendPromo() {
+    if (pmSelected.size === 0) return;
+    const btn   = document.getElementById('pmSendBtn');
+    const force = document.getElementById('pmForce').checked;
+    const orig  = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spin"></span> Sending…';
+
+    try {
+      const r = await fetch(`${baseUrl}/users/send-bulk-promo`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userIds: [...pmSelected], force }),
+      });
+      const d = await r.json();
+
+      if (d.success) {
+        // Show result panel
+        document.getElementById('pmBody').style.display   = 'none';
+        document.getElementById('pmResult').style.display = 'block';
+        document.getElementById('pmResSent').textContent  = d.sent    || 0;
+        document.getElementById('pmResSkip').textContent  = d.skipped || 0;
+        document.getElementById('pmResFail').textContent  = d.failed  || 0;
+        showToast('success', `Promo sent to ${d.sent} users!`);
+      } else {
+        showToast('error', d.message || 'Send failed.');
+        btn.disabled = false;
+        btn.innerHTML = orig;
+      }
+    } catch(e) {
+      showToast('error', 'Network error.');
+      btn.disabled = false;
+      btn.innerHTML = orig;
+    }
+  }
+
+  async function pmResetAndReload() {
+    // Reload the promo modal from scratch so counts refresh
+    document.getElementById('pmResult').style.display = 'none';
+    document.getElementById('pmLoading').style.display = 'block';
+    pmAllUsers = []; pmVisible = []; pmSelected = new Set();
+
+    try {
+      const r = await fetch(`${baseUrl}/users/promo-stats`, { credentials: 'include' });
+      const d = await r.json();
+      if (!d.success) throw new Error(d.message || 'Failed');
+      pmAllUsers = d.entries || [];
+      pmUpdateStats();
+      pmFilterUsers();
+      pmRenderPreview(d.eventName || '', d.categories || []);
+      document.getElementById('pmLoading').style.display = 'none';
+      document.getElementById('pmBody').style.display    = 'grid';
+    } catch(e) {
+      document.getElementById('pmLoading').innerHTML = `<span style="color:var(--error);">${e.message}</span>`;
+    }
+  }
+
+  // ════════════════════════════════════════════════════════════════
+  //  EXPORT MODAL LOGIC (unchanged from original)
+  // ════════════════════════════════════════════════════════════════
   const EXPORT_FIELDS = [
     { key: 'name',     label: 'Full Name',      get: r => r.dataset.name?.replace(/\b\w/g,c=>c.toUpperCase()) },
     { key: 'phone',    label: 'Phone',          get: r => r.dataset.phone },
@@ -736,12 +1112,10 @@
     { key: 'joined',   label: 'Joined Date',    get: r => r.dataset.joined ? new Date(r.dataset.joined).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}) : '' },
     { key: 'id',       label: 'User ID (last6)',get: r => r.dataset.id ? r.dataset.id.slice(-6).toUpperCase() : '' },
   ];
-
   let exportScope = 'filtered';
   const defaultOn = ['name','phone','email','place','district','bookings','verified','active','joined'];
 
   function openExportModal() {
-    // Build fields grid
     const grid = document.getElementById('fieldsGrid');
     grid.innerHTML = '';
     EXPORT_FIELDS.forEach(f => {
@@ -779,14 +1153,12 @@
   }
 
   function getExportRows() {
-    if (exportScope === 'all') {
-      return Array.from(document.querySelectorAll('#usersTable tbody tr'));
-    }
+    if (exportScope === 'all') return Array.from(document.querySelectorAll('#usersTable tbody tr'));
     return filteredRows.length > 0 ? filteredRows : Array.from(document.querySelectorAll('#usersTable tbody tr'));
   }
 
   function updateExportCount() {
-    const rows = getExportRows();
+    const rows    = getExportRows();
     const checked = document.querySelectorAll('#fieldsGrid input:checked').length;
     document.getElementById('exportCount').textContent = `${rows.length} users · ${checked} fields`;
     document.getElementById('doExportBtn').disabled = checked === 0;
@@ -796,38 +1168,26 @@
     const rows = getExportRows();
     const checkedKeys = Array.from(document.querySelectorAll('#fieldsGrid input:checked')).map(i => i.value);
     const fields = EXPORT_FIELDS.filter(f => checkedKeys.includes(f.key));
-
     if (!fields.length || !rows.length) return;
-
-    // Build data array
     const header = fields.map(f => f.label);
     const data = [header, ...rows.map(r => fields.map(f => f.get(r) || ''))];
-
-    // Use SheetJS from CDN
     if (typeof XLSX === 'undefined') {
       const s = document.createElement('script');
       s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
       s.onload = () => _writeExcel(data);
       document.head.appendChild(s);
-    } else {
-      _writeExcel(data);
-    }
+    } else { _writeExcel(data); }
   }
 
   function _writeExcel(data) {
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.aoa_to_sheet(data);
-
-    // Column widths
     ws['!cols'] = data[0].map((_, i) => ({ wch: Math.max(14, ...data.map(r => String(r[i]||'').length)) }));
-
-    // Style header row (basic bold via cell metadata — cosmetic)
     const range = XLSX.utils.decode_range(ws['!ref']);
     for (let C = range.s.c; C <= range.e.c; C++) {
       const cell = ws[XLSX.utils.encode_cell({r:0, c:C})];
       if (cell) { cell.s = { font: { bold: true }, fill: { fgColor: { rgb: 'F3E8FF' } } }; }
     }
-
     XLSX.utils.book_append_sheet(wb, ws, 'Users');
     const date = new Date().toISOString().slice(0,10);
     XLSX.writeFile(wb, `users-export-${date}.xlsx`);
@@ -835,7 +1195,15 @@
     showToast('success', `Exported ${data.length - 1} users to Excel.`);
   }
 
-  // Init
+  // ── NOTE: the promo-stats API also needs to return event categories for the
+  //    preview. Update the route's GET handler to also send eventName + categories
+  //    in the response. Add this to the route before res.json():
+  //
+  //    const activeEvent = await Event.findOne({ isActive: true }).lean();
+  //    const eventName   = activeEvent?.name || '';
+  //    const categories  = (activeEvent?.ticketTypes || []).filter(t => t.isActive);
+  //    res.json({ success: true, entries, total: entries.length, eventName, categories });
+
   applyFilters();
 </script>
 </body>

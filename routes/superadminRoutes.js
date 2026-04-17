@@ -27,6 +27,7 @@ router.delete('/users/:id', userController.deleteUser); // superadmin-only
 const { superAuth } = require('../middleware/adminAuth');
 
 
+
 router.get('/login', (req, res) => {
   res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
   res.set('Pragma', 'no-cache');
@@ -129,48 +130,144 @@ router.post('/api/validate-coupon', async (req, res) => {
 
 router.use(superAuth);
 
+
+router.get('/users/promo-stats', async (req, res) => {
+  try {
+    // 1. Find all user IDs that have at least one paid booking
+    const paidUserIds = await Booking.find({ paymentStatus: 'paid' })
+      .distinct('user');
+ 
+    const paidUserSet = new Set(paidUserIds.map(id => id?.toString()).filter(Boolean));
+ 
+    // 2. Get ALL registered users
+    const allUsers = await User.find({})
+      .select('firstName lastName phone email isActive isVerified googleId bulkPromoSentCount bulkPromoLastSentAt createdAt')
+      .lean();
+ 
+    // 3. Keep only those with zero paid bookings AND a phone number
+    const unpaidUsers = allUsers.filter(u =>
+      !paidUserSet.has(u._id.toString()) &&
+      u.phone &&
+      u.phone.trim() !== ''
+    );
+ 
+    // 4. Shape the entries
+    const entries = unpaidUsers.map(u => ({
+      userId:     u._id,
+      name:       (u.firstName + ' ' + (u.lastName || '')).trim(),
+      phone:      u.phone,
+      email:      u.email || '',
+      isActive:   u.isActive,
+      isVerified: u.isVerified,
+      isGoogle:   !!u.googleId,
+      sentCount:  u.bulkPromoSentCount  || 0,
+      lastSentAt: u.bulkPromoLastSentAt || null,
+      joinedAt:   u.createdAt,
+    }));
+ 
+    // 5. Fetch active event for the message preview
+    const activeEvent = await Event.findOne({ isActive: true }).lean();
+    const eventName   = activeEvent ? activeEvent.name : '';
+    const categories  = activeEvent
+      ? (activeEvent.ticketTypes || [])
+          .filter(t => t.isActive)
+          .map(t => ({ name: t.name || t.category, category: t.category, price: t.price, isActive: t.isActive }))
+      : [];
+ 
+    res.json({ success: true, entries, total: entries.length, eventName, categories });
+  } catch (err) {
+    res.json({ success: false, message: err.message });
+  }
+});
+ 
+ 
+// ══════════════════════════════════════════════════════════════════════════════
+// POST /users/send-bulk-promo  (unchanged from route_additions.js)
+// ══════════════════════════════════════════════════════════════════════════════
+ 
+router.post('/users/send-bulk-promo', async (req, res) => {
+  try {
+    const { sendWhatsAppPromo } = require('../utils/whatsappHelper');
+    const { userIds = [], force = false } = req.body;
+ 
+    if (!userIds.length) {
+      return res.json({ success: false, message: 'No users selected.' });
+    }
+ 
+    // Fetch active event ticket categories
+    const activeEvent = await Event.findOne({ isActive: true }).lean();
+    if (!activeEvent) {
+      return res.json({ success: false, message: 'No active event found. Activate an event first.' });
+    }
+ 
+    const categories = (activeEvent.ticketTypes || [])
+      .filter(t => t.isActive)
+  .map(t => ({
+    name:        t.name || t.category,
+    category:    t.category,
+    price:       t.price,
+    bookedSeats: t.bookedSeats,   // ← was missing
+    totalSeats:  t.totalSeats,    // ← was missing
+  }));
+   
+    if (!categories.length) {
+      return res.json({ success: false, message: 'Active event has no active ticket categories.' });
+    }
+ 
+    // Fetch selected users
+    const users = await User.find({ _id: { $in: userIds } })
+      .select('firstName phone bulkPromoSentCount bulkPromoLastSentAt')
+      .lean();
+ 
+    let sent = 0, skipped = 0, failed = 0;
+    const results = [];
+ 
+    for (const user of users) {
+      if (!user.phone) { skipped++; continue; }
+ 
+      // Skip already-messaged unless force=true
+      if (!force && (user.bulkPromoSentCount || 0) > 0) {
+        skipped++;
+        results.push({ userId: user._id, phone: user.phone, status: 'skipped' });
+        continue;
+      }
+ 
+      const normPhone = user.phone.replace(/\D/g, '');
+      const phoneWith91 = normPhone.startsWith('91') ? normPhone : '91' + normPhone;
+ 
+      try {
+        const r = await sendWhatsAppPromo({
+          phone:      phoneWith91,
+          name:       user.firstName,
+          categories,
+          eventName:  activeEvent.name,
+        });
+ 
+        if (r.success) {
+          await User.findByIdAndUpdate(user._id, {
+            $inc: { bulkPromoSentCount: 1 },
+            bulkPromoLastSentAt: new Date(),
+          });
+          sent++;
+          results.push({ userId: user._id, phone: user.phone, status: 'sent', name: user.firstName });
+        } else {
+          failed++;
+          results.push({ userId: user._id, phone: user.phone, status: 'failed', error: r.error });
+        }
+      } catch (e) {
+        failed++;
+        results.push({ userId: user._id, phone: user.phone, status: 'failed', error: e.message });
+      }
+    }
+ 
+    res.json({ success: true, sent, skipped, failed, total: userIds.length, eventName: activeEvent.name, results });
+  } catch (err) {
+    res.json({ success: false, message: err.message });
+  }
+});
+ 
+
 router.get('/api/revenue-by-date', adminController.getRevenueByDate);
-// ── DASHBOARD ──
-// router.get('/', async (req, res) => {
-//   try {
-//     const Event = require('../models/Event');
-//     const [staffCount, totalBookings, totalRevenueAgg, coupons, totalUsers, events] = await Promise.all([
-//       Staff.countDocuments(),
-//       Booking.countDocuments({ paymentStatus: 'paid' }),
-//       Booking.aggregate([{ $match: { paymentStatus: 'paid' } }, { $group: { _id: null, total: { $sum: '$totalAmount' } } }]),
-//       Coupon.countDocuments(),
-//       User.countDocuments(),
-//       Event.find().sort({ date: -1 }),
-//     ]);
-
-//     // Active event panel — same as admin dashboard
-//     const activeEvent = events.find(e => e.isActive) || null;
-//     let activeEventBookings = [], activeEventRevenue = 0;
-//     if (activeEvent) {
-//       activeEventBookings = await Booking.find({
-//         event: activeEvent._id,
-//         paymentStatus: 'paid',
-//       }).populate('user', 'name phone email').lean();
-//       activeEventRevenue = activeEventBookings.reduce((s, b) => s + (b.totalAmount || 0), 0);
-//     }
-
-//     const currentAdmin = req.session.staffUser || { username: req.session.superAdminUser || 'superadmin', name: 'Super Admin', role: 'superadmin' };
-//     res.render('superadmin/dashboard', {
-//       title: 'Super Admin — MEE',
-//       staffCount, totalBookings,
-//       totalRevenue: totalRevenueAgg[0]?.total || 0,
-//       totalUsers,
-//       coupons,
-//       currentAdmin,
-//       activeEvent,
-//       activeEventBookings,
-//       activeEventRevenue,
-//     });
-//   } catch (err) {
-//     console.error('Superadmin dashboard error:', err);
-//     res.render('superadmin/dashboard', { title: 'Super Admin', staffCount: 0, totalBookings: 0, totalRevenue: 0, totalUsers: 0, coupons: 0, currentAdmin: req.session.staffUser || { name: 'Super Admin', role: 'superadmin' }, activeEvent: null, activeEventBookings: [], activeEventRevenue: 0 });
-//   }
-// });
 
 router.get('/', async (req, res) => {
   try {
@@ -536,6 +633,138 @@ router.get('/entered-tickets', async (req, res) => {
 
 
 
+// ── GET /bookings/reminder-stats
+// Returns per-phone reminder data for paid bookings whose event is tomorrow.
+// Powers the bulk-reminder popup. No body needed.
+router.get('/bookings/reminder-stats', async (req, res) => {
+  try {
+    const now = new Date();
+    // "tomorrow" window: any event between now+12h and now+36h (catches "day before" comfortably)
+    const windowStart = new Date(now.getTime() + 12 * 60 * 60 * 1000);
+    const windowEnd   = new Date(now.getTime() + 36 * 60 * 60 * 1000);
+ 
+    const bookings = await Booking.find({ paymentStatus: 'paid' })
+      .populate('user', 'firstName lastName phone')
+      .populate('event', 'name date doorsOpen venue')
+      .sort({ createdAt: -1 })
+      .lean();
+ 
+    // Group by phone — deduplicate so one number gets one message
+    const phoneMap = {};
+    for (const b of bookings) {
+      const phone = b.user?.phone || b.contactPhone || '';
+      if (!phone) continue;
+      const norm = phone.replace(/\D/g, '');
+      if (!phoneMap[norm]) {
+        phoneMap[norm] = {
+          phone: norm,
+          name: b.user
+            ? (b.user.firstName + ' ' + (b.user.lastName || '')).trim()
+            : (b.contactName || 'Guest'),
+          bookingIds: [],
+          bookingRefs: [],
+          eventNames: [],
+          bookingCount: 0,
+          notifiedAt: null,   // most recent reminder sent timestamp
+        };
+      }
+      phoneMap[norm].bookingIds.push(String(b._id));
+      phoneMap[norm].bookingRefs.push(b.bookingRef);
+      if (b.event?.name && !phoneMap[norm].eventNames.includes(b.event.name)) {
+        phoneMap[norm].eventNames.push(b.event.name);
+      }
+      phoneMap[norm].bookingCount++;
+      // Track most recent reminder timestamp across all bookings for this phone
+      if (b.reminder24SentAt) {
+        const t = new Date(b.reminder24SentAt);
+        if (!phoneMap[norm].notifiedAt || t > new Date(phoneMap[norm].notifiedAt)) {
+          phoneMap[norm].notifiedAt = b.reminder24SentAt;
+        }
+      }
+    }
+ 
+    const entries = Object.values(phoneMap);
+    res.json({ success: true, entries, total: entries.length });
+  } catch (err) {
+    res.json({ success: false, message: err.message });
+  }
+});
+ 
+
+// ── POST /bookings/send-bulk-reminder
+// Body: { phones: ['91XXXXXXXXXX', ...] }   — array of normalised phone numbers
+// Sends one WhatsApp reminder per phone, skips already-notified ones (unless forced).
+// Marks all bookings for that phone with reminder24SentAt.
+router.post('/bookings/send-bulk-reminder', async (req, res) => {
+  try {
+    const { sendWhatsAppEventReminder } = require('../utils/whatsappHelper');
+    const { phones = [], force = false } = req.body; // phones: array of raw phone strings
+ 
+    if (!phones.length) return res.json({ success: false, message: 'No phones provided.' });
+ 
+    const bookings = await Booking.find({ paymentStatus: 'paid' })
+      .populate('user', 'firstName lastName phone')
+      .populate('event', 'name date doorsOpen venue')
+      .lean();
+ 
+    // Build phone → bookings map
+    const phoneMap = {};
+    for (const b of bookings) {
+      const phone = (b.user?.phone || b.contactPhone || '').replace(/\D/g, '');
+      if (!phone) continue;
+      if (!phoneMap[phone]) phoneMap[phone] = [];
+      phoneMap[phone].push(b);
+    }
+ 
+    let sent = 0, skipped = 0, failed = 0;
+    const results = [];
+ 
+    for (const rawPhone of phones) {
+      const norm = String(rawPhone).replace(/\D/g, '');
+      const bList = phoneMap[norm] || [];
+      if (!bList.length) { skipped++; continue; }
+ 
+      // Already reminded recently? Skip unless forced
+      const alreadyReminded = !force && bList.some(b => b.reminder24SentAt);
+      if (alreadyReminded) { skipped++; results.push({ phone: norm, status: 'skipped' }); continue; }
+ 
+      const first  = bList[0];
+      const name   = first.user
+        ? (first.user.firstName + ' ' + (first.user.lastName || '')).trim()
+        : (first.contactName || 'Guest');
+      const phone  = norm.startsWith('91') ? norm : '91' + norm;
+ 
+      try {
+        const r = await sendWhatsAppEventReminder({
+          phone,
+          name,
+          booking: first,
+          event: first.event || {},
+        });
+ 
+        if (r.success) {
+          // Mark ALL bookings for this phone
+          const ids = bList.map(b => b._id);
+          await Booking.updateMany({ _id: { $in: ids } }, { reminder24SentAt: new Date() });
+          sent++;
+          results.push({ phone: norm, status: 'sent', name });
+        } else {
+          failed++;
+          results.push({ phone: norm, status: 'failed', error: r.error });
+        }
+      } catch (e) {
+        failed++;
+        results.push({ phone: norm, status: 'failed', error: e.message });
+      }
+    }
+ 
+    res.json({ success: true, sent, skipped, failed, total: phones.length, results });
+  } catch (err) {
+    res.json({ success: false, message: err.message });
+  }
+});
+
+
 // ── BOOKINGS ──
 router.get('/bookings', async (req, res) => {
   try {
@@ -803,6 +1032,98 @@ router.get('/seller-activity', async (req, res) => {
   }
 });
 
+
+// ── GET /mee-admin/bookings/resend-stats
+// Returns paid bookings with user+event for the resend-confirmation modal
+router.get('/bookings/resend-stats', async (req, res) => {
+  try {
+    const bookings = await Booking.find({ paymentStatus: 'paid' })
+      .populate('user', 'firstName lastName phone')
+      .populate('event', 'name date doorsOpen venue')
+      .sort({ createdAt: -1 })
+      .lean();
+
+    const entries = bookings.map(b => ({
+      bookingId:    String(b._id),
+      bookingRef:   b.bookingRef,
+      name:         b.user ? (b.user.firstName + ' ' + (b.user.lastName || '')).trim() : (b.contactName || 'Guest'),
+      phone:        b.user?.phone || b.contactPhone || '',
+      eventName:    b.event?.name || 'N/A',
+      ticketType:   b.ticketType || '',
+      quantity:     b.quantity   || 1,
+      totalAmount:  b.totalAmount || 0,
+      resentAt:     b.confirmationResentAt || null,
+    }));
+
+    res.json({ success: true, entries });
+  } catch (err) {
+    res.json({ success: false, message: err.message });
+  }
+});
+
+// ── POST /mee-admin/bookings/resend-confirmation
+// Body: { bookingIds: ['...'] }
+// Resends the full WhatsApp confirmation with PDF ticket for each booking
+router.post('/bookings/resend-confirmation', async (req, res) => {
+  try {
+    const { sendWhatsAppTickets } = require('../utils/whatsappHelper');
+    const { bookingIds = [] } = req.body;
+
+    if (!bookingIds.length) return res.json({ success: false, message: 'No bookings selected.' });
+
+    const bookings = await Booking.find({ _id: { $in: bookingIds }, paymentStatus: 'paid' })
+      .populate('user', 'firstName lastName phone email')
+      .populate('event')
+      .lean(); // ← THIS is the fix — ensures plain JS objects like original booking flow
+
+    let sent = 0, failed = 0;
+    const results = [];
+
+    for (const booking of bookings) {
+      const phone = booking.user?.phone || booking.contactPhone || '';
+      const name  = booking.user
+        ? (booking.user.firstName + ' ' + (booking.user.lastName || '')).trim()
+        : (booking.contactName || 'Guest');
+
+console.log('🎫 Ticket seat numbers:', booking.tickets.map(t => ({ 
+  ticketId: t.ticketId, 
+  seatNumber: t.seatNumber 
+})));
+
+      if (!phone) {
+        failed++;
+        results.push({ bookingRef: booking.bookingRef, status: 'failed', error: 'No phone number' });
+        continue;
+      }
+
+      try {
+        const r = await sendWhatsAppTickets({
+          phone,
+          name,
+          booking,
+          event: booking.event || {},
+        });
+
+        if (r.success) {
+          // .lean() means we can't call .save(), so use updateOne
+          await Booking.findByIdAndUpdate(booking._id, { confirmationResentAt: new Date() });
+          sent++;
+          results.push({ bookingRef: booking.bookingRef, status: 'sent', name });
+        } else {
+          failed++;
+          results.push({ bookingRef: booking.bookingRef, status: 'failed', error: r.error });
+        }
+      } catch (e) {
+        failed++;
+        results.push({ bookingRef: booking.bookingRef, status: 'failed', error: e.message });
+      }
+    }
+
+    res.json({ success: true, sent, failed, total: bookingIds.length, results });
+  } catch (err) {
+    res.json({ success: false, message: err.message });
+  }
+});
 
 
 module.exports = router;

@@ -263,7 +263,7 @@ const sendWhatsAppPending = async ({ phone, name, booking, event }) => {
   console.log('📱 MSG91 WA sendWhatsAppPending →', phone);
 
   const bookingId = booking.bookingRef || String(booking._id);
-  const totalAmount = `₹${(booking.totalAmount || 0).toLocaleString('en-IN')}`;
+  const totalAmount = `${(booking.totalAmount || 0).toLocaleString('en-IN')}`;
 
   if (!isConfigured()) {
     devLog('Pending', phone, { name, bookingId, category: booking.ticketType, qty: booking.quantity, totalAmount });
@@ -295,7 +295,7 @@ const sendWhatsAppPaymentFailed = async ({ phone, name, booking, event }) => {
   console.log('📱 MSG91 WA sendWhatsAppPaymentFailed →', phone);
 
   const bookingId = booking.bookingRef || String(booking._id);
-  const totalAmount = `₹${(booking.totalAmount || 0).toLocaleString('en-IN')}`;
+  const totalAmount = `${(booking.totalAmount || 0).toLocaleString('en-IN')}`;
   const buttonVal = String(booking._id || booking.bookingRef);
 
   if (!isConfigured()) {
@@ -321,11 +321,150 @@ const sendWhatsAppPaymentFailed = async ({ phone, name, booking, event }) => {
   }
 };
 
+
+const sendWhatsAppEventReminder = async ({ phone, name, booking, event }) => {
+  if (!phone) return { success: false };
+  console.log('📱 MSG91 WA sendWhatsAppEventReminder →', phone);
+ 
+  if (!isConfigured()) {
+    devLog('EventReminder', phone, { name });
+    return { success: true, dev: true };
+  }
+ 
+  const templateName = process.env.MSG91_WA_TEMPLATE_REMINDER || '';
+  if (!templateName) {
+    console.warn('⚠ MSG91_WA_TEMPLATE_REMINDER not set');
+    return { success: false };
+  }
+ 
+  try {
+    await sendMsg91WA(phone, templateName, {
+      body_name: name,
+    });
+    console.log('   ✅ MSG91 WA event reminder sent');
+    return { success: true };
+  } catch (err) {
+    console.error('   ❌ MSG91 WA event reminder error:', err.message);
+    return { success: false, error: err.message };
+  }
+};
+
+// const sendWhatsAppPromo = async ({ phone, name, categories = [], eventName = '' }) => {
+//   if (!phone) return { success: false };
+//   console.log('📱 MSG91 WA sendWhatsAppPromo →', phone);
+
+//    // ADD THIS TEMPORARILY
+//   console.log('   categories received:', JSON.stringify(categories.map(c => ({
+//     category: c.category,
+//     isActive: c.isActive,
+//     bookedSeats: c.bookedSeats,
+//     totalSeats: c.totalSeats,
+//   })), null, 2));
+  
+//   // Filter only categories with available seats
+//   const availableCats = categories
+//     .filter(c => c.isActive !== false && (c.bookedSeats ?? 0) < (c.totalSeats ?? 0))
+//     .slice(0, 5);
+
+//   if (availableCats.length === 0) {
+//     console.warn('⚠ No available categories — skipping promo for', phone);
+//     return { success: false, reason: 'no_available_seats' };
+//   }
+
+//   if (!isConfigured()) {
+//     devLog('Promo', phone, { name, eventName, categories: availableCats });
+//     return { success: true, dev: true };
+//   }
+
+//   const templateName = process.env.MSG91_WA_TEMPLATE_PROMO || '';
+//   if (!templateName) {
+//     console.warn('⚠ MSG91_WA_TEMPLATE_PROMO not set');
+//     return { success: false };
+//   }
+
+//   // Build one clean category string — no slot padding needed
+//   const categoryLines = availableCats
+//     .map(c => `• ${c.category || c.name} – ₹${(c.price || 0).toLocaleString('en-IN')}`);
+
+//   const components = {
+//     body_name:        name       || '',
+//     body_event_name:  eventName  || '',
+//     body_categories:  categoryLines,
+//   };
+
+//   try {
+//     await sendMsg91WA(phone, templateName, components);
+//     console.log(`   ✅ MSG91 WA promo sent → ${phone} (${availableCats.length} categories)`);
+//     return { success: true };
+//   } catch (err) {
+//     console.error('   ❌ MSG91 WA promo error:', err.message);
+//     return { success: false, error: err.message };
+//   }
+// };
+
+
+
+const sendWhatsAppPromo = async ({ phone, name, categories = [], eventName = '' }) => {
+  if (!phone) return { success: false };
+  console.log('📱 MSG91 WA sendWhatsAppPromo →', phone);
+
+  const availableCats = categories
+    .filter(c => c.isActive !== false && (c.bookedSeats ?? 0) < (c.totalSeats ?? 0))
+    .sort((a, b) => a.price - b.price)  // cheapest first
+    .slice(0, 5);
+
+  if (availableCats.length === 0) {
+    console.warn('⚠ No available categories — skipping promo for', phone);
+    return { success: false, reason: 'no_available_seats' };
+  }
+
+  if (!isConfigured()) {
+    devLog('Promo', phone, { name, eventName, categories: availableCats });
+    return { success: true, dev: true };
+  }
+
+  const templateName = process.env.MSG91_WA_TEMPLATE_PROMO || '';
+  if (!templateName) {
+    console.warn('⚠ MSG91_WA_TEMPLATE_PROMO not set');
+    return { success: false };
+  }
+
+  const EMPTY = '\u200B';  // zero-width space — renders as blank in WhatsApp
+
+  const components = {
+    body_name:       name      || '',
+    body_event_name: eventName || '',
+  };
+
+  // Fill available slots
+  availableCats.forEach((c, i) => {
+    components[`cat${i + 1}`] = `• ${c.category || c.name} – ₹${(c.price || 0).toLocaleString('en-IN')}`;
+  });
+
+  // Pad remaining slots with zero-width space
+  for (let i = availableCats.length; i < 5; i++) {
+    components[`cat${i + 1}`] = EMPTY;
+  }
+
+  try {
+    await sendMsg91WA(phone, templateName, components);
+    console.log(`   ✅ MSG91 WA promo sent → ${phone} (${availableCats.length} categories)`);
+    return { success: true };
+  } catch (err) {
+    console.error('   ❌ MSG91 WA promo error:', err.message);
+    return { success: false, error: err.message };
+  }
+};
+
+ 
+
 // ── Exports ───────────────────────────────────────────────────────────────
 
 module.exports = {
   sendWhatsAppTickets,
+  sendWhatsAppEventReminder,
   sendWhatsAppConfirmation,
+  sendWhatsAppPromo,
   sendWhatsAppPending,
   sendWhatsAppPaymentFailed,
 };

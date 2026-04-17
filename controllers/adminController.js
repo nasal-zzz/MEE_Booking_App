@@ -40,6 +40,10 @@ function parseEventBody(b) {
     isActive:    t.isActive === true || t.isActive === 'true',
     isCombo:     t.isCombo  === true || t.isCombo  === 'true',
     comboCount:  parseInt(t.comboCount)   || 0,
+
+      // ✅ Preserve these — never reset on edit
+  paidSeatCount:  parseInt(t.paidSeatCount)  || 0,
+  releasedSeats:  Array.isArray(t.releasedSeats) ? t.releasedSeats : [],
   }));
 
   let artists = [];
@@ -58,8 +62,8 @@ function parseEventBody(b) {
     slideMobile:        b.slideMobile        || '',
     artists,
     date:             new Date(b.date),
-    doorsOpen:        b.doorsOpen        || '8:00 PM',
-    endTime:          b.endTime          || '4:00 AM',
+    doorsOpen:        b.doorsOpen        || '',
+    endTime:          b.endTime          || '',
     venue:            b.venue,
     venueAddress:     b.venueAddress     || '',
     googleMapLink:    b.googleMapLink    || '',
@@ -217,14 +221,44 @@ exports.getEditEvent = async (req, res) => {
   } catch (err) { res.redirect('/mee-admin'); }
 };
 
+// exports.postUpdateEvent = async (req, res) => {
+//   try {
+//     await Event.findByIdAndUpdate(req.params.id, parseEventBody(req.body), { new: true });
+//     return res.redirect('/mee-admin?success=Event+updated');
+//   } catch (err) {
+//     const event = await Event.findById(req.params.id).catch(() => null);
+//     const currentAdmin = getCurrentAdmin(req);
+//     const isSuperAdmin = req.session.superAdminLoggedIn || (req.session.staffLoggedIn && req.session.staffUser?.role === 'superadmin');
+//     return res.render('mee-admin/event-form', { title: 'Edit Event', event, error: err.message, currentAdmin, isSuperAdmin });
+//   }
+// };
+
 exports.postUpdateEvent = async (req, res) => {
   try {
-    await Event.findByIdAndUpdate(req.params.id, parseEventBody(req.body), { new: true });
+    const parsed = parseEventBody(req.body);
+
+    // Fetch existing event to preserve paidSeatCount + releasedSeats
+    const existing = await Event.findById(req.params.id).lean();
+    if (existing) {
+      parsed.ticketTypes = parsed.ticketTypes.map(newTt => {
+        // Match by category since _id may not be in form body
+        const oldTt = existing.ticketTypes.find(
+          o => o.category === newTt.category
+        );
+        if (oldTt) {
+          newTt.paidSeatCount = oldTt.paidSeatCount || 0;
+          newTt.releasedSeats = oldTt.releasedSeats || [];
+        }
+        return newTt;
+      });
+    }
+
+    await Event.findByIdAndUpdate(req.params.id, parsed, { new: true });
     return res.redirect('/mee-admin?success=Event+updated');
   } catch (err) {
     const event = await Event.findById(req.params.id).catch(() => null);
     const currentAdmin = getCurrentAdmin(req);
-    const isSuperAdmin = req.session.superAdminLoggedIn || (req.session.staffLoggedIn && req.session.staffUser?.role === 'superadmin');
+    const isSuperAdmin = req.session.superAdminLoggedIn;
     return res.render('mee-admin/event-form', { title: 'Edit Event', event, error: err.message, currentAdmin, isSuperAdmin });
   }
 };

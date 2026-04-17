@@ -113,13 +113,53 @@ const generateTicketPDF = async ({ booking, event, sponsors = [] }) => {
   // ── One page per ticket / attendee ──
   const pages = booking.tickets.map((t, i) => {
 
-    const rawSeat = (t.seatNumber || '').trim().toLowerCase();
-    const isStanding = categorySeatType === 'standing'
-      || rawSeat === 'standing'
-      || rawSeat === 'general';
-    const isSitting = !isStanding && rawSeat && rawSeat !== 'n/a';
-    const seatDisp = isStanding ? 'N/A' : isSitting ? esc(t.seatNumber.toUpperCase()) : 'N/A';
+//     const rawSeat = (t.seatNumber || '').trim().toLowerCase();
+//     // const isStanding = categorySeatType === 'standing'
+//     //   || rawSeat === 'standing'
+//     //   || rawSeat === 'general';
+//     const hasRealSeat = rawSeat && rawSeat !== 'standing' && rawSeat !== 'general' && rawSeat !== 'N/A' && rawSeat !== '';
+// const isStanding = !hasRealSeat && (categorySeatType === 'standing' || !categorySeatType);
 
+
+//     const isSitting = !isStanding && rawSeat && rawSeat !== 'n/a';
+//     const seatDisp = isStanding ? 'N/A' : isSitting ? esc(t.seatNumber.toUpperCase()) : 'N/A';
+
+// const rawSeat = (t.seatNumber || '').trim();
+// const rawSeatLower = rawSeat.toLowerCase();
+
+// A "real" seat is any non-empty value that isn't a placeholder
+// const hasRealSeat = rawSeat !== '' 
+//   && rawSeatLower !== 'standing' 
+//   && rawSeatLower !== 'general' 
+//   && rawSeatLower !== 'n/a'
+//   && rawSeatLower !== 'null';
+
+// const seatDisp = hasRealSeat ? esc(rawSeat.toUpperCase()) : 'N/A';
+
+
+// NEW — simple and reliable:
+const rawSeat = (t.seatNumber || '').trim();
+const PLACEHOLDER_SEATS = new Set(['standing', 'general', 'n/a', 'null', 'undefined', '']);
+const hasRealSeat = !PLACEHOLDER_SEATS.has(rawSeat.toLowerCase());
+const seatDisp = hasRealSeat ? esc(rawSeat.toUpperCase()) : 'N/A';
+
+// Keep isStanding/isSitting for any other logic that needs it
+const isStanding = !hasRealSeat;
+const isSitting = hasRealSeat;
+
+
+// AFTER (fixed — if a real seat number exists, it's never standing):
+
+
+console.log('🎫 PDF seat debug:', {
+  seatNumber: t.seatNumber,
+  rawSeat,
+  hasRealSeat,
+  categorySeatType,
+  isStanding,
+  isSitting,
+  seatDisp
+});
     const attendee = t.attendee || {};
     const genderStr = attendee.gender
       ? attendee.gender.charAt(0).toUpperCase() + attendee.gender.slice(1)

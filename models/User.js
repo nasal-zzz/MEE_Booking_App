@@ -16,6 +16,8 @@ const userSchema = new mongoose.Schema({
   isActive:      { type: Boolean, default: true },
   referralCode:  { type: String, default: '' },   // referral code used at signup/first visit
   bookings:      [{ type: mongoose.Schema.Types.ObjectId, ref: 'Booking' }],
+  bulkPromoSentCount:  { type: Number, default: 0 },
+  bulkPromoLastSentAt: { type: Date,   default: null },
 }, { timestamps: true });
 
 // Sparse unique indexes — allow multiple empty strings but enforce uniqueness for real values
