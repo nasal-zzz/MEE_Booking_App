@@ -426,7 +426,7 @@ if (_urlParams.get('success') && !document.querySelector('.flash')) {
 
 // ── Revenue Analytics ────────────────────────────────────────────────────────
 let _revChart;
-const _fmtR = v => '₹' + (v >= 1000 ? (v / 1000).toFixed(1) + 'k' : v);
+const _fmtR = v => '₹' + Number(v).toLocaleString('en-IN');
 const _toISO = d => d.toISOString().split('T')[0];
 
 // IST-aware today string

@@ -183,8 +183,8 @@ router.get('/', async (req, res) => {
         {
           $group: {
             _id: null,
-            grossRevenue:  { $sum: '$totalAmount' },
-            totalDiscount: { $sum: '$discount' },
+            grossRevenue:  { $sum: '$subtotal' },
+            totalDiscount: { $sum: { $ifNull: ['$discount', 0] } },
           }
         }
       ]),

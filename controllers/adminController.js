@@ -84,8 +84,8 @@ exports.getDashboard = async (req, res) => {
       {
         $group: {
           _id: null,
-          grossRevenue:  { $sum: '$totalAmount' },
-          totalDiscount: { $sum: '$discount' },
+          grossRevenue:  { $sum: '$subtotal' },
+          totalDiscount: { $sum: { $ifNull: ['$discount', 0] } },
         }
       },
     ]);
@@ -163,7 +163,7 @@ exports.getRevenueByDate = async (req, res) => {
       {
         $group: {
           _id:      { $dateToString: { format: '%Y-%m-%d', date: '$createdAt', timezone: 'Asia/Kolkata' } },
-          gross:    { $sum: '$totalAmount' },
+          gross:    { $sum: '$subtotal' },
           discount: { $sum: { $ifNull: ['$discount', 0] } },
           bookings: { $sum: 1 },
         }
