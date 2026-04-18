@@ -29,21 +29,26 @@ const saveTicketFile = (buffer, bookingRef) => {
   try {
     const dir = path.join(__dirname, '..', 'public', 'ticket');
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-    const filename = `${bookingRef}_ticket.pdf`;
+
+    // ✅ Unique filename each time — busts MSG91/WhatsApp CDN cache
+    const filename = `${bookingRef}_${Date.now()}_ticket.pdf`;
     const filePath = path.join(dir, filename);
     fs.writeFileSync(filePath, buffer);
 
-    // ✅ Auto-delete after 10 minutes (enough time for MSG91 to fetch it)
+    // Also clean up old PDFs for this booking ref
+    try {
+      fs.readdirSync(dir)
+        .filter(f => f.startsWith(bookingRef) && f !== filename)
+        .forEach(f => fs.unlinkSync(path.join(dir, f)));
+    } catch (_) { }
+
     setTimeout(() => {
       try {
-        if (fs.existsSync(filePath)) {
-          fs.unlinkSync(filePath);
-          console.log(`🗑 Deleted temp ticket PDF: ${filename}`);
-        }
+        if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
       } catch (e) {
         console.warn('PDF cleanup error:', e.message);
       }
-    }, 5 * 60 * 1000); // 5 minutes
+    }, 5 * 60 * 1000);
 
     return `${APP_URL()}/ticket/${filename}`;
   } catch (e) {
@@ -325,18 +330,18 @@ const sendWhatsAppPaymentFailed = async ({ phone, name, booking, event }) => {
 const sendWhatsAppEventReminder = async ({ phone, name, booking, event }) => {
   if (!phone) return { success: false };
   console.log('📱 MSG91 WA sendWhatsAppEventReminder →', phone);
- 
+
   if (!isConfigured()) {
     devLog('EventReminder', phone, { name });
     return { success: true, dev: true };
   }
- 
+
   const templateName = process.env.MSG91_WA_TEMPLATE_REMINDER || '';
   if (!templateName) {
     console.warn('⚠ MSG91_WA_TEMPLATE_REMINDER not set');
     return { success: false };
   }
- 
+
   try {
     await sendMsg91WA(phone, templateName, {
       body_name: name,
@@ -360,7 +365,7 @@ const sendWhatsAppEventReminder = async ({ phone, name, booking, event }) => {
 //     bookedSeats: c.bookedSeats,
 //     totalSeats: c.totalSeats,
 //   })), null, 2));
-  
+
 //   // Filter only categories with available seats
 //   const availableCats = categories
 //     .filter(c => c.isActive !== false && (c.bookedSeats ?? 0) < (c.totalSeats ?? 0))
@@ -432,7 +437,7 @@ const sendWhatsAppPromo = async ({ phone, name, categories = [], eventName = '' 
   const EMPTY = '\u200B';  // zero-width space — renders as blank in WhatsApp
 
   const components = {
-    body_name:       name      || '',
+    body_name: name || '',
     body_event_name: eventName || '',
   };
 
@@ -456,7 +461,7 @@ const sendWhatsAppPromo = async ({ phone, name, categories = [], eventName = '' 
   }
 };
 
- 
+
 
 // ── Exports ───────────────────────────────────────────────────────────────
 
