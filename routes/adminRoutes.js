@@ -533,96 +533,161 @@ router.post('/bookings/send-bulk-reminder', async (req, res) => {
   });
 
   // ── Admin: Staff management (admins can create/manage staff-role accounts) ──
-  router.get('/staff', async (req, res) => {
-    try {
-      const staff = await Staff.find({ role: 'staff' }).sort({ createdAt: -1 });
-      const currentAdmin = getCurrentAdmin(req);
-      const isSuperAdmin = req.session.superAdminLoggedIn || (req.session.staffLoggedIn && req.session.staffUser?.role === 'superadmin');
-      res.render('mee-admin/staff', { title: 'Staff Management — Admin', staff, currentAdmin, isSuperAdmin });
-    } catch(err) { res.redirect('/mee-admin'); }
-  });
 
-  router.post('/staff', async (req, res) => {
-    try {
-      const { firstName, lastName, email, phone, manualUsername, manualPassword, canScanQR, canViewBookings, canManageEvents } = req.body;
-      let username, password;
-      if (manualUsername && manualUsername.trim()) {
-        username = manualUsername.trim().toLowerCase().replace(/\s+/g,'-');
-        if (!manualPassword || manualPassword.trim().length < 4) return res.json({ success:false, message:'Password must be at least 4 characters.' });
-        password = manualPassword.trim();
-        const taken = await Staff.findOne({ username });
-        if (taken) return res.json({ success:false, message:`Username "${username}" is already taken.` });
-      } else {
-        const base = `staff-${firstName.toLowerCase().replace(/[^a-z0-9]/g,'')}`;
-        const existing = await Staff.findOne({ username: base });
-        username = existing ? `${base}${Math.floor(Math.random()*900)+100}` : base;
-        password = `${username}-${(phone||'000').slice(-3)}`;
-      }
-      const member = await Staff.create({
-        firstName, lastName: lastName||'', email, phone: phone||'',
-        username, password, role: 'staff',
-        canScanQR: canScanQR==='on', canViewBookings: canViewBookings==='on', canManageEvents: canManageEvents==='on',
-        createdBy: req.session.staffUser?.id || null,
-      });
-      res.json({ success:true, username: member.username, password: member.password, id: member._id });
-    } catch(err) {
-      res.json({ success:false, message: err.code===11000 ? 'Email or username already exists.' : err.message });
-    }
-  });
 
-  router.post('/staff/:id/toggle', async (req, res) => {
-    try {
-      const member = await Staff.findOne({ _id: req.params.id, role: 'staff' });
-      if (!member) return res.json({ success:false, message:'Staff not found' });
-      member.isActive = !member.isActive;
-      await member.save();
-      res.json({ success:true, isActive: member.isActive });
-    } catch(err) { res.json({ success:false, message: err.message }); }
-  });
+// ── GET /mee-admin/staff ──
+router.get('/staff', async (req, res) => {
+  try {
+    const staff = await Staff.find({ role: 'staff' }).sort({ createdAt: -1 });
+    const currentAdmin = getCurrentAdmin(req);
+    const isSuperAdmin = req.session.superAdminLoggedIn ||
+      (req.session.staffLoggedIn && req.session.staffUser?.role === 'superadmin');
 
-  router.post('/staff/:id/delete', async (req, res) => {
-    await Staff.findOneAndDelete({ _id: req.params.id, role: 'staff' }).catch(()=>{});
-    res.redirect('/mee-admin/staff');
-  });
-
-  // ── Admin error handler — keeps user inside admin context ──
-  router.use((err, req, res, next) => {
-    console.error('[ADMIN ERROR]', req.path, err.message);
-    const isJson = req.headers['content-type']?.includes('application/json') || req.xhr;
-    if (isJson) return res.status(500).json({ success: false, message: err.message });
-    res.status(500).render('mee-admin/error', {
-      title:      'Error — Admin',
-      status:     500,
-      errTitle:   'SOMETHING WENT WRONG',
-      errMessage: 'An unexpected error occurred. Please try again.',
-      errDetail:  process.env.NODE_ENV !== 'production' ? err.message : null,
-    });
-  });
-
-  // ── Admin: Clean up duplicate pending bookings ──
-  router.post('/cleanup-duplicates', async (req, res) => {
-    try {
-      const paidBookings = await Booking.find({ paymentStatus: 'paid' }).lean();
-      let removed = 0;
-      for (const paid of paidBookings) {
-        const dupes = await Booking.find({
-          user:          paid.user,
-          event:         paid.event,
-          paymentStatus: { $in: ['pending', 'failed'] },
-          _id:           { $ne: paid._id }
-        });
-        for (const dupe of dupes) {
-          await Booking.findByIdAndDelete(dupe._id);
-          await User.findByIdAndUpdate(paid.user, { $pull: { bookings: dupe._id } }).catch(()=>{});
-          removed++;
-          console.log('🧹 Removed duplicate booking:', dupe.bookingRef, '(pending/failed, paid exists)');
+    const activeEvent = await Event.findOne({ isActive: true }).lean();
+    const gates = [];
+    if (activeEvent) {
+      const seen = new Set();
+      for (const t of activeEvent.ticketTypes) {
+        if (t.gateNumber && t.isActive && !seen.has(t.gateNumber)) {
+          seen.add(t.gateNumber);
+          const cats = activeEvent.ticketTypes
+            .filter(x => x.gateNumber === t.gateNumber && x.isActive)
+            .map(x => ({ category: x.category, name: x.name || x.category }));
+          gates.push({ gate: t.gateNumber, categories: cats });
         }
       }
-      res.json({ success: true, removed, message: removed + ' duplicate pending/failed bookings removed.' });
-    } catch(err) {
-      res.json({ success: false, message: err.message });
     }
-  });
+
+    res.render('mee-admin/staff', {
+      title: 'Staff Management — Admin',
+      staff,
+      currentAdmin,
+      isSuperAdmin,
+      gates,
+      activeEventId: activeEvent?._id?.toString() || '',
+    });
+  } catch (err) { res.redirect('/mee-admin'); }
+});
+
+// ── POST /mee-admin/staff — create staff ──
+router.post('/staff', async (req, res) => {
+  try {
+    const {
+      firstName, lastName, email, phone, role,
+      canScanQR, canViewBookings, canManageEvents, canSellTickets,
+      manualUsername, manualPassword,
+      gateNo,  // ← single field
+    } = req.body;
+
+    const wantsQR    = canScanQR === 'on';
+    const wantsSell  = canSellTickets === 'on';
+    const isStaffRole = !role || role === 'staff';
+
+    if (isStaffRole && wantsQR && wantsSell)
+      return res.json({ success: false, message: 'Staff can only have Scan QR or Sell Tickets — not both.' });
+    if (isStaffRole && (canViewBookings === 'on' || canManageEvents === 'on'))
+      return res.json({ success: false, message: 'Staff cannot have View Bookings or Manage Events permissions.' });
+
+    let username, password;
+    if (manualUsername && manualUsername.trim()) {
+      username = manualUsername.trim().toLowerCase().replace(/\s+/g, '-');
+      if (!manualPassword || manualPassword.trim().length < 4)
+        return res.json({ success: false, message: 'Password must be at least 4 characters.' });
+      password = manualPassword.trim();
+      const taken = await Staff.findOne({ username });
+      if (taken) return res.json({ success: false, message: `Username "${username}" is already taken.` });
+    } else {
+      const prefix = role === 'admin' ? 'admin' : 'staff';
+      const baseUser = `${prefix}-${firstName.toLowerCase().replace(/[^a-z0-9]/g, '')}`;
+      const existing = await Staff.findOne({ username: baseUser });
+      username = existing ? `${baseUser}${Math.floor(Math.random() * 900) + 100}` : baseUser;
+      password = `${username}-${(phone || '000').slice(-3)}`;
+    }
+
+    // Auto-resolve category from gate
+    let resolvedCategory = '';
+    let resolvedEventId  = null;
+    if (wantsQR && gateNo) {
+      const activeEvent = await Event.findOne({ isActive: true }).lean();
+      if (activeEvent) {
+        resolvedEventId  = activeEvent._id;
+        const match = activeEvent.ticketTypes.find(
+          t => t.gateNumber === gateNo && t.isActive
+        );
+        resolvedCategory = match ? match.category : '';
+      }
+    }
+
+    const member = await Staff.create({
+      firstName, lastName: lastName || '', email, phone: phone || '',
+      username, password, plainPassword: password,
+      role: role || 'staff',
+      canScanQR:       isStaffRole ? wantsQR   : (canScanQR === 'on'),
+      canSellTickets:  isStaffRole ? wantsSell : (canSellTickets === 'on'),
+      canViewBookings: isStaffRole ? false : (canViewBookings === 'on'),
+      canManageEvents: isStaffRole ? false : (canManageEvents === 'on'),
+      gateNo:           wantsQR ? (gateNo || '') : '',
+      assignedCategory: wantsQR ? resolvedCategory : '',
+      assignedEventId:  resolvedEventId,
+      createdBy:      req.session.staffUser?.id   || null,
+      createdByEmail: req.session.staffUser?.email || req.session.adminUser || null,
+      createdByName:  req.session.staffUser?.role === 'superadmin' ? 'SUPER ADMIN' : (req.session.staffUser?.name || req.session.adminUser || 'Admin'),
+        
+    });
+
+    res.json({ success: true, username: member.username, password: member.password, id: member._id });
+  } catch (err) {
+    res.json({ success: false, message: err.code === 11000 ? 'Email or username already exists.' : err.message });
+  }
+});
+
+// ── POST /mee-admin/staff/:id/gate — edit gate assignment ──
+router.post('/staff/:id/gate', async (req, res) => {
+  try {
+    const { gateNo } = req.body;  // ← only need gateNo, no selectedCategory
+    const member = await Staff.findOne({ _id: req.params.id, role: 'staff' });
+    if (!member) return res.json({ success: false, message: 'Staff not found' });
+    if (!member.canScanQR) return res.json({ success: false, message: 'Staff is not a QR scanner.' });
+
+    const activeEvent = await Event.findOne({ isActive: true }).lean();
+    if (!activeEvent) return res.json({ success: false, message: 'No active event.' });
+
+    // Find categories for this gate — take the first one as the single assigned category
+    const gateCats = activeEvent.ticketTypes
+      .filter(t => t.gateNumber === gateNo && t.isActive)
+      .map(t => t.category);
+
+    if (!gateCats.length)
+      return res.json({ success: false, message: `No active categories found for ${gateNo}.` });
+
+    member.gateNo           = gateNo;
+    member.assignedCategory = gateCats[0];  // ← first category for this gate
+    member.assignedEventId  = activeEvent._id;
+    await member.save();
+
+    res.json({ success: true, gateNo, assignedCategory: member.assignedCategory });
+  } catch (err) {
+    res.json({ success: false, message: err.message });
+  }
+});
+
+// ── POST /mee-admin/staff/:id/toggle ──
+router.post('/staff/:id/toggle', async (req, res) => {
+  try {
+    const member = await Staff.findOne({ _id: req.params.id, role: 'staff' });
+    if (!member) return res.json({ success: false, message: 'Staff not found' });
+    member.isActive = !member.isActive;
+    await member.save();
+    res.json({ success: true, isActive: member.isActive });
+  } catch (err) { res.json({ success: false, message: err.message }); }
+});
+
+// ── POST /mee-admin/staff/:id/delete ──
+router.post('/staff/:id/delete', async (req, res) => {
+  await Staff.findOneAndDelete({ _id: req.params.id, role: 'staff' }).catch(() => {});
+  res.redirect('/mee-admin/staff');
+});
+
 
 
   // ════════════════════════════════════════════════════════════

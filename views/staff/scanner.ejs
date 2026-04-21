@@ -15,9 +15,9 @@
       --green:   #00e676;
       --yellow:  #ffd600;
       --red:     #ff3d3d;
+      --orange:  #ff6b35;
       --muted:   #5a5a7a;
       --white:   #ffffff;
-      --dimW:    rgba(255,255,255,0.55);
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -36,12 +36,19 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 14px 20px;
+      padding: 12px 20px;
       border-bottom: 1px solid var(--border);
-      background: rgba(8,8,16,0.95);
+      background: rgba(8,8,16,0.97);
       position: sticky;
       top: 0;
       z-index: 100;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .header-left {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
     }
     .header-brand {
       font-family: 'Space Mono', monospace;
@@ -51,18 +58,62 @@
       text-transform: uppercase;
     }
     .header-user {
-      font-size: 13px;
+      font-size: 12px;
       color: var(--muted);
     }
+
+    /* Gate assignment pill in header */
+    .gate-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(0,230,118,0.06);
+      border: 1px solid rgba(0,230,118,0.2);
+      border-radius: 20px;
+      padding: 6px 14px;
+      flex-shrink: 0;
+    }
+    .gate-pill-icon {
+      font-size: 14px;
+      line-height: 1;
+    }
+    .gate-pill-info {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+    }
+    .gate-pill-no {
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 1.5px;
+      color: var(--green);
+      font-weight: 700;
+    }
+    .gate-pill-cat {
+      font-family: 'Space Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 1px;
+      color: rgba(0,230,118,0.55);
+      text-transform: uppercase;
+    }
+    .gate-pill.no-gate {
+      background: rgba(255,214,0,0.06);
+      border-color: rgba(255,214,0,0.2);
+    }
+    .gate-pill.no-gate .gate-pill-no {
+      color: var(--yellow);
+    }
+
     .btn-logout {
       font-family: 'Space Mono', monospace;
       font-size: 10px;
       color: var(--muted);
       text-decoration: none;
       border: 1px solid var(--border);
-      padding: 4px 10px;
+      padding: 5px 10px;
       border-radius: 4px;
       letter-spacing: 1px;
+      flex-shrink: 0;
     }
 
     /* ── MAIN LAYOUT ── */
@@ -87,7 +138,6 @@
       flex-direction: column;
       gap: 16px;
     }
-
     .section-title {
       font-family: 'Space Mono', monospace;
       font-size: 10px;
@@ -105,7 +155,13 @@
       overflow: hidden;
       position: relative;
       border: 2px solid var(--border);
+      transition: border-color 0.3s;
     }
+    #qr-video-wrap.scanning { border-color: rgba(255,45,120,0.4); }
+    #qr-video-wrap.success  { border-color: rgba(0,230,118,0.6); }
+    #qr-video-wrap.error    { border-color: rgba(255,61,61,0.6); }
+    #qr-video-wrap.wrong-gate { border-color: rgba(255,107,53,0.7); }
+
     #qr-video {
       width: 100%; height: 100%;
       object-fit: cover;
@@ -136,7 +192,6 @@
     }
     .scan-frame::before { top: -3px; left: -3px; border-width: 3px 0 0 3px; border-radius: 6px 0 0 0; }
     .scan-frame::after  { bottom: -3px; right: -3px; border-width: 0 3px 3px 0; border-radius: 0 0 6px 0; }
-
     .scan-line {
       position: absolute;
       left: 4px; right: 4px;
@@ -159,10 +214,7 @@
     }
 
     /* ── MANUAL INPUT ── */
-    .manual-row {
-      display: flex;
-      gap: 8px;
-    }
+    .manual-row { display: flex; gap: 8px; }
     .manual-input {
       flex: 1;
       background: var(--card);
@@ -217,15 +269,84 @@
       text-align: center;
       padding: 32px;
     }
-    .idle-icon {
-      font-size: 48px;
-      opacity: 0.3;
-    }
+    .idle-icon { font-size: 48px; opacity: 0.3; }
     .idle-text {
       font-family: 'Space Mono', monospace;
       font-size: 11px;
       letter-spacing: 2px;
       text-transform: uppercase;
+    }
+
+    /* ── WRONG GATE ERROR CARD ── */
+    .wrong-gate-card {
+      background: var(--card);
+      border-radius: 12px;
+      border: 1px solid rgba(255,107,53,0.4);
+      overflow: hidden;
+    }
+    .wrong-gate-header {
+      background: rgba(255,107,53,0.08);
+      padding: 16px;
+      border-bottom: 1px solid rgba(255,107,53,0.2);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .wrong-gate-icon {
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      background: rgba(255,107,53,0.15);
+      border: 2px solid rgba(255,107,53,0.4);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+    .wrong-gate-title {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--orange);
+      letter-spacing: 1px;
+    }
+    .wrong-gate-sub {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+    .wrong-gate-body {
+      padding: 16px;
+    }
+    .wrong-gate-detail {
+      background: rgba(255,107,53,0.05);
+      border: 1px solid rgba(255,107,53,0.15);
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin-bottom: 14px;
+    }
+    .wg-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 5px 0;
+      font-size: 13px;
+    }
+    .wg-row + .wg-row { border-top: 1px solid rgba(255,255,255,0.04); }
+    .wg-lbl {
+      font-family: 'Space Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 2px;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+    .wg-val { font-weight: 600; }
+    .wg-val.ticket-cat  { color: var(--yellow); }
+    .wg-val.your-gate   { color: var(--green); }
+    .wg-val.wrong       { color: var(--orange); }
+    .wrong-gate-msg {
+      font-size: 13px;
+      color: rgba(255,255,255,0.6);
+      margin-bottom: 14px;
+      line-height: 1.5;
     }
 
     /* ── BOOKING CARD ── */
@@ -235,7 +356,6 @@
       border: 1px solid var(--border);
       overflow: hidden;
     }
-
     .booking-card-header {
       padding: 14px 16px;
       border-bottom: 1px solid var(--border);
@@ -244,7 +364,6 @@
       justify-content: space-between;
       gap: 8px;
     }
-
     .status-badge {
       display: inline-flex;
       align-items: center;
@@ -272,13 +391,11 @@
       border: 1px solid rgba(255,214,0,0.30);
       color: var(--yellow);
     }
-
     .booking-ref {
       font-family: 'Space Mono', monospace;
       font-size: 11px;
       color: var(--muted);
     }
-
     .booking-meta {
       padding: 12px 16px;
       display: grid;
@@ -286,7 +403,6 @@
       gap: 8px 12px;
       border-bottom: 1px solid var(--border);
     }
-    .bm-item {}
     .bm-lbl {
       font-family: 'Space Mono', monospace;
       font-size: 9px;
@@ -295,11 +411,7 @@
       text-transform: uppercase;
       margin-bottom: 2px;
     }
-    .bm-val {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--white);
-    }
+    .bm-val { font-size: 13px; font-weight: 600; color: var(--white); }
     .bm-val.accent { color: var(--accent); }
 
     /* ── ATTENDEE LIST ── */
@@ -316,10 +428,7 @@
       color: var(--muted);
       text-transform: uppercase;
     }
-    .al-count {
-      font-size: 12px;
-      color: var(--muted);
-    }
+    .al-count { font-size: 12px; color: var(--muted); }
 
     .attendee-row {
       display: flex;
@@ -330,71 +439,37 @@
       transition: background 0.15s;
     }
     .attendee-row:hover { background: rgba(255,255,255,0.02); }
-    .attendee-row.checked-in {
-      opacity: 0.6;
-    }
+    .attendee-row.checked-in { opacity: 0.6; }
 
     .attendee-avatar {
-      width: 36px;
-      height: 36px;
+      width: 36px; height: 36px;
       border-radius: 50%;
       background: linear-gradient(135deg, #6a0dad, #ff2d78);
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      display: flex; align-items: center; justify-content: center;
       font-family: 'Barlow Condensed', sans-serif;
-      font-size: 15px;
-      font-weight: 800;
-      flex-shrink: 0;
-      color: #fff;
+      font-size: 15px; font-weight: 800;
+      flex-shrink: 0; color: #fff;
     }
     .attendee-row.checked-in .attendee-avatar {
       background: #1a2a1a;
       color: var(--green);
     }
-
-    .attendee-info {
-      flex: 1;
-      min-width: 0;
-    }
+    .attendee-info { flex: 1; min-width: 0; }
     .attendee-name {
       font-family: 'Barlow Condensed', sans-serif;
-      font-size: 15px;
-      font-weight: 700;
-      color: var(--white);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      font-size: 15px; font-weight: 700; color: var(--white);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
-    .attendee-sub {
-      font-size: 11px;
-      color: var(--muted);
-      margin-top: 1px;
-    }
-    .attendee-seat {
-      font-family: 'Space Mono', monospace;
-      font-size: 10px;
-      color: #c8ff00;
-    }
-
-    .attendee-status {
-      flex-shrink: 0;
-      text-align: right;
-    }
+    .attendee-sub { font-size: 11px; color: var(--muted); margin-top: 1px; }
+    .attendee-seat { font-family: 'Space Mono', monospace; font-size: 10px; color: #c8ff00; }
+    .attendee-status { flex-shrink: 0; text-align: right; }
     .used-tag {
       font-family: 'Space Mono', monospace;
-      font-size: 9px;
-      color: var(--green);
-      letter-spacing: 1px;
-      text-transform: uppercase;
+      font-size: 9px; color: var(--green);
+      letter-spacing: 1px; text-transform: uppercase;
     }
-    .used-time {
-      font-size: 10px;
-      color: var(--muted);
-      margin-top: 1px;
-    }
+    .used-time { font-size: 10px; color: var(--muted); margin-top: 1px; }
 
-    /* ── CHECKIN BUTTON ── */
     .btn-checkin {
       background: rgba(0,230,118,0.12);
       border: 1px solid rgba(0,230,118,0.4);
@@ -402,27 +477,17 @@
       border-radius: 6px;
       padding: 6px 14px;
       font-family: 'Outfit', sans-serif;
-      font-weight: 600;
-      font-size: 12px;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: all 0.2s;
-      flex-shrink: 0;
+      font-weight: 600; font-size: 12px;
+      cursor: pointer; white-space: nowrap;
+      transition: all 0.2s; flex-shrink: 0;
     }
     .btn-checkin:hover:not(:disabled) {
       background: rgba(0,230,118,0.22);
       border-color: var(--green);
     }
-    .btn-checkin:disabled {
-      opacity: 0.35;
-      cursor: not-allowed;
-    }
-    .btn-checkin.loading {
-      opacity: 0.6;
-      cursor: wait;
-    }
+    .btn-checkin:disabled { opacity: 0.35; cursor: not-allowed; }
+    .btn-checkin.loading  { opacity: 0.6; cursor: wait; }
 
-    /* ── CHECK IN ALL BUTTON ── */
     .checkin-all-wrap {
       padding: 12px 16px;
       border-top: 1px solid var(--border);
@@ -430,34 +495,24 @@
     .btn-checkin-all {
       width: 100%;
       background: var(--accent);
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      padding: 12px;
+      color: #fff; border: none;
+      border-radius: 8px; padding: 12px;
       font-family: 'Outfit', sans-serif;
-      font-weight: 700;
-      font-size: 14px;
-      cursor: pointer;
-      letter-spacing: 0.5px;
+      font-weight: 700; font-size: 14px;
+      cursor: pointer; letter-spacing: 0.5px;
       transition: opacity 0.2s;
     }
     .btn-checkin-all:hover:not(:disabled) { opacity: 0.88; }
     .btn-checkin-all:disabled { opacity: 0.35; cursor: not-allowed; }
 
-    /* ── SCAN AGAIN ── */
     .btn-scan-again {
-      display: block;
-      width: 100%;
-      text-align: center;
+      display: block; width: 100%; text-align: center;
       background: transparent;
       border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 10px;
+      border-radius: 8px; padding: 10px;
       font-family: 'Space Mono', monospace;
-      font-size: 11px;
-      color: var(--muted);
-      cursor: pointer;
-      letter-spacing: 1px;
+      font-size: 11px; color: var(--muted);
+      cursor: pointer; letter-spacing: 1px;
       transition: border-color 0.2s;
     }
     .btn-scan-again:hover { border-color: rgba(255,255,255,0.2); color: var(--white); }
@@ -465,47 +520,66 @@
     /* ── TOAST ── */
     #toast {
       position: fixed;
-      bottom: 24px;
-      left: 50%;
+      bottom: 24px; left: 50%;
       transform: translateX(-50%) translateY(80px);
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: 10px;
       padding: 12px 20px;
-      font-size: 13px;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 8px;
+      font-size: 13px; font-weight: 600;
+      display: flex; align-items: center; gap: 8px;
       transition: transform 0.3s ease;
-      z-index: 1000;
-      max-width: 320px;
-      text-align: center;
-      pointer-events: none;
+      z-index: 1000; max-width: 340px;
+      text-align: center; pointer-events: none;
     }
     #toast.show { transform: translateX(-50%) translateY(0); }
-    #toast.success { border-color: rgba(0,230,118,0.4); color: var(--green); }
-    #toast.error   { border-color: rgba(255,61,61,0.4);  color: var(--red); }
-    #toast.warn    { border-color: rgba(255,214,0,0.4);  color: var(--yellow); }
+    #toast.success   { border-color: rgba(0,230,118,0.4);  color: var(--green); }
+    #toast.error     { border-color: rgba(255,61,61,0.4);   color: var(--red); }
+    #toast.warn      { border-color: rgba(255,214,0,0.4);   color: var(--yellow); }
+    #toast.wronggate { border-color: rgba(255,107,53,0.5);  color: var(--orange); }
   </style>
 </head>
 <body>
 
   <!-- ── HEADER ── -->
   <div class="header">
-    <div class="header-brand">MEE · QR Scanner</div>
-    <div class="header-user"><%= staffUser.name %></div>
+    <div class="header-left">
+      <div class="header-brand">MEE · QR Scanner</div>
+      <div class="header-user"><%= staffUser.name %></div>
+    </div>
+
+    <!-- Gate assignment pill -->
+    <% if (staffUser.gateNo) { %>
+    <div class="gate-pill">
+      <div class="gate-pill-icon">🚪</div>
+      <div class="gate-pill-info">
+        <div class="gate-pill-no"><%= staffUser.gateNo %></div>
+        <% if (staffUser.assignedCategory) { %>
+        <div class="gate-pill-cat"><%= staffUser.assignedCategory.toUpperCase() %></div>
+        <% } %>
+      </div>
+    </div>
+    <% } else { %>
+    <div class="gate-pill no-gate">
+      <div class="gate-pill-icon">⚠️</div>
+      <div class="gate-pill-info">
+        <div class="gate-pill-no">NO GATE</div>
+        <div class="gate-pill-cat" style="color:rgba(255,214,0,0.5);">Contact admin</div>
+      </div>
+    </div>
+    <% } %>
+
     <a href="/staff/logout" class="btn-logout">LOGOUT</a>
   </div>
 
   <!-- ── MAIN ── -->
   <div class="main">
 
-    <!-- LEFT: Camera + manual input -->
+    <!-- LEFT: Camera + manual -->
     <div class="camera-panel">
       <div class="section-title">Scan Ticket QR</div>
 
-      <div id="qr-video-wrap">
+      <div id="qr-video-wrap" class="scanning">
         <video id="qr-video" playsinline autoplay muted></video>
         <div class="scan-overlay">
           <div class="scan-frame">
@@ -535,8 +609,12 @@
       <div class="idle-state" id="idle-state">
         <div class="idle-icon">📷</div>
         <div class="idle-text">Scan a QR code<br/>or enter booking ref</div>
+        <% if (staffUser.gateNo) { %>
+        <div style="margin-top:8px;font-family:'Space Mono',monospace;font-size:10px;color:rgba(0,230,118,0.5);letter-spacing:1px;">
+          ASSIGNED: <%= staffUser.gateNo %><% if (staffUser.assignedCategory) { %> · <%= staffUser.assignedCategory.toUpperCase() %><% } %>
+        </div>
+        <% } %>
       </div>
-      <!-- Booking card injected here -->
     </div>
 
   </div>
@@ -544,24 +622,24 @@
   <!-- ── TOAST ── -->
   <div id="toast"></div>
 
-  <!-- jsQR -->
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 
   <script>
-    // ─────────────────────────────────────────────────────────
-    // STATE
-    // ─────────────────────────────────────────────────────────
-    let currentBooking = null;   // last scan result
-    let scanPaused     = false;  // pause QR scanning while showing result
-    let lastScanned    = '';     // debounce duplicate scans
+    // ── Staff gate info from server ──
+    const STAFF_GATE     = '<%= staffUser.gateNo || "" %>';
+    const STAFF_CATEGORY = '<%= staffUser.assignedCategory || "" %>';
 
-    // ─────────────────────────────────────────────────────────
-    // CAMERA
-    // ─────────────────────────────────────────────────────────
+    // ── STATE ──
+    let currentBooking = null;
+    let scanPaused     = false;
+    let lastScanned    = '';
+
+    // ── CAMERA ──
     const video     = document.getElementById('qr-video');
     const camStatus = document.getElementById('cam-status');
     const canvas    = document.createElement('canvas');
     const ctx       = canvas.getContext('2d');
+    const videoWrap = document.getElementById('qr-video-wrap');
 
     async function startCamera() {
       try {
@@ -570,11 +648,12 @@
         });
         video.srcObject = stream;
         video.play();
-        camStatus.textContent = 'Camera active — aim at QR code';
+        camStatus.textContent = STAFF_GATE
+          ? `Active — ${STAFF_GATE}${STAFF_CATEGORY ? ' · ' + STAFF_CATEGORY.toUpperCase() : ''}`
+          : 'Camera active — aim at QR code';
         requestAnimationFrame(scanFrame);
       } catch (e) {
         camStatus.textContent = 'Camera error: ' + e.message;
-        console.error('Camera error:', e);
       }
     }
 
@@ -597,9 +676,7 @@
 
     startCamera();
 
-    // ─────────────────────────────────────────────────────────
-    // SCAN HANDLERS
-    // ─────────────────────────────────────────────────────────
+    // ── SCAN HANDLERS ──
     function handleManualScan() {
       const val = document.getElementById('manual-input').value.trim();
       if (!val) return;
@@ -613,47 +690,93 @@
     async function handleQRData(raw) {
       scanPaused = true;
       let payload = null;
-
-      // Try to parse as JSON
       try { payload = JSON.parse(raw); } catch {}
 
-      // Determine what to send to the server
       const body = {};
       if (payload) {
         body.qrData = payload;
       } else {
-        // raw string — could be bookingRef or ticketId
-        if (raw.startsWith('MEE-CASH-') || raw.startsWith('MEE-') && raw.length < 20) {
-          body.bookingRef = raw;
-        } else {
-          body.bookingRef = raw;
-        }
+        body.bookingRef = raw;
       }
 
       try {
         const res  = await fetch('/staff/api/scan', {
-          method:  'POST',
+          method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body:    JSON.stringify(body),
+          body: JSON.stringify(body),
         });
         const data = await res.json();
         renderResult(data);
       } catch (err) {
         showToast('Network error. Try again.', 'error');
+        setVideoState('error');
         scanPaused = false;
         lastScanned = '';
       }
     }
 
-    // ─────────────────────────────────────────────────────────
-    // RENDER SCAN RESULT
-    // ─────────────────────────────────────────────────────────
+    // ── SET VIDEO BORDER STATE ──
+    function setVideoState(state) {
+      videoWrap.className = state; // scanning | success | error | wrong-gate
+    }
+
+    // ── RENDER SCAN RESULT ──
     function renderResult(data) {
       currentBooking = data.booking || null;
       const panel = document.getElementById('result-panel');
-      document.getElementById('idle-state').style.display = 'none';
+      document.getElementById('idle-state') && (document.getElementById('idle-state').style.display = 'none');
 
+      // ── WRONG GATE — special handling ──
+      if (data.status === 'wrong_gate') {
+        setVideoState('wrong-gate');
+        scanPaused = true; // keep paused so they see the error
+
+        const ticketCat = data.ticketType || '(unknown)';
+
+        panel.innerHTML = `
+          <div class="wrong-gate-card">
+            <div class="wrong-gate-header">
+              <div class="wrong-gate-icon">🚫</div>
+              <div>
+                <div class="wrong-gate-title">WRONG GATE</div>
+                <div class="wrong-gate-sub">This ticket cannot be scanned here</div>
+              </div>
+            </div>
+            <div class="wrong-gate-body">
+              <div class="wrong-gate-detail">
+                <div class="wg-row">
+                  <span class="wg-lbl">Ticket Category</span>
+                  <span class="wg-val ticket-cat">${escH((data.ticketCategory || '').toUpperCase() || '—')}</span>
+                </div>
+                <div class="wg-row">
+                  <span class="wg-lbl">Your Gate</span>
+                  <span class="wg-val your-gate">${escH(STAFF_GATE || '—')}</span>
+                </div>
+                <div class="wg-row">
+                  <span class="wg-lbl">Your Category</span>
+                  <span class="wg-val your-gate">${escH((STAFF_CATEGORY || '—').toUpperCase())}</span>
+                </div>
+                <div class="wg-row">
+                  <span class="wg-lbl">Status</span>
+                  <span class="wg-val wrong">NOT PERMITTED HERE</span>
+                </div>
+              </div>
+              <div class="wrong-gate-msg">
+                ${escH(data.message || 'This ticket category is not valid at your gate. Please direct the attendee to the correct gate.')}
+              </div>
+              <button class="btn-scan-again" onclick="resetScan()" style="border-color:rgba(255,107,53,0.3);color:var(--orange);">
+                ⟳ &nbsp;Scan Next Ticket
+              </button>
+            </div>
+          </div>`;
+
+        showToast(data.message || 'Wrong gate!', 'wronggate');
+        return;
+      }
+
+      // ── GENERAL ERROR (invalid, not found) ──
       if (!data.success && !data.booking) {
+        setVideoState('error');
         panel.innerHTML = `
           <div class="booking-card">
             <div class="booking-card-header">
@@ -670,31 +793,37 @@
         return;
       }
 
+      // ── VALID BOOKING ──
       const b = data.booking;
       if (!b) { scanPaused = false; return; }
 
       const totalTickets   = b.tickets.length;
       const checkedInCount = b.tickets.filter(t => t.isUsed).length;
       const allDone        = checkedInCount === totalTickets;
-      const noneDone       = checkedInCount === 0;
+
+      if (allDone) {
+        setVideoState('error');
+        showToast('All attendees already checked in', 'warn');
+      } else {
+        setVideoState('success');
+        showToast(data.message || 'Booking found', 'success');
+      }
 
       let statusBadge = '';
       if (allDone) {
         statusBadge = `<span class="status-badge used">✓ All Checked In</span>`;
-        showToast('All attendees already checked in', 'warn');
       } else if (checkedInCount > 0) {
         statusBadge = `<span class="status-badge partial">⬤ Partial (${checkedInCount}/${totalTickets})</span>`;
-        showToast(`${totalTickets - checkedInCount} attendee(s) pending`, 'warn');
       } else {
         statusBadge = `<span class="status-badge valid">● Valid — ${totalTickets} Attendee${totalTickets > 1 ? 's' : ''}</span>`;
-        showToast(data.message || 'Booking found', 'success');
       }
 
       const attendeeRowsHtml = b.tickets.map(t => {
         const initial  = (t.attendee.name || 'G').charAt(0).toUpperCase();
         const isUsed   = t.isUsed;
-        const usedTime = t.usedAt ? new Date(t.usedAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : '';
-
+        const usedTime = t.usedAt
+          ? new Date(t.usedAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
+          : '';
         return `
         <div class="attendee-row ${isUsed ? 'checked-in' : ''}" id="row-${escH(t.ticketId)}">
           <div class="attendee-avatar">${initial}</div>
@@ -713,9 +842,7 @@
                   class="btn-checkin"
                   id="btn-${escH(t.ticketId)}"
                   onclick="checkInOne('${escH(t.ticketId)}', '${escH(b.bookingRef)}')"
-                >
-                  Check In
-                </button>`
+                >Check In</button>`
             }
           </div>
         </div>`;
@@ -727,7 +854,6 @@
             ${statusBadge}
             <span class="booking-ref">${escH(b.bookingRef)}</span>
           </div>
-
           <div class="booking-meta">
             <div class="bm-item">
               <div class="bm-lbl">Event</div>
@@ -746,14 +872,11 @@
               <div class="bm-val">${escH(b.event?.venue || '—')}</div>
             </div>
           </div>
-
           <div class="attendee-list-header">
             <span class="al-title">Attendees</span>
             <span class="al-count" id="al-count">${checkedInCount}/${totalTickets} checked in</span>
           </div>
-
           ${attendeeRowsHtml}
-
           <div class="checkin-all-wrap">
             <button
               class="btn-checkin-all"
@@ -764,32 +887,27 @@
               ${allDone ? '✓ All Checked In' : `Check In All (${totalTickets - checkedInCount} remaining)`}
             </button>
           </div>
-
           <div style="padding:0 16px 16px;">
             <button class="btn-scan-again" onclick="resetScan()">⟳ &nbsp;Scan Next Ticket</button>
           </div>
         </div>`;
     }
 
-    // ─────────────────────────────────────────────────────────
-    // CHECK IN ONE ATTENDEE
-    // ─────────────────────────────────────────────────────────
+    // ── CHECK IN ONE ──
     async function checkInOne(ticketId, bookingRef) {
       const btn = document.getElementById('btn-' + ticketId);
       if (btn) { btn.disabled = true; btn.classList.add('loading'); btn.textContent = '…'; }
 
       try {
         const res  = await fetch('/staff/api/scan-ticket', {
-          method:  'POST',
+          method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body:    JSON.stringify({ ticketId, bookingRef }),
+          body: JSON.stringify({ ticketId, bookingRef }),
         });
         const data = await res.json();
 
         if (data.success) {
           showToast(`✓ ${data.attendee || 'Attendee'} checked in`, 'success');
-
-          // Update row UI
           const row = document.getElementById('row-' + ticketId);
           if (row) {
             row.classList.add('checked-in');
@@ -799,17 +917,19 @@
               statusDiv.innerHTML = `<div class="used-tag">✓ Checked In</div><div class="used-time">${now}</div>`;
             }
           }
-
-          // Update the booking in currentBooking
           if (currentBooking) {
             const t = currentBooking.tickets.find(x => x.ticketId === ticketId);
             if (t) { t.isUsed = true; t.usedAt = new Date().toISOString(); }
           }
-
           updateCountAndAllBtn(bookingRef);
-
         } else {
-          showToast(data.message || 'Check-in failed', data.status === 'used' ? 'warn' : 'error');
+          // Handle wrong_gate on individual scan too
+          if (data.status === 'wrong_gate') {
+            showToast(data.message || 'Wrong gate!', 'wronggate');
+            setVideoState('wrong-gate');
+          } else {
+            showToast(data.message || 'Check-in failed', data.status === 'used' ? 'warn' : 'error');
+          }
           if (btn) { btn.disabled = false; btn.classList.remove('loading'); btn.textContent = 'Check In'; }
         }
       } catch (err) {
@@ -818,24 +938,22 @@
       }
     }
 
-    // ─────────────────────────────────────────────────────────
-    // CHECK IN ALL
-    // ─────────────────────────────────────────────────────────
+    // ── CHECK IN ALL ──
     async function checkInAll(bookingRef) {
       const allBtn = document.getElementById('btn-checkin-all');
       if (allBtn) { allBtn.disabled = true; allBtn.textContent = 'Checking in…'; }
 
       try {
         const res  = await fetch('/staff/api/scan', {
-          method:  'POST',
+          method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body:    JSON.stringify({ bookingRef, checkInAll: true }),
+          body: JSON.stringify({ bookingRef, checkInAll: true }),
         });
         const data = await res.json();
 
         if (data.success && data.booking) {
           showToast(data.message || 'All checked in!', 'success');
-          renderResult(data);  // re-render with updated state
+          renderResult(data);
         } else {
           showToast(data.message || 'Failed', 'error');
           if (allBtn) { allBtn.disabled = false; allBtn.textContent = 'Check In All'; }
@@ -846,18 +964,14 @@
       }
     }
 
-    // ─────────────────────────────────────────────────────────
-    // UPDATE COUNT + ALL BUTTON
-    // ─────────────────────────────────────────────────────────
+    // ── UPDATE COUNT + ALL BUTTON ──
     function updateCountAndAllBtn(bookingRef) {
       if (!currentBooking) return;
       const total     = currentBooking.tickets.length;
       const checkedIn = currentBooking.tickets.filter(t => t.isUsed).length;
       const remaining = total - checkedIn;
-
       const countEl = document.getElementById('al-count');
       if (countEl) countEl.textContent = `${checkedIn}/${total} checked in`;
-
       const allBtn = document.getElementById('btn-checkin-all');
       if (allBtn) {
         if (remaining === 0) {
@@ -869,37 +983,32 @@
       }
     }
 
-    // ─────────────────────────────────────────────────────────
-    // RESET SCAN
-    // ─────────────────────────────────────────────────────────
+    // ── RESET SCAN ──
     function resetScan() {
       currentBooking = null;
       lastScanned    = '';
       scanPaused     = false;
+      setVideoState('scanning');
       document.getElementById('manual-input').value = '';
-      const panel = document.getElementById('result-panel');
-      panel.innerHTML = `
+      document.getElementById('result-panel').innerHTML = `
         <div class="idle-state" id="idle-state">
           <div class="idle-icon">📷</div>
           <div class="idle-text">Scan a QR code<br/>or enter booking ref</div>
+          ${STAFF_GATE ? `<div style="margin-top:8px;font-family:'Space Mono',monospace;font-size:10px;color:rgba(0,230,118,0.5);letter-spacing:1px;">ASSIGNED: ${escH(STAFF_GATE)}${STAFF_CATEGORY ? ' · ' + escH(STAFF_CATEGORY.toUpperCase()) : ''}</div>` : ''}
         </div>`;
     }
 
-    // ─────────────────────────────────────────────────────────
-    // TOAST
-    // ─────────────────────────────────────────────────────────
+    // ── TOAST ──
     let toastTimeout;
     function showToast(msg, type = 'success') {
       const t = document.getElementById('toast');
       t.textContent = msg;
       t.className   = `show ${type}`;
       clearTimeout(toastTimeout);
-      toastTimeout = setTimeout(() => { t.className = ''; }, 3000);
+      toastTimeout = setTimeout(() => { t.className = ''; }, 3500);
     }
 
-    // ─────────────────────────────────────────────────────────
-    // UTILS
-    // ─────────────────────────────────────────────────────────
+    // ── UTILS ──
     function escH(str) {
       return String(str || '')
         .replace(/&/g, '&amp;')
@@ -909,6 +1018,5 @@
         .replace(/'/g, '&#39;');
     }
   </script>
-
 </body>
 </html>

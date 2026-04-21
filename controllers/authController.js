@@ -112,65 +112,7 @@
 
   // ─────────────────────────────────────────────
   // SIGNUP
-  // ─────────────────────────────────────────────
-  // exports.postSignup = async (req, res) => {
-  //   try {
-  //     const { firstName, email, phone, whatsapp, gender, place, district, next } = req.body;
-
-  //     if (!firstName || !phone || !gender || !place || !district)
-  //       return res.json({ success: false, message: 'Please fill in all required fields.' });
-  //     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
-  //       return res.json({ success: false, message: 'Enter a valid email address.' });
-  //     if (!/^[6-9]\d{9}$/.test(phone))
-  //       return res.json({ success: false, message: 'Enter a valid 10-digit Indian mobile number.' });
-
-  //     const fullPhone = '+91' + phone;
-
-  //     if (await User.findOne({ phone: fullPhone }))
-  //       return res.json({
-  //         success:  false,
-  //         message:  'Phone already registered. Please log in.',
-  //         redirect: '/auth/login',
-  //       });
-  //     if (email && await User.findOne({ email: email.trim().toLowerCase() }))
-  //       return res.json({ success: false, message: 'Email already registered with another account.' });
-
-  //     const fullWhatsapp = whatsapp && /^[6-9]\d{9}$/.test(whatsapp.trim())
-  //       ? '+91' + whatsapp.trim()
-  //       : fullPhone;
-
-  //     req.session.pendingUser = {
-  //       firstName,
-  //       email:    email ? email.trim().toLowerCase() : '',
-  //       phone:    fullPhone,
-  //       whatsapp: fullWhatsapp,
-  //       gender, place, district,
-  //     };
-  //     req.session.otpPhone = fullPhone;
-  //     req.session.otpMode  = 'signup';
-  //     if (next && !req.session.redirectAfterLogin) {
-  //       req.session.redirectAfterLogin = next;
-  //     }
-
-  //     const result = await createAndSendOTP(fullPhone, 'signup');
-  //     if (!result.success)
-  //       return res.json({ success: false, message: result.message || 'Failed to send OTP.' });
-
-  //     req.session.save((err) => {
-  //       if (err) {
-  //         console.error('Session save error in postSignup:', err);
-  //         return res.json({ success: false, message: 'Session error. Please try again.' });
-  //       }
-  //       return res.json({ success: true, redirect: '/auth/otp' });
-  //     });
-
-  //   } catch (err) {
-  //     console.error('postSignup error:', err);
-  //     res.json({ success: false, message: 'Server error.' });
-  //   }
-  // };
-
-
+  // ───────────────────────
 
   // Key change: accepts emailVerified flag from client — if true, saves email
 // and sets emailVerified=true on the new User doc directly (no second OTP step).

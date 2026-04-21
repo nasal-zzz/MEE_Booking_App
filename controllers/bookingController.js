@@ -607,6 +607,7 @@ exports.verifyPayment = async (req, res) => {
       existingBooking.gateNumber = gateNumber;
 
       await generateSharedQR(existingBooking.tickets, {
+        bookingId: existingBooking._id,
         bookingRef: existingBooking.bookingRef,
         eventId: pending.eventId,
         paymentId: razorpay_payment_id,
@@ -757,6 +758,7 @@ exports.verifyPayment = async (req, res) => {
 
     try {
       await generateSharedQR(booking.tickets, {
+        bookingId: booking._id,
         bookingRef: booking.bookingRef,
         eventId: pending.eventId,
         paymentId: razorpay_payment_id,
@@ -1087,6 +1089,7 @@ exports.razorpayWebhook = async (req, res) => {
       );
 
       await generateSharedQR(booking.tickets, {
+        bookingId: booking._id,
         bookingRef: booking.bookingRef,
         eventId: eventDoc._id,
         paymentId,

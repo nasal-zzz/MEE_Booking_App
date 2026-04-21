@@ -13,9 +13,6 @@
     rel="stylesheet" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet" />
   <style>
-    /* ════════════════════════════════════════════
-       DESIGN TOKENS
-    ════════════════════════════════════════════ */
     :root {
       --bg: #0B0B0F;
       --surf: #14141C;
@@ -30,2129 +27,258 @@
       --error: #FF4444;
       --warn: #f5c842;
       --cash: #00c850;
-      /* Spacing scale */
       --sp-xs: .35rem;
       --sp-sm: .6rem;
       --sp-md: 1rem;
       --sp-lg: 1.4rem;
-      /* Topbar height — used for sticky offsets */
       --topbar-h: 52px;
     }
 
-    /* ════════════════════════════════════════════
-       RESET & BASE
-    ════════════════════════════════════════════ */
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { -webkit-text-size-adjust: 100%; }
+    body { background: var(--bg); color: var(--text); font-family: 'Outfit', sans-serif; min-height: 100vh; overflow-x: hidden; }
+
+    .topbar { background: var(--surf); border-bottom: 1px solid var(--border); padding: 0 .75rem; height: var(--topbar-h); display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 300; gap: .5rem; }
+    .tb-left { display: flex; align-items: center; gap: .55rem; flex: 1; min-width: 0; }
+    .tb-logo { height: 24px; width: auto; object-fit: contain; flex-shrink: 0; }
+    .tb-title { font-family: 'Space Mono', monospace; font-size: .55rem; letter-spacing: 2px; color: var(--muted2); text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .tb-right { display: flex; align-items: center; gap: .4rem; flex-shrink: 0; }
+    .role-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--cash); flex-shrink: 0; }
+    .tb-user { font-size: .7rem; color: var(--muted2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 130px; }
+    .tb-user strong { color: #fff; }
+    .logout-link { display: flex; align-items: center; gap: .28rem; font-size: .7rem; color: var(--error); text-decoration: none; padding: .28rem .5rem; border-radius: 5px; border: 1px solid rgba(255,68,68,.2); white-space: nowrap; flex-shrink: 0; transition: background .15s; }
+    .logout-link:hover { background: rgba(255,68,68,.08); }
+    .logout-txt { display: inline; }
+
+    .page { padding: .75rem; max-width: 1200px; margin: 0 auto; }
+    .page-hd { margin-bottom: .85rem; }
+    .page-title { font-family: 'Poppins', sans-serif; font-size: 1.05rem; font-weight: 700; letter-spacing: 1.5px; }
+    .page-sub { font-size: .72rem; color: var(--muted2); margin-top: .12rem; }
+
+    .grid { display: grid; grid-template-columns: 1fr; gap: .85rem; }
+
+    .card { background: var(--surf); border: 1px solid var(--border); border-radius: 12px; padding: .85rem .8rem; }
+    .card-hd { display: flex; align-items: center; gap: .45rem; font-family: 'Space Mono', monospace; font-size: .56rem; letter-spacing: 2px; color: var(--muted2); text-transform: uppercase; margin-bottom: .9rem; }
+    .card-hd i { font-size: .78rem; color: var(--accent); }
+
+    .fg { margin-bottom: .8rem; }
+    label { display: block; font-size: .7rem; color: var(--muted2); margin-bottom: .32rem; letter-spacing: .3px; }
+    label .req { color: var(--error); margin-left: 2px; }
+    label .opt { color: var(--muted); font-size: .6rem; margin-left: 3px; }
+    input, select { width: 100%; background: rgba(255,255,255,.04); border: 1px solid var(--border); border-radius: 8px; color: #fff; padding: .68rem .85rem; font-family: 'Outfit', sans-serif; outline: none; transition: border .15s; -webkit-appearance: none; font-size: max(.88rem, 16px); }
+    input:focus, select:focus { border-color: var(--accent); }
+    select option { background: #1a1a2e; }
+    @media(min-width:480px) { input, select { font-size: .88rem; } }
+    .hint { font-size: .66rem; color: var(--muted); margin-top: .22rem; }
+    .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: .6rem; }
+
+    /* ── Age limit alert ── */
+    .age-alert { display: none; align-items: flex-start; gap: .55rem; background: rgba(245,200,66,.08); border: 1.5px solid rgba(245,200,66,.35); border-radius: 10px; padding: .7rem .85rem; margin-bottom: .75rem; }
+    .age-alert.show { display: flex; }
+    .age-alert-icon { font-size: 1.1rem; color: var(--warn); flex-shrink: 0; margin-top: .05rem; }
+    .age-alert-body { flex: 1; min-width: 0; }
+    .age-alert-title { font-weight: 700; font-size: .82rem; color: var(--warn); margin-bottom: .18rem; }
+    .age-alert-text { font-size: .72rem; color: rgba(245,200,66,.8); line-height: 1.45; }
+
+    .evt-section { margin-bottom: .9rem; }
+    .evt-section-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: .55rem; }
+    .evt-cards { display: flex; flex-direction: column; gap: .4rem; }
+    .evt-card { display: flex; align-items: center; gap: .7rem; background: rgba(255,255,255,.03); border: 1.5px solid var(--border); border-radius: 10px; padding: .65rem .8rem; cursor: pointer; transition: all .15s; -webkit-tap-highlight-color: transparent; position: relative; overflow: hidden; }
+    .evt-card:active { transform: scale(.985); }
+    .evt-card.selected { border-color: var(--accent); background: rgba(157,78,221,.08); }
+    .evt-card.selected::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--accent); border-radius: 3px 0 0 3px; }
+    .evt-card-icon { width: 34px; height: 34px; border-radius: 8px; background: rgba(157,78,221,.15); border: 1px solid rgba(157,78,221,.25); display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: .88rem; color: var(--accent); }
+    .evt-card-info { flex: 1; min-width: 0; }
+    .evt-card-name { font-weight: 700; font-size: .83rem; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2; }
+    .evt-card-meta { font-size: .63rem; color: var(--muted2); margin-top: .16rem; display: flex; flex-wrap: wrap; gap: .18rem .5rem; }
+    .evt-card-meta span { display: flex; align-items: center; gap: .18rem; }
+    .evt-card-meta i { font-size: .58rem; }
+    .evt-card-sel { width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid var(--border); flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all .15s; }
+    .evt-card.selected .evt-card-sel { background: var(--accent); border-color: var(--accent); }
+    .evt-card.selected .evt-card-sel::after { content: '✓'; font-size: .6rem; color: #fff; font-weight: 700; }
+
+    .ttype-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .45rem; }
+    .ttype-card { background: rgba(255,255,255,.03); border: 1.5px solid var(--border); border-radius: 10px; padding: .7rem .7rem; cursor: pointer; transition: all .15s; position: relative; overflow: hidden; -webkit-tap-highlight-color: transparent; }
+    .ttype-card:active { transform: scale(.97); }
+    .ttype-card.selected { border-color: var(--accent); background: rgba(157,78,221,.08); }
+    .ttype-card.soldout { opacity: .35; pointer-events: none; }
+    .tt-color { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 5px; flex-shrink: 0; }
+    .tt-top { display: flex; align-items: center; margin-bottom: .22rem; }
+    .tt-name { font-weight: 700; font-size: .78rem; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .tt-avail { font-size: .6rem; color: var(--muted2); }
+    .tt-avail.low { color: var(--warn); }
+    .tt-avail.none { color: var(--error); }
+    .tt-price { font-family: 'Space Mono', monospace; font-size: .8rem; color: var(--accent); font-weight: 700; }
+    .tt-combo { display: inline-flex; align-items: center; gap: .2rem; margin-top: .22rem; font-size: .56rem; background: rgba(245,200,66,.1); border: 1px solid rgba(245,200,66,.25); color: var(--warn); padding: .08rem .32rem; border-radius: 10px; word-break: break-word; }
+    .tt-age { display: inline-flex; align-items: center; gap: .2rem; margin-top: .22rem; font-size: .56rem; background: rgba(245,200,66,.1); border: 1px solid rgba(245,200,66,.25); color: var(--warn); padding: .08rem .32rem; border-radius: 10px; }
+
+    .seatmap-outer { background: #0a0a12; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-bottom: .65rem; }
+    .seatmap-title { font-family: 'Space Mono', monospace; font-size: .5rem; letter-spacing: 1.5px; color: var(--muted); padding: .45rem .65rem; border-bottom: 1px solid var(--border); text-transform: uppercase; }
+    .seatmap-canvas-wrap { position: relative; width: 100%; overflow: hidden; touch-action: pan-y; }
+    .seatmap-img { display: block; width: 100%; height: auto; max-height: 220px; object-fit: contain; }
+    #mapSvg { display: none; width: 100%; height: auto; max-height: 220px; }
+    .zone-hit { position: absolute; cursor: pointer; pointer-events: all; border-radius: 5px; border: 2px solid rgba(255,255,255,.25); transition: border-color .15s, box-shadow .15s; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; line-height: 1.25; padding: 3px 4px; -webkit-tap-highlight-color: transparent; }
+    .zone-hit:active, .zone-hit:hover { border-color: #fff; }
+    .zone-hit.active { border-color: #fff; border-width: 2.5px; box-shadow: 0 0 0 2px var(--accent), inset 0 0 0 100px rgba(255,255,255,.12); }
+    .zone-hit.full { opacity: .3; pointer-events: none; cursor: default; }
+    .zone-label { color: #fff; font-weight: 700; font-size: clamp(7px, 1.4vw, 11px); text-shadow: 0 1px 3px rgba(0,0,0,.8); white-space: nowrap; }
+    .zone-cnt { color: rgba(255,255,255,.85); font-size: clamp(6px, 1.1vw, 9px); text-shadow: 0 1px 3px rgba(0,0,0,.8); }
+    .seatmap-legend { display: flex; flex-wrap: wrap; gap: .35rem; padding: .45rem .65rem; background: rgba(255,255,255,.02); border-top: 1px solid var(--border); }
+    .leg-item { display: flex; align-items: center; gap: .25rem; font-size: .63rem; color: var(--muted2); }
+    .leg-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+    .zone-selected-bar { display: none; align-items: center; gap: .45rem; background: rgba(157,78,221,.1); border: 1px solid rgba(157,78,221,.25); border-radius: 7px; padding: .45rem .7rem; margin-bottom: .65rem; font-size: .76rem; font-weight: 600; color: var(--accent); }
+    .zone-selected-bar.show { display: flex; }
+    .zone-selected-bar i { font-size: .88rem; flex-shrink: 0; }
+    .zone-clear { margin-left: auto; background: none; border: none; color: var(--muted); cursor: pointer; font-size: .72rem; padding: .12rem .38rem; border-radius: 4px; flex-shrink: 0; }
+    .zone-clear:hover { color: var(--error); }
+
+    .qty-row { display: flex; gap: .5rem; align-items: center; }
+    .qty-btn { width: 44px; height: 44px; min-width: 44px; border-radius: 7px; background: rgba(255,255,255,.06); border: 1px solid var(--border); color: #fff; font-size: 1.2rem; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: background .12s; -webkit-tap-highlight-color: transparent; }
+    .qty-btn:active { background: rgba(255,255,255,.18); }
+    #qtyInp { text-align: center; font-family: 'Space Mono', monospace; flex: 1; min-width: 0; font-size: max(.95rem, 16px); }
+    @media(min-width:480px) { #qtyInp { font-size: .95rem; } }
+
+    .summary-bar { background: rgba(157,78,221,.07); border: 1px solid rgba(157,78,221,.18); border-radius: 8px; padding: .5rem .4rem; margin: .55rem 0; display: flex; align-items: center; overflow-x: auto; -webkit-overflow-scrolling: touch; gap: 0; scrollbar-width: none; }
+    .summary-bar::-webkit-scrollbar { display: none; }
+    .sum-item { text-align: center; flex: 1; min-width: 52px; padding: 0 .22rem; }
+    .sum-item+.sum-item { border-left: 1px solid rgba(157,78,221,.2); }
+    .sum-val { font-family: 'Space Mono', monospace; font-size: .72rem; font-weight: 700; color: var(--accent); white-space: nowrap; }
+    .sum-val.big { font-size: .85rem; color: #fff; }
+    .sum-lbl { font-size: .52rem; color: var(--muted); margin-top: 1px; white-space: nowrap; }
+    .combo-bar { background: rgba(245,200,66,.07); border: 1px solid rgba(245,200,66,.2); border-radius: 8px; padding: .45rem .75rem; margin-bottom: .55rem; display: flex; align-items: flex-start; gap: .45rem; font-size: .72rem; color: var(--warn); word-break: break-word; }
+    .combo-bar i { flex-shrink: 0; margin-top: .1rem; }
+
+    .att-list { display: flex; flex-direction: column; gap: .45rem; margin-bottom: .8rem; }
+    .att-row { background: rgba(255,255,255,.025); border: 1px solid var(--border); border-radius: 8px; padding: .65rem .6rem; }
+    .att-num { font-family: 'Space Mono', monospace; font-size: .54rem; letter-spacing: 1px; color: var(--accent); margin-bottom: .4rem; text-transform: uppercase; }
+    .att-row .row2 { grid-template-columns: 1fr; }
+    @media(min-width:400px) { .att-row .row2 { grid-template-columns: 1fr 1fr; } }
+
+    .contact-section { border-top: 1px solid var(--border); padding-top: .8rem; margin-top: .45rem; }
+    .contact-section .row2 { grid-template-columns: 1fr; }
+    @media(min-width:420px) { .contact-section .row2 { grid-template-columns: 1fr 1fr; } }
+
+    .sell-sticky { position: sticky; bottom: 0; background: linear-gradient(to top, #0B0B0F 70%, transparent); padding: .6rem 0 env(safe-area-inset-bottom, .3rem); margin-top: .35rem; z-index: 50; }
+    .btn-sell { width: 100%; padding: .88rem; background: linear-gradient(135deg, #6A0DAD, #9D4EDD); border: none; border-radius: 8px; color: #fff; font-family: 'Outfit', sans-serif; font-size: .95rem; font-weight: 700; cursor: pointer; letter-spacing: .5px; transition: all .18s; display: flex; align-items: center; justify-content: center; gap: .45rem; -webkit-tap-highlight-color: transparent; }
+    .btn-sell:active:not(:disabled) { transform: scale(.98); }
+    .btn-sell:disabled { opacity: .4; cursor: not-allowed; }
+
+    .tab-bar { display: flex; border-bottom: 1px solid var(--border); margin-bottom: .9rem; }
+    .tb { background: none; border: none; color: var(--muted2); padding: .55rem .9rem; font-family: 'Space Mono', monospace; font-size: .54rem; letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer; border-bottom: 2px solid transparent; transition: all .15s; white-space: nowrap; }
+    .tb.active { color: #fff; border-bottom-color: var(--accent); }
+    .sales-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .sales-tbl { width: 100%; border-collapse: collapse; min-width: 480px; }
+    .sales-tbl th { font-family: 'Space Mono', monospace; font-size: .45rem; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; padding: .55rem .55rem; text-align: left; border-bottom: 1px solid var(--border); }
+    .sales-tbl td { padding: .6rem .55rem; border-bottom: 1px solid rgba(255,255,255,.035); font-size: .76rem; vertical-align: middle; }
+    .sales-tbl tr:last-child td { border-bottom: none; }
+    .ref-pill { font-family: 'Space Mono', monospace; font-size: .6rem; background: rgba(157,78,221,.1); border: 1px solid rgba(157,78,221,.2); padding: .1rem .38rem; border-radius: 4px; color: #d8b4fe; cursor: pointer; white-space: nowrap; }
+    .reprint-btn { display: inline-flex; align-items: center; gap: .28rem; background: rgba(157,78,221,.06); border: 1px solid rgba(157,78,221,.18); color: #b48ef0; border-radius: 5px; padding: .2rem .5rem; font-size: .58rem; cursor: pointer; margin-top: 4px; transition: all .15s; white-space: nowrap; font-family: 'Space Mono', monospace; letter-spacing: .5px; width: 100%; justify-content: center; }
+    .reprint-btn:hover { background: rgba(157,78,221,.18); border-color: rgba(157,78,221,.5); color: #fff; }
+    .reprint-btn:active { transform: scale(.97); }
+    .reprint-btn:disabled { opacity: .5; cursor: not-allowed; }
+    .reprint-btn i { font-size: .68rem; }
+    .no-sales { text-align: center; color: var(--muted); padding: 2.5rem 1rem; font-size: .82rem; }
+    .no-sales i { display: block; font-size: 2rem; opacity: .25; margin-bottom: .5rem; }
+
+    .stats-strip { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .4rem; margin-top: .9rem; padding-top: .9rem; border-top: 1px solid var(--border); }
+    .sstat { background: rgba(255,255,255,.025); border: 1px solid var(--border); border-radius: 8px; padding: .6rem .4rem; text-align: center; }
+    .sstat-val { font-family: 'Space Mono', monospace; font-size: .74rem; font-weight: 700; color: var(--cash); word-break: break-all; }
+    .sstat-lbl { font-size: .56rem; color: var(--muted); margin-top: 2px; }
+
+    .modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.88); z-index: 999; align-items: flex-end; justify-content: center; padding: 0; }
+    .modal-bg.show { display: flex; }
+    .modal { background: var(--surf); border: 1px solid rgba(157,78,221,.25); border-radius: 16px 16px 0 0; width: 100%; max-width: 700px; max-height: 93vh; overflow-y: auto; padding: 0; padding-bottom: env(safe-area-inset-bottom, 0px); }
+    .modal-handle { width: 36px; height: 4px; background: rgba(255,255,255,.15); border-radius: 2px; margin: 10px auto 0; }
+    .modal-top { padding: 1rem .9rem .8rem; border-bottom: 1px solid var(--border); }
+    .modal-ok { display: flex; align-items: center; gap: .5rem; font-size: .98rem; font-weight: 700; color: var(--success); margin-bottom: .15rem; }
+    .modal-ok i { font-size: 1.05rem; }
+    .modal-ref { font-family: 'Space Mono', monospace; font-size: .58rem; color: var(--muted2); letter-spacing: 1px; word-break: break-all; }
+    .modal-tickets { padding: .8rem .7rem; }
+
+    .ticket-wrap-modal { margin-bottom: 1.5rem; }
+    .ticket { width: 100%; aspect-ratio: 2000/1430; position: relative; overflow: hidden; border-radius: 10px; box-shadow: 0 16px 50px rgba(0,0,0,.7); background: #0d0d18; contain: layout; }
+    .ticket-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: top left; }
+    .t-qr-left { position: absolute; left: 1.5%; top: 2.2%; width: 10.5%; z-index: 2; }
+    .t-qr-left img { width: 100%; aspect-ratio: 1; display: block; border: 2px solid rgba(255,255,255,.3); border-radius: 3px; background: #fff; }
+    .t-ev-info { position: absolute; left: 33%; right: 29.5%; top: 5%; text-align: right; z-index: 2; }
+    .t-ev-name { font-family: 'Anton', Impact, sans-serif; font-size: clamp(.65rem, 1.8vw, 1.5rem); letter-spacing: 3px; color: #fff; line-height: 1; text-shadow: 0 2px 14px rgba(0,0,0,.9); }
+    .t-ev-price { font-family: 'Anton', Impact, sans-serif; font-size: clamp(.6rem, 1.6vw, 1.35rem); color: #ff2d78; letter-spacing: 1px; margin-top: .3rem; text-shadow: 0 2px 10px rgba(255,45,120,.6); }
+    .t-ev-meta { position: absolute; left: 30%; right: 29.5%; top: 40%; z-index: 2; display: flex; flex-direction: column; gap: 0; }
+    .t-em-row { display: flex; flex-direction: row; gap: 8%; margin-bottom: 2%; align-items: flex-start; }
+    .t-em-col { display: flex; flex-direction: column; }
+    .t-em-lbl { font-family: 'Space Mono', monospace; font-size: clamp(.28rem, .5vw, .45rem); letter-spacing: 2px; color: rgba(255,255,255,.45); text-transform: uppercase; margin-bottom: .3rem; }
+    .t-em-val { font-family: 'Barlow Condensed', sans-serif; font-size: clamp(.5rem, 1vw, .95rem); font-weight: 700; color: #fff; letter-spacing: .5px; line-height: 1.2; }
+    .t-em-divider { width: 100%; height: 1px; background: rgba(255,255,255,.2); margin: 2% 0; }
+    .t-em-venue-name { font-family: 'Barlow Condensed', sans-serif; font-size: clamp(.6rem, 1.3vw, 1.1rem); font-weight: 700; color: #fff; letter-spacing: .5px; line-height: 1.15; }
+    .t-em-venue-addr { font-family: 'Barlow Condensed', sans-serif; font-size: clamp(.32rem, .6vw, .55rem); color: rgba(255,255,255,.5); text-transform: uppercase; letter-spacing: 1px; margin-top: .3rem; }
+    .t-rp { position: absolute; left: 71.5%; right: 0; top: 11%; bottom: 0; z-index: 2; display: flex; flex-direction: column; align-items: center; padding: 0 2.5%; gap: 1.5%; }
+    .t-rp-qr { width: 46%; flex-shrink: 0; }
+    .t-rp-qr img { width: 100%; aspect-ratio: 1; display: block; border: 2px solid rgba(255,255,255,.15); border-radius: 3px; background: #fff; }
+    .t-rp-qr-ph { width: 100%; aspect-ratio: 1; background: rgba(255,255,255,.04); border-radius: 3px; display: flex; align-items: center; justify-content: center; font-size: .5rem; color: #555; }
+    .t-bid-lbl { font-family: 'Space Mono', monospace; font-size: clamp(.26rem, .45vw, .42rem); letter-spacing: 2px; color: rgba(255,255,255,.3); text-transform: uppercase; text-align: center; }
+    .t-bid-val { font-family: 'Barlow Condensed', sans-serif; font-size: clamp(.5rem, 1.1vw, .9rem); font-weight: 800; color: #fff; letter-spacing: 2px; text-align: center; line-height: 1.1; }
+    .t-rp-hr { width: 90%; height: 1px; background: rgba(255,255,255,.08); }
+    .t-att-name { font-family: 'Anton', Impact, sans-serif; font-size: clamp(.5rem, .95vw, .85rem); letter-spacing: 1px; color: #fff; width: 100%; text-align: left; line-height: 1; }
+    .t-att-meta { font-family: 'Space Mono', monospace; font-size: clamp(.22rem, .4vw, .38rem); color: rgba(255,255,255,.32); width: 100%; text-align: left; letter-spacing: .8px; margin-top: .2rem; }
+    .t-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1% 2%; width: 100%; }
+    .t-gc { display: flex; flex-direction: column; }
+    .t-gl { font-family: 'Space Mono', monospace; font-size: clamp(.22rem, .38vw, .36rem); letter-spacing: 1px; color: rgba(255,255,255,.3); text-transform: uppercase; margin-bottom: .1rem; }
+    .t-gv { font-family: 'Outfit', sans-serif; font-size: clamp(.35rem, .65vw, .58rem); font-weight: 600; color: rgba(255,255,255,.85); line-height: 1.2; }
+    .t-gv.acc { color: #c8ff00; }
+    .t-gv.mono { font-family: 'Space Mono', monospace; font-size: clamp(.25rem, .45vw, .42rem); }
+    .t-valid { width: 100%; background: rgba(76,220,128,.09); border: 1px solid rgba(76,220,128,.28); color: #4cdc80; font-family: 'Space Mono', monospace; font-size: clamp(.22rem, .38vw, .34rem); letter-spacing: .5px; padding: .8% 1%; border-radius: 3px; text-align: center; }
+
+    .modal-actions { padding: 0 .7rem 1.1rem; display: flex; flex-direction: column; gap: .5rem; }
+    .btn-print { padding: .72rem; background: rgba(157,78,221,.1); border: 1px solid rgba(157,78,221,.25); border-radius: 8px; color: var(--accent); font-family: 'Outfit', sans-serif; font-size: .88rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: .4rem; transition: background .15s; }
+    .btn-print:hover { background: rgba(157,78,221,.2); }
+    .btn-print:disabled { opacity: .5; cursor: not-allowed; }
+    .btn-close-modal { padding: .72rem; background: rgba(255,255,255,.05); border: 1px solid var(--border); border-radius: 8px; color: var(--muted2); font-family: 'Outfit', sans-serif; font-size: .88rem; cursor: pointer; }
+
+    #toast { display: none; position: fixed; bottom: max(1.1rem, env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); background: var(--surf); border: 1px solid var(--border); border-radius: 8px; padding: .55rem 1rem; font-size: .8rem; z-index: 9999; box-shadow: 0 6px 24px rgba(0,0,0,.5); white-space: nowrap; max-width: 90vw; text-align: center; }
 
-    html {
-      -webkit-text-size-adjust: 100%;
-    }
-
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'Outfit', sans-serif;
-      min-height: 100vh;
-      /* Prevent horizontal scroll from any runaway child */
-      overflow-x: hidden;
-    }
-
-    /* ════════════════════════════════════════════
-       TOPBAR
-    ════════════════════════════════════════════ */
-    .topbar {
-      background: var(--surf);
-      border-bottom: 1px solid var(--border);
-      padding: 0 .75rem;
-      height: var(--topbar-h);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      position: sticky;
-      top: 0;
-      z-index: 300;
-      gap: .5rem;
-    }
-
-    .tb-left {
-      display: flex;
-      align-items: center;
-      gap: .55rem;
-      flex: 1;
-      min-width: 0;
-    }
-
-    .tb-logo {
-      height: 24px;
-      width: auto;
-      object-fit: contain;
-      flex-shrink: 0;
-    }
-
-    .tb-title {
-      font-family: 'Space Mono', monospace;
-      font-size: .55rem;
-      letter-spacing: 2px;
-      color: var(--muted2);
-      text-transform: uppercase;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .tb-right {
-      display: flex;
-      align-items: center;
-      gap: .4rem;
-      flex-shrink: 0;
-    }
-
-    .role-dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: var(--cash);
-      flex-shrink: 0;
-    }
-
-    .tb-user {
-      font-size: .7rem;
-      color: var(--muted2);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      max-width: 130px;
-    }
-
-    .tb-user strong {
-      color: #fff;
-    }
-
-    .logout-link {
-      display: flex;
-      align-items: center;
-      gap: .28rem;
-      font-size: .7rem;
-      color: var(--error);
-      text-decoration: none;
-      padding: .28rem .5rem;
-      border-radius: 5px;
-      border: 1px solid rgba(255, 68, 68, .2);
-      white-space: nowrap;
-      flex-shrink: 0;
-      transition: background .15s;
-    }
-
-    .logout-link:hover {
-      background: rgba(255, 68, 68, .08);
-    }
-
-    /* Collapse text on tiny screens — keep icon */
-    .logout-txt {
-      display: inline;
-    }
-
-    /* ════════════════════════════════════════════
-       PAGE SHELL
-    ════════════════════════════════════════════ */
-    .page {
-      padding: .75rem;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-
-    .page-hd {
-      margin-bottom: .85rem;
-    }
-
-    .page-title {
-      font-family: 'Poppins', sans-serif;
-      font-size: 1.05rem;
-      font-weight: 700;
-      letter-spacing: 1.5px;
-    }
-
-    .page-sub {
-      font-size: .72rem;
-      color: var(--muted2);
-      margin-top: .12rem;
-    }
-
-    /* ════════════════════════════════════════════
-       TWO-COLUMN GRID (desktop)
-       Single column by default (mobile-first)
-    ════════════════════════════════════════════ */
-    .grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: .85rem;
-    }
-
-    /* ════════════════════════════════════════════
-       CARDS
-    ════════════════════════════════════════════ */
-    .card {
-      background: var(--surf);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: .85rem .8rem;
-    }
-
-    .card-hd {
-      display: flex;
-      align-items: center;
-      gap: .45rem;
-      font-family: 'Space Mono', monospace;
-      font-size: .56rem;
-      letter-spacing: 2px;
-      color: var(--muted2);
-      text-transform: uppercase;
-      margin-bottom: .9rem;
-    }
-
-    .card-hd i {
-      font-size: .78rem;
-      color: var(--accent);
-    }
-
-    /* ════════════════════════════════════════════
-       FORM ELEMENTS
-    ════════════════════════════════════════════ */
-    .fg {
-      margin-bottom: .8rem;
-    }
-
-    label {
-      display: block;
-      font-size: .7rem;
-      color: var(--muted2);
-      margin-bottom: .32rem;
-      letter-spacing: .3px;
-    }
-
-    label .req {
-      color: var(--error);
-      margin-left: 2px;
-    }
-
-    input,
-    select {
-      width: 100%;
-      background: rgba(255, 255, 255, .04);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      color: #fff;
-      padding: .68rem .85rem;
-      font-family: 'Outfit', sans-serif;
-      font-size: .88rem;
-      outline: none;
-      transition: border .15s;
-      -webkit-appearance: none;
-      /* Prevent zoom on iOS */
-      font-size: max(.88rem, 16px);
-    }
-
-    input:focus,
-    select:focus {
-      border-color: var(--accent);
-    }
-
-    select option {
-      background: #1a1a2e;
-    }
-
-    /* Fix font-size after zoom-prevention hack for desktop */
-    @media(min-width:480px) {
-
-      input,
-      select {
-        font-size: .88rem;
-      }
-    }
-
-    .hint {
-      font-size: .66rem;
-      color: var(--muted);
-      margin-top: .22rem;
-    }
-
-    /* Row with two equal columns */
-    .row2 {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: .6rem;
-    }
-
-    /* ════════════════════════════════════════════
-       EVENT PICKER CARDS
-    ════════════════════════════════════════════ */
-    .evt-section {
-      margin-bottom: .9rem;
-    }
-
-    .evt-section-hd {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: .55rem;
-    }
-
-    .evt-section-lbl {
-      font-size: .72rem;
-      color: var(--muted2);
-    }
-
-    .evt-section-lbl .req {
-      color: var(--error);
-      margin-left: 2px;
-    }
-
-    .evt-cards {
-      display: flex;
-      flex-direction: column;
-      gap: .4rem;
-    }
-
-    .evt-card {
-      display: flex;
-      align-items: center;
-      gap: .7rem;
-      background: rgba(255, 255, 255, .03);
-      border: 1.5px solid var(--border);
-      border-radius: 10px;
-      padding: .65rem .8rem;
-      cursor: pointer;
-      transition: all .15s;
-      -webkit-tap-highlight-color: transparent;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .evt-card:active {
-      transform: scale(.985);
-    }
-
-    .evt-card.selected {
-      border-color: var(--accent);
-      background: rgba(157, 78, 221, .08);
-    }
-
-    .evt-card.selected::before {
-      content: '';
-      position: absolute;
-      left: 0;
-      top: 0;
-      bottom: 0;
-      width: 3px;
-      background: var(--accent);
-      border-radius: 3px 0 0 3px;
-    }
-
-    .evt-card-icon {
-      width: 34px;
-      height: 34px;
-      border-radius: 8px;
-      background: rgba(157, 78, 221, .15);
-      border: 1px solid rgba(157, 78, 221, .25);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      font-size: .88rem;
-      color: var(--accent);
-    }
-
-    .evt-card-info {
-      flex: 1;
-      min-width: 0;
-    }
-
-    .evt-card-name {
-      font-weight: 700;
-      font-size: .83rem;
-      color: #fff;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      line-height: 1.2;
-    }
-
-    .evt-card-meta {
-      font-size: .63rem;
-      color: var(--muted2);
-      margin-top: .16rem;
-      display: flex;
-      flex-wrap: wrap;
-      gap: .18rem .5rem;
-    }
-
-    .evt-card-meta span {
-      display: flex;
-      align-items: center;
-      gap: .18rem;
-    }
-
-    .evt-card-meta i {
-      font-size: .58rem;
-    }
-
-    .evt-card-sel {
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      border: 1.5px solid var(--border);
-      flex-shrink: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all .15s;
-    }
-
-    .evt-card.selected .evt-card-sel {
-      background: var(--accent);
-      border-color: var(--accent);
-    }
-
-    .evt-card.selected .evt-card-sel::after {
-      content: '✓';
-      font-size: .6rem;
-      color: #fff;
-      font-weight: 700;
-    }
-
-    /* ════════════════════════════════════════════
-       TICKET TYPE GRID
-       Always 2-col — minmax prevents overflow
-    ════════════════════════════════════════════ */
-    .ttype-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: .45rem;
-    }
-
-    .ttype-card {
-      background: rgba(255, 255, 255, .03);
-      border: 1.5px solid var(--border);
-      border-radius: 10px;
-      padding: .7rem .7rem;
-      cursor: pointer;
-      transition: all .15s;
-      position: relative;
-      overflow: hidden;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    .ttype-card:active {
-      transform: scale(.97);
-    }
-
-    .ttype-card.selected {
-      border-color: var(--accent);
-      background: rgba(157, 78, 221, .08);
-    }
-
-    .ttype-card.soldout {
-      opacity: .35;
-      pointer-events: none;
-    }
-
-    .tt-color {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      display: inline-block;
-      margin-right: 5px;
-      flex-shrink: 0;
-    }
-
-    .tt-top {
-      display: flex;
-      align-items: center;
-      margin-bottom: .22rem;
-    }
-
-    .tt-name {
-      font-weight: 700;
-      font-size: .78rem;
-      flex: 1;
-      min-width: 0;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .tt-avail {
-      font-size: .6rem;
-      color: var(--muted2);
-    }
-
-    .tt-avail.low {
-      color: var(--warn);
-    }
-
-    .tt-avail.none {
-      color: var(--error);
-    }
-
-    .tt-price {
-      font-family: 'Space Mono', monospace;
-      font-size: .8rem;
-      color: var(--accent);
-      font-weight: 700;
-    }
-
-    .tt-combo {
-      display: inline-flex;
-      align-items: center;
-      gap: .2rem;
-      margin-top: .22rem;
-      font-size: .56rem;
-      background: rgba(245, 200, 66, .1);
-      border: 1px solid rgba(245, 200, 66, .25);
-      color: var(--warn);
-      padding: .08rem .32rem;
-      border-radius: 10px;
-      word-break: break-word;
-    }
-
-    /* ════════════════════════════════════════════
-       SEAT MAP
-    ════════════════════════════════════════════ */
-    .seatmap-outer {
-      background: #0a0a12;
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      overflow: hidden;
-      margin-bottom: .65rem;
-    }
-
-    .seatmap-title {
-      font-family: 'Space Mono', monospace;
-      font-size: .5rem;
-      letter-spacing: 1.5px;
-      color: var(--muted);
-      padding: .45rem .65rem;
-      border-bottom: 1px solid var(--border);
-      text-transform: uppercase;
-    }
-
-    .seatmap-canvas-wrap {
-      position: relative;
-      width: 100%;
-      overflow: hidden;
-      touch-action: pan-y;
-    }
-
-    .seatmap-img {
-      display: block;
-      width: 100%;
-      height: auto;
-      max-height: 220px;
-      object-fit: contain;
-    }
-
-    #mapSvg {
-      display: none;
-      width: 100%;
-      height: auto;
-      max-height: 220px;
-    }
-
-    .zone-hit {
-      position: absolute;
-      cursor: pointer;
-      pointer-events: all;
-      border-radius: 5px;
-      border: 2px solid rgba(255, 255, 255, .25);
-      transition: border-color .15s, box-shadow .15s;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      line-height: 1.25;
-      padding: 3px 4px;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    .zone-hit:active,
-    .zone-hit:hover {
-      border-color: #fff;
-    }
-
-    .zone-hit.active {
-      border-color: #fff;
-      border-width: 2.5px;
-      box-shadow: 0 0 0 2px var(--accent), inset 0 0 0 100px rgba(255, 255, 255, .12);
-    }
-
-    .zone-hit.full {
-      opacity: .3;
-      pointer-events: none;
-      cursor: default;
-    }
-
-    .zone-label {
-      color: #fff;
-      font-weight: 700;
-      font-size: clamp(7px, 1.4vw, 11px);
-      text-shadow: 0 1px 3px rgba(0, 0, 0, .8);
-      white-space: nowrap;
-    }
-
-    .zone-cnt {
-      color: rgba(255, 255, 255, .85);
-      font-size: clamp(6px, 1.1vw, 9px);
-      text-shadow: 0 1px 3px rgba(0, 0, 0, .8);
-    }
-
-    .seatmap-legend {
-      display: flex;
-      flex-wrap: wrap;
-      gap: .35rem;
-      padding: .45rem .65rem;
-      background: rgba(255, 255, 255, .02);
-      border-top: 1px solid var(--border);
-    }
-
-    .leg-item {
-      display: flex;
-      align-items: center;
-      gap: .25rem;
-      font-size: .63rem;
-      color: var(--muted2);
-    }
-
-    .leg-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 2px;
-      flex-shrink: 0;
-    }
-
-    .zone-selected-bar {
-      display: none;
-      align-items: center;
-      gap: .45rem;
-      background: rgba(157, 78, 221, .1);
-      border: 1px solid rgba(157, 78, 221, .25);
-      border-radius: 7px;
-      padding: .45rem .7rem;
-      margin-bottom: .65rem;
-      font-size: .76rem;
-      font-weight: 600;
-      color: var(--accent);
-    }
-
-    .zone-selected-bar.show {
-      display: flex;
-    }
-
-    .zone-selected-bar i {
-      font-size: .88rem;
-      flex-shrink: 0;
-    }
-
-    .zone-clear {
-      margin-left: auto;
-      background: none;
-      border: none;
-      color: var(--muted);
-      cursor: pointer;
-      font-size: .72rem;
-      padding: .12rem .38rem;
-      border-radius: 4px;
-      flex-shrink: 0;
-    }
-
-    .zone-clear:hover {
-      color: var(--error);
-    }
-
-    /* ════════════════════════════════════════════
-       QUANTITY ROW
-    ════════════════════════════════════════════ */
-    .qty-row {
-      display: flex;
-      gap: .5rem;
-      align-items: center;
-    }
-
-    .qty-btn {
-      /* 44px minimum touch target */
-      width: 44px;
-      height: 44px;
-      min-width: 44px;
-      border-radius: 7px;
-      background: rgba(255, 255, 255, .06);
-      border: 1px solid var(--border);
-      color: #fff;
-      font-size: 1.2rem;
-      cursor: pointer;
-      flex-shrink: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: background .12s;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    .qty-btn:active {
-      background: rgba(255, 255, 255, .18);
-    }
-
-    #qtyInp {
-      text-align: center;
-      font-family: 'Space Mono', monospace;
-      font-size: .95rem;
-      flex: 1;
-      min-width: 0;
-      /* Override font-size zoom fix for this input */
-      font-size: max(.95rem, 16px);
-    }
-
-    @media(min-width:480px) {
-      #qtyInp {
-        font-size: .95rem;
-      }
-    }
-
-    /* ════════════════════════════════════════════
-       SUMMARY BAR
-       Horizontal scroll on small screens — never wrap
-    ════════════════════════════════════════════ */
-    .summary-bar {
-      background: rgba(157, 78, 221, .07);
-      border: 1px solid rgba(157, 78, 221, .18);
-      border-radius: 8px;
-      padding: .5rem .4rem;
-      margin: .55rem 0;
-      display: flex;
-      align-items: center;
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
-      gap: 0;
-      /* Hide scrollbar but keep functionality */
-      scrollbar-width: none;
-    }
-
-    .summary-bar::-webkit-scrollbar {
-      display: none;
-    }
-
-    .sum-item {
-      text-align: center;
-      flex: 1;
-      min-width: 52px;
-      padding: 0 .22rem;
-    }
-
-    .sum-item+.sum-item {
-      border-left: 1px solid rgba(157, 78, 221, .2);
-    }
-
-    .sum-val {
-      font-family: 'Space Mono', monospace;
-      font-size: .72rem;
-      font-weight: 700;
-      color: var(--accent);
-      white-space: nowrap;
-    }
-
-    .sum-val.big {
-      font-size: .85rem;
-      color: #fff;
-    }
-
-    .sum-lbl {
-      font-size: .52rem;
-      color: var(--muted);
-      margin-top: 1px;
-      white-space: nowrap;
-    }
-
-    .combo-bar {
-      background: rgba(245, 200, 66, .07);
-      border: 1px solid rgba(245, 200, 66, .2);
-      border-radius: 8px;
-      padding: .45rem .75rem;
-      margin-bottom: .55rem;
-      display: flex;
-      align-items: flex-start;
-      gap: .45rem;
-      font-size: .72rem;
-      color: var(--warn);
-      word-break: break-word;
-    }
-
-    .combo-bar i {
-      flex-shrink: 0;
-      margin-top: .1rem;
-    }
-
-    /* ════════════════════════════════════════════
-       ATTENDEE ROWS
-    ════════════════════════════════════════════ */
-    .att-list {
-      display: flex;
-      flex-direction: column;
-      gap: .45rem;
-      margin-bottom: .8rem;
-    }
-
-    .att-row {
-      background: rgba(255, 255, 255, .025);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: .65rem .6rem;
-    }
-
-    .att-num {
-      font-family: 'Space Mono', monospace;
-      font-size: .54rem;
-      letter-spacing: 1px;
-      color: var(--accent);
-      margin-bottom: .4rem;
-      text-transform: uppercase;
-    }
-
-    /* Attendee name/age: single col on tiny, 2-col on 400px+ */
-    .att-row .row2 {
-      grid-template-columns: 1fr;
-    }
-
-    @media(min-width:400px) {
-      .att-row .row2 {
-        grid-template-columns: 1fr 1fr;
-      }
-    }
-
-    /* ════════════════════════════════════════════
-       CONTACT SECTION
-    ════════════════════════════════════════════ */
-    .contact-section {
-      border-top: 1px solid var(--border);
-      padding-top: .8rem;
-      margin-top: .45rem;
-    }
-
-    /* Contact row2: single col on tiny, 2-col on 420px+ */
-    .contact-section .row2 {
-      grid-template-columns: 1fr;
-    }
-
-    @media(min-width:420px) {
-      .contact-section .row2 {
-        grid-template-columns: 1fr 1fr;
-      }
-    }
-
-    /* ════════════════════════════════════════════
-       STICKY SELL BUTTON
-    ════════════════════════════════════════════ */
-    .sell-sticky {
-      position: sticky;
-      bottom: 0;
-      background: linear-gradient(to top, #0B0B0F 70%, transparent);
-      padding: .6rem 0 env(safe-area-inset-bottom, .3rem);
-      margin-top: .35rem;
-      z-index: 50;
-    }
-
-    .btn-sell {
-      width: 100%;
-      padding: .88rem;
-      background: linear-gradient(135deg, #6A0DAD, #9D4EDD);
-      border: none;
-      border-radius: 8px;
-      color: #fff;
-      font-family: 'Outfit', sans-serif;
-      font-size: .95rem;
-      font-weight: 700;
-      cursor: pointer;
-      letter-spacing: .5px;
-      transition: all .18s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: .45rem;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    .btn-sell:active:not(:disabled) {
-      transform: scale(.98);
-    }
-
-    .btn-sell:disabled {
-      opacity: .4;
-      cursor: not-allowed;
-    }
-
-    /* ════════════════════════════════════════════
-       HISTORY / TABS
-    ════════════════════════════════════════════ */
-    .tab-bar {
-      display: flex;
-      border-bottom: 1px solid var(--border);
-      margin-bottom: .9rem;
-    }
-
-    .tb {
-      background: none;
-      border: none;
-      color: var(--muted2);
-      padding: .55rem .9rem;
-      font-family: 'Space Mono', monospace;
-      font-size: .54rem;
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-      cursor: pointer;
-      border-bottom: 2px solid transparent;
-      transition: all .15s;
-      white-space: nowrap;
-    }
-
-    .tb.active {
-      color: #fff;
-      border-bottom-color: var(--accent);
-    }
-
-    .sales-wrap {
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
-    }
-
-    .sales-tbl {
-      width: 100%;
-      border-collapse: collapse;
-      min-width: 480px;
-    }
-
-    .sales-tbl th {
-      font-family: 'Space Mono', monospace;
-      font-size: .45rem;
-      letter-spacing: 2px;
-      color: var(--muted);
-      text-transform: uppercase;
-      padding: .55rem .55rem;
-      text-align: left;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .sales-tbl td {
-      padding: .6rem .55rem;
-      border-bottom: 1px solid rgba(255, 255, 255, .035);
-      font-size: .76rem;
-      vertical-align: middle;
-    }
-
-    .sales-tbl tr:last-child td {
-      border-bottom: none;
-    }
-
-    .ref-pill {
-      font-family: 'Space Mono', monospace;
-      font-size: .6rem;
-      background: rgba(157, 78, 221, .1);
-      border: 1px solid rgba(157, 78, 221, .2);
-      padding: .1rem .38rem;
-      border-radius: 4px;
-      color: #d8b4fe;
-      cursor: pointer;
-      white-space: nowrap;
-    }
-
-    .reprint-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: .28rem;
-      background: rgba(157, 78, 221, .06);
-      border: 1px solid rgba(157, 78, 221, .18);
-      color: #b48ef0;
-      border-radius: 5px;
-      padding: .2rem .5rem;
-      font-size: .58rem;
-      cursor: pointer;
-      margin-top: 4px;
-      transition: all .15s;
-      white-space: nowrap;
-      font-family: 'Space Mono', monospace;
-      letter-spacing: .5px;
-      width: 100%;
-      justify-content: center;
-    }
-
-    .reprint-btn:hover {
-      background: rgba(157, 78, 221, .18);
-      border-color: rgba(157, 78, 221, .5);
-      color: #fff;
-    }
-
-    .reprint-btn:active {
-      transform: scale(.97);
-    }
-
-    .reprint-btn:disabled {
-      opacity: .5;
-      cursor: not-allowed;
-    }
-
-    .reprint-btn i {
-      font-size: .68rem;
-    }
-
-    .no-sales {
-      text-align: center;
-      color: var(--muted);
-      padding: 2.5rem 1rem;
-      font-size: .82rem;
-    }
-
-    .no-sales i {
-      display: block;
-      font-size: 2rem;
-      opacity: .25;
-      margin-bottom: .5rem;
-    }
-
-    /* Stats strip — always 3 cols */
-    .stats-strip {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: .4rem;
-      margin-top: .9rem;
-      padding-top: .9rem;
-      border-top: 1px solid var(--border);
-    }
-
-    .sstat {
-      background: rgba(255, 255, 255, .025);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: .6rem .4rem;
-      text-align: center;
-    }
-
-    .sstat-val {
-      font-family: 'Space Mono', monospace;
-      font-size: .74rem;
-      font-weight: 700;
-      color: var(--cash);
-      word-break: break-all;
-    }
-
-    .sstat-lbl {
-      font-size: .56rem;
-      color: var(--muted);
-      margin-top: 2px;
-    }
-
-    /* ════════════════════════════════════════════
-       SUCCESS MODAL — bottom sheet on mobile
-    ════════════════════════════════════════════ */
-    .modal-bg {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, .88);
-      z-index: 999;
-      align-items: flex-end;
-      justify-content: center;
-      padding: 0;
-    }
-
-    .modal-bg.show {
-      display: flex;
-    }
-
-    .modal {
-      background: var(--surf);
-      border: 1px solid rgba(157, 78, 221, .25);
-      border-radius: 16px 16px 0 0;
-      width: 100%;
-      max-width: 700px;
-      max-height: 93vh;
-      overflow-y: auto;
-      padding: 0;
-      padding-bottom: env(safe-area-inset-bottom, 0px);
-    }
-
-    .modal-handle {
-      width: 36px;
-      height: 4px;
-      background: rgba(255, 255, 255, .15);
-      border-radius: 2px;
-      margin: 10px auto 0;
-    }
-
-    .modal-top {
-      padding: 1rem .9rem .8rem;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .modal-ok {
-      display: flex;
-      align-items: center;
-      gap: .5rem;
-      font-size: .98rem;
-      font-weight: 700;
-      color: var(--success);
-      margin-bottom: .15rem;
-    }
-
-    .modal-ok i {
-      font-size: 1.05rem;
-    }
-
-    .modal-ref {
-      font-family: 'Space Mono', monospace;
-      font-size: .58rem;
-      color: var(--muted2);
-      letter-spacing: 1px;
-      word-break: break-all;
-    }
-
-    .modal-tickets {
-      padding: .8rem .7rem;
-    }
-
-    /* ═══════════════════════════════════════════
-       TICKET DESIGN — kept intact
-    ═══════════════════════════════════════════ */
-    .ticket-wrap-modal {
-      margin-bottom: 1.5rem;
-    }
-
-    .ticket {
-      width: 100%;
-      aspect-ratio: 2000/1430;
-      position: relative;
-      overflow: hidden;
-      border-radius: 10px;
-      box-shadow: 0 16px 50px rgba(0, 0, 0, .7);
-      background: #0d0d18;
-      contain: layout;
-    }
-
-    .ticket-bg {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      object-position: top left;
-    }
-
-    .t-qr-left {
-      position: absolute;
-      left: 1.5%;
-      top: 2.2%;
-      width: 10.5%;
-      z-index: 2;
-    }
-
-    .t-qr-left img {
-      width: 100%;
-      aspect-ratio: 1;
-      display: block;
-      border: 2px solid rgba(255, 255, 255, .3);
-      border-radius: 3px;
-      background: #fff;
-    }
-
-    .t-ev-info {
-      position: absolute;
-      left: 33%;
-      right: 29.5%;
-      top: 5%;
-      text-align: right;
-      z-index: 2;
-    }
-
-    .t-ev-name {
-      font-family: 'Anton', Impact, sans-serif;
-      font-size: clamp(.65rem, 1.8vw, 1.5rem);
-      letter-spacing: 3px;
-      color: #fff;
-      line-height: 1;
-      text-shadow: 0 2px 14px rgba(0, 0, 0, .9);
-    }
-
-    .t-ev-price {
-      font-family: 'Anton', Impact, sans-serif;
-      font-size: clamp(.6rem, 1.6vw, 1.35rem);
-      color: #ff2d78;
-      letter-spacing: 1px;
-      margin-top: .3rem;
-      text-shadow: 0 2px 10px rgba(255, 45, 120, .6);
-    }
-
-    .t-ev-meta {
-      position: absolute;
-      left: 30%;
-      right: 29.5%;
-      top: 40%;
-      z-index: 2;
-      display: flex;
-      flex-direction: column;
-      gap: 0;
-    }
-
-    .t-em-row {
-      display: flex;
-      flex-direction: row;
-      gap: 8%;
-      margin-bottom: 2%;
-      align-items: flex-start;
-    }
-
-    .t-em-col {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .t-em-lbl {
-      font-family: 'Space Mono', monospace;
-      font-size: clamp(.28rem, .5vw, .45rem);
-      letter-spacing: 2px;
-      color: rgba(255, 255, 255, .45);
-      text-transform: uppercase;
-      margin-bottom: .3rem;
-    }
-
-    .t-em-val {
-      font-family: 'Barlow Condensed', sans-serif;
-      font-size: clamp(.5rem, 1vw, .95rem);
-      font-weight: 700;
-      color: #fff;
-      letter-spacing: .5px;
-      line-height: 1.2;
-    }
-
-    .t-em-divider {
-      width: 100%;
-      height: 1px;
-      background: rgba(255, 255, 255, .2);
-      margin: 2% 0;
-    }
-
-    .t-em-venue-name {
-      font-family: 'Barlow Condensed', sans-serif;
-      font-size: clamp(.6rem, 1.3vw, 1.1rem);
-      font-weight: 700;
-      color: #fff;
-      letter-spacing: .5px;
-      line-height: 1.15;
-    }
-
-    .t-em-venue-addr {
-      font-family: 'Barlow Condensed', sans-serif;
-      font-size: clamp(.32rem, .6vw, .55rem);
-      color: rgba(255, 255, 255, .5);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      margin-top: .3rem;
-    }
-
-    .t-rp {
-      position: absolute;
-      left: 71.5%;
-      right: 0;
-      top: 11%;
-      bottom: 0;
-      z-index: 2;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 0 2.5%;
-      gap: 1.5%;
-    }
-
-    .t-rp-qr {
-      width: 46%;
-      flex-shrink: 0;
-    }
-
-    .t-rp-qr img {
-      width: 100%;
-      aspect-ratio: 1;
-      display: block;
-      border: 2px solid rgba(255, 255, 255, .15);
-      border-radius: 3px;
-      background: #fff;
-    }
-
-    .t-rp-qr-ph {
-      width: 100%;
-      aspect-ratio: 1;
-      background: rgba(255, 255, 255, .04);
-      border-radius: 3px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: .5rem;
-      color: #555;
-    }
-
-    .t-bid-lbl {
-      font-family: 'Space Mono', monospace;
-      font-size: clamp(.26rem, .45vw, .42rem);
-      letter-spacing: 2px;
-      color: rgba(255, 255, 255, .3);
-      text-transform: uppercase;
-      text-align: center;
-    }
-
-    .t-bid-val {
-      font-family: 'Barlow Condensed', sans-serif;
-      font-size: clamp(.5rem, 1.1vw, .9rem);
-      font-weight: 800;
-      color: #fff;
-      letter-spacing: 2px;
-      text-align: center;
-      line-height: 1.1;
-    }
-
-    .t-rp-hr {
-      width: 90%;
-      height: 1px;
-      background: rgba(255, 255, 255, .08);
-    }
-
-    .t-att-name {
-      font-family: 'Anton', Impact, sans-serif;
-      font-size: clamp(.5rem, .95vw, .85rem);
-      letter-spacing: 1px;
-      color: #fff;
-      width: 100%;
-      text-align: left;
-      line-height: 1;
-    }
-
-    .t-att-meta {
-      font-family: 'Space Mono', monospace;
-      font-size: clamp(.22rem, .4vw, .38rem);
-      color: rgba(255, 255, 255, .32);
-      width: 100%;
-      text-align: left;
-      letter-spacing: .8px;
-      margin-top: .2rem;
-    }
-
-    .t-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1% 2%;
-      width: 100%;
-    }
-
-    .t-gc {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .t-gl {
-      font-family: 'Space Mono', monospace;
-      font-size: clamp(.22rem, .38vw, .36rem);
-      letter-spacing: 1px;
-      color: rgba(255, 255, 255, .3);
-      text-transform: uppercase;
-      margin-bottom: .1rem;
-    }
-
-    .t-gv {
-      font-family: 'Outfit', sans-serif;
-      font-size: clamp(.35rem, .65vw, .58rem);
-      font-weight: 600;
-      color: rgba(255, 255, 255, .85);
-      line-height: 1.2;
-    }
-
-    .t-gv.acc {
-      color: #c8ff00;
-    }
-
-    .t-gv.mono {
-      font-family: 'Space Mono', monospace;
-      font-size: clamp(.25rem, .45vw, .42rem);
-    }
-
-    .t-valid {
-      width: 100%;
-      background: rgba(76, 220, 128, .09);
-      border: 1px solid rgba(76, 220, 128, .28);
-      color: #4cdc80;
-      font-family: 'Space Mono', monospace;
-      font-size: clamp(.22rem, .38vw, .34rem);
-      letter-spacing: .5px;
-      padding: .8% 1%;
-      border-radius: 3px;
-      text-align: center;
-    }
-
-    /* Modal actions */
-    .modal-actions {
-      padding: 0 .7rem 1.1rem;
-      display: flex;
-      flex-direction: column;
-      gap: .5rem;
-    }
-
-    .btn-print {
-      padding: .72rem;
-      background: rgba(157, 78, 221, .1);
-      border: 1px solid rgba(157, 78, 221, .25);
-      border-radius: 8px;
-      color: var(--accent);
-      font-family: 'Outfit', sans-serif;
-      font-size: .88rem;
-      font-weight: 600;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: .4rem;
-      transition: background .15s;
-    }
-
-    .btn-print:hover {
-      background: rgba(157, 78, 221, .2);
-    }
-
-    .btn-print:disabled {
-      opacity: .5;
-      cursor: not-allowed;
-    }
-
-    .btn-close-modal {
-      padding: .72rem;
-      background: rgba(255, 255, 255, .05);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      color: var(--muted2);
-      font-family: 'Outfit', sans-serif;
-      font-size: .88rem;
-      cursor: pointer;
-    }
-
-    /* ════════════════════════════════════════════
-       TOAST
-    ════════════════════════════════════════════ */
-    #toast {
-      display: none;
-      position: fixed;
-      bottom: max(1.1rem, env(safe-area-inset-bottom));
-      left: 50%;
-      transform: translateX(-50%);
-      background: var(--surf);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: .55rem 1rem;
-      font-size: .8rem;
-      z-index: 9999;
-      box-shadow: 0 6px 24px rgba(0, 0, 0, .5);
-      white-space: nowrap;
-      max-width: 90vw;
-      text-align: center;
-    }
-
-    /* ════════════════════════════════════════════
-       PRINT STYLES
-    ════════════════════════════════════════════ */
     @media print {
-      body>*:not(#printOverlay) {
-        display: none !important;
-      }
-
-      #printOverlay {
-        display: block !important;
-        position: absolute !important;
-        top: 0;
-        left: 0;
-        width: 100% !important;
-        background: #000 !important;
-        z-index: 99999 !important;
-      }
-
-      .ticket-scale-wrap {
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        width: 100vw !important;
-        height: 100vh !important;
-        padding: 4mm !important;
-        box-sizing: border-box !important;
-        background: #000 !important;
-        page-break-after: always !important;
-        break-after: page !important;
-        page-break-inside: avoid !important;
-        break-inside: avoid !important;
-      }
-
-      .ticket-scale-wrap .ticket {
-        width: 277mm !important;
-        height: calc(277mm*(1430/2000)) !important;
-        aspect-ratio: unset !important;
-        border-radius: 8px !important;
-        flex-shrink: 0 !important;
-      }
-
-      .ticket-scale-wrap .t-ev-name {
-        font-size: 1.55rem !important;
-      }
-
-      .ticket-scale-wrap .t-ev-price {
-        font-size: 1.35rem !important;
-      }
-
-      .ticket-scale-wrap .t-em-lbl {
-        font-size: .46rem !important;
-      }
-
-      .ticket-scale-wrap .t-em-val {
-        font-size: .92rem !important;
-      }
-
-      .ticket-scale-wrap .t-em-venue-name {
-        font-size: 1.05rem !important;
-      }
-
-      .ticket-scale-wrap .t-em-venue-addr {
-        font-size: .52rem !important;
-      }
-
-      .ticket-scale-wrap .t-bid-lbl {
-        font-size: .46rem !important;
-      }
-
-      .ticket-scale-wrap .t-bid-val {
-        font-size: .92rem !important;
-      }
-
-      .ticket-scale-wrap .t-att-name {
-        font-size: .88rem !important;
-      }
-
-      .ticket-scale-wrap .t-att-meta {
-        font-size: .4rem !important;
-      }
-
-      .ticket-scale-wrap .t-gl {
-        font-size: .38rem !important;
-      }
-
-      .ticket-scale-wrap .t-gv {
-        font-size: .6rem !important;
-      }
-
-      .ticket-scale-wrap .t-gv.mono {
-        font-size: .44rem !important;
-      }
-
-      .ticket-scale-wrap .t-valid {
-        font-size: .36rem !important;
-        padding: 1% 2% !important;
-      }
-
-      .ticket-scale-wrap .t-rp {
-        gap: 2% !important;
-      }
-
-      .ticket-scale-wrap .t-rp-qr {
-        width: 48% !important;
-      }
-
-      .ticket-scale-wrap .t-grid {
-        gap: 2% 3% !important;
-      }
-
-      @page {
-        size: A4 landscape;
-        margin: 0;
-      }
+      body>*:not(#printOverlay) { display: none !important; }
+      #printOverlay { display: block !important; position: absolute !important; top: 0; left: 0; width: 100% !important; background: #000 !important; z-index: 99999 !important; }
+      .ticket-scale-wrap { display: flex !important; align-items: center !important; justify-content: center !important; width: 100vw !important; height: 100vh !important; padding: 4mm !important; box-sizing: border-box !important; background: #000 !important; page-break-after: always !important; break-after: page !important; page-break-inside: avoid !important; break-inside: avoid !important; }
+      .ticket-scale-wrap .ticket { width: 277mm !important; height: calc(277mm*(1430/2000)) !important; aspect-ratio: unset !important; border-radius: 8px !important; flex-shrink: 0 !important; }
+      .ticket-scale-wrap .t-ev-name { font-size: 1.55rem !important; }
+      .ticket-scale-wrap .t-ev-price { font-size: 1.35rem !important; }
+      .ticket-scale-wrap .t-em-lbl { font-size: .46rem !important; }
+      .ticket-scale-wrap .t-em-val { font-size: .92rem !important; }
+      .ticket-scale-wrap .t-em-venue-name { font-size: 1.05rem !important; }
+      .ticket-scale-wrap .t-em-venue-addr { font-size: .52rem !important; }
+      .ticket-scale-wrap .t-bid-lbl { font-size: .46rem !important; }
+      .ticket-scale-wrap .t-bid-val { font-size: .92rem !important; }
+      .ticket-scale-wrap .t-att-name { font-size: .88rem !important; }
+      .ticket-scale-wrap .t-att-meta { font-size: .4rem !important; }
+      .ticket-scale-wrap .t-gl { font-size: .38rem !important; }
+      .ticket-scale-wrap .t-gv { font-size: .6rem !important; }
+      .ticket-scale-wrap .t-gv.mono { font-size: .44rem !important; }
+      .ticket-scale-wrap .t-valid { font-size: .36rem !important; padding: 1% 2% !important; }
+      .ticket-scale-wrap .t-rp { gap: 2% !important; }
+      .ticket-scale-wrap .t-rp-qr { width: 48% !important; }
+      .ticket-scale-wrap .t-grid { gap: 2% 3% !important; }
+      @page { size: A4 landscape; margin: 0; }
     }
 
-    /* ════════════════════════════════════════════
-       RESPONSIVE BREAKPOINTS
-       Mobile-first — defaults above are ~320px
-    ════════════════════════════════════════════ */
-
-    /* ── 320px baseline (very tiny phones) ──
-       Most small styles already in base rules.
-       Hide user label + role dot by default.   */
-    .tb-user {
-      display: none;
-    }
-
-    .role-dot {
-      display: none;
-    }
-
-    .logout-txt {
-      display: none;
-    }
-
-    /* ── 360px — larger small phones ── */
-    @media(min-width:360px) {
-      .page {
-        padding: .8rem;
-      }
-
-      .card {
-        padding: .9rem .85rem;
-      }
-
-      .tt-name {
-        font-size: .8rem;
-      }
-
-      .tt-price {
-        font-size: .82rem;
-      }
-    }
-
-    /* ── 400px — most Android mid-range ── */
-    @media(min-width:400px) {
-      .tb-user {
-        display: flex;
-        font-size: .66rem;
-        max-width: 110px;
-      }
-
-      .role-dot {
-        display: block;
-      }
-
-      .logout-txt {
-        display: inline;
-      }
-
-      .page {
-        padding: .9rem;
-      }
-
-      .page-title {
-        font-size: 1.1rem;
-      }
-
-      .card {
-        padding: 1rem .95rem;
-      }
-
-      .evt-card {
-        padding: .7rem .85rem;
-      }
-
-      .ttype-grid {
-        gap: .5rem;
-      }
-
-      .ttype-card {
-        padding: .72rem .7rem;
-      }
-
-      .tt-name {
-        font-size: .81rem;
-      }
-
-      .tt-price {
-        font-size: .83rem;
-      }
-
-      .sum-val {
-        font-size: .76rem;
-      }
-
-      .sum-val.big {
-        font-size: .88rem;
-      }
-
-      .sum-lbl {
-        font-size: .54rem;
-      }
-
-      .seatmap-img,
-      #mapSvg {
-        max-height: 230px;
-      }
-
-      .stats-strip {
-        gap: .45rem;
-      }
-
-      .sstat-val {
-        font-size: .78rem;
-      }
-    }
-
-    /* ── 480px — large Android / small iOS ── */
-    @media(min-width:480px) {
-      .page {
-        padding: 1rem;
-      }
-
-      .page-title {
-        font-size: 1.15rem;
-        letter-spacing: 2px;
-      }
-
-      .card {
-        padding: 1.05rem 1rem;
-      }
-
-      .card-hd {
-        font-size: .58rem;
-      }
-
-      .tb-user {
-        max-width: 140px;
-        font-size: .7rem;
-      }
-
-      .ttype-grid {
-        gap: .5rem;
-      }
-
-      .tt-name {
-        font-size: .82rem;
-      }
-
-      .tt-price {
-        font-size: .85rem;
-      }
-
-      .tt-avail {
-        font-size: .61rem;
-      }
-
-      .sum-item {
-        min-width: 58px;
-      }
-
-      .sum-val {
-        font-size: .8rem;
-      }
-
-      .sum-val.big {
-        font-size: .9rem;
-      }
-
-      .sum-lbl {
-        font-size: .56rem;
-      }
-
-      .seatmap-img,
-      #mapSvg {
-        max-height: 245px;
-      }
-
-      .stats-strip {
-        gap: .5rem;
-      }
-
-      .sstat-val {
-        font-size: .82rem;
-      }
-
-      .sstat-lbl {
-        font-size: .58rem;
-      }
-
-      .sales-tbl {
-        min-width: 500px;
-      }
-
-      .modal-tickets {
-        padding: .85rem .8rem;
-      }
-
-      .modal-actions {
-        padding: 0 .8rem 1.05rem;
-      }
-    }
-
-    /* ── 560px — phablets ── */
-    @media(min-width:560px) {
-      .page {
-        padding: 1.05rem 1.1rem;
-      }
-
-      .card {
-        padding: 1.1rem 1.05rem;
-      }
-
-      .tb-user {
-        max-width: 180px;
-      }
-
-      .ttype-card {
-        padding: .75rem .75rem;
-      }
-
-      .tt-name {
-        font-size: .83rem;
-      }
-
-      .tt-price {
-        font-size: .87rem;
-      }
-
-      .summary-bar {
-        padding: .55rem .5rem;
-      }
-
-      .sum-val {
-        font-size: .82rem;
-      }
-
-      .sum-val.big {
-        font-size: .94rem;
-      }
-
-      .seatmap-img,
-      #mapSvg {
-        max-height: 260px;
-      }
-
-      .stats-strip {
-        gap: .5rem;
-      }
-
-      .sstat-val {
-        font-size: .85rem;
-      }
-
-      .sstat {
-        padding: .65rem .5rem;
-      }
-
-      .sales-tbl th {
-        font-size: .46rem;
-      }
-
-      .sales-tbl td {
-        font-size: .77rem;
-      }
-    }
-
-    /* ── 640px — small tablets / large phones landscape ── */
-    @media(min-width:640px) {
-      .page {
-        padding: 1.1rem 1.15rem;
-      }
-
-      .card {
-        padding: 1.1rem 1.1rem;
-      }
-
-      .page-title {
-        font-size: 1.2rem;
-      }
-
-      .tb-user {
-        max-width: none;
-      }
-
-      .logout-link {
-        padding: .28rem .55rem;
-      }
-
-      .tt-name {
-        font-size: .84rem;
-      }
-
-      .tt-price {
-        font-size: .88rem;
-      }
-
-      .summary-bar {
-        padding: .6rem .55rem;
-      }
-
-      .sum-val {
-        font-size: .84rem;
-      }
-
-      .sum-val.big {
-        font-size: .96rem;
-      }
-
-      .seatmap-img,
-      #mapSvg {
-        max-height: 270px;
-      }
-
-      .stats-strip {
-        gap: .55rem;
-      }
-
-      .sstat-val {
-        font-size: .87rem;
-      }
-
-      /* Modal transitions to centered sheet */
-      .modal-bg {
-        align-items: flex-end;
-      }
-
-      .modal-top {
-        padding: 1.1rem 1.1rem .85rem;
-      }
-
-      .modal-tickets {
-        padding: .9rem .95rem;
-      }
-
-      .modal-actions {
-        padding: 0 .95rem 1.1rem;
-      }
-
-      .btn-print,
-      .btn-close-modal {
-        font-size: .9rem;
-      }
-
-      .sell-sticky {
-        padding: .65rem 0 env(safe-area-inset-bottom, .3rem);
-      }
-
-      .btn-sell {
-        font-size: .97rem;
-        padding: .92rem;
-      }
-    }
-
-    /* ── 768px — tablets portrait ── */
-    @media(min-width:768px) {
-      .page {
-        padding: 1.15rem 1.2rem;
-      }
-
-      .card {
-        padding: 1.15rem 1.15rem;
-      }
-
-      .ttype-grid {
-        gap: .55rem;
-      }
-
-      .tt-name {
-        font-size: .83rem;
-      }
-
-      .tt-price {
-        font-size: .89rem;
-      }
-
-      .summary-bar {
-        padding: .65rem .65rem;
-      }
-
-      .sum-val {
-        font-size: .86rem;
-      }
-
-      .sum-val.big {
-        font-size: 1rem;
-      }
-
-      .sum-lbl {
-        font-size: .58rem;
-      }
-
-      .seatmap-img,
-      #mapSvg {
-        max-height: 285px;
-      }
-
-      .stats-strip {
-        gap: .55rem;
-      }
-
-      .sstat-val {
-        font-size: .9rem;
-      }
-
-      .sstat-lbl {
-        font-size: .6rem;
-      }
-
-      .sales-tbl th {
-        font-size: .47rem;
-        padding: .58rem .58rem;
-      }
-
-      .sales-tbl td {
-        font-size: .78rem;
-        padding: .62rem .58rem;
-      }
-    }
-
-    /* ── 900px — two-column desktop layout ── */
-    @media(min-width:900px) {
-      .page {
-        padding: 1.2rem;
-      }
-
-      .card {
-        padding: 1.2rem;
-      }
-
-      .page-title {
-        font-size: 1.3rem;
-        letter-spacing: 2px;
-      }
-
-      /* Restore two-column grid */
-      .grid {
-        grid-template-columns: 420px 1fr;
-        gap: 1.2rem;
-      }
-
-      .ttype-grid {
-        gap: .5rem;
-      }
-
-      .tt-name {
-        font-size: .83rem;
-      }
-
-      .tt-price {
-        font-size: .88rem;
-      }
-
-      .summary-bar {
-        padding: .72rem .85rem;
-      }
-
-      .sum-val {
-        font-size: .88rem;
-      }
-
-      .sum-val.big {
-        font-size: 1.05rem;
-      }
-
-      .sum-lbl {
-        font-size: .6rem;
-      }
-
-      .seatmap-img,
-      #mapSvg {
-        max-height: 300px;
-      }
-
-      .stats-strip {
-        gap: .6rem;
-      }
-
-      .sstat-val {
-        font-size: .92rem;
-      }
-
-      .sstat {
-        padding: .65rem .5rem;
-      }
-
-      .sales-tbl th {
-        font-size: .48rem;
-        padding: .6rem .6rem;
-      }
-
-      .sales-tbl td {
-        font-size: .79rem;
-        padding: .65rem .6rem;
-      }
-
-      /* Centered dialog on desktop */
-      .modal-bg {
-        align-items: center;
-        padding: 1rem;
-      }
-
-      .modal {
-        border-radius: 16px;
-        max-height: 88vh;
-      }
-
-      .modal-top {
-        padding: 1.2rem 1.25rem .9rem;
-      }
-
-      .modal-tickets {
-        padding: .9rem 1rem;
-      }
-
-      .modal-actions {
-        padding: 0 1rem 1.2rem;
-      }
-
-      .btn-print,
-      .btn-close-modal {
-        font-size: .9rem;
-        padding: .75rem;
-      }
-
-      .sell-sticky {
-        padding: .7rem 0 env(safe-area-inset-bottom, .2rem);
-      }
-
-      .btn-sell {
-        font-size: 1rem;
-        padding: .95rem;
-      }
-    }
-
-    /* ── 1100px — wide desktop ── */
-    @media(min-width:1100px) {
-      .page {
-        padding: 1.4rem 1.2rem;
-      }
-
-      .grid {
-        grid-template-columns: 440px 1fr;
-        gap: 1.4rem;
-      }
-    }
-
-    /* ── Landscape phones (short height) ── */
-    @media(max-height:480px) and (orientation:landscape) {
-      .modal {
-        max-height: 96vh;
-      }
-
-      .sell-sticky {
-        padding: .35rem 0 .15rem;
-      }
-
-      .btn-sell {
-        padding: .65rem;
-        font-size: .88rem;
-      }
-
-      .seatmap-img,
-      #mapSvg {
-        max-height: 140px;
-      }
-
-      .topbar {
-        height: 44px;
-      }
-
-      :root {
-        --topbar-h: 44px;
-      }
-    }
+    .tb-user { display: none; }
+    .role-dot { display: none; }
+    .logout-txt { display: none; }
+
+    @media(min-width:360px) { .page { padding: .8rem; } .card { padding: .9rem .85rem; } .tt-name { font-size: .8rem; } .tt-price { font-size: .82rem; } }
+    @media(min-width:400px) { .tb-user { display: flex; font-size: .66rem; max-width: 110px; } .role-dot { display: block; } .logout-txt { display: inline; } .page { padding: .9rem; } .page-title { font-size: 1.1rem; } .card { padding: 1rem .95rem; } .evt-card { padding: .7rem .85rem; } .ttype-grid { gap: .5rem; } .ttype-card { padding: .72rem .7rem; } .tt-name { font-size: .81rem; } .tt-price { font-size: .83rem; } .sum-val { font-size: .76rem; } .sum-val.big { font-size: .88rem; } .sum-lbl { font-size: .54rem; } .seatmap-img, #mapSvg { max-height: 230px; } .stats-strip { gap: .45rem; } .sstat-val { font-size: .78rem; } }
+    @media(min-width:480px) { .page { padding: 1rem; } .page-title { font-size: 1.15rem; letter-spacing: 2px; } .card { padding: 1.05rem 1rem; } .card-hd { font-size: .58rem; } .tb-user { max-width: 140px; font-size: .7rem; } .ttype-grid { gap: .5rem; } .tt-name { font-size: .82rem; } .tt-price { font-size: .85rem; } .tt-avail { font-size: .61rem; } .sum-item { min-width: 58px; } .sum-val { font-size: .8rem; } .sum-val.big { font-size: .9rem; } .sum-lbl { font-size: .56rem; } .seatmap-img, #mapSvg { max-height: 245px; } .stats-strip { gap: .5rem; } .sstat-val { font-size: .82rem; } .sstat-lbl { font-size: .58rem; } .sales-tbl { min-width: 500px; } .modal-tickets { padding: .85rem .8rem; } .modal-actions { padding: 0 .8rem 1.05rem; } }
+    @media(min-width:560px) { .page { padding: 1.05rem 1.1rem; } .card { padding: 1.1rem 1.05rem; } .tb-user { max-width: 180px; } .ttype-card { padding: .75rem .75rem; } .tt-name { font-size: .83rem; } .tt-price { font-size: .87rem; } .summary-bar { padding: .55rem .5rem; } .sum-val { font-size: .82rem; } .sum-val.big { font-size: .94rem; } .seatmap-img, #mapSvg { max-height: 260px; } .stats-strip { gap: .5rem; } .sstat-val { font-size: .85rem; } .sstat { padding: .65rem .5rem; } .sales-tbl th { font-size: .46rem; } .sales-tbl td { font-size: .77rem; } }
+    @media(min-width:640px) { .page { padding: 1.1rem 1.15rem; } .card { padding: 1.1rem 1.1rem; } .page-title { font-size: 1.2rem; } .tb-user { max-width: none; } .logout-link { padding: .28rem .55rem; } .tt-name { font-size: .84rem; } .tt-price { font-size: .88rem; } .summary-bar { padding: .6rem .55rem; } .sum-val { font-size: .84rem; } .sum-val.big { font-size: .96rem; } .seatmap-img, #mapSvg { max-height: 270px; } .stats-strip { gap: .55rem; } .sstat-val { font-size: .87rem; } .modal-bg { align-items: flex-end; } .modal-top { padding: 1.1rem 1.1rem .85rem; } .modal-tickets { padding: .9rem .95rem; } .modal-actions { padding: 0 .95rem 1.1rem; } .btn-print, .btn-close-modal { font-size: .9rem; } .sell-sticky { padding: .65rem 0 env(safe-area-inset-bottom, .3rem); } .btn-sell { font-size: .97rem; padding: .92rem; } }
+    @media(min-width:768px) { .page { padding: 1.15rem 1.2rem; } .card { padding: 1.15rem 1.15rem; } .ttype-grid { gap: .55rem; } .tt-name { font-size: .83rem; } .tt-price { font-size: .89rem; } .summary-bar { padding: .65rem .65rem; } .sum-val { font-size: .86rem; } .sum-val.big { font-size: 1rem; } .sum-lbl { font-size: .58rem; } .seatmap-img, #mapSvg { max-height: 285px; } .stats-strip { gap: .55rem; } .sstat-val { font-size: .9rem; } .sstat-lbl { font-size: .6rem; } .sales-tbl th { font-size: .47rem; padding: .58rem .58rem; } .sales-tbl td { font-size: .78rem; padding: .62rem .58rem; } }
+    @media(min-width:900px) { .page { padding: 1.2rem; } .card { padding: 1.2rem; } .page-title { font-size: 1.3rem; letter-spacing: 2px; } .grid { grid-template-columns: 420px 1fr; gap: 1.2rem; } .ttype-grid { gap: .5rem; } .tt-name { font-size: .83rem; } .tt-price { font-size: .88rem; } .summary-bar { padding: .72rem .85rem; } .sum-val { font-size: .88rem; } .sum-val.big { font-size: 1.05rem; } .sum-lbl { font-size: .6rem; } .seatmap-img, #mapSvg { max-height: 300px; } .stats-strip { gap: .6rem; } .sstat-val { font-size: .92rem; } .sstat { padding: .65rem .5rem; } .sales-tbl th { font-size: .48rem; padding: .6rem .6rem; } .sales-tbl td { font-size: .79rem; padding: .65rem .6rem; } .modal-bg { align-items: center; padding: 1rem; } .modal { border-radius: 16px; max-height: 88vh; } .modal-top { padding: 1.2rem 1.25rem .9rem; } .modal-tickets { padding: .9rem 1rem; } .modal-actions { padding: 0 1rem 1.2rem; } .btn-print, .btn-close-modal { font-size: .9rem; padding: .75rem; } .sell-sticky { padding: .7rem 0 env(safe-area-inset-bottom, .2rem); } .btn-sell { font-size: 1rem; padding: .95rem; } }
+    @media(min-width:1100px) { .page { padding: 1.4rem 1.2rem; } .grid { grid-template-columns: 440px 1fr; gap: 1.4rem; } }
+    @media(max-height:480px) and (orientation:landscape) { .modal { max-height: 96vh; } .sell-sticky { padding: .35rem 0 .15rem; } .btn-sell { padding: .65rem; font-size: .88rem; } .seatmap-img, #mapSvg { max-height: 140px; } .topbar { height: 44px; } :root { --topbar-h: 44px; } }
   </style>
 </head>
 
 <body>
 
-  <!-- ── TOPBAR ── -->
   <div class="topbar">
     <div class="tb-left">
       <img src="/images/brandings/logo.webp" alt="MEE" class="tb-logo" onerror="this.style.display='none'" />
@@ -2160,9 +286,7 @@
     </div>
     <div class="tb-right">
       <div class="role-dot"></div>
-      <div class="tb-user">Logged in as <strong>
-          <%= staffUser.name || staffUser.username %>
-        </strong></div>
+      <div class="tb-user">Logged in as <strong><%= staffUser.name || staffUser.username %></strong></div>
       <a href="/staff/logout" class="logout-link">
         <i class="bi bi-box-arrow-right"></i>
         <span class="logout-txt">Logout</span>
@@ -2178,42 +302,31 @@
 
     <div class="grid">
 
-      <!-- ─────────────── LEFT: FORM ─────────────── -->
       <div>
         <div class="card">
           <div class="card-hd"><i class="bi bi-ticket-perforated"></i> New Sale</div>
 
-          <!-- EVENT CARDS -->
           <div class="evt-section">
             <div class="evt-section-hd">
               <label style="margin:0;">Event <span class="req">*</span></label>
             </div>
             <div class="evt-cards" id="evtCards">
               <% events.forEach(function(ev){ %>
-                <div class="evt-card" data-id="<%= ev._id %>" onclick="onEventCard(this, '<%= ev._id %>')">
+                <div class="evt-card" data-id="<%= ev._id.toString() %>" onclick="onEventCard(this, '<%= ev._id.toString() %>')">
                   <div class="evt-card-icon"><i class="bi bi-calendar-event"></i></div>
                   <div class="evt-card-info">
-                    <div class="evt-card-name">
-                      <%= ev.name %>
-                    </div>
+                    <div class="evt-card-name"><%= ev.name %></div>
                     <div class="evt-card-meta">
-                      <span><i class="bi bi-calendar3"></i>
-                        <%= new Date(ev.date).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})
-                          %>
-                      </span>
-                      <% if(ev.venue){ %><span><i class="bi bi-geo-alt"></i>
-                          <%= ev.venue %>
-                        </span>
-                        <% } %>
+                      <span><i class="bi bi-calendar3"></i> <%= new Date(ev.date).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}) %></span>
+                      <% if(ev.venue){ %><span><i class="bi bi-geo-alt"></i> <%= ev.venue %></span><% } %>
                     </div>
                   </div>
                   <div class="evt-card-sel"></div>
                 </div>
-                <% }); %>
+              <% }); %>
             </div>
           </div>
 
-          <!-- TICKET TYPES -->
           <div id="secType" style="display:none;">
             <div class="fg">
               <label>Ticket Type <span class="req">*</span></label>
@@ -2221,11 +334,18 @@
             </div>
           </div>
 
-          <!-- SEAT MAP -->
+          <!-- ✅ Age limit alert — shown when a ticket type with ageLimit is selected -->
+          <div class="age-alert" id="ageAlert">
+            <i class="bi bi-exclamation-triangle-fill age-alert-icon"></i>
+            <div class="age-alert-body">
+              <div class="age-alert-title" id="ageAlertTitle">Age Restriction</div>
+              <div class="age-alert-text" id="ageAlertText"></div>
+            </div>
+          </div>
+
           <div id="secMap" style="display:none;">
             <div class="fg">
-              <label>Zone / Section <span style="font-size:.63rem;color:var(--muted);font-weight:400;">(tap to
-                  select)</span></label>
+              <label>Zone / Section <span style="font-size:.63rem;color:var(--muted);font-weight:400;">(tap to select)</span></label>
               <div class="seatmap-outer">
                 <div class="seatmap-title" id="mapTitle">VENUE MAP</div>
                 <div class="seatmap-canvas-wrap" id="mapWrap">
@@ -2245,7 +365,6 @@
             </div>
           </div>
 
-          <!-- FALLBACK ZONE SELECT -->
           <div id="secZoneFb" style="display:none;">
             <div class="fg">
               <label>Zone / Section</label>
@@ -2255,7 +374,6 @@
             </div>
           </div>
 
-          <!-- QUANTITY -->
           <div id="secQty" style="display:none;">
             <div class="fg">
               <label>Number of Tickets <span class="req">*</span></label>
@@ -2270,30 +388,14 @@
               <i class="bi bi-gift-fill"></i><span id="comboTxt"></span>
             </div>
             <div class="summary-bar" id="sumBar" style="display:none;">
-              <div class="sum-item">
-                <div class="sum-val" id="sQty">—</div>
-                <div class="sum-lbl">Tickets</div>
-              </div>
-              <div class="sum-item">
-                <div class="sum-val" id="sPrice">—</div>
-                <div class="sum-lbl">Per Ticket</div>
-              </div>
-              <div class="sum-item">
-                <div class="sum-val" id="sDisc">₹0</div>
-                <div class="sum-lbl">Discount</div>
-              </div>
-              <div class="sum-item">
-                <div class="sum-val" id="sConv">₹0</div>
-                <div class="sum-lbl">Conv.</div>
-              </div>
-              <div class="sum-item">
-                <div class="sum-val big" id="sTotal">—</div>
-                <div class="sum-lbl">Total</div>
-              </div>
+              <div class="sum-item"><div class="sum-val" id="sQty">—</div><div class="sum-lbl">Tickets</div></div>
+              <div class="sum-item"><div class="sum-val" id="sPrice">—</div><div class="sum-lbl">Per Ticket</div></div>
+              <div class="sum-item"><div class="sum-val" id="sDisc">₹0</div><div class="sum-lbl">Discount</div></div>
+              <div class="sum-item"><div class="sum-val" id="sConv">₹0</div><div class="sum-lbl">Conv.</div></div>
+              <div class="sum-item"><div class="sum-val big" id="sTotal">—</div><div class="sum-lbl">Total</div></div>
             </div>
           </div>
 
-          <!-- ATTENDEES -->
           <div id="secAtt" style="display:none;">
             <div class="fg">
               <label>Attendee Details</label>
@@ -2301,7 +403,6 @@
             </div>
           </div>
 
-          <!-- BUYER CONTACT -->
           <div id="secContact" style="display:none;" class="contact-section">
             <div class="card-hd" style="margin-bottom:.75rem;">
               <i class="bi bi-person-lines-fill"></i> Buyer Contact
@@ -2312,20 +413,18 @@
             </div>
             <div class="row2">
               <div class="fg">
+                <!-- ✅ Phone is required, email is now optional -->
                 <label>WhatsApp / Phone <span class="req">*</span></label>
-                <input type="tel" id="bPhone" placeholder="XXXXX XXXXX" maxlength="10" inputmode="numeric"
-                  autocomplete="tel" />
+                <input type="tel" id="bPhone" placeholder="XXXXX XXXXX" maxlength="10" inputmode="numeric" autocomplete="tel" />
                 <div class="hint">QR ticket sent via WhatsApp</div>
               </div>
               <div class="fg">
-                <label>Email <span class="req">*</span></label>
-                <input type="email" id="bEmail" placeholder="buyer@example.com" inputmode="email"
-                  autocomplete="email" />
-                <div class="hint">Confirmation sent here</div>
+                <label>Email <span class="opt">(optional)</span></label>
+                <input type="email" id="bEmail" placeholder="buyer@example.com" inputmode="email" autocomplete="email" />
+                <div class="hint">Confirmation sent here if provided</div>
               </div>
             </div>
-            <div id="contactErr"
-              style="color:var(--error);font-size:.73rem;display:none;margin-top:-.2rem;margin-bottom:.4rem;"></div>
+            <div id="contactErr" style="color:var(--error);font-size:.73rem;display:none;margin-top:-.2rem;margin-bottom:.4rem;"></div>
           </div>
 
           <div class="sell-sticky">
@@ -2333,10 +432,9 @@
               <i class="bi bi-cash-coin"></i> Confirm Cash Sale
             </button>
           </div>
-        </div><!-- /card -->
-      </div><!-- /left -->
+        </div>
+      </div>
 
-      <!-- ─────────────── RIGHT: HISTORY ─────────────── -->
       <div>
         <div class="card">
           <div class="card-hd"><i class="bi bi-clock-history"></i> My Sales</div>
@@ -2345,131 +443,86 @@
             <button class="tb" onclick="switchTab('today',this)">Today</button>
           </div>
           <div class="sales-wrap">
-            <% if(mySales && mySales.length> 0){ %>
+            <% if(mySales && mySales.length > 0){ %>
               <table class="sales-tbl">
                 <thead>
                   <tr>
-                    <th>Ref</th>
-                    <th>Buyer</th>
-                    <th>Event</th>
-                    <th>Type</th>
-                    <th style="text-align:center">Qty</th>
-                    <th>Amount</th>
-                    <th>Time</th>
+                    <th>Ref</th><th>Buyer</th><th>Event</th><th>Type</th>
+                    <th style="text-align:center">Qty</th><th>Amount</th><th>Time</th>
                   </tr>
                 </thead>
                 <tbody id="salesBody">
-                  <% mySales.forEach(function(s){ var isToday=(function(){ var d=new Date(s.createdAt),n=new Date();
-                    return d.getFullYear()===n.getFullYear()&&d.getMonth()===n.getMonth()&&d.getDate()===n.getDate();
-                    })(); %>
+                  <% mySales.forEach(function(s){ var isToday=(function(){ var d=new Date(s.createdAt),n=new Date(); return d.getFullYear()===n.getFullYear()&&d.getMonth()===n.getMonth()&&d.getDate()===n.getDate(); })(); %>
                     <tr class="sale-row" data-today="<%= isToday %>">
                       <td>
-                        <span class="ref-pill" onclick="cpCopy('<%= s.bookingRef %>')" title="Copy ref">
-                          <%= s.bookingRef %>
-                        </span>
+                        <span class="ref-pill" onclick="cpCopy('<%= s.bookingRef %>')" title="Copy ref"><%= s.bookingRef %></span>
                         <button class="reprint-btn" onclick="reprintBooking('<%= s._id %>', event)">
                           <i class="bi bi-printer"></i> Reprint
                         </button>
                       </td>
                       <td>
-                        <div style="font-weight:600;font-size:.78rem;">
-                          <%= s.contactName||'Walk-in' %>
-                        </div>
-                        <div style="font-size:.65rem;color:var(--muted2);">
-                          <%= s.contactPhone||s.contactEmail||'' %>
-                        </div>
+                        <div style="font-weight:600;font-size:.78rem;"><%= s.contactName||'Walk-in' %></div>
+                        <div style="font-size:.65rem;color:var(--muted2);"><%= s.contactPhone||s.contactEmail||'' %></div>
                       </td>
-                      <td style="font-size:.77rem;color:#d8b4fe;">
-                        <%= s.event?s.event.name:'—' %>
-                      </td>
-                      <td style="font-size:.77rem;text-transform:capitalize;">
-                        <%= s.ticketType||'—' %>
-                      </td>
-                      <td style="text-align:center;font-family:'Space Mono',monospace;font-size:.78rem;">
-                        <%= s.quantity %>
-                      </td>
-                      <td
-                        style="font-family:'Space Mono',monospace;font-size:.78rem;font-weight:700;color:var(--cash);">
-                        ₹<%= (s.totalAmount||0).toLocaleString('en-IN') %>
-                      </td>
+                      <td style="font-size:.77rem;color:#d8b4fe;"><%= s.event?s.event.name:'—' %></td>
+                      <td style="font-size:.77rem;text-transform:capitalize;"><%= s.ticketType||'—' %></td>
+                      <td style="text-align:center;font-family:'Space Mono',monospace;font-size:.78rem;"><%= s.quantity %></td>
+                      <td style="font-family:'Space Mono',monospace;font-size:.78rem;font-weight:700;color:var(--cash);">₹<%= (s.totalAmount||0).toLocaleString('en-IN') %></td>
                       <td style="font-size:.67rem;color:var(--muted2);white-space:nowrap;">
                         <%= new Date(s.createdAt).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}) %><br>
-                          <span style="font-size:.6rem;">
-                            <%= new Date(s.createdAt).toLocaleDateString('en-IN',{day:'numeric',month:'short'}) %>
-                          </span>
+                        <span style="font-size:.6rem;"><%= new Date(s.createdAt).toLocaleDateString('en-IN',{day:'numeric',month:'short'}) %></span>
                       </td>
                     </tr>
-                    <% }); %>
+                  <% }); %>
                 </tbody>
               </table>
-              <% } else { %>
-                <div class="no-sales">
-                  <i class="bi bi-ticket-perforated"></i>
-                  No sales yet. Make your first sale!
-                </div>
-                <% } %>
+            <% } else { %>
+              <div class="no-sales">
+                <i class="bi bi-ticket-perforated"></i>
+                No sales yet. Make your first sale!
+              </div>
+            <% } %>
           </div>
 
-          <% var todayCnt=0,todayRev=0,allRev=0; if(mySales){ mySales.forEach(function(s){ allRev+=(s.totalAmount||0);
-            var d=new Date(s.createdAt),n=new Date();
-            if(d.getFullYear()===n.getFullYear()&&d.getMonth()===n.getMonth()&&d.getDate()===n.getDate()){
-            todayCnt++;todayRev+=(s.totalAmount||0); } });} %>
-            <div class="stats-strip">
-              <div class="sstat">
-                <div class="sstat-val" id="dTodayCnt">
-                  <%= todayCnt %>
-                </div>
-                <div class="sstat-lbl">Today's Sales</div>
-              </div>
-              <div class="sstat">
-                <div class="sstat-val" id="dTodayRev">₹<%= todayRev.toLocaleString('en-IN') %>
-                </div>
-                <div class="sstat-lbl">Today's Revenue</div>
-              </div>
-              <div class="sstat">
-                <div class="sstat-val" style="color:var(--accent);" id="dAllRev">
-                  ₹<%= allRev.toLocaleString('en-IN') %>
-                </div>
-                <div class="sstat-lbl">Total Revenue</div>
-              </div>
-            </div>
+          <% var todayCnt=0,todayRev=0,allRev=0; if(mySales){ mySales.forEach(function(s){ allRev+=(s.totalAmount||0); var d=new Date(s.createdAt),n=new Date(); if(d.getFullYear()===n.getFullYear()&&d.getMonth()===n.getMonth()&&d.getDate()===n.getDate()){ todayCnt++;todayRev+=(s.totalAmount||0); } });} %>
+          <div class="stats-strip">
+            <div class="sstat"><div class="sstat-val" id="dTodayCnt"><%= todayCnt %></div><div class="sstat-lbl">Today's Sales</div></div>
+            <div class="sstat"><div class="sstat-val" id="dTodayRev">₹<%= todayRev.toLocaleString('en-IN') %></div><div class="sstat-lbl">Today's Revenue</div></div>
+            <div class="sstat"><div class="sstat-val" style="color:var(--accent);" id="dAllRev">₹<%= allRev.toLocaleString('en-IN') %></div><div class="sstat-lbl">Total Revenue</div></div>
+          </div>
         </div>
-      </div><!-- /right -->
+      </div>
 
-    </div><!-- /grid -->
-  </div><!-- /page -->
+    </div>
+  </div>
 
-  <!-- ── SUCCESS MODAL ── -->
   <div class="modal-bg" id="modalBg" onclick="if(event.target===this)closeModal()">
     <div class="modal" id="modalBox">
       <div class="modal-handle"></div>
       <div class="modal-top">
-        <div class="modal-ok" id="modalOkLine">
-          <i class="bi bi-check-circle-fill"></i> Sale Confirmed!
-        </div>
+        <div class="modal-ok" id="modalOkLine"><i class="bi bi-check-circle-fill"></i> Sale Confirmed!</div>
         <div class="modal-ref" id="mRef"></div>
       </div>
       <div class="modal-tickets" id="mTickets"></div>
       <div class="modal-actions">
-        <button class="btn-print" id="printBtn" onclick="printTickets()">
-          <i class="bi bi-printer"></i> Print Tickets
-        </button>
-        <button class="btn-close-modal" onclick="closeModal()">
-          <i class="bi bi-plus-circle"></i> New Sale
-        </button>
+        <button class="btn-print" id="printBtn" onclick="printTickets()"><i class="bi bi-printer"></i> Print Tickets</button>
+        <button class="btn-close-modal" onclick="closeModal()"><i class="bi bi-plus-circle"></i> New Sale</button>
       </div>
     </div>
   </div>
 
   <div id="toast"></div>
   <div id="printOverlay" style="display:none;"></div>
+  <script id="events-data" type="application/json"><%- JSON.stringify(events) %></script>
+  <script id="smaps-data" type="application/json"><%- seatMaps %></script>
 
-  <!-- ══════════════════════════════════════
-     JAVASCRIPT — identical logic, no changes
-══════════════════════════════════════ -->
   <script>
-    const EVENTS = <% - JSON.stringify(events) %>;
-    const SMAPS = <% - seatMaps %>;
+    const EVENTS = JSON.parse(document.getElementById('events-data').textContent).map(e => ({
+      ...e,
+      _id: String(e._id),
+      ticketTypes: (e.ticketTypes || []).map(t => ({ ...t, _id: String(t._id) }))
+    }));
+    const SMAPS = JSON.parse(document.getElementById('smaps-data').textContent);
 
     const CAT_COLORS = {
       platinum: '#9D4EDD', gold: '#E9B84A', silver: '#A8B5C8',
@@ -2481,9 +534,22 @@
     let selEvt = null, selType = null, selZone = '', selQty = 1, selSeatMap = null;
     let _currentModalData = null, _lockedEvtId = null;
 
+    /* ─── AGE ALERT ─── */
+    function showAgeAlert(ageLimit) {
+      const alert = document.getElementById('ageAlert');
+      const title = document.getElementById('ageAlertTitle');
+      const text = document.getElementById('ageAlertText');
+      if (ageLimit && ageLimit > 0) {
+        title.textContent = `Age Restriction — ${ageLimit}+ Only`;
+        text.textContent = `This ticket category is strictly for attendees aged ${ageLimit} years and above. Please verify each attendee's age before completing the sale. Entry will be denied for underage attendees at the gate.`;
+        alert.classList.add('show');
+      } else {
+        alert.classList.remove('show');
+      }
+    }
+
     /* ─── EVENT CARD SELECT ─── */
     function onEventCard(cardEl, id) {
-      if (_lockedEvtId === id) return;
       document.querySelectorAll('.evt-card').forEach(c => c.classList.remove('selected'));
       cardEl.classList.add('selected');
       onEvent(id);
@@ -2494,17 +560,32 @@
       hide('secType'); hide('secMap'); hide('secZoneFb'); hide('secQty');
       hide('secAtt'); hide('secContact'); hide('sumBar'); hide('comboBar');
       document.getElementById('sellBtn').disabled = true;
+      showAgeAlert(0); // hide age alert on event change
       setZoneBar('');
       if (!id) return;
+
       try {
         const r = await fetch('/staff/api/event/' + id, { credentials: 'include' });
         const d = await r.json();
-        if (d.success && d.event) { selEvt = d.event; const idx = EVENTS.findIndex(e => e._id === id); if (idx >= 0) EVENTS[idx] = d.event; }
-        else selEvt = EVENTS.find(e => e._id === id);
-      } catch (e) { selEvt = EVENTS.find(e => e._id === id); }
+        if (d.success && d.event) {
+          d.event._id = String(d.event._id);
+          (d.event.ticketTypes || []).forEach(t => { t._id = String(t._id); });
+          selEvt = d.event;
+          const idx = EVENTS.findIndex(e => e._id === id);
+          if (idx >= 0) EVENTS[idx] = d.event;
+        } else {
+          selEvt = EVENTS.find(e => e._id === id) || null;
+        }
+      } catch (e) {
+        selEvt = EVENTS.find(e => e._id === id) || null;
+      }
+
       if (!selEvt) return;
-      const grid = document.getElementById('typeGrid'); grid.innerHTML = '';
-      (selEvt.ticketTypes || []).filter(t => t.isActive).forEach(t => {
+
+      const grid = document.getElementById('typeGrid');
+      grid.innerHTML = '';
+
+      (selEvt.ticketTypes || []).filter(t => t.isActive !== false).forEach(t => {
         const avail = Math.max(0, t.totalSeats - t.bookedSeats);
         const color = cc(t.category);
         let comboText = '';
@@ -2514,20 +595,25 @@
         } else if (t.comboOfferMinQty > 0 && t.comboOfferDiscount > 0) {
           comboText = `Buy ${t.comboOfferMinQty}+ → ₹${t.comboOfferDiscount} off`;
         }
+        const ageLimit = t.ageLimit || 0;
         const availClass = avail === 0 ? 'none' : avail <= 10 ? 'low' : '';
         const card = document.createElement('div');
         card.className = 'ttype-card' + (avail <= 0 ? ' soldout' : '');
+        // ✅ Store ageLimit as data attribute
+        card.dataset.agelimit = ageLimit;
         card.innerHTML = `
-      <div class="tt-top">
-        <div class="tt-color" style="background:${color}"></div>
-        <div class="tt-name">${t.name || t.category}</div>
-      </div>
-      <div class="tt-avail ${availClass}">${avail > 0 ? avail + ' available' : 'Sold Out'}</div>
-      <div class="tt-price">₹${(t.price || 0).toLocaleString('en-IN')}</div>
-      ${comboText ? `<div class="tt-combo"><i class="bi bi-gift-fill"></i>${comboText}</div>` : ''}`;
+          <div class="tt-top">
+            <div class="tt-color" style="background:${color}"></div>
+            <div class="tt-name">${t.name || t.category}</div>
+          </div>
+          <div class="tt-avail ${availClass}">${avail > 0 ? avail + ' available' : 'Sold Out'}</div>
+          <div class="tt-price">₹${(t.price || 0).toLocaleString('en-IN')}</div>
+          ${comboText ? `<div class="tt-combo"><i class="bi bi-gift-fill"></i>${comboText}</div>` : ''}
+          ${ageLimit > 0 ? `<div class="tt-age"><i class="bi bi-person-fill-exclamation"></i>${ageLimit}+ only</div>` : ''}`;
         if (avail > 0) card.onclick = () => selectType(t, card);
         grid.appendChild(card);
       });
+
       show('secType');
       fetchAndShowSeatmap(id);
     }
@@ -2542,24 +628,26 @@
           if (selType) renderZones(d.seatMap, selType.category);
           return;
         }
-      } catch (e) { }
+      } catch (e) {}
       const cached = SMAPS[eventId];
       if (cached) { selSeatMap = cached; buildSeatMap(cached); show('secMap'); }
     }
 
-    /* ─── TYPE SELECT ─── */
     function selectType(t, card) {
       selType = t; selZone = '';
       document.querySelectorAll('.ttype-card').forEach(c => c.classList.remove('selected'));
       card.classList.add('selected');
       setZoneBar('');
+
+      // ✅ Show age alert when a ticket type with ageLimit is selected
+      showAgeAlert(t.ageLimit || 0);
+
       if (selSeatMap) { renderZones(selSeatMap, t.category); show('secMap'); hide('secZoneFb'); }
       else { hide('secMap'); hide('secZoneFb'); }
       show('secQty'); show('secContact');
       selQty = 1; document.getElementById('qtyInp').value = 1; onQty(1);
     }
 
-    /* ─── SEAT MAP BUILDER ─── */
     function buildSeatMap(sm) {
       const img = document.getElementById('mapImg'); const svg = document.getElementById('mapSvg');
       if (sm.previewImage && sm.previewImage.startsWith('data:')) { img.src = sm.previewImage; img.style.display = 'block'; svg.style.display = 'none'; return; }
@@ -2572,48 +660,48 @@
       let html = `<rect width="${cw}" height="${ch}" fill="#0f0f18"/>`;
       html += `<pattern id="gdot" width="40" height="40" patternUnits="userSpaceOnUse"><circle cx="20" cy="20" r="0.7" fill="rgba(255,255,255,0.07)"/></pattern><rect width="${cw}" height="${ch}" fill="url(#gdot)"/>`;
       if (stShp === 'semicircle') { const r = stW / 2, atBottom = scy >= ch / 2, sy2 = atBottom ? stY : stY + stH, sw2 = atBottom ? 0 : 1; html += `<path d="M ${stX} ${sy2} A ${r} ${r} 0 0 ${sw2} ${stX + stW} ${sy2}" fill="${stC}33" stroke="${stC}" stroke-width="2"/>`; }
-      else if (stShp === 'thrust') { html += `<polygon points="${stX},${stY} ${stX + stW},${stY} ${stX + stW - 50},${stY + stH} ${stX + stW / 2 + 35},${stY + stH} ${stX + stW / 2 + 35},${stY + stH + 50} ${stX + stW / 2 - 35},${stY + stH + 50} ${stX + stW / 2 - 35},${stY + stH} ${stX + 50},${stY + stH}" fill="${stC}33" stroke="${stC}" stroke-width="2"/>`; }
+      else if (stShp === 'thrust') { html += `<polygon points="${stX},${stY} ${stX+stW},${stY} ${stX+stW-50},${stY+stH} ${stX+stW/2+35},${stY+stH} ${stX+stW/2+35},${stY+stH+50} ${stX+stW/2-35},${stY+stH+50} ${stX+stW/2-35},${stY+stH} ${stX+50},${stY+stH}" fill="${stC}33" stroke="${stC}" stroke-width="2"/>`; }
       else if (stShp === 'intheround') { const r2 = Math.min(stW, stH) * 0.45; html += `<circle cx="${scx}" cy="${scy}" r="${r2}" fill="${stC}33" stroke="${stC}" stroke-width="2"/>`; }
       else { html += `<rect x="${stX}" y="${stY}" width="${stW}" height="${stH}" rx="10" fill="${stC}33" stroke="${stC}" stroke-width="2"/>`; }
-      html += `<text x="${scx}" y="${scy + 5}" text-anchor="middle" fill="${stC}" font-size="14" font-family="'Space Mono',monospace" font-weight="700" letter-spacing="3">${stLbl}</text>`;
+      html += `<text x="${scx}" y="${scy+5}" text-anchor="middle" fill="${stC}" font-size="14" font-family="'Space Mono',monospace" font-weight="700" letter-spacing="3">${stLbl}</text>`;
       (sm.sections || []).forEach(sec => {
-        const col = sec.color || cc(sec.category), sx = sec.x || 0, sy = sec.y || 0, sw = sec.zoneW || 200, sh = sec.zoneH || 100, rot = sec.zoneRot || 0;
-        const zcx = sx + sw / 2, zcy = sy + sh / 2, avail = Math.max(0, (sec.totalSeats || 0) - (sec.bookedSeats || 0)), shape = sec.zoneShape || 'rect';
-        const tr = rot !== 0 ? ` transform="rotate(${rot} ${zcx} ${zcy})"` : ''
-        const fs = Math.max(9, Math.min(14, sw / Math.max((sec.name || '').length * 0.9, 1))), avCol = avail > 0 ? 'rgba(255,255,255,0.8)' : '#FF5555';
-        if (shape === 'round') { html += `<ellipse cx="${zcx}" cy="${zcy}" rx="${sw / 2}" ry="${sh / 2}" fill="${col}28" stroke="${col}" stroke-width="1.5"${tr}/>`; }
-        else if (shape === 'triangle') { html += `<polygon points="${zcx},${sy} ${sx + sw},${sy + sh} ${sx},${sy + sh}" fill="${col}28" stroke="${col}" stroke-width="1.5"${tr}/>`; }
-        else { html += `<rect x="${sx}" y="${sy}" width="${sw}" height="${sh}" rx="8" fill="${col}28" stroke="${col}" stroke-width="1.5"${tr}/>`; }
-        html += `<text x="${zcx}" y="${zcy - 4}" text-anchor="middle" fill="#fff" font-size="${fs}" font-family="'Outfit',sans-serif" font-weight="700"${tr}>${sec.name}</text>`;
-        html += `<text x="${zcx}" y="${zcy + 12}" text-anchor="middle" fill="${avCol}" font-size="10" font-family="'Outfit',sans-serif"${tr}>${avail > 0 ? avail + ' left' : 'FULL'}</text>`;
+        const col = sec.color || cc(sec.category), sx = sec.x||0, sy = sec.y||0, sw = sec.zoneW||200, sh = sec.zoneH||100, rot = sec.zoneRot||0;
+        const zcx = sx+sw/2, zcy = sy+sh/2, avail = Math.max(0,(sec.totalSeats||0)-(sec.bookedSeats||0)), shape = sec.zoneShape||'rect';
+        const tr = rot !== 0 ? ` transform="rotate(${rot} ${zcx} ${zcy})"` : '';
+        const fs = Math.max(9, Math.min(14, sw / Math.max((sec.name||'').length*0.9,1))), avCol = avail>0?'rgba(255,255,255,0.8)':'#FF5555';
+        if (shape==='round') { html+=`<ellipse cx="${zcx}" cy="${zcy}" rx="${sw/2}" ry="${sh/2}" fill="${col}28" stroke="${col}" stroke-width="1.5"${tr}/>`; }
+        else if (shape==='triangle') { html+=`<polygon points="${zcx},${sy} ${sx+sw},${sy+sh} ${sx},${sy+sh}" fill="${col}28" stroke="${col}" stroke-width="1.5"${tr}/>`; }
+        else { html+=`<rect x="${sx}" y="${sy}" width="${sw}" height="${sh}" rx="8" fill="${col}28" stroke="${col}" stroke-width="1.5"${tr}/>`; }
+        html+=`<text x="${zcx}" y="${zcy-4}" text-anchor="middle" fill="#fff" font-size="${fs}" font-family="'Outfit',sans-serif" font-weight="700"${tr}>${sec.name}</text>`;
+        html+=`<text x="${zcx}" y="${zcy+12}" text-anchor="middle" fill="${avCol}" font-size="10" font-family="'Outfit',sans-serif"${tr}>${avail>0?avail+' left':'FULL'}</text>`;
       });
       svg.innerHTML = html; svg.style.display = 'block';
       const leg = document.getElementById('mapLegend');
-      const cats = [...new Set((sm.sections || []).map(s => s.category))];
-      leg.innerHTML = cats.map(cat => `<div class="leg-item"><div class="leg-dot" style="background:${cc(cat)}"></div>${cat}</div>`).join('');
+      const cats = [...new Set((sm.sections||[]).map(s=>s.category))];
+      leg.innerHTML = cats.map(cat=>`<div class="leg-item"><div class="leg-dot" style="background:${cc(cat)}"></div>${cat}</div>`).join('');
     }
 
     function renderZones(sm, filterCat) {
       const overlay = document.getElementById('zoneOverlay'); overlay.innerHTML = '';
-      const cw = sm.canvasWidth || 960, ch = sm.canvasHeight || 760;
-      (sm.sections || []).forEach(sec => {
+      const cw = sm.canvasWidth||960, ch = sm.canvasHeight||760;
+      (sm.sections||[]).forEach(sec => {
         if (filterCat && sec.category !== filterCat) return;
-        const avail = Math.max(0, (sec.totalSeats || 0) - (sec.bookedSeats || 0));
-        const color = sec.color || cc(sec.category);
+        const avail = Math.max(0,(sec.totalSeats||0)-(sec.bookedSeats||0));
+        const color = sec.color||cc(sec.category);
         const el = document.createElement('div');
-        el.className = 'zone-hit' + (avail <= 0 ? ' full' : '');
-        el.style.left = ((sec.x || 0) / cw * 100).toFixed(3) + '%';
-        el.style.top = ((sec.y || 0) / ch * 100).toFixed(3) + '%';
-        el.style.width = ((sec.zoneW || 200) / cw * 100).toFixed(3) + '%';
-        el.style.height = ((sec.zoneH || 100) / ch * 100).toFixed(3) + '%';
-        el.style.background = color + '44'; el.style.borderColor = color;
+        el.className = 'zone-hit'+(avail<=0?' full':'');
+        el.style.left = ((sec.x||0)/cw*100).toFixed(3)+'%';
+        el.style.top = ((sec.y||0)/ch*100).toFixed(3)+'%';
+        el.style.width = ((sec.zoneW||200)/cw*100).toFixed(3)+'%';
+        el.style.height = ((sec.zoneH||100)/ch*100).toFixed(3)+'%';
+        el.style.background = color+'44'; el.style.borderColor = color;
         if (sec.zoneRot) el.style.transform = `rotate(${sec.zoneRot}deg)`;
-        el.innerHTML = `<div class="zone-label">${sec.name}</div><div class="zone-cnt">${avail > 0 ? avail + ' left' : 'Full'}</div>`;
+        el.innerHTML = `<div class="zone-label">${sec.name}</div><div class="zone-cnt">${avail>0?avail+' left':'Full'}</div>`;
         if (avail > 0) {
           el.addEventListener('click', () => {
-            document.querySelectorAll('.zone-hit').forEach(z => z.classList.remove('active'));
+            document.querySelectorAll('.zone-hit').forEach(z=>z.classList.remove('active'));
             el.classList.add('active'); selZone = sec.name; setZoneBar(sec.name);
-            const curQty = parseInt(document.getElementById('qtyInp').value) || 1;
+            const curQty = parseInt(document.getElementById('qtyInp').value)||1;
             document.getElementById('qtyInp').max = avail;
             if (curQty > avail) { document.getElementById('qtyInp').value = avail; onQty(avail); }
             else updateHint(avail);
@@ -2623,172 +711,159 @@
       });
     }
 
-    function setZoneBar(n) { const bar = document.getElementById('zoneBar'), txt = document.getElementById('zoneBarText'); if (n) { txt.textContent = 'Zone: ' + n; bar.classList.add('show'); } else bar.classList.remove('show'); }
-    function clearZone() { selZone = ''; setZoneBar(''); document.querySelectorAll('.zone-hit').forEach(z => z.classList.remove('active')); if (selType) { const max = selType.totalSeats - selType.bookedSeats; document.getElementById('qtyInp').max = max; updateHint(); } }
-    function adjQty(d) { const inp = document.getElementById('qtyInp'); const v = Math.max(1, Math.min(parseInt(inp.max) || 20, (parseInt(inp.value) || 1) + d)); inp.value = v; onQty(v); }
-    function onQty(v) { selQty = Math.max(1, v || 1); document.getElementById('qtyInp').value = selQty; buildAttRows(selQty); updateSummary(); show('secAtt'); checkReady(); }
-    function updateHint(maxAvail) { const hint = document.getElementById('qtyHint'); let max = selType ? selType.totalSeats - selType.bookedSeats : 20; if (maxAvail !== undefined) max = Math.min(max, maxAvail); document.getElementById('qtyInp').max = max; hint.textContent = `Max ${max} available` + (selZone ? ` in "${selZone}"` : ''); }
+    function setZoneBar(n) { const bar=document.getElementById('zoneBar'),txt=document.getElementById('zoneBarText'); if(n){txt.textContent='Zone: '+n;bar.classList.add('show');}else bar.classList.remove('show'); }
+    function clearZone() { selZone='';setZoneBar('');document.querySelectorAll('.zone-hit').forEach(z=>z.classList.remove('active'));if(selType){const max=selType.totalSeats-selType.bookedSeats;document.getElementById('qtyInp').max=max;updateHint();} }
+    function adjQty(d) { const inp=document.getElementById('qtyInp');const v=Math.max(1,Math.min(parseInt(inp.max)||20,(parseInt(inp.value)||1)+d));inp.value=v;onQty(v); }
+    function onQty(v) { selQty=Math.max(1,v||1);document.getElementById('qtyInp').value=selQty;buildAttRows(selQty);updateSummary();show('secAtt');checkReady(); }
+    function updateHint(maxAvail) { const hint=document.getElementById('qtyHint');let max=selType?selType.totalSeats-selType.bookedSeats:20;if(maxAvail!==undefined)max=Math.min(max,maxAvail);document.getElementById('qtyInp').max=max;hint.textContent=`Max ${max} available`+(selZone?` in "${selZone}"`:''); }
 
     function updateSummary() {
       if (!selType) return;
-      const conv = selEvt ? (selEvt.convenienceFee || 0) : 0;
+      const conv = selEvt ? (selEvt.convenienceFee||0) : 0;
       let discount = 0, comboMsg = '';
       if (Array.isArray(selType.discountTiers) && selType.discountTiers.length > 0) {
-        const tiers = selType.discountTiers.filter(d => d.minQty > 0 && d.discount > 0).sort((a, b) => b.minQty - a.minQty);
-        const app = tiers.find(d => selQty >= d.minQty);
-        if (app) { const groups = Math.floor(selQty / app.minQty); discount = groups * app.discount; const next = tiers.slice().reverse().find(d => d.minQty > selQty); comboMsg = `🎉 ₹${discount} discount (${groups} group${groups > 1 ? 's' : ''}×₹${app.discount})`; if (next) comboMsg += ` · Add ${next.minQty - selQty} more for ₹${next.discount} off!`; }
-        else { const next = tiers.slice().reverse().find(d => d.minQty > selQty); if (next) comboMsg = `🎁 Add ${next.minQty - selQty} more ticket${next.minQty - selQty > 1 ? 's' : ''} for ₹${next.discount} off!`; }
-      } else if (selType.comboOfferMinQty > 0 && selType.comboOfferDiscount > 0) {
-        if (selQty >= selType.comboOfferMinQty) { const groups = Math.floor(selQty / selType.comboOfferMinQty); discount = groups * selType.comboOfferDiscount; comboMsg = `🎉 ₹${discount} discount (${groups} group${groups > 1 ? 's' : ''}×₹${selType.comboOfferDiscount})`; }
-        else { comboMsg = `🎁 Add ${selType.comboOfferMinQty - selQty} more for ₹${selType.comboOfferDiscount} off!`; }
+        const tiers = selType.discountTiers.filter(d=>d.minQty>0&&d.discount>0).sort((a,b)=>b.minQty-a.minQty);
+        const app = tiers.find(d=>selQty>=d.minQty);
+        if (app) { const groups=Math.floor(selQty/app.minQty);discount=groups*app.discount;const next=tiers.slice().reverse().find(d=>d.minQty>selQty);comboMsg=`🎉 ₹${discount} discount (${groups} group${groups>1?'s':''}×₹${app.discount})`;if(next)comboMsg+=` · Add ${next.minQty-selQty} more for ₹${next.discount} off!`; }
+        else { const next=tiers.slice().reverse().find(d=>d.minQty>selQty);if(next)comboMsg=`🎁 Add ${next.minQty-selQty} more ticket${next.minQty-selQty>1?'s':''} for ₹${next.discount} off!`; }
+      } else if (selType.comboOfferMinQty>0&&selType.comboOfferDiscount>0) {
+        if (selQty>=selType.comboOfferMinQty){const groups=Math.floor(selQty/selType.comboOfferMinQty);discount=groups*selType.comboOfferDiscount;comboMsg=`🎉 ₹${discount} discount (${groups} group${groups>1?'s':''}×₹${selType.comboOfferDiscount})`;}
+        else{comboMsg=`🎁 Add ${selType.comboOfferMinQty-selQty} more for ₹${selType.comboOfferDiscount} off!`;}
       }
-      const total = Math.max(0, selType.price * selQty - discount + conv);
+      const total = Math.max(0, selType.price*selQty - discount + conv);
       document.getElementById('sQty').textContent = selQty;
-      document.getElementById('sPrice').textContent = '₹' + (selType.price).toLocaleString('en-IN');
-      document.getElementById('sDisc').textContent = discount > 0 ? '-₹' + discount.toLocaleString('en-IN') : '₹0';
-      document.getElementById('sConv').textContent = conv > 0 ? '₹' + conv.toLocaleString('en-IN') : '₹0';
-      document.getElementById('sTotal').textContent = '₹' + total.toLocaleString('en-IN');
+      document.getElementById('sPrice').textContent = '₹'+(selType.price).toLocaleString('en-IN');
+      document.getElementById('sDisc').textContent = discount>0?'-₹'+discount.toLocaleString('en-IN'):'₹0';
+      document.getElementById('sConv').textContent = conv>0?'₹'+conv.toLocaleString('en-IN'):'₹0';
+      document.getElementById('sTotal').textContent = '₹'+total.toLocaleString('en-IN');
       show('sumBar');
-      if (comboMsg) { document.getElementById('comboTxt').textContent = comboMsg; document.getElementById('comboBar').style.display = 'flex'; }
-      else document.getElementById('comboBar').style.display = 'none';
+      if (comboMsg){document.getElementById('comboTxt').textContent=comboMsg;document.getElementById('comboBar').style.display='flex';}
+      else document.getElementById('comboBar').style.display='none';
       updateHint();
     }
 
     function buildAttRows(qty) {
-      const list = document.getElementById('attList'); list.innerHTML = '';
-      for (let i = 0; i < qty; i++) {
-        const div = document.createElement('div'); div.className = 'att-row';
-        div.innerHTML = `<div class="att-num">Attendee ${i + 1}</div>
-      <div class="row2">
-        <div class="fg" style="margin-bottom:.35rem;">
-          <label>Name <span class="req">*</span></label>
-          <input class="att-name" type="text" placeholder="Full name" autocomplete="off"/>
-        </div>
-        <div class="fg" style="margin-bottom:.35rem;">
-          <label>Age <span class="req">*</span></label>
-          <input class="att-age" type="number" placeholder="Age" min="1" max="120" inputmode="numeric"/>
-        </div>
-      </div>
-      <div class="fg" style="margin-bottom:0;">
-        <label>Gender</label>
-        <select class="att-gender">
-          <option value="">—</option>
-          <option value="male">Male</option>
-          <option value="female">Female</option>
-          <option value="other">Other</option>
-        </select>
-      </div>`;
+      const list=document.getElementById('attList'); list.innerHTML='';
+      const ageLimit = selType?.ageLimit || 0;
+      for (let i=0;i<qty;i++) {
+        const div=document.createElement('div'); div.className='att-row';
+        div.innerHTML=`<div class="att-num">Attendee ${i+1}</div>
+          <div class="row2">
+            <div class="fg" style="margin-bottom:.35rem;"><label>Name <span class="req">*</span></label><input class="att-name" type="text" placeholder="Full name" autocomplete="off"/></div>
+            <div class="fg" style="margin-bottom:.35rem;"><label>Age <span class="req">*</span>${ageLimit > 0 ? `<span style="color:var(--warn);font-size:.6rem;margin-left:4px;">(min. ${ageLimit})</span>` : ''}</label><input class="att-age" type="number" placeholder="Age" min="${ageLimit > 0 ? ageLimit : 1}" max="120" inputmode="numeric"/></div>
+          </div>
+          <div class="fg" style="margin-bottom:0;"><label>Gender</label><select class="att-gender"><option value="">—</option><option value="male">Male</option><option value="female">Female</option><option value="other">Other</option></select></div>`;
         list.appendChild(div);
       }
     }
 
     function checkReady() { document.getElementById('sellBtn').disabled = !(selEvt && selType); }
 
-    /* ─── EXECUTE SALE ─── */
     async function doSell() {
       const phone = document.getElementById('bPhone').value.trim();
       const email = document.getElementById('bEmail').value.trim();
-      const errEl = document.getElementById('contactErr'); errEl.style.display = 'none';
-      if (!phone) { errEl.textContent = 'WhatsApp number is required.'; errEl.style.display = 'block'; return; }
-      if (!email) { errEl.textContent = 'Email address is required.'; errEl.style.display = 'block'; return; }
-      if (!/^[6-9]\d{9}$/.test(phone)) { errEl.textContent = 'Invalid phone — enter 10-digit Indian mobile.'; errEl.style.display = 'block'; return; }
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { errEl.textContent = 'Invalid email address.'; errEl.style.display = 'block'; return; }
-      const attendees = []; let valid = true;
-      document.querySelectorAll('.att-row').forEach(row => {
-        const name = row.querySelector('.att-name')?.value?.trim() || '';
-        const age = parseInt(row.querySelector('.att-age')?.value) || 0;
-        const gender = row.querySelector('.att-gender')?.value || '';
-        if (!name || !age) { valid = false; return; }
-        attendees.push({ name, age, gender });
+      const errEl = document.getElementById('contactErr'); errEl.style.display='none';
+
+      // ✅ Phone required, email optional
+      if (!phone){errEl.textContent='WhatsApp number is required.';errEl.style.display='block';return;}
+      if (!/^[6-9]\d{9}$/.test(phone)){errEl.textContent='Invalid phone — enter 10-digit Indian mobile.';errEl.style.display='block';return;}
+      // Validate email only if it's been filled in
+      if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){errEl.textContent='Invalid email address.';errEl.style.display='block';return;}
+
+      // ✅ Age limit validation
+      const ageLimit = selType?.ageLimit || 0;
+      const attendees=[]; let valid=true;
+      document.querySelectorAll('.att-row').forEach((row, idx) => {
+        const name=row.querySelector('.att-name')?.value?.trim()||'';
+        const age=parseInt(row.querySelector('.att-age')?.value)||0;
+        const gender=row.querySelector('.att-gender')?.value||'';
+        if(!name||!age){valid=false;return;}
+        if (ageLimit > 0 && age < ageLimit) {
+          showToast(`Attendee ${idx+1}: Age must be ${ageLimit}+ for this ticket category.`, true);
+          valid = false;
+          return;
+        }
+        attendees.push({name,age,gender});
       });
-      if (!valid) { showToast('Fill in all attendee names and ages.', true); return; }
-      const btn = document.getElementById('sellBtn');
-      btn.disabled = true; btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Processing…';
+      if (!valid) return;
+
+      const btn=document.getElementById('sellBtn');
+      btn.disabled=true; btn.innerHTML='<i class="bi bi-hourglass-split"></i> Processing…';
       const currentEvtId = selEvt._id;
       try {
-        const resp = await fetch('/staff/api/sell', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            eventId: selEvt._id, ticketType: selType.category, quantity: selQty,
-            attendees, buyerPhone: phone, buyerEmail: email,
-            buyerName: document.getElementById('bName').value.trim() || attendees[0]?.name || '',
-            zone: selZone
+        const resp = await fetch('/staff/api/sell',{
+          method:'POST',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({
+            eventId:selEvt._id,ticketType:selType.category,quantity:selQty,
+            attendees,buyerPhone:phone,
+            buyerEmail: email || '',   // ✅ pass empty string if not filled
+            buyerName:document.getElementById('bName').value.trim()||attendees[0]?.name||'',
+            zone:selZone
           })
         });
         const data = await resp.json();
-        if (!data.success) {
-          showToast(data.message || 'Sale failed.', true);
-          btn.disabled = false; btn.innerHTML = '<i class="bi bi-cash-coin"></i> Confirm Cash Sale';
-          if (selEvt) fetchAndShowSeatmap(selEvt._id); return;
+        if (!data.success){
+          showToast(data.message||'Sale failed.',true);
+          btn.disabled=false; btn.innerHTML='<i class="bi bi-cash-coin"></i> Confirm Cash Sale';
+          if(selEvt)fetchAndShowSeatmap(selEvt._id); return;
         }
-        showModal(data); prependRow(data);
         _lockedEvtId = currentEvtId;
-        if (selEvt) fetchAndShowSeatmap(selEvt._id);
-      } catch (e) {
-        showToast('Network error. Try again.', true);
-        btn.disabled = false; btn.innerHTML = '<i class="bi bi-cash-coin"></i> Confirm Cash Sale';
+        showModal(data); prependRow(data);
+        if(selEvt)fetchAndShowSeatmap(selEvt._id);
+      } catch(e) {
+        showToast('Network error. Try again.',true);
+        btn.disabled=false; btn.innerHTML='<i class="bi bi-cash-coin"></i> Confirm Cash Sale';
       }
     }
 
-    /* ─── TICKET HTML ─── */
     function buildTicketHTML(data) {
-      const typeCategory = selType?.category || data.ticketType || '';
-      const typeLabel = (selType?.name || selType?.category || data.ticketType || 'TICKET').toUpperCase();
-      const priceEach = selType?.price ? selType.price : (data.pricePerTicket ? Number(data.pricePerTicket) : 0);
-      const eventDateStr = data.event?.date ? new Date(data.event.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' }).toUpperCase() : '—';
-      const doorsOpen = data.event?.doorsOpen || '—';
-      const venueName = data.event?.venue || '';
-      const venueAddr = data.event?.venueAddress || '';
-      const totalTix = (data.tickets || []).length;
-      const ticketTypesSource = selEvt?.ticketTypes || data.event?.ticketTypes || [];
-      const evtTicketType = ticketTypesSource.find(tt => tt.category === typeCategory);
-      const isSittingType = evtTicketType?.seatType === 'sitting';
-      const gateNumber = evtTicketType?.gateNumber || data.gateNumber || '';
-      let html = '';
-      (data.tickets || []).forEach((t, idx) => {
-        const attendee = t.attendee || 'GUEST';
-        const attAge = t.attendeeAge || '';
-        const attGender = t.attendeeGender ? (t.attendeeGender.charAt(0).toUpperCase() + t.attendeeGender.slice(1)) : '';
-        const rawSeat = (t.seatNumber || '').trim();
-        const seatDisp = (isSittingType && rawSeat) ? rawSeat.toUpperCase() : 'N/A';
-        html += `
+      const typeCategory = selType?.category||data.ticketType||'';
+      const typeLabel = (selType?.name||selType?.category||data.ticketType||'TICKET').toUpperCase();
+      const priceEach = selType?.price?selType.price:(data.pricePerTicket?Number(data.pricePerTicket):0);
+      const eventDateStr = data.event?.date?new Date(data.event.date).toLocaleDateString('en-IN',{day:'2-digit',month:'long',year:'numeric'}).toUpperCase():'—';
+      const doorsOpen = data.event?.doorsOpen||'—';
+      const venueName = data.event?.venue||'';
+      const venueAddr = data.event?.venueAddress||'';
+      const totalTix = (data.tickets||[]).length;
+      const ticketTypesSource = selEvt?.ticketTypes||data.event?.ticketTypes||[];
+      const evtTicketType = ticketTypesSource.find(tt=>tt.category===typeCategory);
+      const isSittingType = evtTicketType?.seatType==='sitting';
+      const gateNumber = evtTicketType?.gateNumber||data.gateNumber||'';
+      let html='';
+      (data.tickets||[]).forEach((t,idx)=>{
+        const attendee=t.attendee||'GUEST';
+        const attAge=t.attendeeAge||'';
+        const attGender=t.attendeeGender?(t.attendeeGender.charAt(0).toUpperCase()+t.attendeeGender.slice(1)):'';
+        const rawSeat=(t.seatNumber||'').trim();
+        const seatDisp=(isSittingType&&rawSeat)?rawSeat.toUpperCase():'N/A';
+        html+=`
     <div class="ticket">
       <img class="ticket-bg" src="/images/brandings/ticket_BG.webp" alt="" crossorigin="anonymous"/>
-      <div class="t-qr-left">
-        ${t.qrCode ? `<img src="${t.qrCode}" alt="QR" crossorigin="anonymous"/>` : '<div style="width:100%;aspect-ratio:1;background:#fff;border-radius:3px;"></div>'}
-      </div>
-      <div class="t-ev-info">
-        <div class="t-ev-name">${typeLabel}</div>
-        <div class="t-ev-price">&#8377; ${priceEach.toLocaleString('en-IN')}</div>
-      </div>
+      <div class="t-qr-left">${t.qrCode?`<img src="${t.qrCode}" alt="QR" crossorigin="anonymous"/>`:'<div style="width:100%;aspect-ratio:1;background:#fff;border-radius:3px;"></div>'}</div>
+      <div class="t-ev-info"><div class="t-ev-name">${typeLabel}</div><div class="t-ev-price">&#8377; ${priceEach.toLocaleString('en-IN')}</div></div>
       <div class="t-ev-meta">
         <div class="t-em-row">
           <div class="t-em-col"><div class="t-em-lbl">DATE</div><div class="t-em-val">${eventDateStr}</div></div>
           <div class="t-em-col"><div class="t-em-lbl">TIME</div><div class="t-em-val">${doorsOpen}</div></div>
         </div>
         <div class="t-em-divider"></div>
-        <div class="t-em-col">
-          <div class="t-em-venue-name">${venueName}</div>
-          ${venueAddr ? `<div class="t-em-venue-addr">${venueAddr.toUpperCase()}</div>` : ''}
-        </div>
+        <div class="t-em-col"><div class="t-em-venue-name">${venueName}</div>${venueAddr?`<div class="t-em-venue-addr">${venueAddr.toUpperCase()}</div>`:''}</div>
       </div>
       <div class="t-rp">
-        <div class="t-rp-qr">
-          ${t.qrCode ? `<img src="${t.qrCode}" alt="QR" crossorigin="anonymous"/>` : '<div class="t-rp-qr-ph">QR CODE</div>'}
-        </div>
+        <div class="t-rp-qr">${t.qrCode?`<img src="${t.qrCode}" alt="QR" crossorigin="anonymous"/>`:'<div class="t-rp-qr-ph">QR CODE</div>'}</div>
         <div class="t-bid-lbl">BOOKING ID</div>
         <div class="t-bid-val">${data.bookingRef}</div>
         <div class="t-rp-hr"></div>
         <div class="t-att-name">${attendee.toUpperCase()}</div>
-        ${(attAge || attGender) ? `<div class="t-att-meta">${attAge ? 'AGE - ' + attAge : ''}${attAge && attGender ? ' | ' : ''}${attGender ? 'GENDER - ' + attGender : ''}</div>` : ''}
+        ${(attAge||attGender)?`<div class="t-att-meta">${attAge?'AGE - '+attAge:''}${attAge&&attGender?' | ':''}${attGender?'GENDER - '+attGender:''}</div>`:''}
         <div class="t-rp-hr"></div>
         <div class="t-grid">
           <div class="t-gc"><div class="t-gl">Ticket ID</div><div class="t-gv mono">${t.ticketId}</div></div>
-          <div class="t-gc"><div class="t-gl">Ticket No.</div><div class="t-gv">${idx + 1} of ${totalTix}</div></div>
+          <div class="t-gc"><div class="t-gl">Ticket No.</div><div class="t-gv">${idx+1} of ${totalTix}</div></div>
           <div class="t-gc"><div class="t-gl">Category</div><div class="t-gv acc">${typeLabel}</div></div>
           <div class="t-gc"><div class="t-gl">Seat No.</div><div class="t-gv acc">${seatDisp}</div></div>
           <div class="t-gc"><div class="t-gl">Amount</div><div class="t-gv">&#8377; ${priceEach.toLocaleString('en-IN')}/-</div></div>
-          ${gateNumber ? `<div class="t-gc"><div class="t-gl">Gate</div><div class="t-gv acc">${gateNumber}</div></div>` : ''}
+          ${gateNumber?`<div class="t-gc"><div class="t-gl">Gate</div><div class="t-gv acc">${gateNumber}</div></div>`:''}
         </div>
         <div class="t-valid">&#10003;&nbsp; VALID &nbsp;·&nbsp; ONE TIME ENTRY</div>
       </div>
@@ -2797,120 +872,116 @@
       return html;
     }
 
-    /* ─── MODAL ─── */
     function showModal(data) {
       _currentModalData = data;
       const isReprint = !!data._isReprint;
       document.getElementById('modalOkLine').innerHTML = isReprint
         ? `<i class="bi bi-printer"></i> Reprinting Tickets`
         : `<i class="bi bi-check-circle-fill"></i> Sale Confirmed!`;
-      const bookingTotal = data.totalAmount ? Number(data.totalAmount).toLocaleString('en-IN') : '—';
-      document.getElementById('mRef').textContent = `Ref: ${data.bookingRef}  ·  ${data.event?.name || ''}  ·  ₹${bookingTotal} collected`;
+      const bookingTotal = data.totalAmount?Number(data.totalAmount).toLocaleString('en-IN'):'—';
+      document.getElementById('mRef').textContent = `Ref: ${data.bookingRef}  ·  ${data.event?.name||''}  ·  ₹${bookingTotal} collected`;
       document.getElementById('mTickets').innerHTML = buildTicketHTML(data);
       document.getElementById('modalBg').classList.add('show');
       document.getElementById('modalBox').scrollTop = 0;
     }
 
-    /* ─── PRINT ─── */
     function printTickets() {
-      if (!_currentModalData) { showToast('No tickets to print.', true); return; }
-      const overlay = document.getElementById('printOverlay'); overlay.innerHTML = '';
-      Array.from(document.getElementById('mTickets').children).forEach(child => {
-        const wrap = document.createElement('div'); wrap.className = 'ticket-scale-wrap';
+      if (!_currentModalData){showToast('No tickets to print.',true);return;}
+      const overlay=document.getElementById('printOverlay'); overlay.innerHTML='';
+      Array.from(document.getElementById('mTickets').children).forEach(child=>{
+        const wrap=document.createElement('div'); wrap.className='ticket-scale-wrap';
         wrap.appendChild(child.cloneNode(true)); overlay.appendChild(wrap);
       });
-      setTimeout(() => { window.print(); setTimeout(() => { overlay.innerHTML = ''; }, 500); }, 200);
+      setTimeout(()=>{window.print();setTimeout(()=>{overlay.innerHTML='';},500);},200);
     }
 
-    /* ─── REPRINT ─── */
     async function reprintBooking(bookingId, ev) {
-      const btn = ev?.currentTarget || ev?.target;
-      if (btn) { btn.disabled = true; btn.innerHTML = '<i class="bi bi-hourglass-split"></i>'; }
+      const btn=ev?.currentTarget||ev?.target;
+      if(btn){btn.disabled=true;btn.innerHTML='<i class="bi bi-hourglass-split"></i>';}
       try {
-        const r = await fetch('/staff/api/booking/' + bookingId, { credentials: 'include' });
-        const d = await r.json();
-        if (btn) { btn.disabled = false; btn.innerHTML = '<i class="bi bi-printer"></i> Reprint'; }
-        if (!d.success) { showToast(d.message || 'Could not load booking.', true); return; }
-        d._isReprint = true;
-        const _prevType = selType, _prevEvt = selEvt;
-        if (!selEvt && d.event) selEvt = d.event;
-        if (selEvt && d.ticketType && !selType) selType = selEvt.ticketTypes?.find(tt => tt.category === d.ticketType) || null;
-        showModal(d); selType = _prevType; selEvt = _prevEvt;
-      } catch (e) {
-        if (btn) { btn.disabled = false; btn.innerHTML = '<i class="bi bi-printer"></i> Reprint'; }
-        showToast('Network error.', true);
+        const r=await fetch('/staff/api/booking/'+bookingId,{credentials:'include'});
+        const d=await r.json();
+        if(btn){btn.disabled=false;btn.innerHTML='<i class="bi bi-printer"></i> Reprint';}
+        if(!d.success){showToast(d.message||'Could not load booking.',true);return;}
+        d._isReprint=true;
+        const _prevType=selType,_prevEvt=selEvt;
+        if(!selEvt&&d.event)selEvt=d.event;
+        if(selEvt&&d.ticketType&&!selType)selType=selEvt.ticketTypes?.find(tt=>tt.category===d.ticketType)||null;
+        showModal(d); selType=_prevType; selEvt=_prevEvt;
+      } catch(e) {
+        if(btn){btn.disabled=false;btn.innerHTML='<i class="bi bi-printer"></i> Reprint';}
+        showToast('Network error.',true);
       }
     }
 
-    /* ─── CLOSE MODAL — stays on same event ─── */
+    /* ─── CLOSE MODAL ─── */
     function closeModal() {
+      const savedEvtId = _lockedEvtId;
+      _lockedEvtId = null;
       document.getElementById('modalBg').classList.remove('show');
       _currentModalData = null;
-      const savedEvtId = _lockedEvtId;
-      ['bPhone', 'bEmail', 'bName'].forEach(id => document.getElementById(id).value = '');
-      selType = null; selZone = '';
-      document.querySelectorAll('.ttype-card').forEach(c => c.classList.remove('selected'));
+      ['bPhone','bEmail','bName'].forEach(id=>document.getElementById(id).value='');
+      selType=null; selZone='';
+      showAgeAlert(0);
+      document.querySelectorAll('.ttype-card').forEach(c=>c.classList.remove('selected'));
       hide('secQty'); hide('secAtt'); hide('secContact'); hide('sumBar'); hide('comboBar');
-      document.getElementById('sellBtn').disabled = true;
-      document.getElementById('sellBtn').innerHTML = '<i class="bi bi-cash-coin"></i> Confirm Cash Sale';
+      document.getElementById('sellBtn').disabled=true;
+      document.getElementById('sellBtn').innerHTML='<i class="bi bi-cash-coin"></i> Confirm Cash Sale';
       setZoneBar('');
       if (savedEvtId) {
-        document.querySelectorAll('.evt-card').forEach(c => c.classList.remove('selected'));
-        const savedCard = document.querySelector(`.evt-card[data-id="${savedEvtId}"]`);
-        if (savedCard) savedCard.classList.add('selected');
+        document.querySelectorAll('.evt-card').forEach(c=>c.classList.remove('selected'));
+        const savedCard=document.querySelector(`.evt-card[data-id="${savedEvtId}"]`);
+        if(savedCard)savedCard.classList.add('selected');
         onEvent(savedEvtId);
       }
     }
 
-    /* ─── PREPEND ROW ─── */
     function prependRow(data) {
-      const tbody = document.getElementById('salesBody'); if (!tbody) return;
-      const now = new Date();
-      const tr = document.createElement('tr'); tr.className = 'sale-row'; tr.dataset.today = 'true';
-      tr.innerHTML = `
-    <td>
-      <span class="ref-pill" onclick="cpCopy('${data.bookingRef}')">${data.bookingRef}</span>
-      <button class="reprint-btn" onclick="reprintBooking('${data.bookingId}',event)">
-        <i class="bi bi-printer-fill"></i> Reprint Tickets
-      </button>
-    </td>
-    <td>
-      <div style="font-weight:600;font-size:.78rem;">${document.getElementById('bName').value || data.tickets[0]?.attendee || '—'}</div>
-      <div style="font-size:.65rem;color:var(--muted2);">${document.getElementById('bPhone').value}</div>
-    </td>
-    <td style="font-size:.77rem;color:#d8b4fe;">${selEvt?.name || '—'}</td>
-    <td style="font-size:.77rem;text-transform:capitalize;">${selType?.name || selType?.category || '—'}</td>
-    <td style="text-align:center;font-family:'Space Mono',monospace;">${selQty}</td>
-    <td style="font-family:'Space Mono',monospace;font-weight:700;color:var(--cash);">₹${(data.totalAmount || 0).toLocaleString('en-IN')}</td>
-    <td style="font-size:.67rem;color:var(--muted2);">${now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</td>`;
-      tbody.insertBefore(tr, tbody.firstChild);
-      ['dTodayCnt', 'dTodayRev', 'dAllRev'].forEach(id => {
-        const el = document.getElementById(id); if (!el) return;
-        if (id === 'dTodayCnt') { el.textContent = (parseInt(el.textContent) || 0) + 1; }
-        else { const cur = parseInt(el.textContent.replace(/[^0-9]/g, '')) || 0; el.textContent = '₹' + (cur + (data.totalAmount || 0)).toLocaleString('en-IN'); }
+      const tbody=document.getElementById('salesBody'); if(!tbody)return;
+      const now=new Date();
+      const tr=document.createElement('tr'); tr.className='sale-row'; tr.dataset.today='true';
+      tr.innerHTML=`
+        <td>
+          <span class="ref-pill" onclick="cpCopy('${data.bookingRef}')">${data.bookingRef}</span>
+          <button class="reprint-btn" onclick="reprintBooking('${data.bookingId}',event)">
+            <i class="bi bi-printer-fill"></i> Reprint Tickets
+          </button>
+        </td>
+        <td>
+          <div style="font-weight:600;font-size:.78rem;">${document.getElementById('bName').value||data.tickets[0]?.attendee||'—'}</div>
+          <div style="font-size:.65rem;color:var(--muted2);">${document.getElementById('bPhone').value}</div>
+        </td>
+        <td style="font-size:.77rem;color:#d8b4fe;">${selEvt?.name||'—'}</td>
+        <td style="font-size:.77rem;text-transform:capitalize;">${selType?.name||selType?.category||'—'}</td>
+        <td style="text-align:center;font-family:'Space Mono',monospace;">${selQty}</td>
+        <td style="font-family:'Space Mono',monospace;font-weight:700;color:var(--cash);">₹${(data.totalAmount||0).toLocaleString('en-IN')}</td>
+        <td style="font-size:.67rem;color:var(--muted2);">${now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})}</td>`;
+      tbody.insertBefore(tr,tbody.firstChild);
+      ['dTodayCnt','dTodayRev','dAllRev'].forEach(id=>{
+        const el=document.getElementById(id); if(!el)return;
+        if(id==='dTodayCnt'){el.textContent=(parseInt(el.textContent)||0)+1;}
+        else{const cur=parseInt(el.textContent.replace(/[^0-9]/g,''))||0;el.textContent='₹'+(cur+(data.totalAmount||0)).toLocaleString('en-IN');}
       });
     }
 
-    /* ─── UTILS ─── */
-    function show(id) { const el = document.getElementById(id); if (el) el.style.display = 'block'; }
-    function hide(id) { const el = document.getElementById(id); if (el) el.style.display = 'none'; }
-    function switchTab(tab, btn) {
-      document.querySelectorAll('.tb').forEach(b => b.classList.remove('active'));
+    function show(id){const el=document.getElementById(id);if(el)el.style.display='block';}
+    function hide(id){const el=document.getElementById(id);if(el)el.style.display='none';}
+    function switchTab(tab,btn){
+      document.querySelectorAll('.tb').forEach(b=>b.classList.remove('active'));
       btn.classList.add('active');
-      document.querySelectorAll('.sale-row').forEach(r => {
-        r.style.display = tab === 'today' ? (r.dataset.today === 'true' ? '' : 'none') : '';
+      document.querySelectorAll('.sale-row').forEach(r=>{
+        r.style.display=tab==='today'?(r.dataset.today==='true'?'':'none'):'';
       });
     }
-    function cpCopy(t) { navigator.clipboard?.writeText(t).then(() => showToast('Copied: ' + t)).catch(() => showToast(t)); }
-    function showToast(msg, isErr = false) {
-      const el = document.getElementById('toast');
-      el.textContent = msg;
-      el.style.borderColor = isErr ? 'rgba(255,68,68,.35)' : 'rgba(0,200,80,.3)';
-      el.style.color = isErr ? 'var(--error)' : 'var(--cash)';
-      el.style.display = 'block';
-      setTimeout(() => el.style.display = 'none', 3200);
+    function cpCopy(t){navigator.clipboard?.writeText(t).then(()=>showToast('Copied: '+t)).catch(()=>showToast(t));}
+    function showToast(msg,isErr=false){
+      const el=document.getElementById('toast');
+      el.textContent=msg;
+      el.style.borderColor=isErr?'rgba(255,68,68,.35)':'rgba(0,200,80,.3)';
+      el.style.color=isErr?'var(--error)':'var(--cash)';
+      el.style.display='block';
+      setTimeout(()=>el.style.display='none',3200);
     }
   </script>
 </body>
-
 </html>

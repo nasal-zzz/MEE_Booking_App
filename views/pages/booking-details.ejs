@@ -484,8 +484,12 @@ let _bookingVerifiedEmail = USER.email;
     const colorEl=document.getElementById('selTicketColor');
     if(colorEl){colorEl.style.background=c+'22';colorEl.style.border='1px solid '+c+'44';colorEl.textContent='🎟️';}
     const catEl=document.getElementById('selTicketCat');
-    const ttName=selTicketData?.name||selTypeName;
-    if(catEl){catEl.textContent=(selZone?selZone+' · ':'')+ttName.toUpperCase();catEl.style.color=c;}
+const ttName = selTicketData?.name || selTypeName;
+if(catEl){
+  const zonePrefix = (selZone && selZone.toUpperCase() !== ttName.toUpperCase()) ? selZone + ' · ' : '';
+  catEl.textContent = zonePrefix + ttName.toUpperCase();
+  catEl.style.color = c;
+}
     const priceEl=document.getElementById('selTicketPrice');
     if(priceEl){priceEl.textContent='₹'+price.toLocaleString('en-IN')+' per person';}
 

@@ -6,7 +6,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins&family=Outfit:wght@400;500;600;700&family=Space+Mono&display=swap" rel="stylesheet"/>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet"/>
   <style>
-    :root{--bg:#0B0B0F;--surface:#14141C;--border:rgba(255,255,255,0.08);--accent:#9D4EDD;--text:#fff;--muted:#B3B3B3;--error:#FF4444;--success:#00FF88;}
+    :root{--bg:#0B0B0F;--surface:#14141C;--border:rgba(255,255,255,0.08);--accent:#9D4EDD;--text:#fff;--muted:#B3B3B3;--error:#FF4444;--success:#00FF88;--warn:#f5c842;}
     *{box-sizing:border-box;margin:0;padding:0;}
     body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;min-height:100vh;}
     .layout{display:grid;grid-template-columns:220px 1fr;min-height:100vh;}
@@ -23,7 +23,7 @@
     .page-title{font-family:'Poppins',sans-serif;font-size:1.8rem;letter-spacing:2px;margin-bottom:0.3rem;}
     .page-sub{font-size:0.78rem;color:var(--muted);margin-bottom:2rem;}
 
-    /* Add form */
+    /* Add card */
     .add-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:2rem;}
     .card-bar{height:3px;background:linear-gradient(90deg,#9D4EDD,#6A0DAD);}
     .card-body{padding:1.5rem;}
@@ -35,9 +35,35 @@
     .f-inp,.f-sel{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:7px;color:#fff;font-family:'Outfit',sans-serif;font-size:0.88rem;padding:0.62rem 0.85rem;outline:none;transition:border-color 0.18s;width:100%;}
     .f-inp:focus,.f-sel:focus{border-color:rgba(157,78,221,0.45);}
     .f-sel option{background:#1a1a2e;}
-    .perms-row{display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1rem;}
+    .f-inp:disabled,.f-sel:disabled{opacity:0.45;cursor:not-allowed;}
+
+    /* ── Role-aware permission UI ── */
+    /* Staff type selector */
+    .perm-toggle-row{display:flex;gap:0.6rem;flex-wrap:wrap;margin-bottom:0.5rem;}
+    .perm-btn{display:flex;align-items:center;gap:0.4rem;padding:0.45rem 0.85rem;border-radius:20px;font-size:0.78rem;font-family:'Space Mono',monospace;letter-spacing:0.5px;cursor:pointer;border:1px solid var(--border);background:rgba(255,255,255,0.03);color:var(--muted);transition:all 0.18s;user-select:none;}
+    .perm-btn input[type=checkbox]{display:none;}
+    .perm-btn.active-qr{background:rgba(0,255,136,0.08);border-color:rgba(0,255,136,0.35);color:#00FF88;}
+    .perm-btn.active-sell{background:rgba(157,78,221,0.1);border-color:rgba(157,78,221,0.4);color:#9D4EDD;}
+    .perm-btn.active-bookings{background:rgba(245,200,66,0.07);border-color:rgba(245,200,66,0.3);color:#f5c842;}
+    .perm-btn.active-events{background:rgba(255,100,50,0.07);border-color:rgba(255,100,50,0.3);color:#ff9060;}
+    .perm-dot{width:7px;height:7px;border-radius:50%;background:currentColor;flex-shrink:0;}
+
+    /* Staff perms (QR/Sell mutual exclusive) */
+    #staffPermsWrap{display:block;}
+    #adminPermsWrap{display:none;}
+
+    /* Gate panel */
+    .gate-panel{background:rgba(0,255,136,0.03);border:1px solid rgba(0,255,136,0.12);border-radius:10px;padding:1.2rem;margin-bottom:1rem;display:none;}
+    .gate-panel.show{display:block;}
+    .gate-panel-title{font-family:'Space Mono',monospace;font-size:0.6rem;letter-spacing:2px;color:#00FF88;margin-bottom:0.9rem;display:flex;align-items:center;gap:0.5rem;}
+    .gate-cats{display:flex;flex-wrap:wrap;gap:0.4rem;margin-top:0.6rem;}
+    .gate-cat-chip{font-family:'Space Mono',monospace;font-size:0.62rem;padding:0.2rem 0.6rem;border-radius:10px;background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.2);color:#00FF88;}
+    .gate-cat-chip.empty{color:#555;border-color:rgba(255,255,255,0.08);background:transparent;}
+    .no-gates-warn{font-size:0.75rem;color:var(--warn);display:flex;align-items:center;gap:0.4rem;padding:0.5rem;background:rgba(245,200,66,0.05);border:1px solid rgba(245,200,66,0.15);border-radius:6px;}
     .perm-check{display:flex;align-items:center;gap:0.4rem;font-size:0.82rem;color:var(--muted);cursor:pointer;}
     .perm-check input{width:15px;height:15px;accent-color:var(--accent);}
+
+    /* Submit */
     .submit-btn{display:flex;align-items:center;justify-content:center;gap:0.5rem;padding:0.8rem 2rem;background:var(--accent);color:#fff;border:none;border-radius:8px;font-weight:700;font-size:0.88rem;cursor:pointer;transition:all 0.18s;}
     .submit-btn:hover{box-shadow:0 0 20px rgba(157,78,221,0.4);}
     .result-box{display:none;background:rgba(0,255,136,0.06);border:1px solid rgba(0,255,136,0.2);border-radius:8px;padding:1rem;margin-top:1rem;}
@@ -45,56 +71,92 @@
     .cred-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:0.4rem;font-family:'Space Mono',monospace;font-size:0.78rem;}
     .cred-key{color:#555;}
     .cred-val{color:#fff;font-weight:700;background:rgba(255,255,255,0.06);padding:0.2rem 0.6rem;border-radius:4px;}
+    #errBox{display:none;color:var(--error);font-size:0.82rem;margin-top:0.7rem;}
 
-    /* Staff table */
+    /* ── Staff Table ── */
+    .section-title{font-family:'Poppins',sans-serif;font-size:1.1rem;letter-spacing:2px;margin-bottom:1rem;display:flex;align-items:center;gap:0.7rem;}
+    .section-count{font-family:'Space Mono',monospace;font-size:0.65rem;color:var(--muted);background:rgba(255,255,255,0.05);padding:0.2rem 0.55rem;border-radius:10px;}
+    .type-tabs{display:flex;gap:0.5rem;margin-bottom:1.2rem;flex-wrap:wrap;}
+    .type-tab{font-family:'Space Mono',monospace;font-size:0.6rem;letter-spacing:1.5px;padding:0.4rem 0.9rem;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:all 0.15s;}
+    .type-tab.active{border-color:rgba(157,78,221,0.4);background:rgba(157,78,221,0.1);color:#fff;}
+    .type-tab:hover:not(.active){color:#fff;border-color:rgba(255,255,255,0.2);}
+
     .staff-table{width:100%;border-collapse:collapse;}
-    .staff-table th{font-family:'Space Mono',monospace;font-size:0.55rem;letter-spacing:2px;color:#555;text-transform:uppercase;padding:0.6rem 0.8rem;border-bottom:1px solid var(--border);text-align:left;}
+    .staff-table th{font-family:'Space Mono',monospace;font-size:0.52rem;letter-spacing:2px;color:#555;text-transform:uppercase;padding:0.6rem 0.8rem;border-bottom:1px solid var(--border);text-align:left;}
     .staff-table td{padding:0.85rem 0.8rem;border-bottom:1px solid rgba(255,255,255,0.04);font-size:0.85rem;vertical-align:middle;}
     .staff-table tr:hover td{background:rgba(255,255,255,0.02);}
+
+    /* Badges */
+    .type-badge{display:inline-flex;align-items:center;gap:0.35rem;font-family:'Space Mono',monospace;font-size:0.58rem;letter-spacing:1px;padding:0.22rem 0.65rem;border-radius:10px;font-weight:700;}
+    .badge-scanner{background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.28);color:#00FF88;}
+    .badge-seller{background:rgba(157,78,221,0.1);border:1px solid rgba(157,78,221,0.35);color:#9D4EDD;}
+    .badge-admin-role{background:rgba(245,200,66,0.08);border:1px solid rgba(245,200,66,0.28);color:#f5c842;}
+    .badge-superadmin-role{background:rgba(255,100,50,0.08);border:1px solid rgba(255,100,50,0.28);color:#ff9060;}
     .role-badge{font-family:'Space Mono',monospace;font-size:0.55rem;letter-spacing:1px;padding:0.2rem 0.55rem;border-radius:10px;}
     .role-admin{background:rgba(157,78,221,0.12);border:1px solid rgba(157,78,221,0.3);color:#9D4EDD;}
     .role-staff{background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.25);color:#00FF88;}
     .role-superadmin{background:rgba(245,200,66,0.1);border:1px solid rgba(245,200,66,0.3);color:#f5c842;}
     .badge-active{background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.25);color:#00FF88;font-size:0.55rem;font-family:'Space Mono',monospace;padding:0.15rem 0.5rem;border-radius:10px;}
     .badge-blocked{background:rgba(255,68,68,0.08);border:1px solid rgba(255,68,68,0.25);color:#FF4444;font-size:0.55rem;font-family:'Space Mono',monospace;padding:0.15rem 0.5rem;border-radius:10px;}
-    .btn-sm{display:inline-flex;align-items:center;gap:0.3rem;padding:0.32rem 0.65rem;border-radius:4px;font-size:0.72rem;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text);transition:all 0.15s;}
-    .btn-sm:hover{border-color:var(--accent);color:var(--accent);}
-    .btn-block{color:#f5c842;border-color:rgba(245,200,66,0.3);}
-    .btn-block:hover{background:rgba(245,200,66,0.1);}
-    .btn-del{color:var(--error);border-color:rgba(255,68,68,0.3);}
-    .btn-del:hover{background:rgba(255,68,68,0.1);}
-    .btn-cred{color:#9D4EDD;border-color:rgba(157,78,221,0.3);}
-    .btn-cred:hover{background:rgba(157,78,221,0.1);}
-    .empty{text-align:center;padding:3rem;color:#555;}
 
-    /* Password reveal cell */
+    /* Gate info */
+    .gate-info{display:flex;flex-direction:column;gap:0.25rem;}
+    .gate-label{font-family:'Space Mono',monospace;font-size:0.7rem;color:#fff;display:flex;align-items:center;gap:0.3rem;}
+    .gate-label i{color:#00FF88;}
+    .gate-cats-inline{display:flex;flex-wrap:wrap;gap:0.25rem;}
+    .mini-chip{font-family:'Space Mono',monospace;font-size:0.55rem;padding:0.1rem 0.45rem;border-radius:8px;background:rgba(0,255,136,0.06);border:1px solid rgba(0,255,136,0.18);color:#00c970;}
+    .no-gate{font-size:0.72rem;color:#444;font-style:italic;}
+
+    /* Password reveal */
     .pw-cell{display:flex;align-items:center;gap:0.4rem;}
     .pw-dots{font-family:'Space Mono',monospace;font-size:0.72rem;color:#555;letter-spacing:2px;user-select:none;}
     .pw-text{font-family:'Space Mono',monospace;font-size:0.75rem;color:#fff;display:none;background:rgba(157,78,221,0.08);padding:0.15rem 0.5rem;border-radius:4px;border:1px solid rgba(157,78,221,0.2);}
     .pw-toggle{background:none;border:none;color:#555;cursor:pointer;font-size:0.85rem;padding:0.1rem 0.2rem;transition:color 0.15s;line-height:1;}
     .pw-toggle:hover{color:#9D4EDD;}
 
-    /* Edit credentials modal */
-    .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;align-items:center;justify-content:center;}
+    /* Action buttons */
+    .btn-sm{display:inline-flex;align-items:center;gap:0.3rem;padding:0.32rem 0.65rem;border-radius:4px;font-size:0.72rem;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text);transition:all 0.15s;}
+    .btn-sm:hover{border-color:var(--accent);color:var(--accent);}
+    .btn-block{color:var(--warn);border-color:rgba(245,200,66,0.3);}
+    .btn-block:hover{background:rgba(245,200,66,0.1);}
+    .btn-del{color:var(--error);border-color:rgba(255,68,68,0.3);}
+    .btn-del:hover{background:rgba(255,68,68,0.1);}
+    .btn-cred{color:#9D4EDD;border-color:rgba(157,78,221,0.3);}
+    .btn-cred:hover{background:rgba(157,78,221,0.1);}
+    .btn-gate{color:#00FF88;border-color:rgba(0,255,136,0.25);}
+    .btn-gate:hover{background:rgba(0,255,136,0.07);}
+    .empty{text-align:center;padding:3rem;color:#555;}
+
+    /* ── Modals ── */
+    .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.72);z-index:200;align-items:center;justify-content:center;}
     .modal-overlay.show{display:flex;}
-    .modal{background:#14141C;border:1px solid rgba(157,78,221,0.35);border-radius:14px;padding:1.8rem;width:420px;max-width:95vw;}
-    .modal-title{font-family:'Poppins',sans-serif;font-size:1rem;letter-spacing:2px;margin-bottom:0.3rem;}
-    .modal-sub{font-size:0.75rem;color:var(--muted);margin-bottom:1.4rem;}
+    .modal{background:#14141C;border:1px solid rgba(157,78,221,0.35);border-radius:14px;padding:1.8rem;width:440px;max-width:95vw;}
+    .modal-bar{height:2px;margin:-1.8rem -1.8rem 1.5rem;border-radius:14px 14px 0 0;}
+    .modal-bar-cred{background:linear-gradient(90deg,#9D4EDD,#6A0DAD);}
+    .modal-bar-gate{background:linear-gradient(90deg,#00FF88,#6A0DAD);}
+    .modal-title{font-family:'Poppins',sans-serif;font-size:1rem;letter-spacing:2px;margin-bottom:0.25rem;}
+    .modal-sub{font-size:0.75rem;color:var(--muted);margin-bottom:1.3rem;}
     .modal-field{margin-bottom:1rem;}
     .modal-lbl{font-family:'Space Mono',monospace;font-size:0.52rem;letter-spacing:1px;color:#555;text-transform:uppercase;display:block;margin-bottom:0.3rem;}
     .modal-inp-wrap{position:relative;}
-    .modal-inp{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:7px;color:#fff;font-family:'Space Mono',monospace;font-size:0.85rem;padding:0.65rem 2.5rem 0.65rem 0.85rem;outline:none;transition:border-color 0.18s;width:100%;}
-    .modal-inp:focus{border-color:rgba(157,78,221,0.5);}
+    .modal-inp,.modal-sel{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:7px;color:#fff;font-family:'Space Mono',monospace;font-size:0.85rem;padding:0.65rem 2.5rem 0.65rem 0.85rem;outline:none;transition:border-color 0.18s;width:100%;}
+    .modal-sel{padding-right:0.85rem;}
+    .modal-inp:focus,.modal-sel:focus{border-color:rgba(157,78,221,0.5);}
+    .modal-sel option{background:#1a1a2e;}
     .modal-eye{position:absolute;right:0.7rem;top:50%;transform:translateY(-50%);background:none;border:none;color:#555;cursor:pointer;font-size:0.95rem;transition:color 0.15s;padding:0;}
     .modal-eye:hover{color:#9D4EDD;}
+    .modal-cat-preview{margin-top:0.7rem;display:flex;flex-wrap:wrap;gap:0.3rem;min-height:28px;}
     .modal-actions{display:flex;gap:0.7rem;justify-content:flex-end;margin-top:1.4rem;}
     .modal-cancel{padding:0.65rem 1.3rem;background:transparent;border:1px solid var(--border);border-radius:7px;color:var(--muted);font-size:0.85rem;cursor:pointer;transition:all 0.15s;}
     .modal-cancel:hover{border-color:rgba(255,255,255,0.2);color:#fff;}
-    .modal-save{padding:0.65rem 1.6rem;background:var(--accent);border:none;border-radius:7px;color:#fff;font-size:0.85rem;font-weight:700;cursor:pointer;transition:all 0.18s;}
-    .modal-save:hover{box-shadow:0 0 16px rgba(157,78,221,0.4);}
+    .modal-save-cred{padding:0.65rem 1.6rem;background:var(--accent);border:none;border-radius:7px;color:#fff;font-size:0.85rem;font-weight:700;cursor:pointer;transition:all 0.18s;}
+    .modal-save-cred:hover{box-shadow:0 0 16px rgba(157,78,221,0.4);}
+    .modal-save-gate{padding:0.65rem 1.6rem;background:#00c970;border:none;border-radius:7px;color:#0B0B0F;font-size:0.85rem;font-weight:700;cursor:pointer;transition:all 0.18s;}
+    .modal-save-gate:hover{box-shadow:0 0 16px rgba(0,255,136,0.35);}
     .modal-err{display:none;color:var(--error);font-size:0.78rem;margin-top:0.5rem;}
     .modal-ok{display:none;color:var(--success);font-size:0.78rem;margin-top:0.5rem;}
-    @media(max-width:900px){.layout{grid-template-columns:1fr;}.sidebar{display:none;}.f-grid{grid-template-columns:1fr;}.f-grid.cols3{grid-template-columns:1fr 1fr;}}
+
+    @media(max-width:900px){.layout{grid-template-columns:1fr;}.sidebar{display:none;}.f-grid,.f-grid.cols3{grid-template-columns:1fr;}}
   </style>
 </head>
 <body>
@@ -102,13 +164,14 @@
   <%- include('../partials/superadmin-sidebar', { activePage: 'staff' }) %>
   <main class="main">
     <h1 class="page-title">STAFF & ADMINS</h1>
-    <p class="page-sub">Create accounts for admins and staff. Only superadmin can view or change credentials.</p>
+    <p class="page-sub">Create staff (QR Scanner or Ticket Seller) and admin accounts. Only superadmin can view or edit credentials.</p>
 
-    <!-- Add Staff Form -->
+    <!-- ── ADD FORM ── -->
     <div class="add-card">
       <div class="card-bar"></div>
       <div class="card-body">
         <div class="card-head">ADD NEW MEMBER</div>
+
         <div class="f-grid">
           <div class="f-grp"><label class="f-lbl">First Name *</label><input class="f-inp" id="saFirstName" placeholder="e.g. Rahul"/></div>
           <div class="f-grp"><label class="f-lbl">Last Name</label><input class="f-inp" id="saLastName" placeholder="e.g. Kumar"/></div>
@@ -118,21 +181,74 @@
           <div class="f-grp"><label class="f-lbl">Phone *</label><input class="f-inp" type="tel" id="saPhone" placeholder="10-digit mobile"/></div>
           <div class="f-grp">
             <label class="f-lbl">Role *</label>
-            <select class="f-sel" id="saRole" onchange="togglePerms()">
+            <select class="f-sel" id="saRole" onchange="onRoleChange()">
               <option value="staff">Staff</option>
               <option value="admin">Admin</option>
             </select>
           </div>
         </div>
-        <div id="permsWrap" style="margin-bottom:1rem;display:block;">
-          <div class="f-lbl" style="margin-bottom:0.5rem;">Permissions</div>
-          <div class="perms-row">
-            <label class="perm-check"><input type="checkbox" id="pCanScanQR" checked/> Scan QR</label>
-            <label class="perm-check"><input type="checkbox" id="pCanViewBookings"/> View Bookings</label>
-            <label class="perm-check"><input type="checkbox" id="pCanManageEvents"/> Manage Events</label>
-            <label class="perm-check"><input type="checkbox" id="pCanSellTickets"/> Sell Tickets (Offline)</label>
+
+        <!-- STAFF permissions — QR or Sell, mutually exclusive -->
+        <div id="staffPermsWrap" style="margin-bottom:1rem;">
+          <div class="f-lbl" style="margin-bottom:0.6rem;">Staff Type — choose one</div>
+          <div class="perm-toggle-row">
+            <label class="perm-btn" id="btnQR" onclick="selectStaffPerm('qr')">
+              <input type="checkbox" id="pCanScanQR"/>
+              <span class="perm-dot"></span>
+              <i class="bi bi-qr-code-scan"></i> QR Scanner
+            </label>
+            <label class="perm-btn" id="btnSell" onclick="selectStaffPerm('sell')">
+              <input type="checkbox" id="pCanSellTickets"/>
+              <span class="perm-dot"></span>
+              <i class="bi bi-ticket-perforated"></i> Ticket Seller
+            </label>
           </div>
+          <div style="font-size:0.7rem;color:#444;margin-top:0.4rem;font-family:'Space Mono',monospace;">Staff: choose QR Scanner OR Ticket Seller only.</div>
         </div>
+
+        <!-- ADMIN permissions — multi-select checkboxes -->
+        <div id="adminPermsWrap" style="margin-bottom:1rem;display:none;">
+          <div class="f-lbl" style="margin-bottom:0.6rem;">Admin Permissions</div>
+          <div class="perm-toggle-row">
+            <label class="perm-btn" id="btnViewBookings" onclick="toggleAdminPerm('pCanViewBookings','btnViewBookings','active-bookings')">
+              <input type="checkbox" id="pCanViewBookings"/>
+              <span class="perm-dot"></span>
+              <i class="bi bi-journal-bookmark"></i> View Bookings
+            </label>
+            <label class="perm-btn" id="btnManageEvents" onclick="toggleAdminPerm('pCanManageEvents','btnManageEvents','active-events')">
+              <input type="checkbox" id="pCanManageEvents"/>
+              <span class="perm-dot"></span>
+              <i class="bi bi-calendar-event"></i> Manage Events
+            </label>
+          </div>
+          <div style="font-size:0.7rem;color:#444;margin-top:0.4rem;font-family:'Space Mono',monospace;">Admins can have View Bookings and/or Manage Events.</div>
+        </div>
+
+        <!-- Gate assignment panel -->
+        <div class="gate-panel" id="gatePanel">
+          <div class="gate-panel-title"><i class="bi bi-door-open"></i> GATE ASSIGNMENT (ACTIVE EVENT)</div>
+          <% if (typeof gates !== 'undefined' && gates.length > 0) { %>
+          <div class="f-grp" style="margin-bottom:0.8rem;">
+            <label class="f-lbl">Assign Gate *</label>
+            <select class="f-sel" id="saGate" onchange="onGateChange()">
+              <option value="">— Select gate —</option>
+              <% gates.forEach(function(g){ %>
+              <option value="<%= g.gate %>" data-cats='<%= JSON.stringify(g.categories) %>'><%= g.gate %></option>
+              <% }); %>
+            </select>
+          </div>
+          <div>
+            <div class="f-lbl" style="margin-bottom:0.4rem;">Auto-assigned Categories</div>
+            <div class="gate-cats" id="gateCatPreview">
+              <span class="gate-cat-chip empty">Select a gate above</span>
+            </div>
+          </div>
+          <% } else { %>
+          <div class="no-gates-warn"><i class="bi bi-exclamation-triangle"></i> No gates found in the active event. Add gate numbers to ticket categories first.</div>
+          <% } %>
+        </div>
+
+        <!-- Manual creds -->
         <div style="margin-bottom:1rem;">
           <label class="perm-check" style="font-size:0.85rem;">
             <input type="checkbox" id="manualCreds" onchange="toggleManualCreds()"/> Set username &amp; password manually
@@ -154,40 +270,70 @@
           </div>
           <div style="font-size:0.72rem;color:#555;margin-top:0.3rem;">Username will be lowercased. Leave blank to auto-generate.</div>
         </div>
+
         <button class="submit-btn" onclick="addStaff()"><i class="bi bi-person-plus-fill"></i> Create Account</button>
         <div class="result-box" id="resultBox">
           <div style="font-family:'Space Mono',monospace;font-size:0.65rem;letter-spacing:2px;color:var(--success);margin-bottom:0.7rem;">✓ ACCOUNT CREATED — SAVE THESE CREDENTIALS</div>
           <div class="cred-row"><span class="cred-key">Username</span><span class="cred-val" id="rUser">—</span></div>
           <div class="cred-row"><span class="cred-key">Password</span><span class="cred-val" id="rPass">—</span></div>
-          <div style="font-size:0.72rem;color:#555;margin-top:0.5rem;">Auto-generated format: username-last3digitsofphone</div>
         </div>
-        <div id="errBox" style="display:none;color:var(--error);font-size:0.82rem;margin-top:0.7rem;"></div>
+        <div id="errBox"></div>
       </div>
     </div>
 
-    <!-- Staff List -->
-    <h2 style="font-family:'Poppins',sans-serif;font-size:1.2rem;letter-spacing:2px;margin-bottom:1rem;">ALL MEMBERS (<%= staff.length %>)</h2>
-    <% if(staff.length === 0){ %>
-    <div class="empty"><i class="bi bi-people" style="font-size:2.5rem;display:block;margin-bottom:0.8rem;"></i>No staff yet.</div>
+    <!-- ── STAFF LIST ── -->
+    <% const scanners    = staff.filter(m => m.canScanQR && m.role === 'staff'); %>
+    <% const sellers     = staff.filter(m => m.canSellTickets && !m.canScanQR && m.role === 'staff'); %>
+    <% const admins      = staff.filter(m => m.role === 'admin'); %>
+    <% const superadmins = staff.filter(m => m.role === 'superadmin'); %>
+
+    <div class="section-title">ALL MEMBERS <span class="section-count"><%= staff.length %></span></div>
+
+    <div class="type-tabs">
+      <button class="type-tab active" onclick="filterStaff('all',this)">ALL <span style="opacity:.5">(<%= staff.length %>)</span></button>
+      <button class="type-tab" onclick="filterStaff('scanner',this)"><i class="bi bi-qr-code-scan"></i> SCANNERS <span style="opacity:.5">(<%= scanners.length %>)</span></button>
+      <button class="type-tab" onclick="filterStaff('seller',this)"><i class="bi bi-ticket-perforated"></i> SELLERS <span style="opacity:.5">(<%= sellers.length %>)</span></button>
+      <button class="type-tab" onclick="filterStaff('admin',this)"><i class="bi bi-shield-check"></i> ADMINS <span style="opacity:.5">(<%= admins.length %>)</span></button>
+      <% if (superadmins.length > 0) { %>
+      <button class="type-tab" onclick="filterStaff('superadmin',this)"><i class="bi bi-stars"></i> SUPER <span style="opacity:.5">(<%= superadmins.length %>)</span></button>
+      <% } %>
+    </div>
+
+    <% if (staff.length === 0) { %>
+    <div class="empty"><i class="bi bi-people" style="font-size:2.5rem;display:block;margin-bottom:0.8rem;"></i>No members yet.</div>
     <% } else { %>
     <div style="overflow-x:auto;">
     <table class="staff-table">
       <thead><tr>
-        <th>Name</th><th>Username</th><th>Password</th><th>Email / Phone</th><th>Role</th><th>Status</th><th>Actions</th>
+        <th>Name</th>
+        <th>Username</th>
+        <th>Password</th>
+        <th>Type / Role</th>
+        <th>Gate / Categories</th>
+        <th>Contact</th>
+        <th>Created By</th>
+        <th>Status</th>
+        <th>Actions</th>
       </tr></thead>
       <tbody>
       <% staff.forEach(function(m){ %>
-      <tr id="sr-<%= m._id %>">
+      <%
+        const isScanner = m.canScanQR && m.role === 'staff';
+        const isSeller  = m.canSellTickets && !m.canScanQR && m.role === 'staff';
+        const isAdmin   = m.role === 'admin';
+        const isSuper   = m.role === 'superadmin';
+        let rowType = isScanner ? 'scanner' : isSeller ? 'seller' : isAdmin ? 'admin' : 'superadmin';
+      %>
+      <tr id="sr-<%= m._id %>" data-type="<%= rowType %>">
         <td>
           <div style="font-weight:600;"><%= m.firstName %> <%= m.lastName %></div>
-          <div style="font-size:0.7rem;color:var(--muted);margin-top:0.1rem;">
-            <% if(m.role==='admin'){ %>
-              <%= [m.canScanQR&&'QR',m.canViewBookings&&'Bookings',m.canManageEvents&&'Events',m.canSellTickets&&'Sell'].filter(Boolean).join(' · ')||'No permissions' %>
-            <% } else if(m.role==='superadmin'){ %>
-              Full access
-            <% } else { %>
-              QR Scanner
-            <% } %>
+          <div style="font-size:0.7rem;color:#555;font-family:'Space Mono',monospace;margin-top:0.1rem;">
+            <% if (isSuper) { %>Full access
+            <% } else if (isAdmin) { %>
+              <%= [m.canViewBookings&&'Bookings', m.canManageEvents&&'Events'].filter(Boolean).join(' · ') || 'No perms' %>
+            <% } else if (isScanner) { %>QR Scanner
+            <% } else if (isSeller) { %>Ticket Seller
+            <% } else { %>No permissions<% } %>
           </div>
         </td>
         <td>
@@ -208,26 +354,82 @@
           </div>
         </td>
         <td>
-          <div style="font-size:0.8rem;color:var(--muted);"><%= m.email %></div>
-          <div style="font-size:0.75rem;color:#555;"><%= m.phone||'—' %></div>
+          <div style="display:flex;flex-direction:column;gap:0.3rem;">
+            <% if (isScanner) { %>
+              <span class="type-badge badge-scanner"><i class="bi bi-qr-code-scan"></i> SCANNER</span>
+            <% } else if (isSeller) { %>
+              <span class="type-badge badge-seller"><i class="bi bi-ticket-perforated"></i> SELLER</span>
+            <% } else if (isAdmin) { %>
+              <span class="type-badge badge-admin-role"><i class="bi bi-shield-check"></i> ADMIN</span>
+            <% } else if (isSuper) { %>
+              <span class="type-badge badge-superadmin-role"><i class="bi bi-stars"></i> SUPER</span>
+            <% } %>
+            <span class="role-badge role-<%= m.role %>"><%= m.role.toUpperCase() %></span>
+          </div>
         </td>
         <td>
-          <span class="role-badge <%= m.role==='superadmin'?'role-superadmin':m.role==='admin'?'role-admin':'role-staff' %>">
-            <%= m.role.toUpperCase() %>
-          </span>
+        <% if (isScanner) { %>
+  <div class="gate-info" id="gate-info-<%= m._id %>">
+    <% if (m.gateNo) { %>
+      <div class="gate-label"><i class="bi bi-door-open-fill"></i> <%= m.gateNo %></div>
+      <div class="gate-cats-inline">
+        <% if (m.assignedCategory) { %>
+          <span class="mini-chip"><%= m.assignedCategory %></span>
+        <% } else { %>
+          <span style="font-size:0.7rem;color:#555;">No category</span>
+        <% } %>
+      </div>
+    <% } else { %>
+      <span class="no-gate">
+        <i class="bi bi-exclamation-circle" style="color:var(--warn);"></i> No gate assigned
+      </span>
+    <% } %>
+  </div>
+<% } else { %>
+  <span style="color:#444;font-size:0.75rem;">—</span>
+<% } %>
+
         </td>
-        <td><span class="<%= m.isActive?'badge-active':'badge-blocked' %>" id="sbadge-<%= m._id %>"><%= m.isActive?'ACTIVE':'BLOCKED' %></span></td>
+        <td>
+          <div style="font-size:0.8rem;color:var(--muted);"><%= m.email %></div>
+          <div style="font-size:0.75rem;color:#555;"><%= m.phone || '—' %></div>
+        </td>
+        <td>
+  <% if (m.createdByName) { %>
+    <div style="font-size:0.8rem;color:var(--muted);">
+      <%= m.createdByName %>
+    </div>
+    <div style="font-size:0.72rem;color:#555;font-family:'Space Mono',monospace;">
+      <%= m.createdByEmail || '' %>
+    </div>
+  <% } else { %>
+    <span style="color:#444;font-size:0.75rem;font-style:italic;">System</span>
+  <% } %>
+</td>
+
+        <td><span class="<%= m.isActive ? 'badge-active' : 'badge-blocked' %>" id="sbadge-<%= m._id %>"><%= m.isActive ? 'ACTIVE' : 'BLOCKED' %></span></td>
         <td>
           <div style="display:flex;gap:0.4rem;flex-wrap:wrap;">
-            <button class="btn-sm btn-cred" onclick="openEditCreds('<%= m._id %>','<%= m.firstName %> <%= m.lastName %>')" title="Edit credentials">
-              <i class="bi bi-key-fill"></i> Credentials
+            <button class="btn-sm btn-cred"
+              onclick="openEditCreds('<%= m._id %>','<%= m.firstName %> <%= m.lastName %>')"
+              title="Edit credentials">
+              <i class="bi bi-key-fill"></i>
             </button>
-            <% if(m.role !== 'superadmin') { %>
+            <% if (isScanner) { %>
+          <button class="btn-sm btn-gate"
+            onclick="openGateModal('<%= m._id %>','<%= m.firstName %> <%= m.lastName %>','<%= m.gateNo || '' %>')"
+            title="Edit gate">
+            <i class="bi bi-door-open"></i> Gate
+          </button>
+            <% } %>
+            <% if (m.role !== 'superadmin') { %>
             <button class="btn-sm btn-block" onclick="toggleStaff('<%= m._id %>')" id="sbtn-<%= m._id %>">
-              <i class="bi bi-<%= m.isActive?'lock-fill':'unlock-fill' %>"></i>
-              <span id="stxt-<%= m._id %>"><%= m.isActive?'Block':'Unblock' %></span>
+              <i class="bi bi-<%= m.isActive ? 'lock-fill' : 'unlock-fill' %>"></i>
+              <span id="stxt-<%= m._id %>"><%= m.isActive ? 'Block' : 'Unblock' %></span>
             </button>
-            <form method="POST" action="/superadmin/staff/<%= m._id %>/delete" onsubmit="return confirm('Delete <%= m.firstName %>? This cannot be undone.')" style="display:inline;">
+            <form method="POST" action="/superadmin/staff/<%= m._id %>/delete"
+              onsubmit="return confirm('Delete <%= m.firstName %>? This cannot be undone.')"
+              style="display:inline;">
               <button type="submit" class="btn-sm btn-del"><i class="bi bi-trash3-fill"></i></button>
             </form>
             <% } %>
@@ -242,15 +444,15 @@
   </main>
 </div>
 
-<!-- Edit Credentials Modal -->
+<!-- ── EDIT CREDENTIALS MODAL ── -->
 <div class="modal-overlay" id="credModal">
   <div class="modal">
+    <div class="modal-bar modal-bar-cred"></div>
     <div class="modal-title">🔑 EDIT CREDENTIALS</div>
     <div class="modal-sub" id="credModalSub">Updating credentials for —</div>
-
     <div class="modal-field">
       <label class="modal-lbl">Username</label>
-      <input class="modal-inp" id="editUsername" type="text" placeholder="e.g. admin-raju" autocomplete="off"/>
+      <input class="modal-inp" id="editUsername" type="text" placeholder="e.g. admin-raju" autocomplete="off" style="padding-right:0.85rem;"/>
     </div>
     <div class="modal-field">
       <label class="modal-lbl">New Password</label>
@@ -260,186 +462,322 @@
       </div>
     </div>
     <div class="modal-err" id="credErr"></div>
-    <div class="modal-ok" id="credOk"></div>
+    <div class="modal-ok"  id="credOk"></div>
     <div class="modal-actions">
       <button class="modal-cancel" onclick="closeCredModal()">Cancel</button>
-      <button class="modal-save" onclick="saveCredentials()"><i class="bi bi-floppy-fill"></i> Save</button>
+      <button class="modal-save-cred" onclick="saveCredentials()"><i class="bi bi-floppy-fill"></i> Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── GATE EDIT MODAL ── -->
+<div class="modal-overlay" id="gateModal">
+  <div class="modal" style="border-color:rgba(0,255,136,0.25);">
+    <div class="modal-bar modal-bar-gate"></div>
+    <div class="modal-title">🚪 EDIT GATE ASSIGNMENT</div>
+    <div class="modal-sub" id="gateModalSub">Updating gate for —</div>
+    <label class="modal-lbl">Select Gate</label>
+    <select class="modal-sel" id="modalGateSelect" onchange="updateModalCatPreview()">
+      <option value="">— No gate —</option>
+      <% if (typeof gates !== 'undefined') { gates.forEach(function(g){ %>
+      <option value="<%= g.gate %>" data-cats='<%= JSON.stringify(g.categories) %>'><%= g.gate %></option>
+      <% }); } %>
+    </select>
+    <div>
+      <div class="modal-lbl" style="margin-top:0.8rem;margin-bottom:0.4rem;">Auto-assigned Categories</div>
+      <div class="modal-cat-preview" id="modalCatPreview">
+        <span style="font-size:0.72rem;color:#555;">Select a gate</span>
+      </div>
+    </div>
+    <div class="modal-err" id="gateErr"></div>
+    <div class="modal-ok"  id="gateOk"></div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeGateModal()">Cancel</button>
+      <button class="modal-save-gate" onclick="saveGateAssignment()"><i class="bi bi-floppy-fill"></i> Save Gate</button>
     </div>
   </div>
 </div>
 
 <script>
-let _editingId = null;
+const GATES_DATA = <%- JSON.stringify(typeof gates !== 'undefined' ? gates : []) %>;
+let _editingCredId = null;
+let _gateEditingId = null;
 
-// ── Password reveal in table ──
-function togglePw(id){
-  const dots = document.getElementById('pw-dots-'+id);
-  const text = document.getElementById('pw-text-'+id);
-  const icon = document.getElementById('pw-icon-'+id);
-  const showing = text.style.display === 'inline';
-  if(showing){
-    text.style.display = 'none';
-    dots.style.display = 'inline';
-    icon.className = 'bi bi-eye';
-  } else {
-    dots.style.display = 'none';
-    text.style.display = 'inline';
-    icon.className = 'bi bi-eye-slash';
-  }
-}
-
-// ── New password eye in add form ──
-function toggleNewPw(){
-  const inp = document.getElementById('saManualPassword');
-  const eye = document.getElementById('newPwEye').querySelector('i');
-  if(inp.type==='password'){ inp.type='text'; eye.className='bi bi-eye-slash'; }
-  else { inp.type='password'; eye.className='bi bi-eye'; }
-}
-
-// ── Edit credentials modal ──
-function openEditCreds(id, name){
-  _editingId = id;
-  document.getElementById('credModalSub').textContent = 'Updating credentials for ' + name;
-  document.getElementById('credErr').style.display = 'none';
-  document.getElementById('credOk').style.display = 'none';
-  // Pre-fill with current values
-  const uname = document.getElementById('uname-'+id);
-  document.getElementById('editUsername').value = uname ? uname.textContent.trim() : '';
-  document.getElementById('editPassword').value = '';
-  document.getElementById('editPwEye').querySelector('i').className = 'bi bi-eye';
-  document.getElementById('editPassword').type = 'password';
-  document.getElementById('credModal').classList.add('show');
-  document.getElementById('editUsername').focus();
-}
-
-function closeCredModal(){
-  document.getElementById('credModal').classList.remove('show');
-  _editingId = null;
-}
-
-function toggleEditPw(){
-  const inp = document.getElementById('editPassword');
-  const eye = document.getElementById('editPwEye').querySelector('i');
-  if(inp.type==='password'){ inp.type='text'; eye.className='bi bi-eye-slash'; }
-  else { inp.type='password'; eye.className='bi bi-eye'; }
-}
-
-async function saveCredentials(){
-  const newUsername = document.getElementById('editUsername').value.trim();
-  const newPassword = document.getElementById('editPassword').value.trim();
-  const errEl = document.getElementById('credErr');
-  const okEl  = document.getElementById('credOk');
-  errEl.style.display='none'; okEl.style.display='none';
-
-  if(!newUsername){ errEl.textContent='Username is required.'; errEl.style.display='block'; return; }
-  if(!newPassword){ errEl.textContent='Password is required.'; errEl.style.display='block'; return; }
-  if(newPassword.length < 4){ errEl.textContent='Password must be at least 4 characters.'; errEl.style.display='block'; return; }
-
-  try {
-    const res = await fetch(`/superadmin/staff/${_editingId}/credentials`, {
-      method: 'POST', credentials: 'include',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ newUsername, newPassword }),
-    });
-    const d = await res.json();
-    if(d.success){
-      // Update table in place
-      const unameEl = document.getElementById('uname-'+_editingId);
-      if(unameEl) unameEl.textContent = d.username;
-      // Update revealed password text if visible
-      const pwText = document.getElementById('pw-text-'+_editingId);
-      if(pwText) {
-        pwText.textContent = newPassword;
-        pwText.dataset.pw = newPassword;
-        pwText.style.fontStyle = 'normal';
-        pwText.style.color = '';
-        pwText.style.fontSize = '';
-      }
-      okEl.textContent = '✓ Credentials updated successfully.';
-      okEl.style.display = 'block';
-      setTimeout(closeCredModal, 1400);
-    } else {
-      errEl.textContent = d.message || 'Failed to update.';
-      errEl.style.display = 'block';
-    }
-  } catch(e){
-    errEl.textContent = 'Network error. Try again.';
-    errEl.style.display = 'block';
-  }
-}
-
-// ── Add staff ──
-function togglePerms(){
+// ── Role switch ──
+function onRoleChange() {
   const role = document.getElementById('saRole').value;
-  // Always show permissions panel
-  document.getElementById('permsWrap').style.display = 'block';
-  // For admin role — check all permissions by default
-  if(role === 'admin'){
-    document.getElementById('pCanScanQR').checked = true;
-    document.getElementById('pCanViewBookings').checked = true;
-    document.getElementById('pCanManageEvents').checked = true;
+  const staffWrap = document.getElementById('staffPermsWrap');
+  const adminWrap = document.getElementById('adminPermsWrap');
+  const gatePanel = document.getElementById('gatePanel');
+
+  if (role === 'admin') {
+    staffWrap.style.display = 'none';
+    adminWrap.style.display = 'block';
+    gatePanel.classList.remove('show');
+    // Reset staff checkboxes
+    document.getElementById('pCanScanQR').checked = false;
     document.getElementById('pCanSellTickets').checked = false;
+    document.getElementById('btnQR').classList.remove('active-qr');
+    document.getElementById('btnSell').classList.remove('active-sell');
+    // Default admin perms
+    document.getElementById('pCanViewBookings').checked = true;
+    document.getElementById('btnViewBookings').classList.add('active-bookings');
+    document.getElementById('pCanManageEvents').checked = true;
+    document.getElementById('btnManageEvents').classList.add('active-events');
   } else {
-    // Staff role — only scan QR by default, others off
-    document.getElementById('pCanScanQR').checked = true;
+    staffWrap.style.display = 'block';
+    adminWrap.style.display = 'none';
+    // Reset admin checkboxes
     document.getElementById('pCanViewBookings').checked = false;
     document.getElementById('pCanManageEvents').checked = false;
-    document.getElementById('pCanSellTickets').checked = false;
+    document.getElementById('btnViewBookings').classList.remove('active-bookings');
+    document.getElementById('btnManageEvents').classList.remove('active-events');
   }
 }
 
-function toggleManualCreds(){
-  const on = document.getElementById('manualCreds').checked;
-  document.getElementById('manualCredsWrap').style.display = on ? 'block' : 'none';
-  if(!on){ document.getElementById('saManualUsername').value=''; document.getElementById('saManualPassword').value=''; }
+// ── Staff permission mutual exclusion ──
+function selectStaffPerm(type) {
+  const qrCb   = document.getElementById('pCanScanQR');
+  const sellCb = document.getElementById('pCanSellTickets');
+  const btnQR  = document.getElementById('btnQR');
+  const btnSell= document.getElementById('btnSell');
+  const panel  = document.getElementById('gatePanel');
+
+  if (type === 'qr') {
+    const wasOn = qrCb.checked;
+    qrCb.checked   = !wasOn;
+    sellCb.checked = false;
+    btnQR.classList.toggle('active-qr', !wasOn);
+    btnSell.classList.remove('active-sell');
+    panel.classList.toggle('show', !wasOn);
+    if (wasOn) {
+      const gs = document.getElementById('saGate');
+      if (gs) gs.value = '';
+      document.getElementById('gateCatPreview').innerHTML = '<span class="gate-cat-chip empty">Select a gate above</span>';
+    }
+  } else {
+    const wasOn = sellCb.checked;
+    sellCb.checked = !wasOn;
+    qrCb.checked   = false;
+    btnSell.classList.toggle('active-sell', !wasOn);
+    btnQR.classList.remove('active-qr');
+    panel.classList.remove('show');
+  }
 }
 
-async function addStaff(){
+// ── Admin permission toggle (independent checkboxes) ──
+function toggleAdminPerm(cbId, btnId, activeClass) {
+  const cb  = document.getElementById(cbId);
+  const btn = document.getElementById(btnId);
+  cb.checked = !cb.checked;
+  btn.classList.toggle(activeClass, cb.checked);
+}
+
+// ── Gate dropdown ──
+function onGateChange() {
+  const sel = document.getElementById('saGate');
+  const preview = document.getElementById('gateCatPreview');
+  if (!sel || !sel.value) { preview.innerHTML = '<span class="gate-cat-chip empty">Select a gate above</span>'; return; }
+  const opt = sel.options[sel.selectedIndex];
+  let cats = [];
+  try { cats = JSON.parse(opt.dataset.cats || '[]'); } catch(e){}
+  preview.innerHTML = cats.length
+    ? cats.map(c => `<span class="gate-cat-chip">${c.name || c.category}</span>`).join('')
+    : '<span class="gate-cat-chip empty">No categories for this gate</span>';
+}
+
+// ── Manual creds ──
+function toggleManualCreds() {
+  const on = document.getElementById('manualCreds').checked;
+  document.getElementById('manualCredsWrap').style.display = on ? 'block' : 'none';
+  if (!on) { document.getElementById('saManualUsername').value=''; document.getElementById('saManualPassword').value=''; }
+}
+function toggleNewPw() {
+  const inp = document.getElementById('saManualPassword');
+  const eye = document.getElementById('newPwEye').querySelector('i');
+  if (inp.type==='password'){ inp.type='text'; eye.className='bi bi-eye-slash'; }
+  else { inp.type='password'; eye.className='bi bi-eye'; }
+}
+
+// ── Create staff ──
+async function addStaff() {
   const firstName = document.getElementById('saFirstName').value.trim();
   const lastName  = document.getElementById('saLastName').value.trim();
   const email     = document.getElementById('saEmail').value.trim();
   const phone     = document.getElementById('saPhone').value.trim();
   const role      = document.getElementById('saRole').value;
+  const canScanQR      = document.getElementById('pCanScanQR').checked;
+  const canSellTickets = document.getElementById('pCanSellTickets').checked;
+  const canViewBookings = document.getElementById('pCanViewBookings').checked;
+  const canManageEvents = document.getElementById('pCanManageEvents').checked;
+  const assignedGate   = document.getElementById('saGate') ? document.getElementById('saGate').value : '';
   const manualUsername = document.getElementById('saManualUsername').value.trim();
   const manualPassword = document.getElementById('saManualPassword').value.trim();
   const errBox = document.getElementById('errBox');
-  errBox.style.display = 'none';
-  if(!firstName||!email||!phone){ errBox.textContent='First name, email and phone are required.'; errBox.style.display='block'; return; }
-  if(document.getElementById('manualCreds').checked && !manualUsername){ errBox.textContent='Enter a username or uncheck manual credentials.'; errBox.style.display='block'; return; }
+  errBox.style.display='none'; errBox.textContent='';
+
+  if (!firstName || !email || !phone) { errBox.textContent='First name, email and phone are required.'; errBox.style.display='block'; return; }
+  if (role === 'staff' && !canScanQR && !canSellTickets) { errBox.textContent='Select a staff type: QR Scanner or Ticket Seller.'; errBox.style.display='block'; return; }
+  if (role === 'staff' && canScanQR && !assignedGate) { errBox.textContent='Please assign a gate for this scanner.'; errBox.style.display='block'; return; }
+  if (document.getElementById('manualCreds').checked && !manualUsername) { errBox.textContent='Enter a username or uncheck manual credentials.'; errBox.style.display='block'; return; }
+
   try {
-    const res = await fetch('/superadmin/staff', { method:'POST', credentials:'include', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ firstName, lastName, email, phone, role, manualUsername, manualPassword,
-        canScanQR: document.getElementById('pCanScanQR').checked ? 'on' : '',
-        canViewBookings: document.getElementById('pCanViewBookings').checked ? 'on' : '',
-        canManageEvents: document.getElementById('pCanManageEvents').checked ? 'on' : '',
-        canSellTickets: document.getElementById('pCanSellTickets').checked ? 'on' : '' }) });
+    const res = await fetch('/superadmin/staff', {
+      method:'POST', credentials:'include', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        firstName, lastName, email, phone, role,
+        canScanQR:    canScanQR    ? 'on' : '',
+        canSellTickets: canSellTickets ? 'on' : '',
+        canViewBookings: canViewBookings ? 'on' : '',
+        canManageEvents: canManageEvents ? 'on' : '',
+        gateNo: canScanQR ? assignedGate : '',
+        manualUsername, manualPassword,
+      }),
+    });
     const d = await res.json();
-    if(d.success){
+    if (d.success) {
       document.getElementById('rUser').textContent = d.username;
       document.getElementById('rPass').textContent = d.password;
       document.getElementById('resultBox').classList.add('show');
       setTimeout(() => location.reload(), 3500);
-    } else { errBox.textContent = d.message||'Failed'; errBox.style.display='block'; }
-  } catch(e){ errBox.textContent='Network error.'; errBox.style.display='block'; }
+    } else { errBox.textContent = d.message || 'Failed'; errBox.style.display='block'; }
+  } catch(e) { errBox.textContent='Network error.'; errBox.style.display='block'; }
 }
 
 // ── Block/Unblock ──
-async function toggleStaff(id){
+async function toggleStaff(id) {
   const res = await fetch(`/superadmin/staff/${id}/toggle`, { method:'POST', credentials:'include' });
   const d = await res.json();
-  if(d.success){
-    const badge = document.getElementById('sbadge-'+id);
-    const btn   = document.getElementById('sbtn-'+id);
-    const txt   = document.getElementById('stxt-'+id);
-    if(d.isActive){ badge.className='badge-active'; badge.textContent='ACTIVE'; btn.querySelector('i').className='bi bi-lock-fill'; txt.textContent='Block'; }
+  if (d.success) {
+    const badge=document.getElementById('sbadge-'+id), btn=document.getElementById('sbtn-'+id), txt=document.getElementById('stxt-'+id);
+    if (d.isActive){ badge.className='badge-active'; badge.textContent='ACTIVE'; btn.querySelector('i').className='bi bi-lock-fill'; txt.textContent='Block'; }
     else { badge.className='badge-blocked'; badge.textContent='BLOCKED'; btn.querySelector('i').className='bi bi-unlock-fill'; txt.textContent='Unblock'; }
   }
 }
 
-// Close modal on backdrop click
-document.getElementById('credModal').addEventListener('click', function(e){ if(e.target===this) closeCredModal(); });
+// ── Filter tabs ──
+function filterStaff(type, btn) {
+  document.querySelectorAll('.type-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.staff-table tbody tr').forEach(row => {
+    row.style.display = (type === 'all' || row.dataset.type === type) ? '' : 'none';
+  });
+}
 
-// Enter key in modal fields triggers save
+// ── Password reveal ──
+function togglePw(id) {
+  const dots=document.getElementById('pw-dots-'+id), text=document.getElementById('pw-text-'+id), icon=document.getElementById('pw-icon-'+id);
+  const showing = text.style.display === 'inline';
+  if (showing){ text.style.display='none'; dots.style.display='inline'; icon.className='bi bi-eye'; }
+  else { dots.style.display='none'; text.style.display='inline'; icon.className='bi bi-eye-slash'; }
+}
+
+// ── Credentials modal ──
+function openEditCreds(id, name) {
+  _editingCredId = id;
+  document.getElementById('credModalSub').textContent = 'Updating credentials for ' + name;
+  document.getElementById('credErr').style.display='none';
+  document.getElementById('credOk').style.display='none';
+  const uname = document.getElementById('uname-' + id);
+  document.getElementById('editUsername').value = uname ? uname.textContent.trim() : '';
+  document.getElementById('editPassword').value = '';
+  document.getElementById('editPwEye').querySelector('i').className='bi bi-eye';
+  document.getElementById('editPassword').type='password';
+  document.getElementById('credModal').classList.add('show');
+  document.getElementById('editUsername').focus();
+}
+function closeCredModal() { document.getElementById('credModal').classList.remove('show'); _editingCredId=null; }
+function toggleEditPw() {
+  const inp=document.getElementById('editPassword'), eye=document.getElementById('editPwEye').querySelector('i');
+  if (inp.type==='password'){ inp.type='text'; eye.className='bi bi-eye-slash'; }
+  else { inp.type='password'; eye.className='bi bi-eye'; }
+}
+async function saveCredentials() {
+  const newUsername=document.getElementById('editUsername').value.trim();
+  const newPassword=document.getElementById('editPassword').value.trim();
+  const errEl=document.getElementById('credErr'), okEl=document.getElementById('credOk');
+  errEl.style.display='none'; okEl.style.display='none';
+  if (!newUsername){ errEl.textContent='Username is required.'; errEl.style.display='block'; return; }
+  if (!newPassword){ errEl.textContent='Password is required.'; errEl.style.display='block'; return; }
+  if (newPassword.length < 4){ errEl.textContent='Password must be at least 4 characters.'; errEl.style.display='block'; return; }
+  try {
+    const res = await fetch(`/superadmin/staff/${_editingCredId}/credentials`, {
+      method:'POST', credentials:'include', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ newUsername, newPassword }),
+    });
+    const d = await res.json();
+    if (d.success) {
+      const unameEl=document.getElementById('uname-'+_editingCredId);
+      if (unameEl) unameEl.textContent = d.username;
+      const pwText=document.getElementById('pw-text-'+_editingCredId);
+      if (pwText){ pwText.textContent=newPassword; pwText.dataset.pw=newPassword; pwText.style.fontStyle='normal'; pwText.style.color=''; }
+      okEl.textContent='✓ Credentials updated.'; okEl.style.display='block';
+      setTimeout(closeCredModal, 1400);
+    } else { errEl.textContent=d.message||'Failed.'; errEl.style.display='block'; }
+  } catch(e){ errEl.textContent='Network error.'; errEl.style.display='block'; }
+}
+
+// ── Gate modal ──
+function openGateModal(id, name, currentGate) {
+  _gateEditingId = id;
+  document.getElementById('gateModalSub').textContent = 'Updating gate for ' + name;
+  document.getElementById('gateErr').style.display='none';
+  document.getElementById('gateOk').style.display='none';
+  document.getElementById('modalGateSelect').value = currentGate || '';
+  updateModalCatPreview();
+  document.getElementById('gateModal').classList.add('show');
+}
+function closeGateModal() { document.getElementById('gateModal').classList.remove('show'); _gateEditingId=null; }
+function updateModalCatPreview() {
+  const sel=document.getElementById('modalGateSelect'), preview=document.getElementById('modalCatPreview');
+  if (!sel.value){ preview.innerHTML='<span style="font-size:0.72rem;color:#555;">Select a gate</span>'; return; }
+  const opt=sel.options[sel.selectedIndex];
+  let cats=[];
+  try{ cats=JSON.parse(opt.dataset.cats||'[]'); }catch(e){}
+  preview.innerHTML=cats.length
+    ? cats.map(c=>`<span class="mini-chip">${c.name||c.category}</span>`).join('')
+    : '<span style="font-size:0.72rem;color:#555;">No categories</span>';
+}
+
+async function saveGateAssignment() {
+  const gate = document.getElementById('modalGateSelect').value;
+  const errEl = document.getElementById('gateErr');
+  const okEl  = document.getElementById('gateOk');
+  errEl.style.display = 'none'; okEl.style.display = 'none';
+  if (!gate) { errEl.textContent = 'Please select a gate.'; errEl.style.display = 'block'; return; }
+  try {
+    const res = await fetch(`/superadmin/staff/${_gateEditingId}/gate`, {  // or /superadmin/staff/...
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ gateNo: gate }),  // ← only send gateNo
+    });
+    const d = await res.json();
+    if (d.success) {
+      const infoEl = document.getElementById('gate-info-' + _gateEditingId);
+      if (infoEl) {
+        infoEl.innerHTML = `
+          <div class="gate-label"><i class="bi bi-door-open-fill"></i> ${d.gateNo}</div>
+          <div class="gate-cats-inline">
+            ${d.assignedCategory
+              ? `<span class="mini-chip">${d.assignedCategory}</span>`
+              : '<span style="font-size:0.7rem;color:#555;">No category</span>'}
+          </div>`;
+      }
+      okEl.textContent = '✓ Gate updated successfully.';
+      okEl.style.display = 'block';
+      setTimeout(closeGateModal, 1400);
+    } else {
+      errEl.textContent = d.message || 'Failed to update gate.';
+      errEl.style.display = 'block';
+    }
+  } catch(e) {
+    errEl.textContent = 'Network error.';
+    errEl.style.display = 'block';
+  }
+}
+// Close modals on backdrop
+document.getElementById('credModal').addEventListener('click', function(e){ if(e.target===this) closeCredModal(); });
+document.getElementById('gateModal').addEventListener('click', function(e){ if(e.target===this) closeGateModal(); });
 ['editUsername','editPassword'].forEach(id => {
   document.getElementById(id).addEventListener('keydown', e => { if(e.key==='Enter') saveCredentials(); });
 });

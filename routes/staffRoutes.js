@@ -85,6 +85,8 @@ router.post('/login', async (req, res) => {
       canViewBookings: !!member.canViewBookings,
       canManageEvents: !!member.canManageEvents,
       canSellTickets: !!member.canSellTickets,
+      gateNo:           member.gateNo || '',            
+      assignedCategory: member.assignedCategory || '',   
     };
 
     if (member.role === 'superadmin') {
@@ -215,8 +217,8 @@ router.post('/api/sell', staffAuth, async (req, res) => {
   try {
     const { eventId, ticketType, quantity, attendees, buyerPhone, buyerEmail, buyerName, zone } = req.body;
 
-    if (!buyerPhone && !buyerEmail) {
-      return res.json({ success: false, message: 'Phone or email is required.' });
+    if (!buyerPhone) {
+      return res.json({ success: false, message: 'Phone is required.' });
     }
 
     const qty = parseInt(quantity) || 1;
@@ -368,6 +370,7 @@ router.post('/api/sell', staffAuth, async (req, res) => {
     // Generate shared QR
     try {
       await generateSharedQR(booking.tickets, {
+        bookingId: booking._id,
         bookingRef: booking.bookingRef,
         eventId: event._id.toString(),
         paymentId: fakePayId,
@@ -503,6 +506,19 @@ router.post('/api/scan', staffAuth, async (req, res) => {
       return res.json({ success: false, status: 'invalid', message: 'Booking not found or payment not confirmed.' });
     }
 
+// ── Gate/category enforcement ──
+if (u.canScanQR && u.assignedCategory) {
+  const ticketCat = (booking.ticketType || '').toLowerCase();
+  if (ticketCat !== u.assignedCategory.toLowerCase()) {
+    return res.json({
+      success: false,
+      status: 'wrong_gate',
+      ticketCategory: booking.ticketType,
+      message: `❌ Wrong gate. This ${booking.ticketType} ticket is not valid at ${u.gateNo || 'your gate'}.`,
+    });
+  }
+}
+
     if (checkInAll) {
       const alreadyAllUsed = booking.tickets.every(t => t.isUsed);
       if (alreadyAllUsed) {
@@ -596,9 +612,23 @@ router.post('/api/scan-ticket', staffAuth, async (req, res) => {
       paymentStatus: 'paid',
     }).populate('event', 'name date venue');
 
+
+
     if (!booking) {
       return res.json({ success: false, status: 'invalid', message: 'Booking not found.' });
     }
+
+    // ── Gate/category enforcement ──
+if (u.canScanQR && u.assignedCategory) {
+  const ticketCat = (booking.ticketType || '').toLowerCase();
+  if (ticketCat !== u.assignedCategory.toLowerCase()) {
+    return res.json({
+      success: false,
+      status: 'wrong_gate',
+      message: `❌ Wrong gate. This ${booking.ticketType} ticket is not valid at ${u.gateNo || 'your gate'}.`,
+    });
+  }
+}
 
     const ticket = booking.tickets.find(t => t.ticketId === ticketId);
     if (!ticket) {

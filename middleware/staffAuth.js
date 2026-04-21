@@ -53,6 +53,8 @@ const staffAuth = async (req, res, next) => {
       canViewBookings: !!member.canViewBookings,
       canManageEvents: !!member.canManageEvents,
       canSellTickets:  !!member.canSellTickets,
+      gateNo:           member.gateNo           || '',   // ← add this
+      assignedCategory: member.assignedCategory || '',        
     };
     req.staffUser = req.session.staffUser;
 

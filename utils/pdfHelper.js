@@ -341,7 +341,7 @@ console.log('🎫 PDF seat debug:', {
     position: absolute;
     left:  23%;     /* 68.3mm */
     right: 28%;     /* ends at 72% — clear of right panel */
-    top:   46%;     /* ~96.6mm */
+    top:   42%;     /* ~96.6mm */
     display: flex;
     flex-direction: column;
     gap: 0;

@@ -333,52 +333,143 @@ router.get('/', async (req, res) => {
 });
 
 
-// ── STAFF MANAGEMENT ──
+// ── GET /superadmin/staff ──
+// ── GET /superadmin/staff ──
 router.get('/staff', async (req, res) => {
   try {
     const staff = await Staff.find().sort({ createdAt: -1 });
-    const currentAdmin = req.session.staffUser || { username: req.session.superAdminUser || 'superadmin', name: 'Super Admin', role: 'superadmin' };
-    res.render('superadmin/staff', { title: 'Staff Management — MEE', staff, currentAdmin });
+    const currentAdmin = req.session.staffUser ||
+      { username: 'superadmin', name: 'Super Admin', role: 'superadmin' };
+
+    const activeEvent = await Event.findOne({ isActive: true }).lean();
+    const gates = [];
+    if (activeEvent) {
+      const seen = new Set();
+      for (const t of activeEvent.ticketTypes) {
+        if (t.gateNumber && t.isActive && !seen.has(t.gateNumber)) {
+          seen.add(t.gateNumber);
+          const cats = activeEvent.ticketTypes
+            .filter(x => x.gateNumber === t.gateNumber && x.isActive)
+            .map(x => ({ category: x.category, name: x.name || x.category }));
+          gates.push({ gate: t.gateNumber, categories: cats });
+        }
+      }
+    }
+
+    res.render('superadmin/staff', {
+      title: 'Staff Management — MEE',
+      staff,
+      currentAdmin,
+      gates,
+      activeEventId: activeEvent?._id?.toString() || '',
+    });
   } catch (err) {
-    res.render('superadmin/staff', { title: 'Staff Management', staff: [] });
+    res.render('superadmin/staff', {
+      title: 'Staff Management', staff: [],
+      currentAdmin: {}, gates: [], activeEventId: '',
+    });
   }
 });
 
+// ── POST /superadmin/staff — create ──
 router.post('/staff', async (req, res) => {
   try {
-    const { firstName, lastName, email, phone, role, canScanQR, canViewBookings, canManageEvents, canSellTickets,
-      manualUsername, manualPassword } = req.body;
+    const {
+      firstName, lastName, email, phone, role,
+      canScanQR, canViewBookings, canManageEvents, canSellTickets,
+      manualUsername, manualPassword,
+      gateNo,  // ← single field
+    } = req.body;
+
+    const wantsQR    = canScanQR === 'on';
+    const wantsSell  = canSellTickets === 'on';
+    const isStaffRole = !role || role === 'staff';
+
+    if (isStaffRole && wantsQR && wantsSell)
+      return res.json({ success: false, message: 'Staff can only have Scan QR or Sell Tickets — not both.' });
+    if (isStaffRole && (canViewBookings === 'on' || canManageEvents === 'on'))
+      return res.json({ success: false, message: 'Staff cannot have View Bookings or Manage Events permissions.' });
 
     let username, password;
-
     if (manualUsername && manualUsername.trim()) {
-      // Manual credentials provided
       username = manualUsername.trim().toLowerCase().replace(/\s+/g, '-');
       if (!manualPassword || manualPassword.trim().length < 4)
         return res.json({ success: false, message: 'Password must be at least 4 characters.' });
       password = manualPassword.trim();
-      // Check username is unique
       const taken = await Staff.findOne({ username });
       if (taken) return res.json({ success: false, message: `Username "${username}" is already taken.` });
     } else {
-      // Auto-generate username and password
       const prefix = role === 'admin' ? 'admin' : 'staff';
       const baseUser = `${prefix}-${firstName.toLowerCase().replace(/[^a-z0-9]/g, '')}`;
       const existing = await Staff.findOne({ username: baseUser });
       username = existing ? `${baseUser}${Math.floor(Math.random() * 900) + 100}` : baseUser;
-      const last3 = (phone || '000').slice(-3);
-      password = `${username}-${last3}`;
+      password = `${username}-${(phone || '000').slice(-3)}`;
+    }
+
+    // Auto-resolve category from gate
+    let resolvedCategory = '';
+    let resolvedEventId  = null;
+    if (wantsQR && gateNo) {
+      const activeEvent = await Event.findOne({ isActive: true }).lean();
+      if (activeEvent) {
+        resolvedEventId  = activeEvent._id;
+        const match = activeEvent.ticketTypes.find(
+          t => t.gateNumber === gateNo && t.isActive
+        );
+        resolvedCategory = match ? match.category : '';
+      }
     }
 
     const member = await Staff.create({
       firstName, lastName: lastName || '', email, phone: phone || '',
-      username, password, role: role || 'staff',
-      canScanQR: canScanQR === 'on', canViewBookings: canViewBookings === 'on', canManageEvents: canManageEvents === 'on', canSellTickets: canSellTickets === 'on',
-      createdBy: null,
+      username, password, plainPassword: password,
+      role: role || 'staff',
+      canScanQR:       isStaffRole ? wantsQR   : (canScanQR === 'on'),
+      canSellTickets:  isStaffRole ? wantsSell : (canSellTickets === 'on'),
+      canViewBookings: isStaffRole ? false : (canViewBookings === 'on'),
+      canManageEvents: isStaffRole ? false : (canManageEvents === 'on'),
+      gateNo:           wantsQR ? (gateNo || '') : '',
+      assignedCategory: wantsQR ? resolvedCategory : '',
+      assignedEventId:  resolvedEventId,
+      createdBy:      req.session.staffUser?.id    || null,
+      createdByEmail: req.session.staffUser?.email || process.env.SUPER_ADMIN_EMAIL || null,
+      createdByName:  req.session.staffUser?.role === 'superadmin' ? 'SUPER ADMIN' : (req.session.staffUser?.name || 'SUPER ADMIN'),
+    
     });
+
     res.json({ success: true, username: member.username, password: member.password, id: member._id });
   } catch (err) {
     res.json({ success: false, message: err.code === 11000 ? 'Email or username already exists.' : err.message });
+  }
+});
+
+
+// ── POST /superadmin/staff/:id/gate — edit gate assignment ──
+router.post('/staff/:id/gate', async (req, res) => {
+  try {
+    const { gateNo } = req.body;
+    const member = await Staff.findById(req.params.id);
+    if (!member) return res.json({ success: false, message: 'Not found' });
+    if (!member.canScanQR) return res.json({ success: false, message: 'Staff is not a QR scanner.' });
+
+    const activeEvent = await Event.findOne({ isActive: true }).lean();
+    if (!activeEvent) return res.json({ success: false, message: 'No active event.' });
+
+    const gateCats = activeEvent.ticketTypes
+      .filter(t => t.gateNumber === gateNo && t.isActive)
+      .map(t => t.category);
+
+    if (!gateCats.length)
+      return res.json({ success: false, message: `No active categories found for ${gateNo}.` });
+
+    member.gateNo           = gateNo;
+    member.assignedCategory = gateCats[0];
+    member.assignedEventId  = activeEvent._id;
+    await member.save();
+
+    res.json({ success: true, gateNo, assignedCategory: member.assignedCategory });
+  } catch (err) {
+    res.json({ success: false, message: err.message });
   }
 });
 
@@ -411,6 +502,7 @@ router.get('/staff/:id/credentials', async (req, res) => {
 });
 
 // POST /superadmin/staff/:id/credentials — superadmin-only credential edit
+// POST /superadmin/staff/:id/credentials — update creds + plainPassword
 router.post('/staff/:id/credentials', async (req, res) => {
   try {
     const { newUsername, newPassword } = req.body;
@@ -420,18 +512,19 @@ router.post('/staff/:id/credentials', async (req, res) => {
       return res.json({ success: false, message: 'Password must be at least 4 characters.' });
 
     const username = newUsername.trim().toLowerCase().replace(/\s+/g, '-');
-
-    // Ensure unique username (excluding self)
     const conflict = await Staff.findOne({ username, _id: { $ne: req.params.id } });
     if (conflict) return res.json({ success: false, message: `Username "${username}" is already taken.` });
 
-    await Staff.findByIdAndUpdate(req.params.id, { username, password: newPassword.trim() });
+    await Staff.findByIdAndUpdate(req.params.id, {
+      username,
+      password:      newPassword.trim(),
+      plainPassword: newPassword.trim(),
+    });
     res.json({ success: true, username });
   } catch (err) {
     res.json({ success: false, message: err.message });
   }
 });
-
 // ── COUPON MANAGEMENT ──
 router.get('/coupons', async (req, res) => {
   try {

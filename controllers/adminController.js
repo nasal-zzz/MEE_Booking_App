@@ -221,18 +221,6 @@ exports.getEditEvent = async (req, res) => {
   } catch (err) { res.redirect('/mee-admin'); }
 };
 
-// exports.postUpdateEvent = async (req, res) => {
-//   try {
-//     await Event.findByIdAndUpdate(req.params.id, parseEventBody(req.body), { new: true });
-//     return res.redirect('/mee-admin?success=Event+updated');
-//   } catch (err) {
-//     const event = await Event.findById(req.params.id).catch(() => null);
-//     const currentAdmin = getCurrentAdmin(req);
-//     const isSuperAdmin = req.session.superAdminLoggedIn || (req.session.staffLoggedIn && req.session.staffUser?.role === 'superadmin');
-//     return res.render('mee-admin/event-form', { title: 'Edit Event', event, error: err.message, currentAdmin, isSuperAdmin });
-//   }
-// };
-
 exports.postUpdateEvent = async (req, res) => {
   try {
     const parsed = parseEventBody(req.body);
@@ -258,7 +246,7 @@ exports.postUpdateEvent = async (req, res) => {
   } catch (err) {
     const event = await Event.findById(req.params.id).catch(() => null);
     const currentAdmin = getCurrentAdmin(req);
-    const isSuperAdmin = req.session.superAdminLoggedIn;
+    const isSuperAdmin = req.session.superAdminLoggedIn || (req.session.staffLoggedIn && req.session.staffUser?.role === 'superadmin');
     return res.render('mee-admin/event-form', { title: 'Edit Event', event, error: err.message, currentAdmin, isSuperAdmin });
   }
 };

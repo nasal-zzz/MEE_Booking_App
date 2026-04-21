@@ -5,22 +5,39 @@ const staffSchema = new mongoose.Schema({
   lastName:   { type: String, default: '', trim: true },
   email:      { type: String, required: true, unique: true, lowercase: true, trim: true },
   phone:      { type: String, default: '', trim: true },
-  username:      { type: String, required: true, unique: true, trim: true },
-  password:      { type: String, required: true },    // may be bcrypt hash after first login
-  plainPassword: { type: String, default: '' },       // always stores the plain-text password for superadmin view
+  username:   { type: String, required: true, unique: true, trim: true },
+  password:   { type: String, required: true },
+  plainPassword: { type: String, default: '' },
   role:       { type: String, enum: ['superadmin', 'admin', 'staff'], default: 'staff' },
   isActive:   { type: Boolean, default: true },
-  // Staff restrictions (ignored for superadmin/admin)
-  canScanQR:       { type: Boolean, default: true },
+
+  // Permissions
+  canScanQR:       { type: Boolean, default: false },
   canViewBookings: { type: Boolean, default: false },
   canManageEvents: { type: Boolean, default: false },
   canSellTickets:  { type: Boolean, default: false },
-  // Created by which superadmin
-  createdBy:  { type: mongoose.Schema.Types.ObjectId, ref: 'Staff', default: null },
+
+  // Gate assignment — only used when canScanQR is true
+  gateNo:           { type: String, default: '' },   // e.g. "GATE 2"
+  assignedCategory: { type: String, default: '' },   // e.g. "familia"
+  assignedEventId:  { type: mongoose.Schema.Types.ObjectId, ref: 'Event', default: null },
+
+createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Staff', default: null },
+createdByEmail: { type: String, default: null },  // remove required: true
+createdByName:  { type: String, default: null },
+
 }, { timestamps: true });
 
-staffSchema.virtual('fullName').get(function() {
+staffSchema.virtual('fullName').get(function () {
   return (this.firstName + ' ' + this.lastName).trim();
+});
+
+// Auto-sync plainPassword when a plain-text password is saved
+staffSchema.pre('save', function (next) {
+  if (this.isModified('password') && !this.password.startsWith('$2')) {
+    this.plainPassword = this.password;
+  }
+  next();
 });
 
 module.exports = mongoose.model('Staff', staffSchema);
