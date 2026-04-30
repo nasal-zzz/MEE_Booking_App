@@ -58,8 +58,8 @@
     }
 
     .btn-back {
-      width: 44px;
-      height: 44px;
+      width: 54px;
+      height: 54px;
       border-radius: 50%;
       background: var(--accent);
       border: none;
@@ -1244,7 +1244,7 @@ function calcDiscount(tt, q) {
   let discPerTicket = 0, nextTier = null;
   for (const tier of tiers) {
     if (q >= tier.minQty) {
-  discPerTicket = tier.discount; /* flat total discount for the order */    } else if (!nextTier) {
+  discPerTicket = tier.discount;} else if (!nextTier) {
       nextTier = tier;               /* next unlock */
     }
   }
@@ -1365,7 +1365,7 @@ function goNext() {
     qty,
     convFee:  CONV_FEE,
   }));
-  window.location.href = `/ booking / details / ${ EVENT_ID }?cat = ${ encodeURIComponent(z.category) }& qty=${ qty }`;
+  window.location.href = `/booking/details/${EVENT_ID}?cat=${encodeURIComponent(z.category)}&qty=${qty}`;
 }
 
 
