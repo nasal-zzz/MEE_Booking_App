@@ -10,7 +10,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
   <style>
-    :root{--bg:#0B0B0F;--surface:#14141C;--card:#14141C;--card2:#1a1a24;--border:rgba(255,255,255,0.08);--accent:#6A0DAD;--accent-dim:rgba(106,13,173,0.09);--text:#FFFFFF;--muted:#B3B3B3;--success:#00FF88;--error:#FF4444;}
+    :root{--bg:#0B0B0F;--surface:#14141C;--card:#14141C;--card2:#1a1a24;--border:rgba(255,255,255,0.08);--accent:#9500ff;--accent-dim:rgba(106,13,173,0.09);--text:#FFFFFF;--muted:#B3B3B3;--success:#00FF88;--error:#FF4444;}
     *{box-sizing:border-box;margin:0;padding:0;}
     body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;min-height:100vh;}
     body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(255,255,255,0.012) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.012) 1px,transparent 1px);background-size:50px 50px;pointer-events:none;}
@@ -32,7 +32,7 @@
 
     /* LEFT COLUMN */
     .profile-card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;position:sticky;top:80px;}
-    .profile-card-top{height:3px;background:linear-gradient(90deg,transparent,#6A0DAD,transparent);}
+    .profile-card-top{height:3px;background:linear-gradient(90deg,transparent,#9500ff,transparent);}
     .profile-card-body{padding:1.8rem;}
 
     /* Avatar */
@@ -83,7 +83,7 @@
     /* Booking card */
     .booking-card{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:1rem;transition:border-color 0.2s;}
     .booking-card:hover{border-color:rgba(106,13,173,0.15);}
-    .booking-card-top{height:2px;background:linear-gradient(90deg,transparent,#6A0DAD,transparent);}
+    .booking-card-top{height:2px;background:linear-gradient(90deg,transparent,#9500ff,transparent);}
     .booking-main{padding:1.3rem 1.5rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;}
     .booking-left{display:flex;align-items:center;gap:1rem;}
     .booking-icon{width:52px;height:52px;border-radius:8px;background:linear-gradient(135deg,#1a0a2e,#2d0a5c);display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0;}
@@ -116,7 +116,7 @@
     .btn-dl-pdf:disabled{opacity:0.4;cursor:not-allowed;}
     .btn-view-ticket{display:flex;align-items:center;gap:0.4rem;padding:0.4rem 0.8rem;background:var(--accent);border:1px solid var(--accent);border-radius:5px;color:#000;font-size:0.76rem;font-family:'Outfit',sans-serif;font-weight:700;cursor:pointer;text-decoration:none;white-space:nowrap;transition:all 0.2s;}
     .btn-view-ticket:hover{box-shadow:0 0 15px rgba(106,13,173,0.4);}
-    .btn-pay-now{display:flex;align-items:center;gap:0.4rem;padding:0.5rem 1rem;background:linear-gradient(135deg,#6A0DAD,#9D4EDD);border:none;border-radius:6px;color:#fff;font-size:0.78rem;font-family:'Outfit',sans-serif;font-weight:700;cursor:pointer;white-space:nowrap;transition:all 0.2s;letter-spacing:0.5px;}
+    .btn-pay-now{display:flex;align-items:center;gap:0.4rem;padding:0.5rem 1rem;background:linear-gradient(135deg,#9500ff,#9D4EDD);border:none;border-radius:6px;color:#fff;font-size:0.78rem;font-family:'Outfit',sans-serif;font-weight:700;cursor:pointer;white-space:nowrap;transition:all 0.2s;letter-spacing:0.5px;}
     .btn-pay-now:hover{box-shadow:0 0 18px rgba(106,13,173,0.5);transform:translateY(-1px);}
     .btn-retry{display:flex;align-items:center;gap:0.4rem;padding:0.5rem 1rem;background:rgba(245,200,66,0.12);border:1px solid rgba(245,200,66,0.35);border-radius:6px;color:#f5c842;font-size:0.78rem;font-family:'Outfit',sans-serif;font-weight:700;cursor:pointer;white-space:nowrap;transition:all 0.2s;text-decoration:none;}
     .btn-retry:hover{background:rgba(245,200,66,0.2);}
@@ -394,14 +394,14 @@
               <% if (booking.paymentStatus === 'pending' || booking.paymentStatus === 'failed') { %>
               <div class="booking-actions-bar">
                 <% if (booking.paymentStatus === 'pending') { %>
-                <button class="btn-pay-now" onclick="payNow('<%= booking._id %>', '<%= bi %>')">
+                <!-- <button class="btn-pay-now" onclick="payNow('<%= booking._id %>', '<%= bi %>')">
                   <i class="bi bi-lightning-charge-fill"></i> Pay Now
-                </button>
+                </button> -->
                 <% } %>
                 <% if (booking.paymentStatus === 'failed') { %>
-                <a href="/booking/retry-payment/<%= booking._id %>" class="btn-retry">
+                <!-- <button class="btn-pay-now" onclick="payNow('<%= booking._id %>', '<%= bi %>')">
                   <i class="bi bi-arrow-repeat"></i> Retry Payment
-                </a>
+                </button> -->
                 <% } %>
               </div>
               <% } %>
@@ -595,7 +595,7 @@
           key: data.key, amount: data.amount, currency: data.currency,
           name: 'Melattur Entertainment Events', description: data.description || 'Ticket Payment',
           order_id: data.orderId, prefill: data.prefill,
-          theme: { color: '#6A0DAD', backdrop_color: '#0B0B0F' },
+          theme: { color: '#9500ff', backdrop_color: '#0B0B0F' },
           handler: async function(response) {
             const vres = await fetch('/booking/verify-payment', {
               method: 'POST', credentials: 'include',
@@ -610,9 +610,18 @@
             if (vd.success) { window.location.href = '/booking/success/' + vd.bookingId; }
             else { alert('Payment verified but failed. ID: ' + response.razorpay_payment_id); }
           },
-          modal: { ondismiss: () => {} }
+          // modal: { ondismiss: () => {} }
+
+                modal: {
+        ondismiss: function() {
+          fetch('/booking/save-failed', { method: 'POST', credentials: 'include' }).catch(() => {});
+        }
+      },
         });
-        rzp.open();
+            rzp.on('payment.failed', function(r) {
+      fetch('/booking/save-failed', { method: 'POST', credentials: 'include' }).catch(() => {});
+    });
+    rzp.open();
       } catch(e) { alert('Error initiating payment. Please try again.'); }
     }
 
@@ -910,7 +919,7 @@
   ════════════════════════════════════════════════ -->
   <div id="cropModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:1100;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(8px);">
     <div style="background:#14141C;border:1px solid rgba(255,255,255,0.09);border-radius:16px;width:100%;max-width:420px;overflow:hidden;">
-      <div style="height:3px;background:linear-gradient(90deg,#6A0DAD,#9D4EDD,#6A0DAD);"></div>
+      <div style="height:3px;background:linear-gradient(90deg,#9500ff,#9D4EDD,#9500ff);"></div>
       <div style="padding:1.4rem;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
           <div style="font-family:var(--font-display);font-size:0.95rem;letter-spacing:2px;color:#fff;">CROP PHOTO</div>
@@ -936,12 +945,12 @@
         <!-- Controls -->
         <div style="margin-bottom:0.8rem;">
           <div style="font-family:var(--font-mono);font-size:0.5rem;letter-spacing:1px;color:#555;text-transform:uppercase;margin-bottom:0.4rem;">Zoom</div>
-          <input type="range" id="zoomSlider" min="0.5" max="3" step="0.01" value="1" style="width:100%;accent-color:#6A0DAD;" oninput="updateZoom(this.value)"/>
+          <input type="range" id="zoomSlider" min="0.5" max="3" step="0.01" value="1" style="width:100%;accent-color:#9500ff;" oninput="updateZoom(this.value)"/>
         </div>
         <div style="font-size:0.7rem;color:#555;text-align:center;margin-bottom:1rem;">Drag to reposition • Pinch or slider to zoom</div>
         <div style="display:flex;gap:0.7rem;">
           <button onclick="closeCropModal()" style="flex:1;padding:0.75rem;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:#ccc;cursor:pointer;font-size:0.85rem;">Cancel</button>
-          <button id="cropSaveBtn" onclick="saveCroppedAvatar()" style="flex:2;padding:0.75rem;background:#6A0DAD;border:none;border-radius:8px;color:#fff;font-weight:700;cursor:pointer;font-size:0.85rem;letter-spacing:1px;">
+          <button id="cropSaveBtn" onclick="saveCroppedAvatar()" style="flex:2;padding:0.75rem;background:#9500ff;border:none;border-radius:8px;color:#fff;font-weight:700;cursor:pointer;font-size:0.85rem;letter-spacing:1px;">
             <i class="bi bi-check-lg"></i> Save Photo
           </button>
         </div>
@@ -952,7 +961,7 @@
   <div id="profileEmailModal"
   style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.78);z-index:9900;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(8px);">
   <div style="background:#14141C;border:1px solid rgba(106,13,173,0.35);border-radius:16px;width:100%;max-width:440px;overflow:hidden;box-shadow:0 40px 80px rgba(0,0,0,0.6);animation:_eotpIn .25s cubic-bezier(.4,0,.2,1);position:relative;">
-    <div style="height:3px;background:linear-gradient(90deg,transparent,#6A0DAD,transparent);"></div>
+    <div style="height:3px;background:linear-gradient(90deg,transparent,#9500ff,transparent);"></div>
     <button onclick="closeProfileEmailModal()"
       style="position:absolute;top:1rem;right:1rem;background:none;border:none;color:#555;font-size:1.3rem;cursor:pointer;line-height:1;transition:color .18s;"
       onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#555'">×</button>
@@ -1016,7 +1025,7 @@
           style="text-align:center;font-size:.75rem;color:#FF4444;min-height:1.1rem;margin-bottom:.7rem;"></div>
 
         <button id="profileVerifyOTPBtn" onclick="verifyProfileEmailOTP()"
-          style="width:100%;padding:.85rem;background:#6A0DAD;color:#fff;font-family:'Outfit',sans-serif;font-weight:700;font-size:.88rem;border:none;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:.5rem;transition:box-shadow .18s;box-shadow:0 0 20px rgba(106,13,173,.2);">
+          style="width:100%;padding:.85rem;background:#9500ff;color:#fff;font-family:'Outfit',sans-serif;font-weight:700;font-size:.88rem;border:none;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:.5rem;transition:box-shadow .18s;box-shadow:0 0 20px rgba(106,13,173,.2);">
           <i class="bi bi-shield-check" id="profileVerifyIcon"></i>
           <span id="profileVerifyTxt">Confirm & Save Email</span>
           <div id="profileVerifySpin"
@@ -1026,7 +1035,7 @@
         <div style="text-align:center;margin-top:.8rem;font-size:.74rem;color:#555;">
           Didn't receive it?
           <button id="profileResendBtn" onclick="sendProfileEmailOTP(true)" disabled
-            style="background:none;border:none;color:#6A0DAD;font-size:.74rem;cursor:pointer;font-weight:600;padding:0;font-family:inherit;">
+            style="background:none;border:none;color:#9500ff;font-size:.74rem;cursor:pointer;font-weight:600;padding:0;font-family:inherit;">
             Resend OTP
           </button>
           <span id="profileOTPTimer" style="color:#666;font-family:'Space Mono',monospace;font-size:.68rem;"></span>

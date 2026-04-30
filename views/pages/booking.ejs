@@ -11,7 +11,7 @@
     <a href="javascript:history.back()" style="display:flex;align-items:center;gap:0.4rem;color:#B3B3B3;text-decoration:none;font-size:0.8rem;font-family:'Space Mono',monospace;letter-spacing:1px;transition:color 0.2s;">
       <i class="bi bi-arrow-left"></i> BACK
     </a>
-    <span style="font-family:'Poppins',sans-serif;font-size:1rem;letter-spacing:3px;color:#fff;"><span style="color:#6A0DAD;">M</span>EE</span>
+    <span style="font-family:'Poppins',sans-serif;font-size:1rem;letter-spacing:3px;color:#fff;"><span style="color:#9500ff;">M</span>EE</span>
     <span style="font-family:'Space Mono',monospace;font-size:0.65rem;letter-spacing:2px;color:#B3B3B3;">STEP 1 OF 4</span>
   </nav>
 
@@ -64,7 +64,7 @@
               <%
                 const isSoldOut = ttype.bookedSeats >= ttype.totalSeats;
                 const isFirst = ti === firstAvail;
-                const tColor = ttype.color || '#6A0DAD';
+                const tColor = ttype.color || '#9500ff';
                 const avail = ttype.totalSeats - ttype.bookedSeats;
               %>
               <label class="ticket-tier-card <%= isFirst ? 'selected' : '' %> <%= isSoldOut ? 'sold-out' : '' %>"
@@ -696,7 +696,7 @@
           name: 'Melattur Entertainment Events', description: selectedTypeName + ' × ' + qty,
           order_id: data.orderId,
           prefill: data.prefill,
-          theme: { color: '#6A0DAD', backdrop_color: '#0B0B0F' },
+          theme: { color: '#9500ff', backdrop_color: '#0B0B0F' },
           modal: { ondismiss: () => setPayLoading(false) },
           handler: async function(response) {
             const vres = await fetch('/booking/verify-payment', {
@@ -834,7 +834,7 @@
       .special-req-input.show { display:block; }
       .special-req-input:focus { border-color:rgba(106,13,173,0.4); }
       .sum-card { background:var(--card); border:1px solid var(--border); border-radius:10px; overflow:hidden; }
-      .sum-top { height:3px; background:linear-gradient(90deg,transparent,#6A0DAD,transparent); }
+      .sum-top { height:3px; background:linear-gradient(90deg,transparent,#9500ff,transparent); }
       .sum-line { display:flex; justify-content:space-between; align-items:center; padding:0.55rem 0; border-bottom:1px solid var(--border); font-size:0.85rem; }
       .sum-line:last-of-type { border-bottom:none; }
       .sum-line .lbl { color:var(--muted); } .sum-line .val { color:var(--text); font-weight:500; }

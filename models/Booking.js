@@ -46,6 +46,7 @@ const bookingSchema = new mongoose.Schema({
   totalAmount: { type: Number, required: true },
   tickets: [ticketSchema],
   gateNumber: { type: String, default: '' },
+  zone: { type: String, default: '' },
 
   // ── FIX #3: QR failure tracking ──────────────────────────────────────────
   // Set to true when generateSharedQR throws. The booking is still valid and
@@ -64,6 +65,9 @@ const bookingSchema = new mongoose.Schema({
   contactPhone: { type: String, default: '' },
   contactEmail: { type: String, default: '' },
   contactName: { type: String, default: '' },
+  seatsReleased: { type: Boolean, default: false },
+  failedNotified: { type: Boolean, default: false },
+
 
   reminderImmediateSentAt: { type: Date, default: null },
   reminder24SentAt: { type: Date, default: null },

@@ -49,7 +49,7 @@
     .pf-desc{font-size:0.82rem;color:#B3B3B3;line-height:1.65;margin-bottom:1.2rem;}
     .pf-error-box{background:rgba(255,68,68,0.07);border:1px solid rgba(255,68,68,0.2);border-radius:8px;padding:0.7rem 1rem;font-size:0.78rem;color:#ff9999;margin-bottom:1.6rem;font-family:var(--font-mono);line-height:1.5;}
     .pf-btns{display:flex;flex-direction:column;gap:0.7rem;}
-    .pf-retry{display:flex;align-items:center;justify-content:center;gap:0.5rem;width:100%;padding:0.9rem;background:#6A0DAD;color:#fff;border:none;border-radius:8px;font-weight:700;font-size:0.9rem;cursor:pointer;letter-spacing:0.5px;transition:all 0.18s;}
+    .pf-retry{display:flex;align-items:center;justify-content:center;gap:0.5rem;width:100%;padding:0.9rem;background:#9500ff;color:#fff;border:none;border-radius:8px;font-weight:700;font-size:0.9rem;cursor:pointer;letter-spacing:0.5px;transition:all 0.18s;}
     .pf-retry:hover{box-shadow:0 0 28px rgba(106,13,173,0.55);transform:translateY(-1px);}
     .pf-back{display:flex;align-items:center;justify-content:center;gap:0.4rem;padding:0.8rem;background:transparent;color:#B3B3B3;border:1px solid rgba(255,255,255,0.1);border-radius:8px;font-size:0.85rem;text-decoration:none;transition:all 0.18s;}
     .pf-back:hover{border-color:rgba(255,255,255,0.25);color:#fff;}
@@ -109,7 +109,7 @@
           <span id="payTxt">Pay &#8377;<%= booking.totalAmount.toLocaleString('en-IN') %></span>
           <div class="spin" id="spin"></div>
         </button>
-        <a href="/booking/my-bookings" class="btn-back">
+        <a href="/user/profile/#myBookings" class="btn-back">
           <i class="bi bi-ticket-perforated"></i> View My Bookings
         </a>
       </div>
@@ -117,62 +117,85 @@
   </div>
 
   <%- include('../partials/scripts') %>
-  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-  <script>
-  var ORDER   = <%- JSON.stringify({id: order.id, amount: booking.totalAmount*100, currency:'INR'}) %>;
-  var RZP_KEY = '<%= rzpKey %>';
-  var USER    = <%- JSON.stringify({name:(user.firstName||'')+' '+(user.lastName||''), email:user.email||'', phone:user.phone||''}) %>;
+ <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+var BOOKING_ID = '<%= booking._id %>';
+var USER = <%- JSON.stringify({
+  name: (user.firstName||'') + ' ' + (user.lastName||''),
+  email: user.email || '',
+  phone: user.phone || ''
+}) %>;
 
-  function showToast(title, msg, type, ms) {
-    ms = ms || 4500;
-    var icons = { success:'bi-check-circle-fill', error:'bi-x-circle-fill', info:'bi-info-circle-fill' };
-    var el = document.createElement('div');
-    el.className = 'toast-msg ' + (type || 'info');
-    el.innerHTML = '<i class="bi ' + (icons[type] || 'bi-info-circle-fill') + ' toast-icon"></i>' +
-      '<div class="toast-body"><div class="toast-title">' + title + '</div>' +
-      (msg ? '<div class="toast-sub">' + msg + '</div>' : '') + '</div>';
-    document.getElementById('toast-container').appendChild(el);
-    setTimeout(function(){
-      el.style.animation = 'tOut 0.3s ease forwards';
-      setTimeout(function(){ el.remove(); }, 300);
-    }, ms);
-  }
+function showToast(title, msg, type, ms) {
+  ms = ms || 4500;
+  var icons = { success:'bi-check-circle-fill', error:'bi-x-circle-fill', info:'bi-info-circle-fill' };
+  var el = document.createElement('div');
+  el.className = 'toast-msg ' + (type || 'info');
+  el.innerHTML = '<i class="bi ' + (icons[type] || 'bi-info-circle-fill') + ' toast-icon"></i>' +
+    '<div class="toast-body"><div class="toast-title">' + title + '</div>' +
+    (msg ? '<div class="toast-sub">' + msg + '</div>' : '') + '</div>';
+  document.getElementById('toast-container').appendChild(el);
+  setTimeout(function(){
+    el.style.animation = 'tOut 0.3s ease forwards';
+    setTimeout(function(){ el.remove(); }, 300);
+  }, ms);
+}
 
-  function showFailed(errMsg) {
-    document.getElementById('pfErrMsg').textContent = errMsg || 'Please try again or use a different payment method.';
-    document.getElementById('payFailedOverlay').classList.add('show');
-    resetBtn();
-  }
+function showFailed(errMsg) {
+  document.getElementById('pfErrMsg').textContent = errMsg || 'Please try again or use a different payment method.';
+  document.getElementById('payFailedOverlay').classList.add('show');
+  resetBtn();
+}
 
-  document.getElementById('pfRetryBtn').onclick = function() {
-    document.getElementById('payFailedOverlay').classList.remove('show');
-    setTimeout(doPay, 250);
-  };
+document.getElementById('pfRetryBtn').onclick = function() {
+  document.getElementById('payFailedOverlay').classList.remove('show');
+  setTimeout(doPay, 250);
+};
 
-  function setLoading(on) {
-    document.getElementById('payBtn').disabled = on;
-    document.getElementById('payTxt').style.display = on ? 'none' : 'flex';
-    document.getElementById('spin').style.display   = on ? 'block' : 'none';
-  }
+function setLoading(on) {
+  document.getElementById('payBtn').disabled = on;
+  document.getElementById('payTxt').style.display = on ? 'none' : 'flex';
+  document.getElementById('spin').style.display   = on ? 'block' : 'none';
+}
 
-  function resetBtn() {
-    document.getElementById('payBtn').disabled = false;
-    document.getElementById('payTxt').style.display = 'flex';
-    document.getElementById('spin').style.display = 'none';
-  }
+function resetBtn() {
+  document.getElementById('payBtn').disabled = false;
+  document.getElementById('payTxt').style.display = 'flex';
+  document.getElementById('spin').style.display = 'none';
+}
 
-  function doPay() {
-    setLoading(true);
+function doPay() {
+  setLoading(true);
+
+  // Step 1: reserve seats + create Razorpay order on the server
+  fetch('/booking/retry-payment-api/' + BOOKING_ID, {
+    method: 'POST',
+    credentials: 'include'
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (!data.success) {
+      showToast('Could not start payment', data.message || 'Please try again.', 'error');
+      resetBtn();
+      return;
+    }
+
+    // Step 2: open Razorpay with the fresh order
     var rzp = new Razorpay({
-      key:         RZP_KEY,
-      amount:      ORDER.amount,
-      currency:    ORDER.currency,
+      key:         data.key,
+      amount:      data.amount,
+      currency:    data.currency,
       name:        'Melattur Entertainment Events',
-      description: 'Complete pending booking',
-      order_id:    ORDER.id,
-      prefill:     USER,
-      theme:       { color: '#6A0DAD', backdrop_color: '#0B0B0F' },
-      modal:       { ondismiss: function(){ resetBtn(); } },
+      description: data.description,
+      order_id:    data.orderId,
+      prefill:     data.prefill || USER,
+      theme:       { color: '#9500ff', backdrop_color: '#0B0B0F' },
+      modal: {
+        ondismiss: function() {
+          fetch('/booking/save-failed', { method: 'POST', credentials: 'include' }).catch(function(){});
+          resetBtn();
+        }
+      },
       handler: function(response) {
         showToast('Verifying payment', 'Please wait a moment...', 'info', 9000);
         fetch('/booking/verify-payment', {
@@ -185,16 +208,16 @@
             razorpay_signature:  response.razorpay_signature
           })
         })
-        .then(function(r){ return r.json(); })
-        .then(function(vdata){
-          if(vdata.success){
+        .then(function(r) { return r.json(); })
+        .then(function(vdata) {
+          if (vdata.success) {
             window.location.href = '/booking/success/' + vdata.bookingId;
           } else {
             showToast('Confirmation failed', 'Payment ID: ' + response.razorpay_payment_id + '. Please contact support.', 'error', 12000);
             resetBtn();
           }
         })
-        .catch(function(){
+        .catch(function() {
           showToast('Network error', 'Could not verify. Contact support with payment ID: ' + response.razorpay_payment_id, 'error', 12000);
           resetBtn();
         });
@@ -202,12 +225,18 @@
     });
 
     rzp.on('payment.failed', function(r) {
+      fetch('/booking/save-failed', { method: 'POST', credentials: 'include' }).catch(function(){});
       var errMsg = r.error && r.error.description ? r.error.description : 'Payment could not be processed.';
       showFailed(errMsg);
     });
 
     rzp.open();
-  }
-  </script>
+  })
+  .catch(function() {
+    showToast('Network error', 'Could not reach server. Please try again.', 'error');
+    resetBtn();
+  });
+}
+</script>
 </body>
 </html>

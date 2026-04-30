@@ -280,10 +280,13 @@ router.post('/api/sell', staffAuth, async (req, res) => {
         if (sec) {
           const za = sec.totalSeats - sec.bookedSeats;
           if (za < qty) {
-            await Event.updateOne(
-              { _id: event._id, 'ticketTypes._id': ttype._id, 'ticketTypes.bookedSeats': { $gte: qty } },
-              { $inc: { 'ticketTypes.$.bookedSeats': -qty } }
-            ).catch(() => { });
+
+            await Event.findOneAndUpdate(
+              { _id: event._id },
+              { $inc: { 'ticketTypes.$[tt].bookedSeats': -qty } },
+              { arrayFilters: [{ 'tt._id': ttype._id }] }
+            ).catch(() => {});
+
             return res.json({ success: false, message: `Only ${Math.max(0, za)} seats in zone "${zone}".` });
           }
         }
@@ -365,6 +368,7 @@ router.post('/api/sell', staffAuth, async (req, res) => {
       tickets,
       soldBy: u.username,
       gateNumber,
+      zone: zone || '',
     });
 
     // Generate shared QR
@@ -381,12 +385,14 @@ router.post('/api/sell', staffAuth, async (req, res) => {
       console.error('Shared QR gen error (cash sale):', qrErr.message);
     }
 
+
     if (zone) {
-      SeatMap.updateOne(
-        { event: event._id, 'sections.name': zone },
-        { $inc: { 'sections.$.bookedSeats': qty } }
-      ).catch(() => { });
-    }
+  await SeatMap.updateOne(
+    { event: event._id, 'sections.name': zone },
+    { $inc: { 'sections.$.bookedSeats': qty } }
+  ).catch(() => {});
+}
+
 
     const phone = buyerPhone ? String(buyerPhone).replace(/\D/g, '') : '';
     const email = buyerEmail || '';

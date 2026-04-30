@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Confirming Payment — MEE</title>
+  <%- include('../partials/head') %>
+  <style>
+    body { display:flex; align-items:center; justify-content:center; min-height:100vh; }
+    .pp-wrap {
+      text-align:center; padding:3rem 2rem; max-width:480px; width:100%;
+    }
+    .pp-spinner {
+      width:64px; height:64px; border:4px solid rgba(106,13,173,0.2);
+      border-top-color:#9500ff; border-radius:50%;
+      animation:spin 1s linear infinite; margin:0 auto 2rem;
+    }
+    @keyframes spin { to { transform:rotate(360deg) } }
+    .pp-title {
+      font-family:var(--font-display); font-size:1.4rem;
+      letter-spacing:2px; color:#fff; margin-bottom:0.75rem;
+    }
+    .pp-sub {
+      font-size:0.85rem; color:#B3B3B3; line-height:1.7; margin-bottom:1.5rem;
+    }
+    .pp-ref {
+      font-family:var(--font-mono); font-size:0.72rem;
+      background:rgba(106,13,173,0.1); border:1px solid rgba(106,13,173,0.25);
+      color:#bf80ff; padding:0.4rem 1rem; border-radius:20px;
+      display:inline-block; margin-bottom:2rem;
+    }
+    .pp-note {
+      font-size:0.72rem; color:#555;
+    }
+    .pp-link {
+      color:var(--accent); text-decoration:none; border-bottom:1px solid rgba(106,13,173,0.3);
+    }
+  </style>
+</head>
+<body>
+  <%- include('../partials/nav') %>
+
+  <div class="pp-wrap">
+    <div class="pp-spinner"></div>
+    <div class="pp-title">CONFIRMING YOUR TICKET</div>
+    <p class="pp-sub">
+      Your payment was received successfully.<br/>
+      We're generating your ticket now — this usually takes a few seconds.
+    </p>
+    <div class="pp-ref">Ref: <%= booking.bookingRef %></div>
+    <p class="pp-note">
+      This page refreshes automatically. If it takes too long,
+      check <a class="pp-link" href="/booking/my-bookings">My Bookings</a>.
+    </p>
+  </div>
+
+  <%- include('../partials/scripts') %>
+  <script>
+    const BOOKING_ID = '<%= booking._id %>';
+    let attempts = 0;
+    const MAX_ATTEMPTS = 20; // 20 × 3s = 60s total wait
+
+    const interval = setInterval(async () => {
+      attempts++;
+      if(attempts > MAX_ATTEMPTS){
+        clearInterval(interval);
+        // Give up polling — send to my-bookings
+        window.location.href = '/booking/my-bookings';
+        return;
+      }
+      try {
+        const res  = await fetch('/booking/status/' + BOOKING_ID, { credentials: 'include' });
+        const data = await res.json();
+        if(data.status === 'paid'){
+          clearInterval(interval);
+          window.location.href = '/booking/success/' + BOOKING_ID;
+        }
+      } catch(e) { /* network hiccup — keep polling */ }
+    }, 3000);
+  </script>
+</body>
+</html>

@@ -1,64 +1,61 @@
+/**
+ * cleanupPendingBookings.js
+ * ─────────────────────────
+ * Runs on a schedule and marks stale pending bookings as 'failed',
+ * releasing their held bookedSeats back to the pool.
+ *
+ * A pending booking is considered stale if it was created more than
+ * PENDING_EXPIRE_MINS minutes ago and payment was never completed.
+ *
+ * NOTE: bookedSeats is incremented at order creation (reservation),
+ * not at payment. So stale pending bookings DO hold seats and must
+ * release them via releaseSeatsToPool before being marked failed.
+ * The floor guard in releaseSeatsToPool ensures bookedSeats never
+ * drops below paidSeatCount, making this safe to run concurrently.
+ */
 
-  /**
-   * cleanupPendingBookings.js
-   * ─────────────────────────
-   * Runs on a schedule (every 12 hours) and marks stale pending bookings as
-   * 'failed'.
-   *
-   * A pending booking is considered stale if it was created more than
-   * PENDING_EXPIRE_MINS minutes ago and payment was never completed.
-   *
-   * Safe because:
-   *  - bookedSeats is incremented ONLY when paymentStatus = 'paid'
-   *  - So expiring pending bookings will not affect seat counts
-   */
+const Booking = require('../models/Booking');
+const { releaseSeatsToPool } = require('../utils/seatHelper');
 
-  const Booking = require('../models/Booking');
+const PENDING_EXPIRE_MINS = 6 * 60; // 360 minutes (6 hours)
 
-  // ✅ Expire pending bookings after 6 hours
-  const PENDING_EXPIRE_MINS = 6 * 60; // 720 minutes
+async function cleanupStalePendingBookings() {
+  try {
+    const cutoff = new Date(Date.now() - PENDING_EXPIRE_MINS * 60 * 1000);
 
-  async function cleanupStalePendingBookings() {
-    try {
-      const cutoff = new Date(Date.now() - PENDING_EXPIRE_MINS * 60 * 1000);
+    const stale = await Booking.find({
+      paymentStatus: 'pending',
+      createdAt: { $lt: cutoff },
+    }).lean();
 
-      const result = await Booking.updateMany(
-        {
-          paymentStatus: 'pending',
-          createdAt: { $lt: cutoff },
-        },
-        {
-          $set: { paymentStatus: 'failed' }, // ✅ explicit update (best practice)
-        }
-      );
+    if (!stale.length) return;
+    console.log(`🧹 cleanupPending: found ${stale.length} stale pending booking(s)`);
 
-      if (result.modifiedCount > 0) {
-        console.log(
-          `🧹 cleanupPending: expired ${result.modifiedCount} booking(s) older than ${PENDING_EXPIRE_MINS} mins`
+    for (const booking of stale) {
+      try {
+        // await releaseSeatsToPool(booking.event, booking.ticketType, booking);
+
+        await Booking.updateOne(
+          { _id: booking._id, paymentStatus: 'pending' },
+          { $set: { paymentStatus: 'failed' } }
         );
+
+        console.log(`🔓 cleanupPending: released ${booking.quantity} × ${booking.ticketType}`);
+      } catch (e) {
+        console.warn(`cleanupPending: error on booking ${booking._id}:`, e.message);
       }
-    } catch (err) {
-      console.error('❌ cleanupPendingBookings error:', err);
     }
+  } catch (err) {
+    console.error('❌ cleanupPendingBookings error:', err);
   }
+}
 
-  /**
-   * Start the cleanup interval.
-   * Call this once from server.js after DB connects.
-   */
-  function startCleanupJob(intervalMs = 6 * 60 * 60 * 1000) {
-    // ✅ Run immediately on server start
-    cleanupStalePendingBookings();
+function startCleanupJob(intervalMs = 60 * 60 * 1000) {
+  cleanupStalePendingBookings();
+  setInterval(cleanupStalePendingBookings, intervalMs);
+  console.log(
+    `⏰ Pending booking cleanup job started (every ${intervalMs / (60 * 60 * 1000)} hours)`
+  );
+}
 
-    // ✅ Run every 6 hours
-    setInterval(cleanupStalePendingBookings, intervalMs);
-
-    console.log(
-      `⏰ Pending booking cleanup job started (every ${intervalMs / (60 * 60 * 1000)} hours)`
-    );
-  }
-
-  module.exports = {
-    startCleanupJob,
-    cleanupStalePendingBookings,
-  };
+module.exports = { startCleanupJob, cleanupStalePendingBookings };

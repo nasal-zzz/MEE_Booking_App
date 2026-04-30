@@ -198,7 +198,7 @@ const getTransporter = () => {
             </div>
             <p style="color:#aaa;font-size:13px;">If money was deducted, it will be automatically refunded within 5–7 business days.</p>
             <a href="${process.env.APP_URL || 'https://yourapp.com'}/booking/my-bookings"
-              style="display:inline-block;background:#6A0DAD;color:#fff;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:700;letter-spacing:1px;margin-top:12px;">
+              style="display:inline-block;background:#9500ff;color:#fff;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:700;letter-spacing:1px;margin-top:12px;">
               🔄 Try Again
             </a>
             <p style="margin-top:20px;font-size:12px;color:#555;">Need help? Contact us at meemelattur@gmail.com or +91 99958 43003</p>

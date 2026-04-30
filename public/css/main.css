@@ -11,7 +11,7 @@
 /* ── CSS VARIABLES ── */
 :root {
   --bg: #0B0B0F; --surface: #14141C; --card: #14141C; --card2: #1a1a24;
-  --border: rgba(255,255,255,0.08); --accent: #6A0DAD;
+  --border: rgba(255,255,255,0.08); --accent: #9500ff;
   --accent-dim: rgba(106,13,173,0.15); --text: #FFFFFF;
   --muted: #B3B3B3; --error: #FF4444; --success: #00FF88;
   --font-display: 'Poppins', sans-serif;
@@ -162,7 +162,7 @@ body::before { content:''; position:fixed; inset:0; background-image:linear-grad
 .ticket-header::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse 80% 80% at 50% 120%,rgba(106,13,173,0.25) 0%,transparent 60%); }
 .ticket-brand { font-family:var(--font-display); font-size:0.9rem; letter-spacing:4px; color:rgba(255,255,255,0.5); margin-bottom:0.5rem; position:relative; }
 .ticket-event-name { font-family:var(--font-display); font-size:2rem; letter-spacing:3px; color:#fff; line-height:1; position:relative; text-shadow:0 0 30px rgba(106,13,173,0.5); }
-.ticket-type-badge { position:absolute; top:1rem; right:1rem; background:rgba(106,13,173,0.15); border:1px solid rgba(106,13,173,0.5); color:#6A0DAD; font-family:var(--font-mono); font-size:0.6rem; letter-spacing:2px; padding:0.25rem 0.7rem; border-radius:2px; }
+.ticket-type-badge { position:absolute; top:1rem; right:1rem; background:rgba(106,13,173,0.15); border:1px solid rgba(106,13,173,0.5); color:#9500ff; font-family:var(--font-mono); font-size:0.6rem; letter-spacing:2px; padding:0.25rem 0.7rem; border-radius:2px; }
 .tear-line { display:flex; align-items:center; background:#f0f0f0; position:relative; height:1px; }
 .tear-line::before,.tear-line::after { content:''; position:absolute; width:24px; height:24px; border-radius:50%; background:var(--bg); top:50%; transform:translateY(-50%); z-index:2; }
 .tear-line::before { left:-12px; } .tear-line::after { right:-12px; }
@@ -182,7 +182,7 @@ body::before { content:''; position:fixed; inset:0; background-image:linear-grad
 .ticket-footer-note { font-family:var(--font-mono); font-size:0.6rem; letter-spacing:1px; color:#999; }
 .ticket-footer-price { font-family:var(--font-display); font-size:1.2rem; color:#111; letter-spacing:1px; }
 .btn-dl-ticket { display:flex; align-items:center; gap:0.5rem; width:100%; padding:0.7rem 1.5rem; background:#111; color:#fff; border:none; cursor:pointer; font-family:var(--font-body); font-weight:600; font-size:0.82rem; justify-content:center; transition:background 0.2s; }
-.btn-dl-ticket:hover { background:#1a1a00; color:#6A0DAD; }
+.btn-dl-ticket:hover { background:#1a1a00; color:#9500ff; }
 .whats-next { max-width:1100px; margin:0 auto 3rem; padding:0 1.5rem; position:relative; z-index:1; }
 .next-title { font-family:var(--font-display); font-size:1.5rem; letter-spacing:2px; color:#fff; margin-bottom:1.2rem; }
 .next-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:1rem; }

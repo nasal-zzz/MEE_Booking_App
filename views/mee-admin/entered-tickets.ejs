@@ -6,7 +6,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins&family=Outfit:wght@400;500;600;700&family=Space+Mono&display=swap" rel="stylesheet"/>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet"/>
   <style>
-    :root{--bg:#0B0B0F;--surface:#14141C;--border:rgba(255,255,255,0.08);--accent:#6A0DAD;--text:#fff;--muted:#B3B3B3;--success:#00FF88;--error:#FF4444;}
+    :root{--bg:#0B0B0F;--surface:#14141C;--border:rgba(255,255,255,0.08);--accent:#9500ff;--text:#fff;--muted:#B3B3B3;--success:#00FF88;--error:#FF4444;}
     *{box-sizing:border-box;margin:0;padding:0;}
     body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;min-height:100vh;}
     .layout{display:grid;grid-template-columns:220px 1fr;min-height:100vh;}
@@ -88,13 +88,13 @@
     .ex-fld{display:flex;align-items:center;gap:0.42rem;padding:0.4rem 0.62rem;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:5px;cursor:pointer;transition:all 0.15s;user-select:none;}
     .ex-fld:hover{border-color:rgba(106,13,173,0.3);background:rgba(106,13,173,0.05);}
     .ex-fld.on{border-color:rgba(106,13,173,0.4);background:rgba(106,13,173,0.1);}
-    .ex-fld input[type=checkbox]{accent-color:#6A0DAD;width:13px;height:13px;cursor:pointer;flex-shrink:0;}
+    .ex-fld input[type=checkbox]{accent-color:#9500ff;width:13px;height:13px;cursor:pointer;flex-shrink:0;}
     .ex-fld span{font-size:0.75rem;color:#ccc;}
     .ex-op{display:flex;gap:0.45rem;flex-wrap:wrap;}
     .ex-opl{display:inline-flex;align-items:center;gap:0.3rem;padding:0.35rem 0.78rem;border-radius:20px;font-size:0.68rem;font-weight:700;cursor:pointer;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:#B3B3B3;font-family:'Space Mono',monospace;transition:all 0.15s;}
     .ex-opl.active{border-color:rgba(106,13,173,0.45);background:rgba(106,13,173,0.12);color:#bf80ff;}
     .ex-sl{display:flex;gap:0.45rem;margin-bottom:0.5rem;}
-    .ex-lnk{background:none;border:none;color:#6A0DAD;font-size:0.68rem;font-family:'Space Mono',monospace;cursor:pointer;text-decoration:underline;padding:0;}
+    .ex-lnk{background:none;border:none;color:#9500ff;font-size:0.68rem;font-family:'Space Mono',monospace;cursor:pointer;text-decoration:underline;padding:0;}
     .ex-ft{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;margin-top:1rem;}
     .ex-cnt{font-size:0.68rem;color:#555;font-family:'Space Mono',monospace;}
     .ex-dl{display:inline-flex;align-items:center;gap:0.4rem;padding:0.52rem 1.25rem;background:rgba(0,255,136,0.09);border:1px solid rgba(0,255,136,0.35);border-radius:7px;color:#00FF88;font-family:'Space Mono',monospace;font-size:0.74rem;font-weight:700;cursor:pointer;transition:all 0.2s;}
@@ -342,50 +342,48 @@ function toggleAuto(){
   }
 }
 
-// Auto-refresh
-var arInterval = null;
-var arOn = true;
-var AR_SECONDS = 30;
+// ── Single unified auto-refresh ──────────────────────────────────────────────
+var arInterval  = null;
+var arOn        = true;
+var AR_SECONDS  = 30;
 
-function setLastRefreshed(){
+function setLastRefreshed() {
   var el = document.getElementById('lastRefreshed');
-  if(el) el.textContent = 'Last refreshed: ' + new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  if (el) el.textContent = 'Last refreshed: ' +
+    new Date().toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
 }
 
-function manualRefresh(){
-  setLastRefreshed();
+function manualRefresh() {
   location.reload();
 }
 
-function toggleAutoRefresh(){
+function startAR() {
+  clearInterval(arInterval);
+  arInterval = setInterval(function () { location.reload(); }, AR_SECONDS * 1000);
+}
+
+function toggleAutoRefresh() {
   arOn = !arOn;
   var btn = document.getElementById('arBtn');
   var lbl = document.getElementById('autoRefreshLbl');
-  if(arOn){
-    btn.textContent = '⏸ Pause';
-    btn.style.color = '#00FF88';
+  if (arOn) {
+    btn.textContent       = '⏸ Pause';
+    btn.style.color       = '#00FF88';
     btn.style.borderColor = 'rgba(0,255,136,0.25)';
     btn.style.background  = 'rgba(0,255,136,0.08)';
-    if(lbl) lbl.textContent = 'AUTO-REFRESH: ON';
+    if (lbl) lbl.textContent = 'AUTO-REFRESH: ON';
     startAR();
   } else {
-    btn.textContent = '▶ Resume';
-    btn.style.color = '#f5c842';
+    clearInterval(arInterval);
+    btn.textContent       = '▶ Resume';
+    btn.style.color       = '#f5c842';
     btn.style.borderColor = 'rgba(245,200,66,0.25)';
     btn.style.background  = 'rgba(245,200,66,0.06)';
-    if(lbl) lbl.textContent = 'AUTO-REFRESH: OFF';
-    clearInterval(arInterval);
+    if (lbl) lbl.textContent = 'AUTO-REFRESH: OFF';
   }
 }
 
-function startAR(){
-  clearInterval(arInterval);
-  arInterval = setInterval(function(){
-    setLastRefreshed();
-    location.reload();
-  }, AR_SECONDS * 1000);
-}
-
+// Remove the old toggleAuto() button from the HTML — only keep arBtn / toggleAutoRefresh()
 setLastRefreshed();
 startAR();
 </script>

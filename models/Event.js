@@ -11,7 +11,7 @@
   const ticketTypeSchema = new mongoose.Schema({
     category:    { type: String, required: true },
     name:        { type: String, default: '' },
-    color:       { type: String, default: '#6A0DAD' },
+    color:       { type: String, default: '#9500ff' },
     price:       { type: Number, required: true },
     ageLimit:    { type: Number, default: 0 },
     ticketType:  { type: String, enum: ['single', 'multiple'], default: 'single' },
@@ -19,12 +19,12 @@
     comboCount:  { type: Number, default: 1 },
     comboOfferMinQty:   { type: Number, default: 0 },
     comboOfferDiscount: { type: Number, default: 0 },
-    totalSeats:  { type: Number, required: true },
-    bookedSeats: { type: Number, default: 0 },
+    totalSeats:  { type: Number, required: true, min: 1  },
+    bookedSeats: { type: Number, default: 0, min: 0 },
     releasedSeats: { type: [Number], default: [] },
 
     
-    paidSeatCount: { type: Number, default: 0 },
+    paidSeatCount: { type: Number, default: 0, min: 0 }, // Tracks how many seats have been paid for (vs just booked)
 
     maxPerOrder: { type: Number, default: 10 },
     seatType:    { type: String, enum: ['standing','sitting'], default: 'standing' },

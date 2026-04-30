@@ -50,7 +50,7 @@
         from { opacity:0; transform: scale(.95) translateY(12px); }
         to   { opacity:1; transform: scale(1)  translateY(0);     }
       }
-      #_eotpBar { height:3px; background:linear-gradient(90deg,transparent,#6A0DAD,transparent); }
+      #_eotpBar { height:3px; background:linear-gradient(90deg,transparent,#9500ff,transparent); }
       #_eotpInner { padding: 2rem; }
       #_eotpTitle {
         font-family: 'Poppins', sans-serif;
@@ -87,7 +87,7 @@
         caret-color: transparent;
       }
       ._eotpDigit:focus {
-        border-color: #6A0DAD;
+        border-color: #9500ff;
         box-shadow: 0 0 0 3px rgba(106,13,173,.18);
       }
       ._eotpDigit.filled { border-color: rgba(106,13,173,.55); }
@@ -113,7 +113,7 @@
       #_eotpVerifyBtn {
         width: 100%;
         padding: .9rem;
-        background: #6A0DAD;
+        background: #9500ff;
         color: #fff;
         font-family: 'Outfit', sans-serif;
         font-weight: 700;
@@ -152,7 +152,7 @@
       #_eotpResendBtn {
         background: none;
         border: none;
-        color: #6A0DAD;
+        color: #9500ff;
         font-size: .76rem;
         cursor: pointer;
         font-weight: 600;

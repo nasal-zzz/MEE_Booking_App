@@ -17,7 +17,7 @@ function parseEventBody(b) {
   const ticketTypes = rawTiers.map(t => ({
     category:    String(t.category || '').toLowerCase().replace(/\s+/g,'_'),
     name:        String(t.name     || t.category || ''),
-    color:       t.color           || '#6A0DAD',
+    color:       t.color           || '#9500ff',
     price:       parseInt(t.price)        || 0,
     ageLimit:    parseInt(t.ageLimit)     || 0,
     ticketType:  t.ticketType             || 'single',
@@ -395,7 +395,7 @@ exports.getEventQuota = async (req, res) => {
         category:   t.category,
         name:       t.name || t.category,
         totalSeats: t.totalSeats || 0,
-        color:      t.color || '#6A0DAD',
+        color:      t.color || '#9500ff',
         price:      t.price || 0,
       })),
     });

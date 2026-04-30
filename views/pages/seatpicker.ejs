@@ -1,248 +1,691 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Step 1 — Choose Zone · <%= event.name %></title>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&family=Space+Mono&display=swap" rel="stylesheet"/>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet"/>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <title>Select Zone · <%= event.name %>
+  </title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&family=Space+Mono:wght@400;700&display=swap"
+    rel="stylesheet" />
   <style>
-    *{box-sizing:border-box;margin:0;padding:0;}
-    :root{--accent:#6A0DAD;--accent2:#9D4EDD;--bg:#0B0B0F;--surface:#14141C;--border:rgba(255,255,255,0.08);--text:#fff;--muted:#B3B3B3;}
-    body{background:var(--bg);color:var(--text);font-family:'Poppins',sans-serif;min-height:100vh;display:flex;flex-direction:column;}
-
-    .step-bar{background:#0e0e18;border-bottom:1px solid var(--border);padding:0 0.75rem;height:44px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;gap:0.5rem;}
-    .step-back{display:flex;align-items:center;gap:0.4rem;color:var(--muted);text-decoration:none;font-size:0.78rem;transition:color 0.2s;white-space:nowrap;}
-    .step-back:hover{color:#fff;}
-    .steps{display:flex;align-items:center;gap:0;flex:1;justify-content:center;}
-    .step-item{display:flex;align-items:center;gap:0.4rem;font-size:0.68rem;color:#444;white-space:nowrap;}
-    .step-item.active{color:var(--accent2);}
-    .step-item.done{color:#555;}
-    .step-num{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.58rem;font-weight:700;border:1.5px solid #333;background:#0e0e18;flex-shrink:0;}
-    .step-item.active .step-num{border-color:var(--accent2);background:rgba(157,78,221,0.15);color:var(--accent2);}
-    .step-item.done .step-num{border-color:#555;background:#555;color:#0e0e18;}
-    .step-line{width:24px;height:1px;background:#333;margin:0 0.25rem;flex-shrink:0;}
-    .event-lbl{font-family:'Space Mono',monospace;font-size:0.6rem;color:#444;letter-spacing:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px;}
-
-    .layout{display:flex;flex:1;overflow:hidden;height:calc(100vh - 44px);}
-
-    .map-area{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--bg);min-width:0;}
-    .map-tabs{display:flex;border-bottom:1px solid var(--border);background:#0e0e18;flex-shrink:0;}
-    .map-tab{padding:0.5rem 1rem;font-size:0.7rem;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;color:#555;transition:all 0.2s;display:flex;align-items:center;gap:0.3rem;}
-    .map-tab.active{color:var(--accent2);border-bottom-color:var(--accent);}
-    .map-legend{padding:0.5rem 1.2rem;background:#0e0e18;border-bottom:1px solid rgba(255,255,255,0.04);display:flex;align-items:center;gap:0.7rem;flex-wrap:wrap;flex-shrink:0;}
-    .leg-lbl{font-family:'Space Mono',monospace;font-size:0.5rem;letter-spacing:2px;color:#333;}
-    .leg-item{display:flex;align-items:center;gap:0.32rem;font-size:0.68rem;cursor:pointer;padding:0.22rem 0.5rem;border-radius:20px;border:1px solid transparent;transition:all 0.18s;}
-    .leg-item:hover,.leg-item.active{border-color:var(--zc);background:rgba(255,255,255,0.03);}
-    .leg-dot{width:9px;height:9px;border-radius:2px;border:1.5px solid var(--zc);transition:background 0.18s;}
-    .leg-item.active .leg-dot{background:var(--zc);}
-    .map-scroll{flex:1;overflow:auto;padding:1rem;display:flex;align-items:flex-start;justify-content:center;}
-    canvas{cursor:pointer;background:#0d0d16;border-radius:12px;border:1px solid rgba(255,255,255,0.05);display:block;max-width:100%;}
-    .preview-wrap{display:none;flex:1;overflow:auto;padding:1rem;align-items:flex-start;justify-content:center;}
-    .preview-wrap.show{display:flex;}
-    .preview-wrap img{max-width:100%;border-radius:12px;border:1px solid var(--border);}
-
-    .sidebar{width:295px;background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden;}
-    .sb-head{padding:1rem 1.2rem 0.8rem;border-bottom:1px solid var(--border);}
-    .sb-title{font-family:'Poppins',sans-serif;font-size:0.85rem;font-weight:800;letter-spacing:2px;color:#fff;margin-bottom:0.12rem;}
-    .sb-sub{font-size:0.65rem;color:#555;}
-    .zone-list{flex:1;overflow-y:auto;padding:0.65rem;}
-
-    .zc{background:var(--bg);border:1.5px solid rgba(255,255,255,0.05);border-radius:10px;padding:0.7rem 0.85rem;margin-bottom:0.45rem;cursor:pointer;transition:border-color 0.18s,transform 0.1s;display:flex;align-items:center;gap:0.7rem;position:relative;overflow:hidden;}
-    .zc::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--zc);border-radius:2px 0 0 2px;}
-    .zc:hover:not(.so){border-color:rgba(255,255,255,0.12);transform:translateX(2px);}
-    .zc.sel{border-color:var(--zc);background:rgba(255,255,255,0.02);}
-    .zc.lit:not(.sel){border-color:var(--zc);box-shadow:0 0 0 1px var(--zc) inset;}
-    .zc.so{opacity:0.38;pointer-events:none;}
-    .zc-ico{width:36px;height:36px;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
-    .zc-ico svg{width:32px;height:32px;}
-    .zc-info{flex:1;min-width:0;}
-    .zc-name{font-family:'Poppins',sans-serif;font-weight:700;font-size:0.8rem;color:#fff;margin-bottom:0.06rem;}
-    .zc-cat{font-size:0.62rem;font-weight:700;letter-spacing:0.5px;margin-bottom:0.06rem;}
-    .zc-price{font-family:'Space Mono',monospace;font-size:0.65rem;color:var(--muted);}
-    .zc-avail{font-size:0.62rem;margin-top:0.18rem;display:flex;align-items:center;gap:0.28rem;font-weight:600;}
-    .zc-avail.ok{color:#555;}
-    .zc-avail.warn{color:#f5c842;}
-    .zc-avail.crit{color:#FF4444;}
-    .zc-avail-bar{height:3px;border-radius:2px;margin-top:0.28rem;background:rgba(255,255,255,0.05);overflow:hidden;}
-    .zc-avail-bar-fill{height:100%;border-radius:2px;transition:width 0.3s;}
-    .zc-ck{position:absolute;top:0.42rem;right:0.65rem;font-size:0.7rem;font-weight:800;display:none;}
-    .zc.sel .zc-ck{display:block;}
-
-    .cv-tip{position:absolute;background:rgba(8,8,16,0.96);backdrop-filter:blur(8px);border:1.5px solid var(--tip-c,#6A0DAD);border-radius:9px;padding:0.55rem 0.75rem;pointer-events:none;white-space:nowrap;display:none;z-index:20;box-shadow:0 4px 20px rgba(0,0,0,0.5),0 0 12px var(--tip-glow,rgba(106,13,173,0.2));min-width:140px;}
-    .tip-zone{font-family:'Poppins',sans-serif;font-weight:800;font-size:0.75rem;color:#fff;margin-bottom:0.22rem;letter-spacing:0.5px;}
-    .tip-cat{font-family:'Space Mono',monospace;font-size:0.52rem;letter-spacing:1.5px;color:var(--tip-c,#9D4EDD);margin-bottom:0.3rem;}
-    .tip-row{display:flex;align-items:center;justify-content:space-between;gap:0.8rem;}
-    .tip-price{font-family:'Space Mono',monospace;font-size:0.68rem;color:#fff;font-weight:700;}
-    .tip-avail{font-family:'Space Mono',monospace;font-size:0.62rem;font-weight:700;padding:0.12rem 0.45rem;border-radius:4px;display:flex;align-items:center;gap:0.25rem;}
-    .tip-avail.ok{background:rgba(0,255,136,0.1);color:#00FF88;border:1px solid rgba(0,255,136,0.25);}
-    .tip-avail.warn{background:rgba(245,200,66,0.1);color:#f5c842;border:1px solid rgba(245,200,66,0.3);}
-    .tip-avail.crit{background:rgba(255,68,68,0.12);color:#FF4444;border:1px solid rgba(255,68,68,0.3);}
-    .tip-avail.sold{background:rgba(255,68,68,0.15);color:#FF4444;border:1px solid rgba(255,68,68,0.4);font-size:0.6rem;letter-spacing:1px;}
-    .tip-bar{height:3px;background:rgba(255,255,255,0.07);border-radius:2px;margin-top:0.38rem;overflow:hidden;}
-    .tip-bar-fill{height:100%;border-radius:2px;transition:width 0.2s;}
-
-    .sb-footer{padding:0.75rem 1.2rem;border-top:1px solid rgba(255,255,255,0.05);}
-    .sf-row{display:flex;justify-content:space-between;font-size:0.72rem;color:var(--muted);margin-bottom:0.22rem;align-items:center;}
-    .sf-row span:last-child{font-weight:600;color:#fff;}
-    .sf-total{display:flex;justify-content:space-between;padding-top:0.42rem;border-top:1px solid rgba(255,255,255,0.05);margin-bottom:0.8rem;align-items:center;}
-    .sf-tlbl{font-size:0.72rem;color:var(--muted);}
-    .sf-tval{font-family:'Poppins',sans-serif;font-weight:800;font-size:1.18rem;color:var(--accent2);}
-    .btn-next{width:100%;padding:0.78rem;background:var(--accent);color:#fff;border:none;border-radius:9px;font-family:'Poppins',sans-serif;font-weight:700;font-size:0.86rem;cursor:pointer;transition:box-shadow 0.2s,transform 0.12s;display:flex;align-items:center;justify-content:center;gap:0.4rem;box-shadow:0 0 20px rgba(106,13,173,0.18);}
-    .btn-next:hover:not(:disabled){box-shadow:0 0 40px rgba(106,13,173,0.48);transform:translateY(-1px);}
-    .btn-next:disabled{opacity:0.32;cursor:not-allowed;box-shadow:none;transform:none;}
-    .trust-row{display:flex;justify-content:center;gap:0.9rem;margin-top:0.45rem;}
-    .trust-item{display:flex;align-items:center;gap:0.22rem;font-size:0.57rem;color:#333;}
-    .trust-item i{color:#00FF88;font-size:0.6rem;}
-
-    .leg-avail{font-size:0.58rem;font-family:'Space Mono',monospace;}
-    .leg-avail.warn{color:#f5c842;}
-    .leg-avail.crit{color:#FF4444;font-weight:700;}
-
-    @media(max-width:768px){
-      .layout{flex-direction:column;height:auto;}
-      .map-area{height:58vw;min-height:260px;}
-      .sidebar{width:100%;border-left:none;border-top:1px solid var(--border);}
-      .zone-list{max-height:280px;}
-      .event-lbl{display:none;}
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
     }
-    @media(max-width:480px){
-      .step-bar{padding:0 0.6rem;height:42px;}
-      .step-item{font-size:0.58rem;gap:0.22rem;}
-      .step-num{width:17px;height:17px;font-size:0.5rem;}
-      .step-line{width:14px;}
-      .step-back{font-size:0.68rem;}
-      .steps{gap:0;}
-      .map-legend{padding:0.38rem 0.75rem;gap:0.45rem;}
-      .leg-lbl{display:none;}
+
+    :root {
+      --accent: #7C3AED;
+      --accent2: #A78BFA;
+      --bg: #0B0B12;
+      --surface: #111118;
+      --surface2: #18181F;
+      --border: rgba(255, 255, 255, 0.07);
+      --text: #fff;
+      --muted: #6B7280;
+      --yellow: #F5C518;
+      --topbar: 88px;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Poppins', sans-serif;
+    }
+
+    /* ══ TOP BAR — taller, bigger title ══ */
+    .top-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 50;
+      height: var(--topbar);
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 1.25rem;
+      gap: 1rem;
+    }
+
+    .btn-back {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--accent);
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: box-shadow 0.15s, transform 0.15s;
+      box-shadow: 0 4px 16px rgba(124, 58, 237, .4);
+    }
+
+    .btn-back:hover {
+      box-shadow: 0 0 22px rgba(124, 58, 237, .65);
+      transform: scale(1.06);
+    }
+
+    .btn-back svg {
+      width: 22px;
+      height: 22px;
+      stroke: #fff;
+      fill: none;
+      stroke-width: 2.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .bar-title {
+      font-weight: 800;
+      font-size: 1.5rem;
+      letter-spacing: -.02em;
+    }
+
+    .bar-sub {
+      font-size: 0.92rem;
+      color: #9CA3AF;
+      margin-top: 3px;
+      font-weight: 500;
+      display: none;
+    }
+
+    /* ══ MAP AREA ══ */
+    .bar-sub-wrap {
+      position: fixed;
+      top: var(--topbar);
+      left: 0;
+      right: 0;
+      z-index: 49;
+      background: var(--bg);
+      padding: 0.55rem 1.25rem 0.55rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .bar-sub-wrap .bar-sub {
+      display: block;
+      font-size: 0.92rem;
+      color: #9CA3AF;
+      font-weight: 500;
+    }
+
+    .map-area {
+      position: fixed;
+      top: calc(var(--topbar) + 36px);
+      left: 0;
+      right: 0;
+      bottom: 0;
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg);
+      overflow: hidden;
+    }
+
+    #canvasWrap {
+      position: relative;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+
+    canvas {
+      display: block;
+      flex-shrink: 0;
+      cursor: pointer;
+      touch-action: pan-x pan-y;
+      background: #090910;
+    }
+
+    /* ══ TOOLTIP ══ */
+    .cv-tip {
+      position: fixed;
+      background: rgba(8, 8, 15, 0.97);
+      backdrop-filter: blur(10px);
+      border: 1.5px solid var(--tc, #7C3AED);
+      border-radius: 11px;
+      padding: 0.6rem 0.85rem;
+      pointer-events: none;
+      white-space: nowrap;
+      display: none;
+      z-index: 100;
+      box-shadow: 0 6px 28px rgba(0, 0, 0, 0.65);
+    }
+
+    .tip-zone {
+      font-weight: 800;
+      font-size: 0.82rem;
+      color: #fff;
+      margin-bottom: .14rem;
+    }
+
+    .tip-cat {
+      font-family: 'Space Mono', monospace;
+      font-size: .52rem;
+      letter-spacing: 1.5px;
+      color: var(--tc, #A78BFA);
+      margin-bottom: .28rem;
+    }
+
+    .tip-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: .9rem;
+    }
+
+    .tip-price {
+      font-family: 'Space Mono', monospace;
+      font-size: .7rem;
+      font-weight: 700;
+      color: var(--yellow);
+    }
+
+    .tip-avail {
+      font-family: 'Space Mono', monospace;
+      font-size: .58rem;
+      font-weight: 700;
+      padding: .1rem .4rem;
+      border-radius: 4px;
+    }
+
+    .ta-ok {
+      background: rgba(0, 255, 136, .10);
+      color: #00FF88;
+      border: 1px solid rgba(0, 255, 136, .20);
+    }
+
+    .ta-warn {
+      background: rgba(245, 200, 66, .10);
+      color: #f5c842;
+      border: 1px solid rgba(245, 200, 66, .25);
+    }
+
+    .ta-crit {
+      background: rgba(255, 68, 68, .12);
+      color: #FF4444;
+      border: 1px solid rgba(255, 68, 68, .30);
+    }
+
+    .ta-sold {
+      background: rgba(255, 68, 68, .15);
+      color: #FF4444;
+      border: 1px solid rgba(255, 68, 68, .35);
+      letter-spacing: 1px;
+    }
+
+    /* ══ MODAL — bottom sheet / right panel ══ */
+    .modal-bg {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(6px);
+      z-index: 200;
+      display: none;
+      align-items: flex-end;
+    }
+
+    .modal-bg.open {
+      display: flex;
+    }
+
+    .sheet {
+      width: 100%;
+      background: #111118;
+      border-radius: 24px 24px 0 0;
+      padding: 0 1.4rem 2.5rem;
+      transform: translateY(105%);
+      transition: transform .38s cubic-bezier(.32, .72, 0, 1);
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .modal-bg.open .sheet {
+      transform: translateY(0);
+    }
+
+    .drag-handle {
+      width: 40px;
+      height: 4px;
+      border-radius: 2px;
+      background: rgba(255, 255, 255, 0.12);
+      margin: .9rem auto 1.4rem;
+    }
+
+    .sh-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.6rem;
+    }
+
+    .sh-title {
+      font-weight: 800;
+      font-size: 1.05rem;
+    }
+
+    .sh-close {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, .06);
+      border: none;
+      color: var(--muted);
+      font-size: 1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background .15s;
+    }
+
+    .sh-close:hover {
+      background: rgba(255, 255, 255, .1);
+      color: #fff;
+    }
+
+    .zone-info-pill {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      background: rgba(255, 255, 255, .04);
+      border: 1px solid rgba(255, 255, 255, .08);
+      border-radius: 14px;
+      padding: 0.75rem 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .zip-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .zip-name {
+      font-size: 0.95rem;
+      font-weight: 800;
+      flex: 1;
+    }
+
+    .zip-price {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.82rem;
+      color: var(--yellow);
+      font-weight: 700;
+    }
+
+    .qty-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 2rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .qty-btn {
+      width: 48px;
+      height: 48px;
+      border-radius: 13px;
+      background: #1E1E2A;
+      border: 1.5px solid rgba(255, 255, 255, .10);
+      color: #fff;
+      font-size: 1.5rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: border-color .15s, background .15s, opacity .15s;
+      user-select: none;
+    }
+
+    .qty-btn:hover {
+      border-color: var(--accent2);
+      background: rgba(124, 58, 237, .12);
+    }
+
+    .qty-btn.plus {
+      border-color: var(--accent);
+      background: rgba(124, 58, 237, .18);
+      color: #A78BFA;
+    }
+
+    .qty-btn:disabled {
+      opacity: .3;
+      pointer-events: none;
+    }
+
+    .qty-num {
+      font-family: 'Poppins', sans-serif;
+      font-weight: 900;
+      font-size: 4rem;
+      color: #fff;
+      min-width: 60px;
+      text-align: center;
+      line-height: 1;
+    }
+
+    .offer-box {
+      background: rgba(245, 197, 24, .06);
+      border: 1px solid rgba(245, 197, 24, .22);
+      border-radius: 12px;
+      padding: .85rem 1rem;
+      font-size: .8rem;
+      color: var(--yellow);
+      line-height: 1.55;
+      margin-bottom: 1.4rem;
+    }
+
+    .offer-box.hidden {
+      display: none;
+    }
+
+    .divider {
+      height: 1px;
+      background: rgba(255, 255, 255, .06);
+    }
+
+    .totals {
+      padding: .9rem 0 0;
+      margin-bottom: .3rem;
+    }
+
+    .t-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: .35rem;
+    }
+
+    .t-row .lbl {
+      font-size: .82rem;
+      color: var(--muted);
+    }
+
+    .t-row .val {
+      font-size: 1.55rem;
+      font-weight: 900;
+      color: #fff;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    /* ── FIX 4: Discount rows — clear layout ── */
+    .t-breakdown {
+      padding: .5rem 0;
+      margin-bottom: .3rem;
+      display: none;
+    }
+
+    .tb-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: .18rem 0;
+    }
+
+    .tb-row .lbl {
+      font-size: .78rem;
+      color: var(--muted);
+    }
+
+    .tb-row .val-sm {
+      font-family: 'Space Mono', monospace;
+      font-size: .78rem;
+      color: var(--muted);
+    }
+
+    .tb-row .val-disc {
+      font-family: 'Space Mono', monospace;
+      font-size: .82rem;
+      font-weight: 700;
+      color: #4ade80;
+    }
+
+    .tb-row .val-conv {
+      font-family: 'Space Mono', monospace;
+      font-size: .78rem;
+      color: #f87171;
+    }
+
+    .t-total-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding-top: .55rem;
+      border-top: 1px solid rgba(255, 255, 255, .06);
+      margin-top: .3rem;
+    }
+
+    .t-total-row .lbl {
+      font-size: .9rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .t-total-row .val {
+      font-size: 1.65rem;
+      font-weight: 900;
+      color: #fff;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    .children-note {
+      font-size: .72rem;
+      color: #d5d5f4;
+      line-height: 1.55;
+      margin: 1rem 0 1.3rem;
+      padding: .6rem .85rem;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, .022);
+      border: 1px solid rgba(255, 255, 255, .05);
+    }
+
+    .btn-proceed {
+      width: 100%;
+      padding: 1rem;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 14px;
+      font-family: 'Poppins', sans-serif;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: box-shadow .2s, transform .12s;
+      box-shadow: 0 6px 28px rgba(124, 58, 237, .35);
+      letter-spacing: .02em;
+    }
+
+    .btn-proceed:hover {
+      box-shadow: 0 0 40px rgba(124, 58, 237, .6);
+      transform: translateY(-1px);
+    }
+
+    @media (min-width: 768px) {
+      .modal-bg {
+        align-items: stretch;
+        justify-content: flex-end;
+      }
+
+      .sheet {
+        width: 400px;
+        max-height: 100vh;
+        height: 100%;
+        border-radius: 0;
+        transform: translateX(110%);
+        transition: transform .38s cubic-bezier(.32, .72, 0, 1);
+        padding: 2rem 2rem 2.5rem;
+      }
+
+      .modal-bg.open .sheet {
+        transform: translateX(0);
+      }
+
+      .drag-handle {
+        display: none;
+      }
     }
   </style>
 </head>
+
 <body>
 
-<div class="step-bar">
-  <a href="/event/<%= event._id %>" class="step-back"><i class="bi bi-arrow-left"></i> Back</a>
-  <div class="steps">
-    <div class="step-item active"><div class="step-num">1</div><span>Zone</span></div>
-    <div class="step-line"></div>
-    <div class="step-item"><div class="step-num">2</div><span>Details</span></div>
-    <div class="step-line"></div>
-    <div class="step-item"><div class="step-num">3</div><span>Payment</span></div>
-    <div class="step-line"></div>
-    <div class="step-item"><div class="step-num"><i class="bi bi-check" style="font-size:0.6rem;"></i></div><span>Done</span></div>
-  </div>
-  <div class="event-lbl"><%= event.name.toUpperCase() %></div>
-</div>
+  <div class="top-bar"><a href="/event/69c6078cb267972f82b8ed45">
+      <button class="btn-back">
 
-<div class="layout">
-  <div class="map-area">
-    <% if(seatMap.previewImage){ %>
-    <div class="map-tabs">
-      <div class="map-tab active" id="tab-live" onclick="switchTab('live')"><i class="bi bi-grid-3x3-gap"></i> Interactive</div>
-    </div>
-    <% } %>
-    <div class="map-legend">
-      <span class="leg-lbl">Legend</span>
-      <% event.ticketTypes.filter(t=>t.isActive).forEach(t=>{
-           const cc = t.color || {platinum:'#9D4EDD',gold:'#f5c842',silver:'#c0c8d8',fanfit:'#00FF88',family:'#FF6B6B'}[t.category] || '#6A0DAD';
-           const avail = t.totalSeats - t.bookedSeats;
-           const catSoldOut = t.bookedSeats >= t.totalSeats && t.totalSeats > 0;
-           const availCls = catSoldOut ? 'crit' : (avail<=3&&t.totalSeats>0 ? 'crit' : (avail<=10&&t.totalSeats>0 ? 'warn' : '')); %>
-      <div class="leg-item" id="leg-<%= t.category %>" style="--zc:<%=catSoldOut?'#FF4444':cc%>;<%=catSoldOut?'opacity:0.45;cursor:not-allowed;':'';%>" onclick="<%=catSoldOut?'':"highlightCat('"+t.category+"')" %>">
-        <div class="leg-dot" style="<%=catSoldOut?'background:#FF4444;border-color:#FF4444;':''%>"></div>
-        <span style="color:<%=catSoldOut?'#FF4444':cc%>;font-weight:700;font-size:0.66rem;"><%= t.category.toUpperCase() %></span>
-        <% if(catSoldOut){ %>
-          <span class="leg-avail crit">SOLD OUT</span>
-        <% } else { %>
-          <span style="color:var(--muted);">&#8377;<%= t.price.toLocaleString('en-IN') %></span>
-          <% if(avail<=10&&t.totalSeats>0){ %>
-            <span class="leg-avail <%=availCls%>">&#9888; <%=avail%> left</span>
-          <% } %>
-          <%
-          const _tiers_sp = (t.discountTiers && t.discountTiers.length > 0)
-            ? t.discountTiers.filter(d=>d.minQty>0&&d.discount>0).sort((a,b)=>a.minQty-b.minQty)
-            : (t.comboOfferMinQty>0&&t.comboOfferDiscount>0 ? [{minQty:t.comboOfferMinQty,discount:t.comboOfferDiscount}] : []);
-          %>
-          <% if(!catSoldOut && _tiers_sp.length > 0){ %>
-            <span style="color:#f5c842;font-size:0.54rem;font-family:'Space Mono',monospace;">&#9889; <%= _tiers_sp.map(function(d){ return 'Buy '+d.minQty+'+ \u2192 \u20b9'+d.discount+' off'; }).join(' \u00b7 ') %></span>
-          <% } %>
-        <% } %>
-      </div>
-      <% }); %>
-    </div>
-    <div class="map-scroll" id="liveView" style="position:relative;">
-      <canvas id="vc" width="<%= seatMap.canvasWidth||960 %>" height="<%= seatMap.canvasHeight||760 %>"></canvas>
-      <div class="cv-tip" id="cvTip">
-        <div class="tip-zone" id="tipZone"></div>
-        <div class="tip-cat" id="tipCat"></div>
-        <div class="tip-row">
-          <div class="tip-price" id="tipPrice"></div>
-          <div class="tip-avail" id="tipAvail"></div>
-        </div>
-        <div class="tip-bar"><div class="tip-bar-fill" id="tipBarFill"></div></div>
-      </div>
-    </div>
-    <div class="preview-wrap" id="previewView">
-      <% if(seatMap.previewImage){ %><img src="<%= seatMap.previewImage %>" alt="Venue Map"/><% } %>
-    </div>
-  </div>
-
-  <div class="sidebar">
-    <div class="sb-head">
-      <div class="sb-title">PICK YOUR ZONE</div>
-      <div class="sb-sub">Tap the map or click a zone below</div>
-    </div>
-    <div class="zone-list" id="zoneList"></div>
-    <div class="sb-footer">
-      <div class="sf-row"><span>Zone</span><span id="sfZone">&#8212;</span></div>
-      <div class="sf-row"><span>Price / ticket</span><span id="sfPrice">&#8212;</span></div>
-      <div class="sf-row"><span>Qty</span><span id="sfQty">0</span></div>
-      <div class="sf-row"><span>Convenience fee</span><span>&#8377;<%= event.convenienceFee||0 %></span></div>
-      <div class="sf-total">
-        <div class="sf-tlbl">Total</div>
-        <div class="sf-tval" id="sfTotal">&#8377;<%= event.convenienceFee||0 %></div>
-      </div>
-      <button class="btn-next" id="btnNext" disabled onclick="goNext()">
-        Continue <i class="bi bi-arrow-right"></i>
+        <svg viewBox="0 0 24 24">
+          <polyline points="15 18 9 12 15 6" />
+        </svg>
       </button>
-      <div class="trust-row">
-        <div class="trust-item"><i class="bi bi-shield-check-fill"></i> Secure</div>
-        <div class="trust-item"><i class="bi bi-qr-code"></i> Instant QR</div>
-        <div class="trust-item"><i class="bi bi-x-circle-fill"></i> Non-Refundable</div>
+    </a>
+    <div>
+      <!-- FIX 2: Bigger title, FIX 3: event name removed -->
+      <div class="bar-title">Select Zone</div>
+    </div>
+
+
+    <!-- bar-right with event name intentionally removed -->
+  </div>
+
+  <div class="top-bar"><a href="/event/69c6078cb267972f82b8ed45">
+      <button class="btn-back">
+
+        <svg viewBox="0 0 24 24">
+          <polyline points="15 18 9 12 15 6" />
+        </svg>
+      </button>
+    </a>
+    <div>
+      <!-- FIX 2: Bigger title, FIX 3: event name removed -->
+      <div class="bar-title">Select Zone</div>
+    </div>
+
+    <div class="bar-sub-wrap">
+      <div class="bar-sub">Tap your preferred section on the map below.</div>
+    </div>
+    <!-- bar-right with event name intentionally removed -->
+  </div>
+
+
+
+
+
+
+  <div class="map-area" id="mapArea">
+    <div id="canvasWrap">
+      <canvas id="vc"></canvas>
+    </div>
+    <div class="cv-tip" id="cvTip">
+      <div class="tip-zone" id="tipZone"></div>
+      <div class="tip-cat" id="tipCat"></div>
+      <div class="tip-row">
+        <div class="tip-price" id="tipPrice"></div>
+        <div class="tip-avail" id="tipAvail"></div>
       </div>
     </div>
   </div>
-</div>
 
-<script>
-const EVENT_ID = '<%= event._id %>';
-const CONV_FEE = <%= event.convenienceFee||0 %>;
-const SEAT_MAP = <%- JSON.stringify(seatMap) %>;
-const TT       = <%- JSON.stringify(event.ticketTypes) %>;
-const TICKET_TYPES = TT;
+  <!-- TICKET COUNT MODAL -->
+  <div class="modal-bg" id="modalBg" onclick="bgClick(event)">
+    <div class="sheet" id="sheet">
+      <div class="drag-handle"></div>
+      <div class="sh-head">
+        <div class="sh-title">Number of Tickets</div>
+        <button class="sh-close" onclick="closeModal()">✕</button>
+      </div>
 
-// ── Color resolution — ticket type color first, then palette fallback ──
+      <div class="zone-info-pill" id="zonePill">
+        <div class="zip-dot" id="pillDot"></div>
+        <div class="zip-name" id="pillName">—</div>
+        <div class="zip-price" id="pillPrice">—</div>
+      </div>
+
+      <div class="qty-wrap">
+        <button class="qty-btn minus" id="btnMinus" onclick="changeQty(-1)">−</button>
+        <div class="qty-num" id="qtyNum">1</div>
+        <button class="qty-btn plus" id="btnPlus" onclick="changeQty(1)">+</button>
+      </div>
+
+      <div class="offer-box hidden" id="offerBox"></div>
+
+      <div class="divider"></div>
+
+      <!-- FIX 4: Proper breakdown + total -->
+      <div class="totals">
+        <div class="t-row">
+          <span class="lbl" id="tBaseLabel">Tickets</span>
+          <span class="val" id="tBase" style="font-size:1rem;color:var(--muted)"></span>
+        </div>
+      </div>
+
+      <!-- Breakdown rows (shown when conv fee or discount applies) -->
+      <div class="t-breakdown" id="tBreakdown">
+        <div class="tb-row" id="tDiscRow" style="display:none">
+          <span class="lbl">Group Discount</span>
+          <span class="val-disc" id="tDisc"></span>
+        </div>
+        <div class="tb-row" id="tConvRow" style="display:none">
+          <span class="lbl">Convenience Fee</span>
+          <span class="val-conv" id="tConv"></span>
+        </div>
+      </div>
+
+      <div class="t-total-row">
+        <span class="lbl">Total to Pay</span>
+        <span class="val" id="tTotal"></span>
+      </div>
+
+      <div class="divider" style="margin-top:.6rem"></div>
+
+      <div class="children-note" id="childrenNote">
+        Children above 5 years of age must have a valid ticket for entry.
+      </div>
+
+      <button class="btn-proceed" onclick="goNext()">Proceed</button>
+    </div>
+  </div>
+
+  <script>
+    /* ═══════════════════════════════════════════
+       SERVER-INJECTED DATA
+    ═══════════════════════════════════════════ */
+    const EVENT_ID = '<%= event._id %>';
+    const CONV_FEE = <%= event.convenienceFee || 0 %>;
+    const SEAT_MAP = <% - JSON.stringify(seatMap) %>;
+    const TT = <% - JSON.stringify(event.ticketTypes) %>;
+    const EVT_NOTICE = `<%= (event.ageNotice||'Children above 5 years of age must have a valid ticket for entry.').replace(/` / g,"'") %> `;
+
+/* ── FIX 3: bar-right / event name element removed, no textContent set ── */
+
+/* ── Color resolution ── */
 const CAT_C_BASE = {
-  platinum:'#9D4EDD', gold:'#f5c842',  silver:'#c0c8d8',
-  fanfit:'#00FF88',   family:'#FF6B6B', vip:'#FF4088',
-  standard:'#a0a0a0', general:'#a0a0a0', diamond:'#00C8F8',
-  premium:'#FF8C00',  bronze:'#cd7f32',  solo:'#9D4EDD',
+  platinum:'#9D4EDD', gold:'#f5c842',    silver:'#c0c8d8',
+  fanfit:'#00C896',   family:'#E8914A',  vip:'#FF4088',
+  standard:'#8090A0', general:'#8090A0', diamond:'#00C8F8',
+  premium:'#FF8C00',  bronze:'#cd7f32',  solo:'#00BFCF',
+  gathering:'#C04040',fanpit:'#00C896',
 };
-
 const CAT_C = Object.fromEntries(
-  TT.map(t => [t.category, t.color || CAT_C_BASE[t.category] || '#6A0DAD'])
+  TT.map(t => [t.category, t.color || CAT_C_BASE[t.category] || '#7C3AED'])
 );
-(SEAT_MAP.sections||[]).forEach(s => { if(s.color) CAT_C[s.category] = s.color; });
-Object.keys(CAT_C_BASE).forEach(k => { if(!CAT_C[k]) CAT_C[k] = CAT_C_BASE[k]; });
+(SEAT_MAP.sections || []).forEach(s => { if (s.color) CAT_C[s.category] = s.color; });
+Object.keys(CAT_C_BASE).forEach(k => { if (!CAT_C[k]) CAT_C[k] = CAT_C_BASE[k]; });
 
-const PM = Object.fromEntries(TT.map(t => [t.category, t.price]));
+const PM    = Object.fromEntries(TT.map(t => [t.category, t.price]));
+const TT_BY = Object.fromEntries(TT.map(t => [t.category, t]));
 
-const canvas = document.getElementById('vc');
-const ctx    = canvas.getContext('2d');
-
-function d2r(d){ return d * Math.PI / 180; }
-
-// ── Zones ──
-const zones = (SEAT_MAP.sections||[]).map(s => ({
+const zones = (SEAT_MAP.sections || []).map(s => ({
   name:        s.name,
   category:    s.category,
   shape:       s.zoneShape || 'rect',
@@ -256,429 +699,680 @@ const zones = (SEAT_MAP.sections||[]).map(s => ({
   color:       s.color || '',
 }));
 
-// ── Overlays — include shape field ──
-const overlays = (SEAT_MAP.overlays||[]).map(o => ({
+const overlays = (SEAT_MAP.overlays || []).map(o => ({
   type:  o.type  || 'reserved',
   label: o.label || '',
   note:  o.note  || '',
   icon:  o.icon  || '',
   color: o.color || '#9D4EDD',
-  shape: o.shape || 'rect',         // ← shape restored from DB
-  x:     o.x  ?? 100,
-  y:     o.y  ?? 100,
-  w:     o.w  > 0 ? o.w : 160,
-  h:     o.h  > 0 ? o.h : 80,
-  rot:   o.rot != null ? Number(o.rot) : 0,
+  shape: o.shape || 'rect',
+  x: o.x ?? 100, y: o.y ?? 100,
+  w: o.w > 0 ? o.w : 160,
+  h: o.h > 0 ? o.h : 80,
+  rot: o.rot != null ? Number(o.rot) : 0,
 }));
 
-let selIdx = null, litCat = null, qty = 1;
-const MAXQ = 10;
 
-function avail(z)  { return (z.totalSeats||0) - (z.bookedSeats||0); }
-function isSO(z)   { return z.totalSeats > 0 && avail(z) <= 0; }
-function maxQty(z) { return z.totalSeats > 0 ? Math.min(MAXQ, avail(z)) : MAXQ; }
-function avClass(z){
-  if(isSO(z)) return 'crit';
-  if(!z.totalSeats) return 'ok';
-  const a = avail(z);
-  return a<=3 ? 'crit' : a<=10 ? 'warn' : 'ok';
-}
-function avText(z){
-  if(isSO(z)) return 'SOLD OUT';
-  if(!z.totalSeats) return '';
-  const a = avail(z);
-  if(a<=3)  return `\u26a0\ufe0f Only ${a} ticket${a===1?'':'s'} left \u2014 book now!`;
-  if(a<=10) return `\u26a0 Only ${a} tickets remaining`;
-  return '';
-}
-function avShort(z){
-  if(isSO(z)) return 'SOLD OUT';
-  if(!z.totalSeats) return '';
-  const a = avail(z);
-  if(a<=3)  return `\u26a0 ${a} left`;
-  if(a<=10) return `${a} remaining`;
-  return '';
-}
-function barPct(z)   { if(!z.totalSeats) return 100; return Math.round((avail(z)/z.totalSeats)*100); }
-function barColor(z) { const a=avail(z); if(isSO(z)||a<=3) return '#FF4444'; if(a<=10) return '#f5c842'; return '#00FF88'; }
-function getColor(z) { return z.color || CAT_C[z.category] || '#6A0DAD'; }
 
-function switchTab(t){
-  document.querySelectorAll('.map-tab').forEach(e=>e.classList.remove('active'));
-  document.getElementById('tab-'+t)?.classList.add('active');
-  document.getElementById('liveView').style.display  = t==='live' ? 'flex' : 'none';
-  document.getElementById('previewView').classList.toggle('show', t==='preview');
+
+// // ── Canvas helpers — use SEATMAP data (zone object) ──
+// const availCanvas = z => Math.max(0, (z.totalSeats || 0) - (z.bookedSeats || 0));
+// const isSO        = z => z.totalSeats > 0 && availCanvas(z) <= 0;
+
+// ── Modal helpers — use EVENT DB data (TT_BY) ──
+const availDB = z => {
+  const tt = TT_BY[z.category];
+  if (!tt) return 999;
+  return Math.max(0, tt.totalSeats - tt.bookedSeats);
+};
+const isSO_DB = z => {
+  const tt = TT_BY[z.category];
+  if (!tt) return false;
+  return tt.totalSeats > 0 && tt.bookedSeats >= tt.totalSeats;
+};
+
+function maxQty(z) {
+  const tt  = TT_BY[z.category];
+  const cap = tt && tt.maxPerOrder > 0 ? tt.maxPerOrder : 10;
+  const av  = availDB(z); // use DB data for real cap
+  const hasSeats = tt ? tt.totalSeats > 0 : false;
+  return hasSeats ? Math.min(cap, av) : cap;
 }
 
-// ── DRAW ──
-function draw(){
-  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+/* ═══════════════════════════════════════════
+   CANVAS SETUP
+═══════════════════════════════════════════ */
+const canvas = document.getElementById('vc');
+const ctx    = canvas.getContext('2d');
+const DB_W   = SEAT_MAP.canvasWidth  || 960;
+const DB_H   = SEAT_MAP.canvasHeight || 760;
+
+canvas.width  = DB_W;
+canvas.height = DB_H;
+
+let scale = 1;
+
+function getContentBounds() {
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  function expand(x, y, w, h) {
+    if (!w || !h) return;
+    minX = Math.min(minX, x);     minY = Math.min(minY, y);
+    maxX = Math.max(maxX, x + w); maxY = Math.max(maxY, y + h);
+  }
+  if (SEAT_MAP.stage) {
+    const s = SEAT_MAP.stage;
+    expand(s.x || 0, s.y || 0, s.width || 0, s.height || 0);
+  }
+  zones.forEach(z    => expand(z.x, z.y, z.w, z.h));
+  overlays.forEach(o => expand(o.x, o.y, o.w, o.h));
+  if (!isFinite(minX)) return { x: 0, y: 0, w: DB_W, h: DB_H };
+  const PAD = 20;
+  return {
+    x: Math.max(0,    minX - PAD),
+    y: Math.max(0,    minY - PAD),
+    w: Math.min(DB_W, maxX - minX + PAD * 2),
+    h: Math.min(DB_H, maxY - minY + PAD * 2),
+  };
+}
+
+function sizeCanvas() {
+  const mapArea = document.getElementById('mapArea');
+  const wrap    = document.getElementById('canvasWrap');
+  const aW = mapArea.clientWidth;
+  const aH = mapArea.clientHeight;
+  const b = getContentBounds();
+
+  /* On mobile (narrow viewport) fill ~95% of available area.
+     On desktop keep a small breathing margin (90%).             */
+  const isMobile = aW < 600;
+  const FILL = isMobile ? 0.95 : 0.88;
+
+  const scaleByW = (aW * FILL) / b.w;
+  const scaleByH = (aH * FILL) / b.h;
+  scale = Math.min(scaleByW, scaleByH, 3.0);
+
+  const visW = Math.round(b.w * scale);
+  const visH = Math.round(b.h * scale);
+
+  canvas.style.width  = Math.round(DB_W * scale) + 'px';
+  canvas.style.height = Math.round(DB_H * scale) + 'px';
+  canvas.style.marginLeft = -Math.round(b.x * scale) + 'px';
+  canvas.style.marginTop  = -Math.round(b.y * scale) + 'px';
+
+  wrap.style.width    = visW + 'px';
+  wrap.style.height   = visH + 'px';
+  wrap.style.overflow = 'hidden';
+  mapArea.style.overflow       = 'hidden';
+  mapArea.style.alignItems     = 'center';
+  mapArea.style.justifyContent = 'center';
+  draw();
+}
+
+let _rsz;
+window.addEventListener('resize', () => { clearTimeout(_rsz); _rsz = setTimeout(sizeCanvas, 60); });
+
+/* ── Helpers ── */
+const d2r    = d => d * Math.PI / 180;
+const avail  = z => Math.max(0, (z.totalSeats || 0) - (z.bookedSeats || 0));
+const isSO   = z => z.totalSeats > 0 && avail(z) <= 0;
+const getCol = z => z.color || CAT_C[z.category] || '#7C3AED';
+
+function maxQty(z) {
+  const tt  = TT_BY[z.category];
+  const cap = tt && tt.maxPerOrder > 0 ? tt.maxPerOrder : 10;
+  return z.totalSeats > 0 ? Math.min(cap, avail(z)) : cap;
+}
+
+let selIdx = null, hovIdx = -1, qty = 1;
+
+/* ═══════════════════════════════════════════
+   DRAW
+═══════════════════════════════════════════ */
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
   drawGrid();
   drawStage(SEAT_MAP.stage);
-  zones.forEach((z,i) => drawZone(z, i===selIdx, litCat===z.category && i!==selIdx));
-  overlays.forEach(o => drawOverlayUser(o));
+  zones.forEach((z, i) => drawZone(z, i === selIdx, i === hovIdx && i !== selIdx));
+  overlays.forEach(o => drawOverlay(o));
 }
 
-function drawGrid(){
-  ctx.save(); ctx.strokeStyle='rgba(255,255,255,0.025)'; ctx.lineWidth=1;
-  for(let x=0;x<canvas.width;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,canvas.height);ctx.stroke();}
-  for(let y=0;y<canvas.height;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(canvas.width,y);ctx.stroke();}
-  ctx.restore();
-}
-
-function drawStage(s){
-  if(!s) return;
-  const x=s.x||80, y=s.y||30, w=s.width||500, h=s.height||100;
-  const sc  = s.color||'#6A0DAD';
-  const shp = s.shape||'rectangle';
+function drawGrid() {
   ctx.save();
-  ctx.fillStyle=sc+'26'; ctx.strokeStyle=sc; ctx.lineWidth=2;
-  if(shp==='rectangle'){
-    ctx.beginPath(); ctx.roundRect(x,y,w,h,10); ctx.fill(); ctx.stroke();
-  } else if(shp==='semicircle'){
-    ctx.beginPath(); ctx.arc(x+w/2,y+h,w/2,Math.PI,0); ctx.closePath(); ctx.fill(); ctx.stroke();
-  } else if(shp==='thrust'){
-    ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x+w,y); ctx.lineTo(x+w-50,y+h);
-    ctx.lineTo(x+w/2+35,y+h); ctx.lineTo(x+w/2+35,y+h+50);
-    ctx.lineTo(x+w/2-35,y+h+50); ctx.lineTo(x+w/2-35,y+h);
-    ctx.lineTo(x+50,y+h); ctx.closePath(); ctx.fill(); ctx.stroke();
-  } else if(shp==='intheround'){
-    ctx.beginPath(); ctx.arc(x+w/2,y+h/2,Math.min(w,h)*0.45,0,Math.PI*2); ctx.fill(); ctx.stroke();
-  } else {
-    ctx.beginPath(); ctx.roundRect(x,y,w,h,10); ctx.fill(); ctx.stroke();
-  }
-  ctx.fillStyle=sc;
-  ctx.font='bold 14px "Space Mono",monospace';
-  ctx.textAlign='center'; ctx.textBaseline='middle';
-  ctx.fillText(s.label||'STAGE', x+w/2, y+h/2);
+  ctx.strokeStyle = 'rgba(255,255,255,0.022)';
+  ctx.lineWidth   = 1;
+  for (let x = 0; x < DB_W; x += 40) { ctx.beginPath(); ctx.moveTo(x, 0);   ctx.lineTo(x, DB_H); ctx.stroke(); }
+  for (let y = 0; y < DB_H; y += 40) { ctx.beginPath(); ctx.moveTo(0, y);   ctx.lineTo(DB_W, y); ctx.stroke(); }
   ctx.restore();
 }
 
-function drawZone(z, isSel, isLit){
-  const {x,y,w,h,name,category,shape} = z;
-  const rot   = d2r(z.rot||0);
-  const color = getColor(z);
+function drawStage(s) {
+  if (!s) return;
+  const { x=80, y=30, width:w=500, height:h=100,
+          color:sc='#74a2ed', shape:shp='rectangle', label='STAGE' } = s;
+  ctx.save();
+  ctx.fillStyle   = sc + '26';
+  ctx.strokeStyle = sc;
+  ctx.lineWidth   = 2;
+  ctx.beginPath();
+  if      (shp === 'semicircle') { ctx.arc(x+w/2, y+h, w/2, Math.PI, 0); ctx.closePath(); }
+  else if (shp === 'thrust')     { ctx.moveTo(x,y); ctx.lineTo(x+w,y); ctx.lineTo(x+w-50,y+h); ctx.lineTo(x+w/2+35,y+h); ctx.lineTo(x+w/2+35,y+h+50); ctx.lineTo(x+w/2-35,y+h+50); ctx.lineTo(x+w/2-35,y+h); ctx.lineTo(x+50,y+h); ctx.closePath(); }
+  else if (shp === 'intheround') { ctx.arc(x+w/2, y+h/2, Math.min(w,h)*0.45, 0, Math.PI*2); }
+  else                           { ctx.roundRect(x, y, w, h, 10); }
+  ctx.fill(); ctx.stroke();
+  ctx.fillStyle    = sc;
+  ctx.font         = `bold ${ Math.max(10, Math.min(15, w / label.length * 0.75)) }px "Space Mono", monospace`;
+  ctx.textAlign    = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(label, x + w/2, y + h/2);
+  ctx.restore();
+}
+
+function drawZone(z, isSel, isHov) {
+  const { x, y, w, h, name, category, shape } = z;
+  const rot   = d2r(z.rot || 0);
+  const color = getCol(z);
   const price = PM[category] || 0;
-  const cx=x+w/2, cy=y+h/2;
-  const a=avail(z), SO=isSO(z);
+  const cx    = x + w/2, cy = y + h/2;
+  const SO    = isSO(z);
+  const displayLabel = (name || category).toUpperCase();
 
   ctx.save();
-  ctx.translate(cx,cy); ctx.rotate(rot);
+  ctx.translate(cx, cy);
 
-  if(isSel)      { ctx.shadowColor=color; ctx.shadowBlur=30; }
-  else if(isLit) { ctx.shadowColor=color; ctx.shadowBlur=16; }
+ctx.rotate(rot);
 
-  ctx.fillStyle   = SO?'rgba(50,50,60,0.32)':(isSel?color+'55':(isLit?color+'38':color+'1A'));
-  ctx.strokeStyle = SO?'rgba(100,100,110,0.38)':(isSel?color:(isLit?color:color+'55'));
-  ctx.lineWidth   = isSel?3:(isLit?2:1.5);
+/* Clamp text to fit within the zone bounds */
+ctx.save();
+ctx.beginPath();
+if (shape === 'triangle') {
+  ctx.moveTo(0, -h/2); ctx.lineTo(w/2, h/2); ctx.lineTo(-w/2, h/2); ctx.closePath();
+} else if (shape === 'round') {
+  ctx.ellipse(0, 0, w/2, h/2, 0, 0, Math.PI*2);
+} else {
+  ctx.rect(-w/2, -h/2, w, h);
+}
+ctx.clip();
+
+  if (isSel)      { ctx.shadowColor = color; ctx.shadowBlur = 32; }
+  else if (isHov) { ctx.shadowColor = color; ctx.shadowBlur = 20; }
+
+  ctx.fillStyle   = SO ? 'rgba(48,48,58,0.28)'
+                       : isSel  ? color + '55'
+                       : isHov  ? color + '38'
+                                : color + '1A';
+  ctx.strokeStyle = SO ? 'rgba(100,100,115,0.35)'
+                       : isSel  ? color
+                       : isHov  ? color + 'CC'
+                                : color + '66';
+  ctx.lineWidth   = isSel ? 3 : isHov ? 2.5 : 1.5;
 
   ctx.beginPath();
-  if(shape==='round')          ctx.ellipse(0,0,w/2,h/2,0,0,Math.PI*2);
-  else if(shape==='triangle'){ ctx.moveTo(0,-h/2); ctx.lineTo(w/2,h/2); ctx.lineTo(-w/2,h/2); ctx.closePath(); }
-  else                         ctx.roundRect(-w/2,-h/2,w,h,10);
-  ctx.fill(); ctx.shadowBlur=0; ctx.stroke();
+  if      (shape === 'round')    ctx.ellipse(0, 0, w/2, h/2, 0, 0, Math.PI*2);
+  else if (shape === 'triangle') { ctx.moveTo(0,-h/2); ctx.lineTo(w/2,h/2); ctx.lineTo(-w/2,h/2); ctx.closePath(); }
+  else                           ctx.roundRect(-w/2, -h/2, w, h, 8);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+  ctx.stroke();
 
-  const fs = Math.max(9, Math.min(14, w/(name.length*0.78)));
-  const lY = shape==='triangle' ? (h*0.12) : -10;
-  ctx.fillStyle='#fff'; ctx.font=`bold ${fs}px "Poppins",sans-serif`;
-  ctx.textAlign='center'; ctx.textBaseline='middle';
-  ctx.fillText(name, 0, lY);
+  /* ── Text vertical layout ──────────────────────────────
+     For triangles the visual centroid is at h/6 above centre.
+     For rect/round it is at the geometric centre (0,0).
+     We centre the name+price block on the visual centroid.   */
+  const hasPrice  = !SO;
 
-  ctx.fillStyle = SO?'#444':color;
-  ctx.font='600 9.5px "Poppins",sans-serif';
-  ctx.fillText(category.toUpperCase(), 0, lY+13);
+/* For rotated zones the effective readable width is smaller */
+const effectiveW = (z.rot % 180 !== 0) ? Math.min(w, h) * 0.85 : w;
+const nameFs    = Math.max(10, Math.min(22, effectiveW / Math.max(displayLabel.length * 0.6, 1)));
+ 
+  const priceFs   = Math.max(13, Math.min(20, w / 6));
+  const lineGap   = 5;
+  const totalH    = hasPrice ? nameFs + lineGap + priceFs : nameFs;
 
-  ctx.fillStyle = SO?'#333':'rgba(255,255,255,0.75)';
-  ctx.font='bold 11px "Space Mono",monospace';
-  ctx.fillText('\u20b9'+price.toLocaleString('en-IN'), 0, lY+26);
+  /* Visual centroid offset inside the rotated-local frame */
+  const centroidY = shape === 'triangle' ? -h / 4 : 0;
 
-  if(SO){
-    ctx.fillStyle='rgba(255,68,68,0.85)';
-    ctx.font='bold 9px "Space Mono",monospace';
-    ctx.fillText('SOLD OUT', 0, lY+39);
+  const nameY  = centroidY - totalH / 2 + nameFs / 2;
+  const priceY = centroidY - totalH / 2 + nameFs + lineGap + priceFs / 2;
+
+  /* ── Zone name ── */
+ctx.rotate(-rot); /* counter-rotate so text is always horizontal */
+  ctx.fillStyle    = SO ? '#4A4A5A' : '#fff';
+  ctx.font         = `900 ${ nameFs }px "Poppins", sans - serif`;
+  ctx.textAlign    = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(displayLabel, 0, 0);
+
+  /* ── Price or SOLD OUT ── */
+  if (!SO) {
+    ctx.fillStyle = '#F5C518';
+    ctx.font      = `800 ${ priceFs }px "Space Mono", monospace`;
+    ctx.fillText('₹' + price.toLocaleString('en-IN'), 0, nameFs + 6);
+
+  } else {
+    ctx.fillStyle = 'rgba(255,68,68,0.8)';
+    ctx.font      = `bold 11px "Space Mono", monospace`;
+    ctx.fillText('SOLD OUT', 0, nameFs * 0.7);
   }
 
-  if(isSel){
+  ctx.restore();
+
+  if (isSel) {
     ctx.rotate(-rot);
-    ctx.fillStyle=color; ctx.strokeStyle='#0f0f18'; ctx.lineWidth=2;
-    ctx.beginPath(); ctx.arc(w/2-12,-h/2+12,11,0,Math.PI*2); ctx.fill(); ctx.stroke();
-    ctx.fillStyle='#fff'; ctx.font='bold 13px sans-serif';
-    ctx.textAlign='center'; ctx.textBaseline='middle';
-    ctx.fillText('\u2713', w/2-12, -h/2+13);
+    ctx.fillStyle    = color;
+    ctx.strokeStyle  = '#0f0f18';
+    ctx.lineWidth    = 2;
+    ctx.shadowColor  = color;
+    ctx.shadowBlur   = 14;
+    ctx.beginPath();
+    ctx.arc(w/2 - 14, -h/2 + 14, 12, 0, Math.PI*2);
+    ctx.fill(); ctx.stroke();
+    ctx.shadowBlur    = 0;
+    ctx.fillStyle     = '#fff';
+    ctx.font          = 'bold 14px sans-serif';
+    ctx.textAlign     = 'center';
+    ctx.textBaseline  = 'middle';
+    ctx.fillText('✓', w/2 - 14, -h/2 + 15);
   }
   ctx.restore();
 }
 
-// ── DRAW OVERLAY — shape-aware, no lineDash leak ──
-function drawOverlayUser(o){
-  const {x, y, w, h, rot, label, icon, color, type, note} = o;
-  const shape = o.shape || 'rect';
-  const rad   = d2r(rot||0);
-  const cx    = x+w/2, cy = y+h/2;
+function drawOverlay(o) {
+  const { x, y, w, h, rot, label, icon, color, type, note, shape = 'rect' } = o;
+  const rad = d2r(rot || 0);
+  const cx  = x + w/2, cy = y + h/2;
 
-  // Shape path helper (local coords centred at 0,0)
-  function makeShapePath(){
+  function mkPath() {
     ctx.beginPath();
-    if(shape === 'round'){
-      ctx.ellipse(0, 0, w/2, h/2, 0, 0, Math.PI*2);
-    } else if(shape === 'triangle'){
-      ctx.moveTo(0, -h/2);
-      ctx.lineTo( w/2,  h/2);
-      ctx.lineTo(-w/2,  h/2);
-      ctx.closePath();
-    } else {
-      ctx.roundRect(-w/2, -h/2, w, h, 8);
-    }
+    if (shape === 'round')         ctx.ellipse(0, 0, w/2, h/2, 0, 0, Math.PI*2);
+    else if (shape === 'triangle') { ctx.moveTo(0,-h/2); ctx.lineTo(w/2,h/2); ctx.lineTo(-w/2,h/2); ctx.closePath(); }
+    else                           ctx.roundRect(-w/2, -h/2, w, h, 8);
   }
 
   ctx.save();
   ctx.translate(cx, cy);
   ctx.rotate(rad);
 
-  if(type === 'reserved'){
-    // Hatch fill clipped to shape
-    ctx.save();
-    makeShapePath();
-    ctx.save();
-    ctx.clip();
-    ctx.strokeStyle = color+'38';
-    ctx.lineWidth   = 1.5;
-    ctx.setLineDash([]);
-    for(let hx = -w; hx < w*1.5; hx += 10){
-      ctx.beginPath();
-      ctx.moveTo(hx - h, -h/2);
-      ctx.lineTo(hx + h,  h/2);
-      ctx.stroke();
+  if (type === 'reserved') {
+    ctx.save(); mkPath(); ctx.save(); ctx.clip();
+    ctx.strokeStyle = color + '38'; ctx.lineWidth = 1.5;
+    for (let hx = -w; hx < w * 1.5; hx += 10) {
+      ctx.beginPath(); ctx.moveTo(hx - h, -h/2); ctx.lineTo(hx + h, h/2); ctx.stroke();
     }
     ctx.restore();
-    // Tint
-    ctx.fillStyle = color+'14';
-    makeShapePath(); ctx.fill();
-    // Dashed border
-    ctx.setLineDash([6,4]);
-    ctx.strokeStyle = color+'77';
-    ctx.lineWidth   = 1.5;
-    makeShapePath(); ctx.stroke();
+    ctx.fillStyle = color + '14'; mkPath(); ctx.fill();
+    ctx.setLineDash([6, 4]);
+    ctx.strokeStyle = color + '77'; ctx.lineWidth = 1.5;
+    mkPath(); ctx.stroke();
     ctx.setLineDash([]);
     ctx.restore();
-
-    // Icon — skip for triangle (too cramped)
-    if(shape !== 'triangle'){
-      ctx.font = '13px sans-serif';
-      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillText(icon||'🔒', -w/2+13, -h/2+13);
+    if (shape !== 'triangle') {
+      ctx.font = '13px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(icon || '🔒', -w/2 + 13, -h/2 + 13);
     }
-    // Label
-    ctx.fillStyle = 'rgba(255,255,255,0.7)';
-    const fs = Math.max(8, Math.min(11, w / (Math.max(label.length,1) * 0.9)));
-    ctx.font = `bold ${fs}px "Poppins",sans-serif`;
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    const lY = shape === 'triangle' ? h*0.1 : (note ? -7 : 0);
-    ctx.fillText(label, 0, lY);
-    if(note && shape !== 'triangle'){
-      ctx.fillStyle = '#777';
-      ctx.font = '8px "Space Mono",monospace';
-      ctx.fillText(note, 0, lY + 10);
+    ctx.fillStyle    = 'rgba(255,255,255,0.65)';
+    ctx.font         = `bold ${ Math.max(8, Math.min(11, w / (Math.max(label.length, 1) * 0.9))) }px "Poppins", sans - serif`;
+    ctx.textAlign    = 'center'; ctx.textBaseline = 'middle';
+    const lY2 = shape === 'triangle' ? h * 0.1 : (note ? -7 : 0);
+    ctx.fillText(label, 0, lY2);
+    if (note && shape !== 'triangle') {
+      ctx.fillStyle = '#666'; ctx.font = '8px "Space Mono",monospace';
+      ctx.fillText(note, 0, lY2 + 10);
     }
-    // RESERVED badge (rect only)
-    if(shape === 'rect'){
-      ctx.fillStyle = color+'aa';
-      ctx.font = 'bold 7px "Space Mono",monospace';
-      ctx.textAlign = 'right';
-      ctx.fillText('RESERVED', w/2-5, h/2-5);
-    }
-
   } else {
-    // POI — shape-aware
-    ctx.save();
-    makeShapePath();
-    ctx.fillStyle = color+'1A'; ctx.fill();
-    ctx.setLineDash([4,3]);
-    ctx.strokeStyle = color+'66';
-    ctx.lineWidth   = 1.5;
-    ctx.stroke();
-    ctx.setLineDash([]);   // ← reset before restore so it never leaks
+    ctx.save(); mkPath();
+    ctx.fillStyle = color + '1A'; ctx.fill();
+    ctx.setLineDash([4, 3]);
+    ctx.strokeStyle = color + '66'; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.setLineDash([]);
     ctx.restore();
-
-    // Icon centred
-    const iconSize = Math.max(13, Math.min(20, Math.min(w,h)*0.4));
-    ctx.font = `${iconSize}px sans-serif`;
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    const iconY = shape === 'triangle' ? h*0.05 : -1;
-    ctx.fillText(icon||'📌', 0, iconY);
-
-    // Label below shape
-    ctx.fillStyle = color+'cc';
-    ctx.font = 'bold 8px "Space Mono",monospace';
+    const is = Math.max(13, Math.min(20, Math.min(w, h) * 0.4));
+    ctx.font = `${ is }px sans - serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(icon || '📌', 0, shape === 'triangle' ? h * 0.05 : -1);
+    ctx.fillStyle = color + 'cc';
+    ctx.font      = 'bold 8px "Space Mono",monospace';
     ctx.textAlign = 'center'; ctx.textBaseline = 'top';
     ctx.fillText(label, 0, h/2 + 3);
   }
-
-  ctx.restore(); // back to world space — lineDash guaranteed clean
+  ctx.restore();
 }
 
-// ── HIT TEST ──
-function ptIn(px,py,z){
-  const cx=z.x+z.w/2, cy=z.y+z.h/2, rot=-d2r(z.rot||0);
-  const c=Math.cos(rot), s=Math.sin(rot);
-  const lx=(px-cx)*c-(py-cy)*s, ly=(px-cx)*s+(py-cy)*c;
-  const hw=z.w/2, hh=z.h/2;
-  if(z.shape==='round') return (lx/hw)**2+(ly/hh)**2<=1;
-  if(z.shape==='triangle'){
-    function sgn(ax,ay,bx,by,qx,qy){ return(ax-qx)*(by-ay)-(bx-ax)*(ay-qy); }
-    const d1=sgn(0,-hh,hw,hh,lx,ly), d2=sgn(hw,hh,-hw,hh,lx,ly), d3=sgn(-hw,hh,0,-hh,lx,ly);
-    return !((d1<0||d2<0||d3<0)&&(d1>0||d2>0||d3>0));
+
+
+
+/* ═══════════════════════════════════════════
+   HIT TEST
+═══════════════════════════════════════════ */
+function toWorld(clientX, clientY) {
+  const r = canvas.getBoundingClientRect();
+  return { wx: (clientX - r.left) / scale, wy: (clientY - r.top) / scale };
+}
+
+function ptIn(px, py, z) {
+  const cx  = z.x + z.w/2, cy = z.y + z.h/2;
+  const rot = -d2r(z.rot || 0);
+  const c   = Math.cos(rot), s = Math.sin(rot);
+  const lx  = (px - cx) * c - (py - cy) * s;
+  const ly  = (px - cx) * s + (py - cy) * c;
+  const hw  = z.w/2, hh = z.h/2;
+  if (z.shape === 'round')    return (lx/hw)**2 + (ly/hh)**2 <= 1;
+  if (z.shape === 'triangle') {
+    const sgn = (ax,ay,bx,by,qx,qy) => (ax-qx)*(by-ay) - (bx-ax)*(ay-qy);
+    const d1 = sgn(0,-hh, hw,hh, lx,ly);
+    const d2 = sgn(hw,hh, -hw,hh, lx,ly);
+    const d3 = sgn(-hw,hh, 0,-hh, lx,ly);
+    return !((d1<0||d2<0||d3<0) && (d1>0||d2>0||d3>0));
   }
-  return lx>=-hw&&lx<=hw&&ly>=-hh&&ly<=hh;
+  return lx >= -hw && lx <= hw && ly >= -hh && ly <= hh;
 }
-function zoneAt(px,py){ for(let i=zones.length-1;i>=0;i--) if(ptIn(px,py,zones[i])) return i; return -1; }
 
-canvas.addEventListener('click',e=>{
-  const r=canvas.getBoundingClientRect(), sx=canvas.width/r.width;
-  const px=(e.clientX-r.left)*sx, py=(e.clientY-r.top)*sx;
-  const hit=zoneAt(px,py);
-  if(hit!==-1){
-    const z=zones[hit];
-    if(isSO(z)) return;
-    selIdx=hit; litCat=null; qty=1;
-    refresh();
-    setTimeout(()=>goNext(), 320);
-  } else { selIdx=null; }
-  refresh();
+function zoneAt(wx, wy) {
+  for (let i = zones.length - 1; i >= 0; i--)
+    if (ptIn(wx, wy, zones[i])) return i;
+  return -1;
+}
+
+canvas.addEventListener('click', e => {
+  const { wx, wy } = toWorld(e.clientX, e.clientY);
+  const hit = zoneAt(wx, wy);
+  if (hit !== -1 && !isSO(zones[hit])) { selIdx = hit; qty = 1; draw(); openModal(hit); }
 });
 
-canvas.addEventListener('mousemove',e=>{
-  const r=canvas.getBoundingClientRect(), sx=canvas.width/r.width;
-  const px=(e.clientX-r.left)*sx, py=(e.clientY-r.top)*sx;
-  const zi=zoneAt(px,py);
-  const tip=document.getElementById('cvTip');
-  if(zi!==-1){
-    const z=zones[zi]; const SO=isSO(z);
+canvas.addEventListener('touchend', e => {
+  if (e.changedTouches.length !== 1) return;
+  const t = e.changedTouches[0];
+  const { wx, wy } = toWorld(t.clientX, t.clientY);
+  const hit = zoneAt(wx, wy);
+  if (hit !== -1 && !isSO(zones[hit])) { selIdx = hit; qty = 1; draw(); openModal(hit); }
+}, { passive: true });
+
+
+
+canvas.addEventListener('mousemove', e => {
+  const { wx, wy } = toWorld(e.clientX, e.clientY);
+  const zi   = zoneAt(wx, wy);
+  const prev = hovIdx; hovIdx = zi;
+  if (hovIdx !== prev) draw();
+
+  const tip = document.getElementById('cvTip');
+  if (zi !== -1) {
+    const z = zones[zi];
+    // Tooltip uses seatmap data for visual display
+    const SO = isSO(z);
+    const a  = availCanvas(z);
+    const col = getCol(z);
+    const p  = PM[z.category] || 0;
+
     canvas.style.cursor = SO ? 'not-allowed' : 'pointer';
-    const a=avail(z), p=PM[z.category]||0;
-    const col = getColor(z);
-    const cls = SO?'sold': a<=3?'crit': a<=10?'warn':'ok';
-    const availTxt = SO?'SOLD OUT': a<=3?'⚠ Only '+a+' left!': a<=10?'⚠ '+a+' remaining':'';
-    const pct    = z.totalSeats>0 ? Math.round((a/z.totalSeats)*100) : 100;
-    const barCol = SO||a<=3?'#FF4444': a<=10?'#f5c842':'#00FF88';
-    const glowCol= SO||a<=3?'rgba(255,68,68,0.18)': a<=10?'rgba(245,200,66,0.15)':'rgba(0,255,136,0.12)';
-    document.getElementById('tipZone').textContent  = z.name;
-    document.getElementById('tipCat').textContent   = z.category.toUpperCase()+' ZONE';
-    document.getElementById('tipPrice').textContent = '₹'+p.toLocaleString('en-IN')+' / ticket';
-    const av=document.getElementById('tipAvail');
-    av.className='tip-avail '+cls; av.textContent=availTxt;
-    document.getElementById('tipBarFill').style.cssText='width:'+pct+'%;background:'+barCol+';';
-    tip.style.setProperty('--tip-c',    SO||a<=3?'#FF4444': a<=10?'#f5c842':col);
-    tip.style.setProperty('--tip-glow', glowCol);
-    const tw=tip.offsetWidth||160, th=tip.offsetHeight||80;
-    let tx=e.clientX-r.left+16, ty=e.clientY-r.top-th-8;
-    if(tx+tw>r.width-8) tx=e.clientX-r.left-tw-8;
-    if(ty<4)             ty=e.clientY-r.top+18;
-    tip.style.left=tx+'px'; tip.style.top=ty+'px'; tip.style.display='block';
+    const cls  = SO ? 'ta-sold' : a <= 3 ? 'ta-crit' : a <= 10 ? 'ta-warn' : 'ta-ok';
+    const aTxt = SO ? 'SOLD OUT' : a <= 3 ? `⚠ ${ a } left` : a <= 10 ? `${ a } remaining` : 'Available';
+    document.getElementById('tipZone').textContent  = (z.name || z.category).toUpperCase();
+    document.getElementById('tipCat').textContent   = z.category.toUpperCase() + ' ZONE';
+    document.getElementById('tipPrice').textContent = '₹' + p.toLocaleString('en-IN') + ' / ticket';
+    const av = document.getElementById('tipAvail');
+    av.className = 'tip-avail ' + cls; av.textContent = aTxt;
+    tip.style.setProperty('--tc', SO || a <= 3 ? '#FF4444' : a <= 10 ? '#f5c842' : col);
+    tip.style.left = (e.clientX + 16) + 'px';
+    tip.style.top  = (e.clientY - 70) + 'px';
+    tip.style.display = 'block';
   } else {
-    canvas.style.cursor='default';
-    tip.style.display='none';
+    canvas.style.cursor = 'default';
+    tip.style.display   = 'none';
   }
 });
-canvas.addEventListener('mouseleave',()=>{ document.getElementById('cvTip').style.display='none'; });
 
-function highlightCat(cat){
-  litCat = (litCat===cat) ? null : cat;
-  if(litCat) selIdx=null;
-  qty=1; syncLegend(); refresh();
-}
-function syncLegend(){
-  document.querySelectorAll('.leg-item').forEach(e=>e.classList.toggle('active', e.id==='leg-'+litCat));
-}
 
-// ── SIDEBAR CARDS ──
-function renderCards(){
-  const wrap=document.getElementById('zoneList');
-  wrap.innerHTML=zones.map((z,i)=>{
-    const c    = getColor(z);
-    const p    = PM[z.category] || 0;
-    const isSel= i===selIdx, isLit=z.category===litCat&&!isSel;
-    const SO   = isSO(z), a=avail(z);
-    const pct  = barPct(z), bcol=barColor(z);
-    const cls  = avClass(z), short=avShort(z);
 
-    let sh='';
-    if(z.shape==='triangle')   sh=`<polygon points="16,2 30,30 2,30" fill="${c}1F" stroke="${c}" stroke-width="1.6"/>`;
-    else if(z.shape==='round') sh=`<ellipse cx="16" cy="16" rx="14" ry="9" fill="${c}1F" stroke="${c}" stroke-width="1.6"/>`;
-    else                       sh=`<rect x="2" y="6" width="28" height="20" rx="4" fill="${c}1F" stroke="${c}" stroke-width="1.6"/>`;
+canvas.addEventListener('mouseleave', () => {
+  hovIdx = -1; draw();
+  document.getElementById('cvTip').style.display = 'none';
+});
 
-    const availHtml = SO
-      ? `<div class="zc-avail crit"><i class="bi bi-x-circle-fill"></i> SOLD OUT</div>`
-      : (z.totalSeats>0 && a<=10 ? `
-        <div class="zc-avail ${cls}">
-          ${a<=3?'<i class="bi bi-exclamation-triangle-fill"></i>':a<=10?'<i class="bi bi-exclamation-triangle"></i>':''}
-          ${short}
-        </div>
-        <div class="zc-avail-bar"><div class="zc-avail-bar-fill" style="width:${pct}%;background:${bcol};"></div></div>` : '');
+/* ═══════════════════════════════════════════
+   MODAL
+═══════════════════════════════════════════ */
+let _mz = null;
 
-    const tt = TICKET_TYPES.find(t=>t.category===z.category);
-    const _tiers = (tt && Array.isArray(tt.discountTiers) && tt.discountTiers.length > 0)
-      ? tt.discountTiers.filter(d=>d.minQty>0&&d.discount>0).sort((a,b)=>a.minQty-b.minQty)
-      : (tt && tt.comboOfferMinQty>0 && tt.comboOfferDiscount>0
-          ? [{minQty:tt.comboOfferMinQty, discount:tt.comboOfferDiscount}]
-          : []);
-    const comboHtml = _tiers.length > 0
-      ? `<div style="margin-top:0.28rem;font-size:0.62rem;color:#f5c842;font-weight:600;font-family:'Space Mono',monospace;">
-          ⚡ ${_tiers.map(d=>`Buy ${d.minQty}+ → ₹${d.discount} off`).join(' · ')}
-         </div>`
-      : '';
+function openModal(zi) {
+  const z  = zones[zi];
+  const p  = PM[z.category] || 0;
+  const tt = TT_BY[z.category];
+  const mq = maxQty(z);
+  _mz = { zi, p, mq, z };
+  qty = Math.min(1, mq);
 
-    return `<div class="zc${isSel?' sel':''}${SO?' so':''}${isLit?' lit':''}" style="--zc:${c}" onclick="selCard(${i})">
-      <div class="zc-ico"><svg viewBox="0 0 32 32">${sh}</svg></div>
-      <div class="zc-info">
-        <div class="zc-name">${z.name}</div>
-        <div class="zc-cat" style="color:${c}">${z.category.toUpperCase()}</div>
-        <div class="zc-price">\u20b9${p.toLocaleString('en-IN')}<span style="font-size:0.57rem;color:#444;"> / person</span></div>
-        ${availHtml}
-        ${comboHtml}
-      </div>
-      <span class="zc-ck" style="color:${c}">\u2713</span>
-    </div>`;
-  }).join('');
-}
+  const color = getCol(z);
+  const label = (z.name || z.category).toUpperCase();
+  document.getElementById('pillDot').style.background = color;
+  document.getElementById('pillName').textContent     = label;
+  document.getElementById('pillName').style.color     = color;
+  document.getElementById('pillPrice').textContent    = '₹' + p.toLocaleString('en-IN') + ' / person';
 
-function selCard(i){
-  const z=zones[i]; if(isSO(z)) return;
-  selIdx=i; litCat=null; qty=1;
-  refresh();
-  setTimeout(()=>goNext(), 320);
-}
-
-function updFooter(){
-  const btn=document.getElementById('btnNext');
-  if(selIdx===null){
-    document.getElementById('sfZone').textContent='\u2014';
-    document.getElementById('sfPrice').textContent='\u2014';
-    document.getElementById('sfQty').textContent='0';
-    document.getElementById('sfTotal').textContent='\u20b9'+CONV_FEE.toLocaleString('en-IN');
-    btn.disabled=true; return;
+  // ── Availability badge in pill ──
+  const av = avail(z);
+  let avBadge = document.getElementById('pillAvail');
+  if (!avBadge) {
+    avBadge = document.createElement('div');
+    avBadge.id = 'pillAvail';
+    avBadge.style.cssText = `
+    font - family: 'Space Mono', monospace;
+    font - size: 0.7rem; font - weight: 700;
+    padding: 0.18rem 0.55rem;
+    border - radius: 6px; white - space: nowrap; flex - shrink: 0;
+    `;
+    document.getElementById('zonePill').appendChild(avBadge);
   }
-  const z=zones[selIdx], p=PM[z.category]||0;
-  document.getElementById('sfZone').textContent=z.name;
-  document.getElementById('sfPrice').textContent='\u20b9'+p.toLocaleString('en-IN');
-  document.getElementById('sfQty').textContent=qty;
-  document.getElementById('sfTotal').textContent='\u20b9'+(p*qty+CONV_FEE).toLocaleString('en-IN');
-  btn.disabled=false;
+  if (z.totalSeats > 0) {
+    if (av <= 3) {
+      avBadge.textContent = `⚠ ${ av } left`;
+      avBadge.style.cssText += 'background:rgba(255,68,68,0.12);color:#FF4444;border:1px solid rgba(255,68,68,0.3);display:block;';
+    } else if (av <= 10) {
+      avBadge.textContent = `${ av } remaining`;
+      avBadge.style.cssText += 'background:rgba(245,200,66,0.10);color:#F5C842;border:1px solid rgba(245,200,66,0.25);display:block;';
+    } else {
+      avBadge.style.display = 'none';
+    }
+  } else {
+    avBadge.style.display = 'none';
+  }
+
+  // ── Inject qtyWarn element if not exists ──
+  if (!document.getElementById('qtyWarn')) {
+    const warn = document.createElement('div');
+    warn.id = 'qtyWarn';
+    warn.style.cssText = `
+    display: none;
+    text - align: center;
+    font - size: 0.75rem; font - weight: 600;
+    margin: -0.5rem 0 1rem;
+    padding: 0.45rem 0.75rem;
+    border - radius: 8px;
+    font - family: 'Poppins', sans - serif;
+    `;
+    document.getElementById('offerBox').before(warn);
+  }
+
+  const notice = EVT_NOTICE || (tt && tt.ageNotice) || '';
+  const noteEl = document.getElementById('childrenNote');
+  if (notice) { noteEl.textContent = notice; noteEl.style.display = 'block'; }
+  else noteEl.style.display = 'none';
+
+  updateModal();
+  document.getElementById('modalBg').classList.add('open');
+  document.body.style.overflow = 'hidden';
 }
 
-function refresh(){ syncLegend(); draw(); renderCards(); updFooter(); }
+function closeModal() {
+  document.getElementById('modalBg').classList.remove('open');
+  document.body.style.overflow = '';
+  selIdx = null; draw();
+}
 
-function goNext(){
-  if(selIdx===null) return;
-  const z=zones[selIdx];
+function bgClick(e) {
+  if (e.target === document.getElementById('modalBg')) closeModal();
+}
+
+function changeQty(d) {
+  if (!_mz) return;
+  const av       = availDB(_mz.z);  // EVENT DB data
+  const maxOrder = (TT_BY[_mz.z.category]?.maxPerOrder > 0) ? TT_BY[_mz.z.category].maxPerOrder : 10;
+  const mq       = TT_BY[_mz.z.category]?.totalSeats > 0 ? Math.min(maxOrder, av) : maxOrder;
+  qty = Math.max(1, Math.min(mq, qty + d));
+  updateModal();
+}
+
+/* ═══════════════════════════════════════════
+   FIX 4: calcDiscount — robust tier lookup
+   Supports both discountTiers[] array AND
+   legacy comboOfferMinQty / comboOfferDiscount fields.
+   discount values are treated as per-ticket rupee amounts.
+═══════════════════════════════════════════ */
+function calcDiscount(tt, q) {
+  if (!tt) return { discPerTicket: 0, nextTier: null, tiers: [] };
+
+  let tiers = [];
+  /* Prefer explicit tiers array */
+  if (Array.isArray(tt.discountTiers) && tt.discountTiers.length > 0) {
+    tiers = tt.discountTiers
+      .filter(d => d.minQty > 0 && d.discount > 0)
+      .sort((a, b) => a.minQty - b.minQty);
+  } else if (tt.comboOfferMinQty > 0 && tt.comboOfferDiscount > 0) {
+    tiers = [{ minQty: tt.comboOfferMinQty, discount: tt.comboOfferDiscount }];
+  }
+
+  /* Find best applicable tier (highest minQty <= qty) */
+  let discPerTicket = 0, nextTier = null;
+  for (const tier of tiers) {
+    if (q >= tier.minQty) {
+  discPerTicket = tier.discount; /* flat total discount for the order */    } else if (!nextTier) {
+      nextTier = tier;               /* next unlock */
+    }
+  }
+  return { discPerTicket, nextTier, tiers };
+}
+
+
+function updateModal() {
+  if (!_mz) return;
+  const { p, z } = _mz;
+  const tt = TT_BY[z.category];
+
+  // ── Always use EVENT DB data for modal validation ──
+  const av       = availDB(z);
+  const maxOrder = (tt && tt.maxPerOrder > 0) ? tt.maxPerOrder : 10;
+  const mq       = tt && tt.totalSeats > 0 ? Math.min(maxOrder, av) : maxOrder;
+  _mz.mq = mq;
+
+  if (qty > mq) qty = Math.max(1, mq);
+
+  document.getElementById('qtyNum').textContent = qty;
+  document.getElementById('btnMinus').disabled  = qty <= 1;
+  document.getElementById('btnPlus').disabled   = qty >= mq;
+
+  // ── Warning banner uses EVENT DB available count ──
+  const qtyWarn = document.getElementById('qtyWarn');
+  if (qtyWarn) {
+    if (tt && tt.totalSeats > 0 && av <= 10 && av > 0) {
+      qtyWarn.style.display = 'block';
+      if (av <= 3) {
+        qtyWarn.innerHTML        = `🔴 Only < strong > ${ av } seat${ av > 1 ? 's' : '' }</strong > left in this zone!`;
+        qtyWarn.style.background = 'rgba(255,68,68,0.08)';
+        qtyWarn.style.color      = '#FF6B6B';
+        qtyWarn.style.border     = '1px solid rgba(255,68,68,0.25)';
+      } else {
+        qtyWarn.innerHTML        = `⚠ Only < strong > ${ av } seats</strong > remaining in this zone`;
+        qtyWarn.style.background = 'rgba(245,200,66,0.07)';
+        qtyWarn.style.color      = '#F5C842';
+        qtyWarn.style.border     = '1px solid rgba(245,200,66,0.22)';
+      }
+      if (qty >= mq) {
+        const capReason = av <= maxOrder
+          ? `Maximum ${ mq } ticket${ mq > 1 ? 's' : '' } available`
+          : `Max ${ maxOrder } ticket${ maxOrder > 1 ? 's' : '' } per order`;
+        qtyWarn.innerHTML += `< br > <span style="font-size:0.7rem;opacity:0.8;">${capReason}</span>`;
+      }
+    } else if (tt && tt.totalSeats > 0 && qty >= mq) {
+      qtyWarn.style.display    = 'block';
+      qtyWarn.innerHTML        = `🔒 Max < strong > ${ maxOrder } ticket${ maxOrder > 1 ? 's' : '' }</strong > per order`;
+      qtyWarn.style.background = 'rgba(124,58,237,0.08)';
+      qtyWarn.style.color      = '#A78BFA';
+      qtyWarn.style.border     = '1px solid rgba(124,58,237,0.25)';
+    } else {
+      qtyWarn.style.display = 'none';
+    }
+  }
+
+  const { discPerTicket, nextTier, tiers } = calcDiscount(tt, qty);
+
+  // ── Money calculations ──
+  const baseTotal  = p * qty;
+  const discTotal  = discPerTicket;
+  const convTotal  = CONV_FEE;
+  const grandTotal = baseTotal - discTotal + convTotal;
+
+  document.getElementById('tBaseLabel').textContent = `${ qty } × ₹${ p.toLocaleString('en-IN') } `;
+  document.getElementById('tBase').textContent      = '₹' + baseTotal.toLocaleString('en-IN');
+
+  const breakdown = document.getElementById('tBreakdown');
+  const discRow   = document.getElementById('tDiscRow');
+  const convRow   = document.getElementById('tConvRow');
+
+  const showBreakdown = discTotal > 0 || convTotal > 0;
+  breakdown.style.display = showBreakdown ? 'block' : 'none';
+
+  if (discTotal > 0) {
+    discRow.style.display = 'flex';
+    document.getElementById('tDisc').textContent = '− ₹' + discTotal.toLocaleString('en-IN');
+  } else {
+    discRow.style.display = 'none';
+  }
+
+  if (convTotal > 0) {
+    convRow.style.display = 'flex';
+    document.getElementById('tConv').textContent = '+ ₹' + convTotal.toLocaleString('en-IN');
+  } else {
+    convRow.style.display = 'none';
+  }
+
+  document.getElementById('tTotal').textContent = '₹' + grandTotal.toLocaleString('en-IN');
+
+  // ── Offer nudge box ──
+  const box = document.getElementById('offerBox');
+  if (tiers.length > 0) {
+    if (nextTier) {
+      const need = nextTier.minQty - qty;
+      box.innerHTML = `⚡ Add < strong > ${ need } more ticket${ need > 1 ? 's' : '' }</strong > to get ₹${ nextTier.discount.toLocaleString('en-IN') } OFF your order!`;
+    } else if (discTotal > 0) {
+      box.innerHTML = `🎉 Group discount applied — saving < strong >₹${ discTotal.toLocaleString('en-IN') }</strong > on your order!`;
+    } else {
+      box.innerHTML = '';
+    }
+    if (box.innerHTML) box.classList.remove('hidden');
+    else box.classList.add('hidden');
+  } else {
+    box.classList.add('hidden');
+  }
+}
+
+function goNext() {
+  if (selIdx === null) return;
+  const z = zones[selIdx];
   sessionStorage.setItem('np_sel', JSON.stringify({
-    eventId:EVENT_ID, zone:z.name, category:z.category,
-    price:PM[z.category]||0, qty, convFee:CONV_FEE,
+    eventId:  EVENT_ID,
+    zone:     z.name,
+    category: z.category,
+    price:    PM[z.category] || 0,
+    qty,
+    convFee:  CONV_FEE,
   }));
-  window.location.href=`/booking/details/${EVENT_ID}?cat=${encodeURIComponent(z.category)}&qty=${qty}`;
+  window.location.href = `/ booking / details / ${ EVENT_ID }?cat = ${ encodeURIComponent(z.category) }& qty=${ qty }`;
 }
 
-renderCards(); updFooter(); draw();
-</script>
+
+
+/* ══ INIT ══ */
+document.fonts.ready.then(sizeCanvas);
+  </script>
 </body>
+
 </html>

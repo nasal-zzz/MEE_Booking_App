@@ -8,7 +8,7 @@
   // ─────────────────────────────────────────────
   // HELPERS
   // ─────────────────────────────────────────────
-  const redirectPage = (res, url, name, subtitle, color = '#6A0DAD') => {
+  const redirectPage = (res, url, name, subtitle, color = '#9500ff') => {
     res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
     res.send(`<!DOCTYPE html><html><head><meta charset="UTF-8"/>
     <title>Please wait...</title>
@@ -411,7 +411,7 @@ exports.postSignup = async (req, res) => {
         req.session.redirectAfterLogin = redirectTo;
         await new Promise(r => req.session.save(r));
         return redirectPage(res, '/auth/verify-phone',
-          `Welcome, ${user.firstName}! 👋`, 'One more step — add your phone number', '#6A0DAD');
+          `Welcome, ${user.firstName}! 👋`, 'One more step — add your phone number', '#9500ff');
       }
 
       delete req.session.redirectAfterLogin;

@@ -2,1265 +2,839 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Step 2 — Attendee Details · <%= event.name %></title>
+  <title>Details · <%= event.name %></title>
   <%- include('../partials/head') %>
-  <style>
-    .step-bar{background:#0e0e18;border-bottom:1px solid rgba(255,255,255,0.07);padding:0 0.75rem;height:44px;display:flex;align-items:center;justify-content:space-between;gap:0.5rem;}
-    .step-back{display:flex;align-items:center;gap:0.4rem;color:#B3B3B3;text-decoration:none;font-size:0.78rem;transition:color 0.2s;white-space:nowrap;}
-    .step-back:hover{color:#fff;}
-    .steps{display:flex;align-items:center;flex:1;justify-content:center;}
-    .step-item{display:flex;align-items:center;gap:0.4rem;font-size:0.68rem;color:#444;white-space:nowrap;}
-    .step-item.active{color:var(--accent);}
-    .step-item.done{color:#666;}
-    .step-num{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.58rem;font-weight:700;border:1.5px solid #333;background:#0e0e18;flex-shrink:0;}
-    .step-item.active .step-num{border-color:var(--accent);background:rgba(106,13,173,0.15);color:var(--accent);}
-    .step-item.done .step-num{border-color:#555;background:#555;color:#0e0e18;}
-    .step-line{width:22px;height:1px;background:#333;margin:0 0.22rem;flex-shrink:0;}
-    .step-line.done{background:#555;}
-    .event-lbl{font-family:var(--font-mono);font-size:0.6rem;color:#444;letter-spacing:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px;}
+ 
 
-    .pg-wrap{max-width:1040px;margin:0 auto;padding:2rem 1.5rem 5rem;display:grid;grid-template-columns:1fr 360px;gap:1.5rem;align-items:start;}
-    @media(max-width:860px){.pg-wrap{grid-template-columns:1fr;}}
+<style>
+    *{box-sizing:border-box;margin:0;padding:0;}
+    :root{
+      --accent:#7B2FFF;
+      --accent-bright:#8B3FFF;
+      --bg:#0D0D0D;
+      --surface:#161616;
+      --surface2:#1E1E1E;
+      --border:rgba(255,255,255,0.08);
+      --text:#fff;
+      --muted:#bebebe;
+      --yellow:#F5C842;
+    }
+    body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;display:flex;flex-direction:column;padding-bottom:120px;}
 
-    /* Zone summary banner */
-    .zone-banner{display:flex;align-items:center;gap:0.8rem;background:rgba(106,13,173,0.08);border:1px solid rgba(106,13,173,0.22);border-radius:10px;padding:0.85rem 1.2rem;margin-bottom:1.4rem;}
-    .zb-icon{width:40px;height:40px;border-radius:8px;background:rgba(106,13,173,0.18);display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0;}
-    .zb-info{flex:1;}
-    .zb-zone{font-family:var(--font-display);font-size:1rem;letter-spacing:1px;color:#fff;margin-bottom:0.12rem;}
-    .zb-meta{font-size:0.72rem;color:#B3B3B3;}
-    .zb-change{font-size:0.72rem;color:var(--accent);text-decoration:none;border-bottom:1px solid rgba(106,13,173,0.35);}
 
-    /* Section cards */
-    .sec-card{background:var(--card,#14141C);border:1px solid rgba(255,255,255,0.07);border-radius:10px;overflow:hidden;margin-bottom:1.2rem;}
-    .sec-hd{padding:1rem 1.4rem;border-bottom:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;gap:0.75rem;}
-    .sec-num{width:26px;height:26px;border-radius:50%;background:var(--accent,#6A0DAD);color:#fff;font-family:var(--font-display);font-size:0.82rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-    .sec-title{font-family:var(--font-display);font-size:1.1rem;letter-spacing:2px;color:#fff;}
-    .sec-body{padding:1.4rem;}
 
-    /* Selected ticket display */
-    #selTicketDisplay{transition:border-color 0.2s;}
+    /* ── TOP NAV ── */
+    .topbar{
+      display:flex;align-items:center;justify-content:space-between;
+      padding:1rem 1.25rem;
+      position:sticky;top:0;z-index:50;
+      background:var(--bg);
+    }
+    .back-btn{
+      width:42px;height:42px;border-radius:50%;
+      background:var(--accent);border:none;
+      display:flex;align-items:center;justify-content:center;
+      cursor:pointer;flex-shrink:0;transition:transform 0.18s;
+    }
+    .back-btn:hover{transform:scale(1.08);}
+    .back-btn svg{width:20px;height:20px;fill:none;stroke:#fff;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;}
+    .page-title{font-size:1.15rem;font-weight:700;color:#fff;}
+    .topbar-right{width:42px;}
 
-    /* Qty row */
-    .qty-sep{height:1px;background:rgba(255,255,255,0.07);margin:0 0 1.2rem;}
-    .qty-lbl{font-family:var(--font-mono);font-size:0.58rem;letter-spacing:2px;color:#B3B3B3;text-transform:uppercase;margin-bottom:0.9rem;display:block;}
-    .qty-row{display:flex;align-items:center;gap:1.1rem;}
-    .qty-btn{width:42px;height:42px;border-radius:8px;background:var(--surface,#14141C);border:1px solid rgba(255,255,255,0.08);color:#fff;font-size:1.25rem;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:0.18s;flex-shrink:0;}
-    .qty-btn:hover{border-color:var(--accent);color:var(--accent);}
-    .qty-btn:disabled{opacity:0.28;cursor:not-allowed;}
-    .qty-num{font-family:var(--font-display);font-size:2.8rem;color:#fff;letter-spacing:2px;min-width:55px;text-align:center;line-height:1;}
-    .qty-right{flex:1;}
-    .qty-total-lbl{font-size:0.72rem;color:#B3B3B3;font-family:var(--font-mono);margin-bottom:0.2rem;}
-    .qty-total-val{font-family:var(--font-display);font-size:1.5rem;color:var(--accent);letter-spacing:1px;}
-    .qty-chips{display:flex;gap:0.4rem;flex-wrap:wrap;margin-top:1.2rem;}
-    .tix-chip{background:var(--surface,#14141C);border:1px solid rgba(255,255,255,0.07);border-radius:4px;padding:0.3rem 0.65rem;font-family:var(--font-mono);font-size:0.62rem;color:#B3B3B3;letter-spacing:1px;display:flex;align-items:center;gap:0.35rem;}
-    .tix-chip i{color:var(--accent);}
+    /* ── MAIN CONTENT ── */
+    .content{padding:0 1.25rem;}
 
-    /* Age limit banner */
-    .age-limit-banner{display:flex;align-items:center;gap:0.55rem;background:rgba(245,200,66,0.07);border:1px solid rgba(245,200,66,0.25);border-radius:8px;padding:0.65rem 0.9rem;margin-bottom:1rem;font-size:0.78rem;color:#f5c842;}
-    .age-limit-banner i{flex-shrink:0;font-size:0.9rem;}
+    /* ── YOUR SELECTION ── */
+    .section-title{font-size:1.3rem;font-weight:700;color:#fff;margin-bottom:1rem;}
 
-    /* Attendee forms */
-    .att-card{background:rgba(255,255,255,0.025);border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:1.1rem;margin-bottom:0.8rem;}
-    .att-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:0.9rem;}
-    .att-badge-wrap{display:flex;align-items:center;gap:0.55rem;}
-    .att-num{width:25px;height:25px;border-radius:50%;background:rgba(106,13,173,0.2);border:1px solid rgba(106,13,173,0.35);display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:0.62rem;color:var(--accent);}
-    .att-lbl{font-size:0.8rem;font-weight:600;color:#fff;}
-    .you-chip{font-family:var(--font-mono);font-size:0.58rem;letter-spacing:1px;background:rgba(106,13,173,0.1);border:1px solid rgba(106,13,173,0.3);color:var(--accent);padding:0.18rem 0.55rem;border-radius:10px;}
-    .att-fields{display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;}
-    @media(max-width:480px){.att-fields{grid-template-columns:1fr;}}
-    .form-label{font-family:var(--font-mono);font-size:0.55rem;letter-spacing:1.5px;color:#d2cfcf;display:block;margin-bottom:0.3rem;text-transform:uppercase;}
-    .form-inp{width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:6px;color:#fff;font-size:0.88rem;padding:0.6rem 0.85rem;font-family:var(--font-body);outline:none;transition:border-color 0.18s;}
-    .form-inp:focus{border-color:rgba(106,13,173,0.4);}
-    .form-inp.err{border-color:#FF4444;}
-    .form-inp[readonly]{opacity:0.55;cursor:not-allowed;}
-    /* Dark styled select */
+    .selection-card{
+      background:var(--surface2);
+      border-radius:18px;
+      padding:1.1rem;
+      display:flex;align-items:center;gap:1rem;
+      margin-bottom:1.75rem;
+    }
+    .sel-icon{
+      width:54px;height:54px;border-radius:12px;
+      background:rgba(255,255,255,0.07);
+      display:flex;align-items:center;justify-content:center;
+      font-size:1.1rem;font-weight:800;color:#fff;
+      flex-shrink:0;letter-spacing:0.5px;
+    }
+    .sel-info{flex:1;min-width:0;}
+    .sel-cat{font-size:1rem;font-weight:800;color:var(--yellow);margin-bottom:0.12rem;}
+    .sel-cat span.qty{color:#fff;font-weight:500;}
+    .sel-price-row{display:flex;align-items:baseline;gap:0.4rem;margin-bottom:0.15rem;}
+    .sel-price{font-size:1.35rem;font-weight:800;color:#fff;}
+    .sel-per{font-size:0.82rem;color:var(--muted);font-weight:400;}
+    .sel-offer{font-size:0.78rem;color:var(--yellow);}
+    .sel-change{
+      background:rgba(123,47,255,0.15);
+      border:1px solid rgba(123,47,255,0.35);
+      color:#fff;
+      font-size:0.8rem;font-weight:600;
+      padding:0.45rem 1rem;
+      border-radius:20px;
+      white-space:nowrap;
+      text-decoration:none;
+      flex-shrink:0;
+      transition:background 0.18s;
+    }
+    .sel-change:hover{background:rgba(123,47,255,0.3);}
+
+    /* ── BOOKING DETAILS SECTION ── */
+    .booking-title{font-size:1.3rem;font-weight:700;color:#fff;margin-bottom:0.35rem;}
+    .booking-sub{font-size:0.88rem;color:var(--muted);margin-bottom:1.4rem;}
+
+    /* Form fields */
+    .field-group{margin-bottom:1.1rem;}
+    .field-label{
+      font-size:0.72rem;font-weight:700;color:var(--muted);
+      letter-spacing:1px;text-transform:uppercase;
+      margin-bottom:0.5rem;display:block;
+    }
+    .field-label .req{color:#FF4444;}
+    .form-inp{
+      width:100%;
+      background:var(--surface2);
+      border:1px solid rgba(255,255,255,0.07);
+      border-radius:14px;
+      color:#fff;font-size:0.95rem;
+      padding:0.95rem 1.1rem;
+      font-family:'Inter',sans-serif;
+      outline:none;
+      transition:border-color 0.18s;
+      appearance:none;-webkit-appearance:none;
+    }
+    .form-inp::placeholder{color:rgba(255,255,255,0.25);}
+    .form-inp:focus{border-color:rgba(123,47,255,0.5);}
+    .form-inp.err{border-color:rgba(255,68,68,0.6);}
+    .form-inp[readonly]{opacity:0.5;cursor:not-allowed;}
     select.form-inp{
-      appearance:none; -webkit-appearance:none;
-      background:rgba(255,255,255,0.04) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236A0DAD' stroke-width='1.8' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 0.85rem center;
-      color:#fff;
-      cursor:pointer;
+      background:var(--surface2) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' stroke-width='1.8' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 1rem center;
+      cursor:pointer;color:#fff;
     }
-    select.form-inp option{
-      background:#1a1a2e;
-      color:#fff;
-      padding:0.5rem;
+    select.form-inp option{background:#1a1a2e;color:#fff;}
+    .two-col{display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;}
+    .field-err{
+      font-size:0.75rem;color:#FF5555;
+      margin-top:0.35rem;display:none;
+      align-items:center;gap:0.3rem;
     }
-    select.form-inp option:checked,
-    select.form-inp option:hover{
-      background:#6A0DAD;
-      color:#fff;
-    }
-    .field-err{font-size:0.68rem;color:#FF4444;margin-top:0.22rem;display:none;align-items:center;gap:0.25rem;}
     .field-err.show{display:flex;}
-    .special-toggle{display:flex;align-items:center;gap:0.45rem;font-size:0.78rem;color:#B3B3B3;cursor:pointer;margin-top:0.75rem;}
-    .special-toggle i{color:var(--accent);}
-    .special-inp{width:100%;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:6px;color:#fff;font-size:0.85rem;padding:0.65rem 0.85rem;font-family:var(--font-body);outline:none;resize:none;margin-top:0.65rem;display:none;transition:border-color 0.18s;}
-    .special-inp.show{display:block;}
-    .special-inp:focus{border-color:rgba(106,13,173,0.35);}
 
-    /* ── TICKET TERMS ── */
-    .terms-card{background:var(--card,#14141C);border:1px solid rgba(255,255,255,0.07);border-radius:10px;overflow:hidden;margin-bottom:1.2rem;}
-    .terms-hd{display:flex;align-items:center;gap:0.65rem;padding:0.9rem 1.2rem;border-bottom:1px solid transparent;cursor:pointer;user-select:none;transition:background 0.18s;}
-    .terms-hd:hover{background:rgba(255,255,255,0.025);}
-    .terms-hd.open{border-bottom-color:rgba(255,255,255,0.06);}
-    .terms-hd-icon{width:30px;height:30px;border-radius:7px;background:rgba(106,13,173,0.15);border:1px solid rgba(106,13,173,0.3);display:flex;align-items:center;justify-content:center;font-size:0.85rem;color:var(--accent);flex-shrink:0;}
-    .terms-hd-title{flex:1;font-family:var(--font-display);font-size:0.85rem;letter-spacing:2px;color:#fff;}
-    .terms-hd-badge{font-family:var(--font-mono);font-size:0.52rem;letter-spacing:1px;background:rgba(106,13,173,0.1);border:1px solid rgba(106,13,173,0.25);color:var(--accent);padding:0.15rem 0.55rem;border-radius:10px;white-space:nowrap;}
-    .terms-chevron{color:#555;font-size:0.8rem;transition:transform 0.28s ease;flex-shrink:0;}
-    .terms-chevron.open{transform:rotate(180deg);}
-    .terms-body{padding:0 1.2rem;max-height:0;overflow:hidden;transition:max-height 0.38s ease, padding 0.25s ease;}
-    .terms-body.open{max-height:700px;padding:1.2rem;}
-    .terms-content{font-size:0.8rem;color:#999;line-height:1.85;white-space:pre-wrap;word-break:break-word;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);border-radius:7px;padding:1rem 1.1rem;max-height:220px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(106,13,173,0.4) transparent;}
-    .terms-content::-webkit-scrollbar{width:4px;}
-    .terms-content::-webkit-scrollbar-track{background:transparent;}
-    .terms-content::-webkit-scrollbar-thumb{background:rgba(106,13,173,0.4);border-radius:2px;}
-    .terms-agree-row{display:flex;align-items:flex-start;gap:0.7rem;margin-top:1rem;padding-top:1rem;border-top:1px solid rgba(255,255,255,0.06);}
-    .terms-checkbox{width:20px;height:20px;border-radius:5px;border:1.5px solid rgba(106,13,173,0.45);background:rgba(106,13,173,0.08);appearance:none;-webkit-appearance:none;cursor:pointer;flex-shrink:0;margin-top:1px;position:relative;transition:all 0.18s;}
+    /* ── AGE LIMIT BANNER ── */
+    .age-banner{
+      display:flex;align-items:center;gap:0.6rem;
+      background:rgba(245,200,66,0.07);
+      border:1px solid rgba(245,200,66,0.2);
+      border-radius:12px;
+      padding:0.75rem 1rem;
+      font-size:0.82rem;color:var(--yellow);
+      margin-bottom:1.1rem;
+    }
+
+    /* ── T&C ── */
+    .terms-row{
+      display:flex;align-items:flex-start;gap:0.75rem;
+      margin-top:1.5rem;padding-top:1.25rem;
+      border-top:1px solid rgba(255,255,255,0.06);
+    }
+    .terms-checkbox{
+      width:22px;height:22px;border-radius:6px;
+      border:1.5px solid rgba(123,47,255,0.45);
+      background:rgba(123,47,255,0.08);
+      appearance:none;-webkit-appearance:none;
+      cursor:pointer;flex-shrink:0;margin-top:1px;
+      position:relative;transition:all 0.18s;
+    }
     .terms-checkbox:checked{background:var(--accent);border-color:var(--accent);}
-    .terms-checkbox:checked::after{content:'✓';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:0.7rem;font-weight:800;line-height:1;}
-    .terms-checkbox:focus{outline:2px solid rgba(106,13,173,0.4);outline-offset:2px;}
-    .terms-agree-lbl{font-size:0.79rem;color:#B3B3B3;line-height:1.55;cursor:pointer;flex:1;}
-    .terms-agree-lbl strong{color:#fff;font-weight:600;}
-    .terms-agree-lbl .terms-link{color:var(--accent);border-bottom:1px solid rgba(106,13,173,0.35);}
-    .terms-err{display:none;align-items:center;gap:0.4rem;font-size:0.72rem;color:#FF4444;margin-top:0.6rem;padding:0.5rem 0.75rem;background:rgba(255,68,68,0.06);border:1px solid rgba(255,68,68,0.18);border-radius:6px;}
-    .terms-err.show{display:flex;}
-    /* Must-read indicator strip */
-    .terms-must-read{display:flex;align-items:center;gap:0.5rem;font-size:0.7rem;color:#f5c842;font-family:var(--font-mono);letter-spacing:0.5px;margin-bottom:0.75rem;}
-    .terms-must-read i{font-size:0.75rem;}
+    .terms-checkbox:checked::after{
+      content:'✓';position:absolute;inset:0;
+      display:flex;align-items:center;justify-content:center;
+      color:#fff;font-size:0.72rem;font-weight:800;
+    }
+    .terms-lbl{font-size:0.82rem;color:var(--muted);line-height:1.6;cursor:pointer;flex:1;}
+    .terms-link{color:var(--accent);text-decoration:none;}
+    .terms-err-msg{
+      display:none;
+      font-size:0.75rem;color:#FF5555;
+      margin-top:0.5rem;padding:0.5rem 0.75rem;
+      background:rgba(255,68,68,0.06);
+      border:1px solid rgba(255,68,68,0.18);
+      border-radius:8px;
+      align-items:center;gap:0.4rem;
+    }
+    .terms-err-msg.show{display:flex;}
 
-    /* Order summary */
-    .sum-card{background:var(--card,#14141C);border:1px solid rgba(255,255,255,0.07);border-radius:10px;overflow:hidden;}
-    .sum-sticky-wrap{position:sticky;top:72px;}
-    .sum-top{height:3px;background:linear-gradient(90deg,transparent,var(--accent),transparent);}
-    .sum-body{padding:1.4rem;}
-    .sum-hd{font-family:var(--font-display);font-size:1.1rem;letter-spacing:2px;color:#fff;margin-bottom:1.1rem;}
-    .sum-event{display:flex;align-items:center;gap:0.75rem;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:6px;padding:0.8rem;margin-bottom:1rem;}
-    .sum-evt-ico{width:42px;height:42px;border-radius:6px;background:linear-gradient(135deg,#150820,#2d0a5c);display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;}
-    .sum-evt-name{font-family:var(--font-display);font-size:0.95rem;letter-spacing:1px;color:#fff;}
-    .sum-evt-sub{font-size:0.7rem;color:#B3B3B3;margin-top:0.1rem;}
-    .sum-row{display:flex;justify-content:space-between;align-items:center;padding:0.5rem 0;border-bottom:1px solid rgba(255,255,255,0.06);font-size:0.82rem;}
+    /* ── ORDER SUMMARY (desktop right col / mobile inline above button) ── */
+    .sum-card{
+      background:var(--surface2);
+      border-radius:18px;
+      padding:1.4rem;
+      margin-top:1.75rem;
+    }
+    .sum-title{font-size:1rem;font-weight:700;color:#fff;margin-bottom:1rem;}
+    .sum-row{
+      display:flex;justify-content:space-between;
+      font-size:0.88rem;padding:0.5rem 0;
+      border-bottom:1px solid rgba(255,255,255,0.05);
+    }
     .sum-row:last-of-type{border-bottom:none;}
-    .sum-row .lbl{color:#B3B3B3;}.sum-row .val{color:#fff;font-weight:500;}
-    .sum-total-row{display:flex;align-items:center;justify-content:space-between;padding:0.8rem 0;border-top:1px solid rgba(255,255,255,0.08);margin-top:0.2rem;}
-    .sum-total-lbl{font-family:var(--font-display);font-size:0.95rem;letter-spacing:1px;color:#fff;}
-    .sum-total-val{font-family:var(--font-display);font-size:1.9rem;color:var(--accent);letter-spacing:2px;text-shadow:0 0 20px rgba(106,13,173,0.35);}
-    .coupon-row{display:flex;gap:0.45rem;margin:0.4rem 0 0.9rem;}
-    .coupon-inp{flex:1;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:6px;color:#fff;font-size:0.82rem;padding:0.62rem 0.85rem;font-family:var(--font-mono);letter-spacing:1px;outline:none;text-transform:uppercase;transition:border-color 0.18s;min-width:0;}
-    .coupon-inp::placeholder{color:#444;text-transform:none;letter-spacing:0;font-size:0.75rem;}
-    .coupon-inp:focus{border-color:rgba(106,13,173,0.4);}
-    .coupon-btn{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);color:var(--accent);font-size:0.76rem;font-weight:700;padding:0 0.9rem;border-radius:6px;cursor:pointer;letter-spacing:1px;transition:0.18s;white-space:nowrap;}
-    .coupon-btn:hover{border-color:var(--accent);background:rgba(106,13,173,0.1);}
-    .coupon-msg{display:none;align-items:center;gap:0.4rem;font-size:0.75rem;margin-bottom:0.35rem;}
-    .coupon-msg.show{display:flex;}
-    .disc-row{display:none;justify-content:space-between;align-items:center;padding:0.5rem 0;border-bottom:1px solid rgba(255,255,255,0.06);font-size:0.82rem;}
+    .sum-row .lbl{color:var(--muted);}
+    .sum-row .val{color:#fff;font-weight:600;}
+    .disc-row{display:none;justify-content:space-between;font-size:0.88rem;padding:0.5rem 0;border-bottom:1px solid rgba(255,255,255,0.05);}
     .disc-row.show{display:flex;}
 
-    .btn-pay{width:100%;padding:1.05rem;background:var(--accent);color:#fff;font-family:var(--font-body);font-weight:700;font-size:0.95rem;letter-spacing:1px;border:none;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:0.55rem;transition:0.18s;box-shadow:0 0 26px rgba(106,13,173,0.22);position:relative;overflow:hidden;}
-    .btn-pay:hover{transform:translateY(-2px);box-shadow:0 0 48px rgba(106,13,173,0.48);}
-    .btn-pay:disabled{opacity:0.38;cursor:not-allowed;transform:none;box-shadow:none;}
+    /* Coupon */
+    .coupon-row{display:flex;gap:0.5rem;margin-top:1rem;}
+    .coupon-inp{
+      flex:1;background:var(--surface);border:1px solid var(--border);
+      border-radius:12px;color:#fff;font-size:0.85rem;
+      padding:0.75rem 1rem;font-family:'Inter',sans-serif;
+      letter-spacing:1px;outline:none;text-transform:uppercase;
+      transition:border-color 0.18s;min-width:0;
+    }
+    .coupon-inp::placeholder{color:#444;text-transform:none;letter-spacing:0;}
+    .coupon-inp:focus{border-color:rgba(123,47,255,0.4);}
+    .coupon-btn{
+      background:rgba(123,47,255,0.12);
+      border:1px solid rgba(123,47,255,0.3);
+      color:var(--accent);font-size:0.8rem;font-weight:700;
+      padding:0 1rem;border-radius:12px;cursor:pointer;
+      letter-spacing:0.5px;transition:0.18s;white-space:nowrap;
+    }
+    .coupon-btn:hover{background:rgba(123,47,255,0.25);}
+    .coupon-msg{display:none;font-size:0.78rem;margin-top:0.4rem;}
+    .coupon-msg.show{display:flex;align-items:center;gap:0.4rem;}
+
+    /* ── STICKY BOTTOM BAR ── */
+    .bottom-bar{
+      position:fixed;bottom:0;left:0;right:0;
+      background:var(--bg);
+      border-top:1px solid rgba(255,255,255,0.07);
+      padding:1rem 1.25rem 1.25rem;
+      z-index:100;
+    }
+    .bb-totals{
+      display:flex;justify-content:space-between;align-items:center;
+      margin-bottom:0.8rem;
+    }
+    .bb-lbl{font-size:0.82rem;color:var(--muted);}
+    .bb-right{text-align:right;}
+    .bb-amount{font-size:1.5rem;font-weight:800;color:#fff;line-height:1;}
+    .bb-discount{font-size:0.82rem;color:var(--yellow);margin-top:0.1rem;}
+    .btn-pay{
+      width:100%;padding:1.05rem;
+      background:var(--accent);
+      border:none;border-radius:16px;
+      color:#fff;font-size:1rem;font-weight:700;
+      cursor:pointer;transition:all 0.18s;
+      display:flex;align-items:center;justify-content:center;gap:0.5rem;
+      position:relative;overflow:hidden;
+    }
+    .btn-pay:hover:not(:disabled){background:var(--accent-bright);transform:translateY(-1px);}
+    .btn-pay:disabled{opacity:0.38;cursor:not-allowed;transform:none;}
     .spin{width:18px;height:18px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:sp 0.7s linear infinite;display:none;}
     @keyframes sp{to{transform:rotate(360deg)}}
-    .rzp-note{display:flex;align-items:center;justify-content:center;gap:0.4rem;margin-top:0.7rem;font-size:0.7rem;color:#555;}
-    .rzp-badge{font-family:var(--font-mono);font-size:0.65rem;background:#072654;color:#5a9dff;border:1px solid rgba(90,157,255,0.3);padding:0.12rem 0.45rem;border-radius:3px;}
 
-    /* Mobile bottom bar */
-    .mob-bar{display:none !important;}
-    .mob-bar-total{font-family:var(--font-display);font-size:1.7rem;color:var(--accent);letter-spacing:1px;}
-    .mob-bar-lbl{font-size:0.65rem;color:#B3B3B3;font-family:var(--font-mono);}
-    .btn-mob-pay{background:var(--accent);color:#fff;font-family:var(--font-body);font-weight:700;font-size:0.88rem;padding:0.8rem 1.6rem;border:none;border-radius:6px;cursor:pointer;white-space:nowrap;}
-    @media(max-width:860px){.mob-bar{display:flex;}}
+    /* ── DESKTOP LAYOUT ── */
+    @media(min-width:768px){
+      body{padding-bottom:0;}
+      .topbar{padding:1.25rem 2.5rem;}
+      .content{
+        max-width:1080px;margin:0 auto;padding:0 2.5rem 3rem;
+        display:grid;grid-template-columns:1fr 380px;gap:2rem;align-items:start;
+      }
+      .col-left{} .col-right{}
+      .bottom-bar{display:none;}
+      .sum-card{margin-top:0;position:sticky;top:84px;}
+      .sum-card-title-row{font-size:1.1rem;font-weight:700;color:#fff;margin-bottom:1.1rem;}
+    }
 
-    /* ── TOAST NOTIFICATION ── */
-    #toast-container{position:fixed;top:1.2rem;right:1.2rem;z-index:9999;display:flex;flex-direction:column;gap:0.6rem;pointer-events:none;}
-    .toast-msg{display:flex;align-items:flex-start;gap:0.7rem;padding:0.9rem 1.1rem;border-radius:10px;font-size:0.83rem;min-width:260px;max-width:360px;box-shadow:0 8px 32px rgba(0,0,0,0.45);pointer-events:all;animation:toastIn 0.3s ease;backdrop-filter:blur(10px);}
-    @keyframes toastIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
-    @keyframes toastOut{from{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(20px)}}
-    .toast-msg.success{background:rgba(0,20,10,0.92);border:1px solid rgba(0,255,136,0.3);color:#00FF88;}
-    .toast-msg.error{background:rgba(20,0,0,0.92);border:1px solid rgba(255,68,68,0.35);color:#FF6B6B;}
-    .toast-msg.warning{background:rgba(20,15,0,0.92);border:1px solid rgba(245,200,66,0.35);color:#f5c842;}
-    .toast-msg.info{background:rgba(10,8,25,0.92);border:1px solid rgba(106,13,173,0.4);color:#bf80ff;}
-    .toast-icon{font-size:1rem;flex-shrink:0;margin-top:0.05rem;}
-    .toast-body{flex:1;line-height:1.45;}
-    .toast-title{font-weight:700;font-size:0.8rem;margin-bottom:0.12rem;letter-spacing:0.3px;}
-    .toast-sub{font-size:0.75rem;opacity:0.85;}
+    /* ── MOBILE: hide right col entirely so only sticky bar shows ── */
+/* ── MOBILE: show order summary but hide the pay button inside it ── */
+/* ── MOBILE: show order summary but hide only the pay button & razorpay text ── */
+@media(max-width:767px){
+  .col-right .btn-pay{display:none !important;}
+  .col-right .btn-pay + div{display:none !important;}
+  .col-right{display:block;}
+  .sum-card{
+    margin-top:1rem;
+    margin-bottom:0;
+  }
+  /* remove the gap div above razorpay text */
+  .col-right .sum-card > div[style*="height:0.9rem"]{display:none !important;}
+  .col-right .sum-card > div[style*="height:1px"]{margin-bottom:0 !important;}
+  body{padding-bottom:130px;}
+}
+    /* Terms modal */
+    .terms-modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:500;align-items:flex-end;justify-content:center;backdrop-filter:blur(6px);}
+    .terms-modal-bg.open{display:flex;}
+    .terms-modal{background:#1a1a1a;border-radius:20px 20px 0 0;padding:1.5rem 1.5rem 2rem;width:100%;max-width:520px;max-height:80vh;overflow-y:auto;}
+    .terms-modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;}
+    .terms-modal-title{font-size:1rem;font-weight:800;color:#fff;}
+    .terms-modal-close{background:rgba(255,255,255,0.07);border:none;color:#888;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;}
+    .terms-modal-body{font-size:0.85rem;color:#aaa;line-height:1.7;}
+    @media(min-width:520px){
+      .terms-modal-bg{align-items:center;}
+      .terms-modal{border-radius:20px;max-height:70vh;}
+    }
 
-    /* ── PAYMENT FAILED OVERLAY ── */
-    #payFailedOverlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.82);z-index:8888;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(8px);}
+    /* ── TOAST ── */
+    #toast-container{position:fixed;top:1rem;right:1rem;z-index:9999;display:flex;flex-direction:column;gap:0.5rem;pointer-events:none;}
+    .toast-msg{display:flex;align-items:flex-start;gap:0.65rem;padding:0.85rem 1rem;border-radius:12px;font-size:0.82rem;min-width:240px;max-width:340px;pointer-events:all;animation:toastIn 0.3s ease;backdrop-filter:blur(10px);}
+    @keyframes toastIn{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:translateX(0)}}
+    @keyframes toastOut{from{opacity:1}to{opacity:0;transform:translateX(16px)}}
+    .toast-msg.success{background:rgba(0,15,8,0.95);border:1px solid rgba(0,200,100,0.3);color:#00C864;}
+    .toast-msg.error{background:rgba(20,0,0,0.95);border:1px solid rgba(255,68,68,0.3);color:#FF6B6B;}
+    .toast-msg.warning{background:rgba(20,14,0,0.95);border:1px solid rgba(245,200,66,0.3);color:#F5C842;}
+    .toast-msg.info{background:rgba(8,0,20,0.95);border:1px solid rgba(123,47,255,0.35);color:#BF80FF;}
+    .toast-body{flex:1;}.toast-title{font-weight:700;font-size:0.8rem;margin-bottom:0.1rem;}.toast-sub{font-size:0.74rem;opacity:0.85;}
+
+    /* ── PAY FAILED OVERLAY ── */
+    #payFailedOverlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:8888;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(8px);}
     #payFailedOverlay.show{display:flex;}
-    .pf-card{background:#14141C;border:1px solid rgba(255,68,68,0.25);border-radius:16px;width:100%;max-width:420px;overflow:hidden;text-align:center;}
-    .pf-top{height:4px;background:linear-gradient(90deg,#FF4444,#ff8800,#FF4444);}
-    .pf-body{padding:2.2rem 2rem;}
-    .pf-icon{font-size:3rem;margin-bottom:1rem;display:block;}
-    .pf-title{font-family:var(--font-display);font-size:1.3rem;letter-spacing:2px;color:#fff;margin-bottom:0.5rem;}
-    .pf-desc{font-size:0.82rem;color:#B3B3B3;line-height:1.6;margin-bottom:1.8rem;}
-    .pf-error-msg{background:rgba(255,68,68,0.07);border:1px solid rgba(255,68,68,0.2);border-radius:8px;padding:0.65rem 1rem;font-size:0.78rem;color:#ff8888;margin-bottom:1.5rem;font-family:var(--font-mono);}
-    .pf-btns{display:flex;flex-direction:column;gap:0.7rem;}
-    .pf-btn-retry{display:flex;align-items:center;justify-content:center;gap:0.5rem;padding:0.85rem;background:#6A0DAD;color:#fff;border:none;border-radius:8px;font-weight:700;font-size:0.88rem;cursor:pointer;transition:all 0.18s;letter-spacing:0.5px;}
-    .pf-btn-retry:hover{box-shadow:0 0 24px rgba(106,13,173,0.5);transform:translateY(-1px);}
-    .pf-btn-back{display:flex;align-items:center;justify-content:center;gap:0.5rem;padding:0.75rem;background:transparent;color:#B3B3B3;border:1px solid rgba(255,255,255,0.1);border-radius:8px;font-size:0.85rem;cursor:pointer;transition:all 0.18s;text-decoration:none;}
-    .pf-btn-back:hover{border-color:rgba(255,255,255,0.25);color:#fff;}
+    .pf-card{background:#161616;border:1px solid rgba(255,68,68,0.2);border-radius:20px;width:100%;max-width:400px;text-align:center;overflow:hidden;}
+    .pf-top{height:3px;background:linear-gradient(90deg,#FF4444,#ff8800,#FF4444);}
+    .pf-body{padding:2rem 1.75rem;}
+    .pf-icon{font-size:2.5rem;margin-bottom:0.75rem;display:block;}
+    .pf-title{font-size:1.2rem;font-weight:800;color:#fff;margin-bottom:0.4rem;}
+    .pf-desc{font-size:0.82rem;color:var(--muted);line-height:1.6;margin-bottom:1.25rem;}
+    .pf-error-msg{background:rgba(255,68,68,0.06);border:1px solid rgba(255,68,68,0.18);border-radius:8px;padding:0.6rem 0.9rem;font-size:0.76rem;color:#FF8888;margin-bottom:1.25rem;}
+    .pf-btns{display:flex;flex-direction:column;gap:0.6rem;}
+    .pf-btn-retry{padding:0.85rem;background:var(--accent);color:#fff;border:none;border-radius:12px;font-weight:700;font-size:0.9rem;cursor:pointer;transition:all 0.18s;}
+    .pf-btn-retry:hover{background:var(--accent-bright);}
+    .pf-btn-back{padding:0.75rem;background:transparent;color:var(--muted);border:1px solid rgba(255,255,255,0.1);border-radius:12px;font-size:0.85rem;cursor:pointer;transition:all 0.18s;}
+    .pf-btn-back:hover{color:#fff;border-color:rgba(255,255,255,0.25);}
+
     @media(max-width:480px){
-      .step-bar{padding:0 0.6rem;height:42px;}
-      .step-item{font-size:0.58rem;gap:0.22rem;}
-      .step-num{width:17px;height:17px;font-size:0.5rem;}
-      .step-line{width:14px;}
-      .step-back{font-size:0.68rem;}
+      .topbar{padding:0.9rem 1rem;}
+      .content{padding:0 1rem;}
     }
   </style>
+
+
 </head>
 <body>
-  <div class="step-bar">
-    <a href="/booking/seatmap/<%= event._id %>" class="step-back"><i class="bi bi-arrow-left"></i> Back</a>
-    <div class="steps">
-      <div class="step-item done"><div class="step-num"><i class="bi bi-check" style="font-size:0.6rem;"></i></div><span>Zone</span></div>
-      <div class="step-line done"></div>
-      <div class="step-item active"><div class="step-num">2</div><span>Details</span></div>
-      <div class="step-line"></div>
-      <div class="step-item"><div class="step-num">3</div><span>Payment</span></div>
-      <div class="step-line"></div>
-      <div class="step-item"><div class="step-num"><i class="bi bi-check" style="font-size:0.6rem;"></i></div><span>Done</span></div>
-    </div>
-    <div class="event-lbl"><%= event.name.toUpperCase() %></div>
+
+  <div class="topbar">
+<button class="back-btn">      
+      <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <div class="page-title">Details</div>
+    <div class="topbar-right"></div>
   </div>
 
-  <!-- Toast container -->
   <div id="toast-container"></div>
 
-  <!-- Payment Failed Overlay -->
   <div id="payFailedOverlay">
     <div class="pf-card">
       <div class="pf-top"></div>
       <div class="pf-body">
         <span class="pf-icon">❌</span>
-        <div class="pf-title">PAYMENT FAILED</div>
-        <p class="pf-desc">Your payment could not be processed. No amount has been charged to your account.</p>
-        <div class="pf-error-msg" id="pfErrorMsg">Please try again or use a different payment method.</div>
+        <div class="pf-title">Payment Failed</div>
+        <p class="pf-desc">Your payment could not be processed. No amount has been charged.</p>
+        <div class="pf-error-msg" id="pfErrorMsg">Please try again or use a different method.</div>
         <div class="pf-btns">
-          <button class="pf-btn-retry" onclick="retryFromOverlay()">
-            <i class="bi bi-arrow-clockwise"></i> Retry Payment
-          </button>
-          <button class="pf-btn-back" onclick="closePayFailed()">
-            <i class="bi bi-arrow-left"></i> Back to Details
-          </button>
-          <a href="/booking/seatmap/<%= event._id %>" class="pf-btn-seat" style="font-size:0.72rem;color:#555;text-decoration:none;display:flex;align-items:center;gap:0.3rem;margin-top:0.5rem;justify-content:center;">
-            <i class="bi bi-map"></i> Change seat selection
-          </a>
+          <button class="pf-btn-retry" onclick="retryFromOverlay()">↺ Retry Payment</button>
+          <button class="pf-btn-back" onclick="closePayFailed()">← Back to Details</button>
         </div>
       </div>
     </div>
   </div>
 
-  <div class="pg-wrap">
-    <!-- LEFT -->
-    <div>
-      <!-- Zone summary -->
-      <div class="zone-banner" id="zoneBanner">
-        <div class="zb-icon">🗺️</div>
-        <div class="zb-info">
-          <div class="zb-zone" id="zbZone">No zone selected</div>
-          <div class="zb-meta" id="zbMeta">Go back to pick a zone</div>
+  <!-- ── MAIN CONTENT ── -->
+  <div class="content">
+
+    <!-- LEFT COL -->
+    <div class="col-left">
+
+      <!-- Your Selection -->
+      <div class="section-title">Your Selection</div>
+      <div class="selection-card">
+        <div class="sel-icon" id="selIcon">—</div>
+        <div class="sel-info">
+          <div class="sel-cat" id="selCat">—</div>
+          <div class="sel-price-row">
+            <div class="sel-price" id="selPrice">—</div>
+            <div class="sel-per">Per Person</div>
+          </div>
+          <div class="sel-offer" id="selOffer" style="display:none;"></div>
         </div>
-        <a href="/booking/seatmap/<%= event._id %>" class="zb-change">← Change</a>
+        <a href="/booking/seatmap/<%= event._id %>" class="sel-change">Change</a>
       </div>
 
-      <!-- Selected ticket type display (from step 1, read-only) -->
-      <div class="sec-card">
-        <div class="sec-hd"><div class="sec-num">1</div><div class="sec-title">SELECTED TICKET</div></div>
-        <div class="sec-body">
-          <div id="selTicketDisplay" style="display:flex;align-items:center;gap:1rem;background:rgba(255,255,255,0.025);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:1rem 1.2rem;margin-bottom:1.2rem;">
-            <div id="selTicketColor" style="width:44px;height:44px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;background:rgba(106,13,173,0.2);">🎟️</div>
-            <div style="flex:1;">
-              <div id="selTicketCat" style="font-family:var(--font-display);font-size:1.1rem;letter-spacing:2px;color:#fff;margin-bottom:0.2rem;">—</div>
-              <div id="selTicketPrice" style="font-family:var(--font-mono);font-size:0.85rem;color:var(--accent);">—</div>
-              <div id="selTicketTiers" style="font-size:0.68rem;color:#f5c842;font-family:var(--font-mono);margin-top:0.2rem;display:none;"></div>
-            </div>
-            <a href="/booking/seatmap/<%= event._id %>" style="font-size:0.72rem;color:var(--accent);text-decoration:none;border-bottom:1px solid rgba(106,13,173,0.35);white-space:nowrap;">← Change</a>
-          </div>
-          <!-- Hidden input carries the category value for JS -->
-          <input type="hidden" id="hiddenTicketType" value=""/>
-          <div id="qtySectionWrap">
-          <div class="qty-sep"></div>
-          <span class="qty-lbl">Number of Tickets</span>
-          <div class="qty-row">
-            <button class="qty-btn" id="qtyMinus" onclick="changeQty(-1)" disabled>−</button>
-            <div class="qty-num" id="qtyDisplay">1</div>
-            <button class="qty-btn" id="qtyPlus" onclick="changeQty(1)">+</button>
-            <div class="qty-right">
-              <div class="qty-total-lbl">TOTAL AMOUNT</div>
-              <div class="qty-total-val" id="qtyTotalAmt">—</div>
-              <div id="qtyHint" style="font-size:0.68rem;color:#555;margin-top:0.15rem;">Max 10 per booking</div>
-            </div>
-          </div>
-          <!-- Availability warning -->
-          <div id="qtyAvailWarn" style="display:none;margin-top:0.75rem;padding:0.5rem 0.75rem;border-radius:8px;font-size:0.72rem;display:none;align-items:center;gap:0.4rem;">
-            <i class="bi bi-exclamation-triangle-fill"></i>
-            <span id="qtyAvailWarnTxt"></span>
-          </div>
-          <div class="qty-chips" id="qtyChips" style="display:none;">
-            <div class="tix-chip"><i class="bi bi-ticket-perforated-fill"></i> TICKET #1</div>
-          </div>
-        </div>
+      <!-- Booking Info -->
+      <div class="booking-title">Booking Info</div>
+      <div class="booking-sub">Enter attendee details to complete your booking.</div>
+
+      <!-- Age limit banner -->
+      <div class="age-banner" id="ageBanner" style="display:none;">
+        <i class="bi bi-shield-exclamation" style="flex-shrink:0;"></i>
+        <span id="ageBannerTxt"></span>
       </div>
 
-      <!-- Attendees -->
-      <div class="sec-card">
-        <div class="sec-hd"><div class="sec-num">2</div><div class="sec-title">ATTENDEE DETAILS</div></div>
-        <div class="sec-body">
-          <div style="display:flex;align-items:flex-start;gap:0.55rem;background:rgba(106,13,173,0.06);border:1px solid rgba(106,13,173,0.14);border-radius:6px;padding:0.75rem;font-size:0.78rem;color:#B3B3B3;margin-bottom:1rem;">
-            <i class="bi bi-info-circle-fill" style="color:var(--accent);flex-shrink:0;margin-top:2px;"></i>
-            Each ticket requires a name — printed on the QR pass and checked at entry.
-          </div>
-          <!-- Age limit banner — shown dynamically if ticket has ageLimit > 0 -->
-          <div class="age-limit-banner" id="ageLimitBanner" style="display:none;">
-            <i class="bi bi-shield-exclamation"></i>
-            <span id="ageLimitBannerTxt"></span>
-          </div>
-          </div><!-- /qtySectionWrap -->
-          <!-- Group ticket note (hidden by default) -->
-          <div id="groupTicketNote" style="display:none;align-items:center;gap:0.8rem;background:rgba(106,13,173,0.08);border:1px solid rgba(106,13,173,0.22);border-radius:10px;padding:0.8rem 1.1rem;margin-bottom:1rem;">
-            <div style="font-size:1.3rem;">👥</div>
-            <div>
-              <div style="font-family:var(--font-display);font-size:0.9rem;letter-spacing:1px;color:#fff;margin-bottom:0.1rem;">GROUP TICKET — <span class="gtn-count">2</span> PEOPLE</div>
-              <div style="font-size:0.72rem;color:var(--muted);">This is a group entry. Fill in details for each person below. Each will get their own QR code.</div>
-            </div>
-          </div>
-          <div id="attendeeForms"></div>
+      <!-- Form -->
+      <div class="field-group">
+        <label class="field-label" for="n-1">NAME <span class="req">*</span></label>
+        <input type="text" class="form-inp" id="n-1" placeholder="Enter Your Full Name" oninput="liveVal('n-1','ne-1',v=>v.trim().length>=2)" value="<%= user ? (user.firstName||'') + ' ' + (user.lastName||'') : '' %>" autocomplete="name"/>
+        
+        <div class="field-err" id="ne-1"><i class="bi bi-exclamation-circle"></i> Name required</div>
+      </div>
+
+      <div class="two-col">
+        <div class="field-group">
+          <label class="field-label" for="a-1">AGE <span class="req">*</span></label>
+<input type="number" class="form-inp" id="a-1" placeholder="Enter Age" min="1" max="120" inputmode="numeric" oninput="liveValAge()"/>      
+          <div class="field-err" id="ae-1"><i class="bi bi-exclamation-circle"></i> <span id="ae-msg-1">Valid age required</span></div>
+        </div>
+        <div class="field-group">
+          <label class="field-label" for="g-1">GENDER <span class="req">*</span></label>
+         <select class="form-inp" id="g-1" onchange="liveVal('g-1','ge-1',v=>v!=='')">
+            <option value="">Select Gender</option>
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+            <option value="other">Other</option>
+          </select>
+          <div class="field-err" id="ge-1"><i class="bi bi-exclamation-circle"></i> Gender required</div>
         </div>
       </div>
 
-      <!-- ── TERMS & CONDITIONS ── -->
-      <div id="termsSection" style="display:none;">
-        <div class="terms-card">
-          <div class="terms-hd" id="termsHd" onclick="toggleTerms()">
-            <div class="terms-hd-icon"><i class="bi bi-file-earmark-text-fill"></i></div>
-            <div class="terms-hd-title">TERMS & CONDITIONS</div>
-            <span class="terms-hd-badge" id="termsCatBadge"></span>
-            <i class="bi bi-chevron-down terms-chevron" id="termsChevron"></i>
+      <div class="field-group">
+        <label class="field-label">WHATSAPP NUMBER</label>
+        <input type="tel" class="form-inp" id="wa-1"
+          value="<%= user ? (user.whatsapp || user.phone || '') : '' %>"
+          placeholder="+91 XXXXXXXXXX"
+          <%= user && user.whatsapp ? 'readonly' : '' %>
+          inputmode="numeric" maxlength="15" oninput="liveVal('wa-1','wa-err-1',v=>v.trim().length>=10)"/>
+
+        <div class="field-err" id="wa-err-1"><i class="bi bi-exclamation-circle"></i> WhatsApp number required</div>
+      </div>
+
+      <!-- T&C -->
+     
+    <!-- T&C — only shown if ticket type has terms -->
+      <% const selTT = event.ticketTypes.find(t => t.category === (locals.query && locals.query.cat || '')); %>
+      <% if (selTT && selTT.terms && selTT.terms.trim().length > 0) { %>
+      <div class="terms-row" style="margin-top:1.25rem;padding-top:1.25rem;border-top:1px solid rgba(255,255,255,0.06);">
+        <p class="terms-lbl" style="font-size:0.82rem;color:var(--muted);line-height:1.6;">
+          By proceeding, you agree to the
+          <a href="#" class="terms-link" onclick="openTermsModal(event)">Terms &amp; Conditions</a>,
+          and confirm that all booking details entered are correct before proceeding with payment.
+        </p>
+      </div>
+
+      <!-- Terms modal -->
+      <div class="terms-modal-bg" id="termsModalBg" onclick="if(event.target===this)closeTermsModal()">
+        <div class="terms-modal">
+          <div class="terms-modal-head">
+            <div class="terms-modal-title">Terms &amp; Conditions</div>
+            <button class="terms-modal-close" onclick="closeTermsModal()">✕</button>
           </div>
-          <div class="terms-body" id="termsBody">
-            <div class="terms-must-read">
-              <i class="bi bi-exclamation-circle-fill"></i>
-              Please read before proceeding to payment
-            </div>
-            <div class="terms-content" id="termsContent"></div>
-            <div class="terms-agree-row">
-              <input type="checkbox" class="terms-checkbox" id="termsCheckbox" onchange="onTermsChange()"/>
-              <label class="terms-agree-lbl" for="termsCheckbox">
-                I have read and agree to the <strong>terms & conditions</strong> for the
-                <span class="terms-link" id="termsAgreeLabel"></span> ticket.
-              </label>
-            </div>
-            <div class="terms-err" id="termsErr">
-              <i class="bi bi-exclamation-circle-fill"></i>
-              You must accept the terms & conditions before proceeding to payment.
-            </div>
-          </div>
+          <div class="terms-modal-body"><%= selTT.terms %></div>
         </div>
       </div>
-      <!-- /TERMS -->
+      <% } %>
 
+    
     </div>
 
-    <!-- RIGHT — summary -->
-    <div>
-      <div class="sum-sticky-wrap"><div class="sum-card">
-        <div class="sum-top"></div>
-        <div class="sum-body">
-          <div class="sum-hd">ORDER SUMMARY</div>
-          <div class="sum-event">
-            <div class="sum-evt-ico">🎶</div>
-            <div>
-              <div class="sum-evt-name"><%= event.name.toUpperCase() %></div>
-              <div class="sum-evt-sub"><%= new Date(event.date).toDateString() %> · <%= event.venue %></div>
-            </div>
+    <!-- RIGHT COL (desktop only) -->
+    <div class="col-right">
+      <div class="sum-card">
+        <div class="sum-title">Order Summary</div>
+        <div style="background:var(--surface);border-radius:12px;padding:0.9rem;display:flex;align-items:center;gap:0.75rem;margin-bottom:1.1rem;">
+          <div style="width:44px;height:44px;border-radius:10px;background:rgba(123,47,255,0.15);display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;">🎶</div>
+          <div>
+            <div style="font-size:0.9rem;font-weight:700;color:#fff;"><%= event.name.toUpperCase() %></div>
+            <div style="font-size:0.72rem;color:var(--muted);margin-top:0.12rem;"><%= new Date(event.date).toDateString() %> · <%= event.venue %></div>
           </div>
-          <div class="sum-row"><span class="lbl">Zone</span><span class="val" id="sumZone">—</span></div>
-          <div class="sum-row"><span class="lbl">Ticket Type</span><span class="val" id="sumType">—</span></div>
-          <div class="sum-row"><span class="lbl">Price each</span><span class="val" id="sumPrice" style="color:var(--accent);font-family:var(--font-mono);">—</span></div>
-          <div class="sum-row"><span class="lbl">Quantity</span><span class="val" id="sumQty">× 1</span></div>
-          <div class="sum-row"><span class="lbl">Subtotal</span><span class="val" id="sumSub">—</span></div>
-          <div class="disc-row" id="discRow"><span class="lbl" style="color:#f5c842;">Discount</span><span class="val" id="discVal" style="color:#f5c842;">—</span></div>
-          <!-- Combo offer nudge -->
-          <div id="comboOfferNudge" style="display:none;align-items:center;gap:0.5rem;background:rgba(245,200,66,0.07);border:1px solid rgba(245,200,66,0.25);border-radius:7px;padding:0.5rem 0.75rem;margin:0.4rem 0;">
-            <i class="bi bi-tag-fill" style="color:#f5c842;font-size:0.85rem;flex-shrink:0;"></i>
-            <span class="cn-text" style="font-size:0.78rem;color:#f5c842;font-weight:600;"></span>
-          </div>
-          <div class="sum-row"><span class="lbl">Convenience fee</span><span class="val" id="sumFee">₹<%= event.convenienceFee||0 %></span></div>
-          <div class="sum-total-row">
-            <div class="sum-total-lbl">TOTAL</div>
-            <div class="sum-total-val" id="sumTotal">—</div>
-          </div>
-          <!-- Coupon -->
-          <div class="coupon-row">
-            <input class="coupon-inp" type="text" id="couponInp" placeholder="Coupon code"/>
-            <button class="coupon-btn" onclick="applyCoupon()">APPLY</button>
-          </div>
-          <div class="coupon-msg" id="couponMsg"></div>
-          <!-- Pay -->
-          <button class="btn-pay" id="payBtn" onclick="doPayment()">
-            <i class="bi bi-lock-fill"></i>
-            <span id="payBtnTxt">Pay Now</span>
-            <div class="spin" id="paySpinner"></div>
-          </button>
-          <div class="rzp-note">Powered by <span class="rzp-badge">razorpay</span></div>
         </div>
-      </div></div><!-- /sum-sticky-wrap -->
+        <div class="sum-row"><span class="lbl">Zone</span><span class="val" id="sumZone">—</span></div>
+        <div class="sum-row"><span class="lbl">Price each</span><span class="val" id="sumPrice" style="color:var(--yellow);">—</span></div>
+        <div class="sum-row"><span class="lbl">Quantity</span><span class="val" id="sumQty">—</span></div>
+        <div class="sum-row"><span class="lbl">Subtotal</span><span class="val" id="sumSub">—</span></div>
+        <div class="disc-row" id="discRow"><span class="lbl" style="color:var(--yellow);">Discount</span><span class="val" id="discVal" style="color:var(--yellow);">—</span></div>
+        <div class="sum-row"><span class="lbl">Convenience fee</span><span class="val">₹<%= event.convenienceFee||0 %></span></div>
+        <div style="height:1px;background:rgba(255,255,255,0.08);margin:0.5rem 0 1rem;"></div>
+        <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:1.25rem;">
+          <span style="font-size:0.88rem;color:var(--muted);">Total to Pay</span>
+          <div style="text-align:right;">
+            <div style="font-size:1.75rem;font-weight:800;color:#fff;" id="sumTotal">—</div>
+            <div style="font-size:0.82rem;color:var(--yellow);margin-top:0.1rem;" id="sumTotalDisc" style="display:none;"></div>
+          </div>
+        </div>
+        <div class="coupon-row" style="margin-top:0;">
+          <input class="coupon-inp" type="text" id="couponInpD" placeholder="Coupon code"/>
+          <button class="coupon-btn" onclick="applyCoupon('D')">APPLY</button>
+        </div>
+        <div class="coupon-msg" id="couponMsgD"></div>
+        <div style="height:0.9rem;"></div>
+        <button class="btn-pay" id="payBtnD" onclick="doPayment()">
+          <i class="bi bi-lock-fill"></i>
+          <span id="payBtnTxtD">Proceed to Pay</span>
+          <div class="spin" id="paySpinnerD"></div>
+        </button>
+        <div style="display:flex;align-items:center;justify-content:center;gap:0.4rem;margin-top:0.65rem;font-size:0.7rem;color:#444;">
+          Powered by <span style="font-size:0.65rem;background:#072654;color:#5a9dff;border:1px solid rgba(90,157,255,0.3);padding:0.1rem 0.4rem;border-radius:3px;">razorpay</span>
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- Mobile bottom bar -->
-  <div class="mob-bar" id="mobBar">
-    <div>
-      <div class="mob-bar-lbl">TOTAL PAYABLE</div>
-      <div class="mob-bar-total" id="mobTotal">—</div>
+  <!-- Sticky bottom bar (mobile) -->
+  <div class="bottom-bar" id="bottomBar">
+    <div class="bb-totals">
+      <div class="bb-lbl">Total to Pay</div>
+      <div class="bb-right">
+        <div class="bb-amount" id="bbTotal">—</div>
+        <div class="bb-discount" id="bbDiscount" style="display:none;"></div>
+      </div>
     </div>
-    <button class="btn-mob-pay" onclick="doPayment()"><i class="bi bi-lock-fill"></i> Pay Now</button>
+    <button class="btn-pay" id="payBtn" onclick="doPayment()">
+      <i class="bi bi-lock-fill"></i>
+      <span id="payBtnTxt">Proceed to Pay</span>
+      <div class="spin" id="paySpinner"></div>
+    </button>
   </div>
 
   <%- include('../partials/scripts') %>
   <script src="/js/emailOtpModal.js"></script>
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
- <script>
+  <script>
+
 const EVENT_DATA = <%- JSON.stringify(event) %>;
 const CONV_FEE   = <%= event.convenienceFee||0 %>;
 const USER = <%- JSON.stringify(user ? {
-  name:          (user.firstName||'') + ' ' + (user.lastName||''),
-  phone:         user.phone    || '',
-  email:         user.email    || '',
-  whatsapp:      user.whatsapp || '',
+  name:  (user.firstName||'') + ' ' + (user.lastName||''),
+  phone: user.phone    || '',
+  email: user.email    || '',
+  whatsapp: user.whatsapp || '',
   emailVerified: user.emailVerified || false,
 } : { name:'', phone:'', email:'', whatsapp:'', emailVerified:false }) %>;
 
-// Dynamic colors from ticket type data
-const TCOLORS = Object.fromEntries((EVENT_DATA.ticketTypes||[]).map(t=>[t.category, t.color||'#6A0DAD']));
+const TCOLORS = Object.fromEntries((EVENT_DATA.ticketTypes||[]).map(t=>[t.category, t.color||'#7B2FFF']));
 
-let qty = 1, price = 0, selTypeName = '', discAmt = 0, couponApplied = false, couponCode = null;
-let selTicketData = null, isMultiEntry = false, multiCount = 1;
-let selZone = '', selZoneCategory = '';
+let qty=1, price=0, selTypeName='', discAmt=0, couponApplied=false, couponCode=null;
+let selTicketData=null, isMultiEntry=false, multiCount=1;
+let selZone='', selZoneCategory='';
 
-// ── Inline email verification state for attendee #1 ──────────────────────────
-let _bookingEmailVerified = USER.emailVerified && !!USER.email;
-let _bookingVerifiedEmail = USER.email;
+function openTermsModal(e){ e.preventDefault(); document.getElementById('termsModalBg').classList.add('open'); }
+function closeTermsModal(){ document.getElementById('termsModalBg').classList.remove('open'); }
 
-// ─── READ ZONE/CATEGORY FROM STEP 1 ─────────────────────────────
+// ── INIT ──
 (function(){
   try{
-    const raw=sessionStorage.getItem('np_sel');
-    const urlP=new URLSearchParams(location.search);
+    const raw = sessionStorage.getItem('np_sel');
+    const urlP = new URLSearchParams(location.search);
     let urlCat='', urlQty=1;
-
-    if(raw){
-      const d=JSON.parse(raw);
-      selZone=d.zone||''; selZoneCategory=d.category||'';
-      urlCat=d.category||''; urlQty=d.qty||1;
-    }
+    if(raw){ const d=JSON.parse(raw); selZone=d.zone||''; selZoneCategory=d.category||''; urlCat=d.category||''; urlQty=d.qty||1; }
     if(urlP.get('cat')) urlCat=urlP.get('cat');
     if(urlP.get('qty')) urlQty=parseInt(urlP.get('qty'))||1;
 
     const tt=EVENT_DATA.ticketTypes.find(t=>t.category===urlCat);
-    if(tt && tt.bookedSeats < tt.totalSeats){
-      price=tt.price; selTypeName=tt.category; selTicketData=tt;
-    } else {
-      const fallback=EVENT_DATA.ticketTypes.find(t=>t.bookedSeats<t.totalSeats);
-      if(fallback){price=fallback.price; selTypeName=fallback.category; urlCat=fallback.category; selTicketData=fallback;}
+    if(tt&&tt.bookedSeats<tt.totalSeats){ price=tt.price; selTypeName=tt.category; selTicketData=tt; }
+    else{ const fb=EVENT_DATA.ticketTypes.find(t=>t.bookedSeats<t.totalSeats); if(fb){price=fb.price;selTypeName=fb.category;urlCat=fb.category;selTicketData=fb;} }
+
+    const isCombo=selTicketData&&(selTicketData.ticketType==='multiple'||selTicketData.isCombo===true);
+    if(isCombo){ isMultiEntry=true; multiCount=selTicketData.comboCount||2; qty=1; }
+
+    const _tt=EVENT_DATA.ticketTypes.find(t=>t.category===selTypeName);
+    const _avail=_tt?Math.max(0,(_tt.totalSeats||999)-(_tt.bookedSeats||0)):999;
+    const _perMax=(_tt&&_tt.maxPerOrder>0)?_tt.maxPerOrder:10;
+    qty=Math.min(urlQty,_avail>0?Math.min(_perMax,_avail):_perMax);
+
+    // Render selection card
+    const color=TCOLORS[selTypeName]||'#7B2FFF';
+    const initials=(selZone||selTypeName).slice(0,2).toUpperCase();
+    const iconEl=document.getElementById('selIcon');
+    if(iconEl){iconEl.textContent=initials;iconEl.style.background=color+'22';iconEl.style.border='1px solid '+color+'44';iconEl.style.color=color;}
+
+    const catEl=document.getElementById('selCat');
+    if(catEl){
+      const displayName=(selTicketData&&selTicketData.name)||selTypeName;
+      catEl.innerHTML=`<span style="color:${color};">${displayName.toUpperCase()}</span> <span class="qty">× ${isMultiEntry?multiCount:qty}</span>`;
     }
+    const priceEl=document.getElementById('selPrice');
+    if(priceEl) priceEl.textContent='₹'+price.toLocaleString('en-IN');
 
-    const isComboTicket = selTicketData && (selTicketData.ticketType==='multiple' || selTicketData.isCombo===true);
-    if(isComboTicket){
-      isMultiEntry=true;
-      multiCount=selTicketData.comboCount||2;
-      qty=1;
-      const qtySection=document.getElementById('qtySectionWrap');
-      if(qtySection){qtySection.style.display='none';}
-      const note=document.getElementById('groupTicketNote');
-      if(note){note.style.display='flex'; note.querySelector('.gtn-count').textContent=multiCount;}
+    // Discount tiers teaser
+    const trs=(selTicketData&&Array.isArray(selTicketData.discountTiers)&&selTicketData.discountTiers.length>0)
+      ?selTicketData.discountTiers.filter(d=>d.minQty>0&&d.discount>0).sort((a,b)=>a.minQty-b.minQty)
+      :(selTicketData&&selTicketData.comboOfferMinQty>0?[{minQty:selTicketData.comboOfferMinQty,discount:selTicketData.comboOfferDiscount}]:[]);
+
+    // const offerEl=document.getElementById('selOffer');
+    
+    // if(offerEl&&trs.length>0){
+    //   offerEl.textContent='Discount Offers are Here';
+    //   offerEl.style.display='block';
+    // }
+
+    renderOfferBadge();
+
+    // Age limit
+    if(selTicketData&&selTicketData.ageLimit>0){
+      const b=document.getElementById('ageBanner'),t=document.getElementById('ageBannerTxt');
+      if(b&&t){t.textContent='Age restriction: You must be '+selTicketData.ageLimit+'+ years old for this ticket.';b.style.display='flex';}
     }
+  }catch(e){console.warn('Init:',e);}
 
-    document.getElementById('hiddenTicketType').value=selTypeName;
-
-    const c=TCOLORS[selTypeName]||'#6A0DAD';
-    const displayEl=document.getElementById('selTicketDisplay');
-    if(displayEl){displayEl.style.borderColor=c+'44';}
-    const colorEl=document.getElementById('selTicketColor');
-    if(colorEl){colorEl.style.background=c+'22';colorEl.style.border='1px solid '+c+'44';colorEl.textContent='🎟️';}
-    const catEl=document.getElementById('selTicketCat');
-const ttName = selTicketData?.name || selTypeName;
-if(catEl){
-  const zonePrefix = (selZone && selZone.toUpperCase() !== ttName.toUpperCase()) ? selZone + ' · ' : '';
-  catEl.textContent = zonePrefix + ttName.toUpperCase();
-  catEl.style.color = c;
-}
-    const priceEl=document.getElementById('selTicketPrice');
-    if(priceEl){priceEl.textContent='₹'+price.toLocaleString('en-IN')+' per person';}
-
-    const tiersEl = document.getElementById('selTicketTiers');
-    if(tiersEl && selTicketData){
-      const trs = (Array.isArray(selTicketData.discountTiers) && selTicketData.discountTiers.length > 0)
-        ? selTicketData.discountTiers.filter(d=>d.minQty>0&&d.discount>0).sort((a,b)=>a.minQty-b.minQty)
-        : (selTicketData.comboOfferMinQty>0 ? [{minQty:selTicketData.comboOfferMinQty,discount:selTicketData.comboOfferDiscount}] : []);
-      if(trs.length > 0){
-        tiersEl.textContent = '🎯 ' + trs.map(d=>`Buy ${d.minQty}+ → ₹${d.discount.toLocaleString('en-IN')} off per group`).join(' · ');
-        tiersEl.style.display = 'block';
-      } else {
-        tiersEl.style.display = 'none';
-      }
-    }
-
-    if(selTicketData && selTicketData.ageLimit > 0){
-      const banner = document.getElementById('ageLimitBanner');
-      const bannerTxt = document.getElementById('ageLimitBannerTxt');
-      if(banner && bannerTxt){
-        bannerTxt.textContent = 'Age restriction: All attendees must be ' + selTicketData.ageLimit + ' years or older to attend with this ticket.';
-        banner.style.display = 'flex';
-      }
-    }
-
-    const qtyHint = document.getElementById('qtyHint');
-    if(qtyHint && selTicketData && selTicketData.maxPerOrder > 0){
-      qtyHint.textContent = `Max ${selTicketData.maxPerOrder} per order`;
-    }
-
-    const _tt = EVENT_DATA.ticketTypes.find(t=>t.category===selTypeName);
-    const _avail = _tt ? Math.max(0, (_tt.totalSeats||999) - (_tt.bookedSeats||0)) : 999;
-    const _perOrderMax = (_tt && _tt.maxPerOrder > 0) ? _tt.maxPerOrder : 10;
-    const _maxQ = _avail > 0 ? Math.min(_perOrderMax, _avail) : _perOrderMax;
-    qty = Math.min(urlQty, _maxQ);
-
-    var _ezbZone=document.getElementById('zbZone'); if(_ezbZone) _ezbZone.textContent=selZone?(selZone+' Zone'):selTypeName.toUpperCase()+' ZONE';
-    var _ezbMeta=document.getElementById('zbMeta'); if(_ezbMeta) _ezbMeta.textContent=selTypeName.toUpperCase()+' · ₹'+price.toLocaleString('en-IN')+' per person';
-    var _esumZone=document.getElementById('sumZone'); if(_esumZone) _esumZone.textContent=selZone||selTypeName.toUpperCase();
-
-  }catch(e){console.warn('Init error:',e);}
-  setQtyDisplay(); updateChips(); updateAttendeeForms(); updateSummary();
-  renderTerms();
+  updateSummary();
 })();
 
-// ─── QTY ─────────────────────────────────────────────────────────
-function getMaxQty(){
-  const tt=EVENT_DATA.ticketTypes.find(t=>t.category===selTypeName);
-  if(!tt||!tt.totalSeats) return (tt && tt.maxPerOrder) ? tt.maxPerOrder : 10;
-  const avail=Math.max(0,(tt.totalSeats||0)-(tt.bookedSeats||0));
-  const perOrderMax = tt.maxPerOrder > 0 ? tt.maxPerOrder : 10;
-  return avail>0 ? Math.min(perOrderMax, avail) : perOrderMax;
-}
-function changeQty(d){
-  const mq=getMaxQty();
-  const n=qty+d; if(n<1||n>mq)return; qty=n;
-  setQtyDisplay(); updateChips(); updateAttendeeForms(); updateSummary();
-}
-function setQtyDisplay(){
-  const mq=getMaxQty();
-  const tt=EVENT_DATA.ticketTypes.find(t=>t.category===selTypeName);
-  const avail=tt&&tt.totalSeats?Math.max(0,(tt.totalSeats||0)-(tt.bookedSeats||0)):999;
-  document.getElementById('qtyDisplay').textContent=qty;
-  document.getElementById('qtyMinus').disabled=qty<=1;
-  document.getElementById('qtyPlus').disabled=qty>=mq;
-  const hintEl=document.getElementById('qtyHint');
-  if(hintEl){
-    if(avail>0&&avail<=10){
-      hintEl.textContent='Only '+avail+' ticket'+(avail===1?'':'s')+' left';
-      hintEl.style.color=avail<=3?'#FF4444':'#f5c842';
-      hintEl.style.display='block';
+// ── OFFER BADGE ──
+function renderOfferBadge(){
+  const offerEl=document.getElementById('selOffer');
+  if(!offerEl)return;
+
+  const tiers=(selTicketData&&Array.isArray(selTicketData.discountTiers)&&selTicketData.discountTiers.length>0)
+    ?selTicketData.discountTiers.filter(d=>d.minQty>0&&d.discount>0).sort((a,b)=>a.minQty-b.minQty)
+    :(selTicketData&&selTicketData.comboOfferMinQty>0?[{minQty:selTicketData.comboOfferMinQty,discount:selTicketData.comboOfferDiscount}]:[]);
+
+  if(!tiers.length){offerEl.style.display='none';return;}
+
+  const bestApplied=tiers.filter(d=>qty>=d.minQty).sort((a,b)=>b.minQty-a.minQty)[0]||null;
+  const nextTier=tiers.find(d=>qty<d.minQty)||null;
+
+  const parts=[];
+
+  if(bestApplied){
+    parts.push('🎉 ₹'+bestApplied.discount.toLocaleString('en-IN')+' discount applied!');
+  }
+
+  if(nextTier){
+    const needed=nextTier.minQty-qty;
+    if(bestApplied){
+      parts.push('Add '+needed+' more ticket'+(needed>1?'s':'')+' → save ₹'+nextTier.discount.toLocaleString('en-IN')+' more');
     } else {
-      hintEl.textContent='Max '+mq+' per booking';
-      hintEl.style.color='#555';
-      hintEl.style.display='block';
+      tiers.forEach(t=>{
+        parts.push('Buy '+t.minQty+'+ tickets → ₹'+t.discount.toLocaleString('en-IN')+' off');
+      });
     }
   }
-  const warnEl=document.getElementById('qtyAvailWarn');
-  const warnTxt=document.getElementById('qtyAvailWarnTxt');
-  if(warnEl&&warnTxt){
-    if(avail>0&&avail<=10){
-      const isLow=avail<=3;
-      warnEl.style.display='flex';
-      warnEl.style.background=isLow?'rgba(255,68,68,.07)':'rgba(245,200,66,.07)';
-      warnEl.style.border='1px solid '+(isLow?'rgba(255,68,68,.25)':'rgba(245,200,66,.25)');
-      warnEl.style.color=isLow?'#FF4444':'#f5c842';
-      warnTxt.textContent=isLow
-        ? 'Only '+avail+' ticket'+(avail===1?'':'s')+' left — book now!'
-        : 'Hurry! Only '+avail+' tickets remaining for this zone.';
-    } else {
-      warnEl.style.display='none';
-    }
-  }
-}
-function updateChips(){
-  const c=document.getElementById('qtyChips'); c.innerHTML='';
-  for(let i=1;i<=qty;i++) c.innerHTML+=`<div class="tix-chip"><i class="bi bi-ticket-perforated-fill"></i> TICKET #${i}</div>`;
+
+  offerEl.innerHTML=parts.join(' &nbsp;·&nbsp; ');
+  offerEl.style.display=parts.length?'block':'none';
 }
 
-// ─── ATTENDEE FORMS ──────────────────────────────────────────────
-function updateAttendeeForms(){
-  const con=document.getElementById('attendeeForms');
-  const total=isMultiEntry?multiCount:qty;
-  while(con.children.length>total) con.removeChild(con.lastChild);
-  for(let i=con.children.length+1;i<=total;i++) con.appendChild(mkAtt(i));
-}
 
-function mkAtt(n){
-  const isFirst = n === 1;
-  const el = document.createElement('div');
-  el.className = 'att-card';
-  el.id = 'att-' + n;
-
-  const minAge = (selTicketData && selTicketData.ageLimit > 0) ? selTicketData.ageLimit : 1;
-  const ageLimitHint = minAge > 1
-    ? ` <span style="color:#f5c842;font-size:0.52rem;letter-spacing:1px;font-family:var(--font-mono);">(${minAge}+)</span>`
-    : '';
-
-  if (isFirst) {
-    // ── Three-state email field ──────────────────────────────────
-    const hasEmail   = !!USER.email;
-    const isVerified = USER.emailVerified;
-    let emailFieldHTML = '';
-
-    if (hasEmail && isVerified) {
-      // Case A: already verified in DB — read-only with green badge
-      emailFieldHTML = `
-        <div style="grid-column:1/-1;">
-          <label class="form-label">Email <span style="font-size:0.52rem;color:#B3B3B3;">(optional)</span></label>
-          <div style="display:flex;border:1px solid rgba(0,255,136,0.3);border-radius:6px;overflow:hidden;background:rgba(0,255,136,0.04);">
-            <input type="email" class="form-inp" id="em-1"
-              value="${USER.email}" readonly
-              style="flex:1;opacity:.7;cursor:not-allowed;border:none;background:transparent;"/>
-            <div style="display:flex;align-items:center;padding:0 .75rem;color:#00FF88;font-size:.62rem;font-family:var(--font-mono);gap:.25rem;white-space:nowrap;">
-              <i class="bi bi-check-circle-fill"></i> VERIFIED
-            </div>
-          </div>
-          <div class="field-err" id="em-err-1"><i class="bi bi-exclamation-circle"></i> Valid email required</div>
-        </div>`;
-    } else {
-      // Case B (email in DB, not verified) or Case C (no email) — editable + VERIFY button
-      emailFieldHTML = `
-        <div style="grid-column:1/-1;">
-          <label class="form-label">Email <span style="font-size:0.52rem;color:#B3B3B3;">(optional)</span></label>
-          <div id="bk-emailWrap" style="display:flex;border:1px solid rgba(255,255,255,0.08);border-radius:6px;overflow:hidden;background:rgba(255,255,255,0.04);transition:border-color .18s;">
-            <input type="email" class="form-inp" id="em-1"
-              placeholder="email@example.com"
-              value="${USER.email || ''}"
-              style="flex:1;border:none;background:transparent;"
-              oninput="onBookingEmailInput(this)"/>
-            <button type="button" id="bk-emailVerifyBtn"
-              style="display:none;align-items:center;gap:.3rem;padding:0 .85rem;background:rgba(106,13,173,0.15);border:none;border-left:1px solid rgba(106,13,173,0.3);color:#bf80ff;font-family:var(--font-mono);font-size:.55rem;letter-spacing:1.5px;cursor:pointer;white-space:nowrap;flex-shrink:0;"
-              onclick="triggerBookingEmailVerify()">
-              <i class="bi bi-patch-check-fill"></i> VERIFY
-            </button>
-          </div>
-          <div id="bk-emailVerifiedBadge" style="display:none;align-items:center;gap:.3rem;font-size:.68rem;color:#00FF88;margin-top:.25rem;">
-            <i class="bi bi-check-circle-fill"></i> Email verified
-          </div>
-          <div class="field-err" id="em-err-1"><i class="bi bi-exclamation-circle"></i> Valid email required</div>
-        </div>`;
-    }
-
-    el.innerHTML = `
-      <div class="att-hd">
-        <div class="att-badge-wrap"><div class="att-num">1</div><div class="att-lbl">Attendee 1</div></div>
-        <span class="you-chip">YOU</span>
-      </div>
-      <div class="att-fields">
-        <div>
-          <label class="form-label">Full Name *</label>
-          <input type="text" class="form-inp" id="n-1"
-            placeholder="Full name" value="${USER.name.trim()}" autocomplete="name"/>
-          <div class="field-err" id="ne-1"><i class="bi bi-exclamation-circle"></i> Name required</div>
-        </div>
-        <div>
-          <label class="form-label">Age *${ageLimitHint}</label>
-          <input type="number" class="form-inp" id="a-1"
-            placeholder="${minAge > 1 ? minAge : '25'}" min="${minAge}" max="120" inputmode="numeric"/>
-          <div class="field-err" id="ae-1"><i class="bi bi-exclamation-circle"></i>
-            <span id="ae-msg-1">Valid age required</span></div>
-        </div>
-        <div>
-          <label class="form-label">Gender *</label>
-          <select class="form-inp" id="g-1" style="cursor:pointer;">
-            <option value="">Select gender</option>
-            <option value="male">Male</option>
-            <option value="female">Female</option>
-            <option value="other">Other / Prefer not to say</option>
-          </select>
-          <div class="field-err" id="ge-1"><i class="bi bi-exclamation-circle"></i> Gender required</div>
-        </div>
-        <div>
-          <label class="form-label">Phone</label>
-          <input type="tel" class="form-inp" value="${USER.phone}"
-            readonly style="opacity:0.6;cursor:not-allowed;"/>
-        </div>
-        ${emailFieldHTML}
-        <div style="grid-column:1/-1;">
-          <label class="form-label">WhatsApp Number ${USER.whatsapp ? '' : '<span style="color:#FF4444;">*</span>'}</label>
-          <input type="tel" class="form-inp" id="wa-1"
-            placeholder="91XXXXXXXXXX"
-            value="${USER.whatsapp || USER.phone || ''}"
-            ${USER.whatsapp ? 'readonly style="opacity:0.6;cursor:not-allowed;"' : ''}
-            inputmode="numeric" maxlength="15"/>
-          <div class="field-err" id="wa-err-1"><i class="bi bi-exclamation-circle"></i> WhatsApp number required</div>
-          <div style="font-size:0.68rem;color:#B3B3B3;margin-top:0.25rem;">Your ticket PDF will be sent here via WhatsApp or email.</div>
-        </div>
-      </div>
-      <div class="special-toggle" onclick="document.getElementById('sp-1').classList.toggle('show')">
-        <i class="bi bi-chat-left-text"></i> Add special request
-      </div>
-      <textarea class="special-inp" id="sp-1" rows="2" placeholder="E.g. wheelchair access..."></textarea>`;
-
-  } else {
-    // ── Attendees 2+ — name / age / gender / special only ────────
-    el.innerHTML = `
-      <div class="att-hd">
-        <div class="att-badge-wrap">
-          <div class="att-num">${n}</div>
-          <div class="att-lbl">Attendee ${n}</div>
-        </div>
-      </div>
-      <div class="att-fields">
-        <div>
-          <label class="form-label">Full Name *</label>
-          <input type="text" class="form-inp" id="n-${n}"
-            placeholder="Full name" autocomplete="off"/>
-          <div class="field-err" id="ne-${n}"><i class="bi bi-exclamation-circle"></i> Name required</div>
-        </div>
-        <div>
-          <label class="form-label">Age *${ageLimitHint}</label>
-          <input type="number" class="form-inp" id="a-${n}"
-            placeholder="${minAge > 1 ? minAge : '25'}" min="${minAge}" max="120" inputmode="numeric"/>
-          <div class="field-err" id="ae-${n}"><i class="bi bi-exclamation-circle"></i>
-            <span id="ae-msg-${n}">Valid age required</span></div>
-        </div>
-        <div>
-          <label class="form-label">Gender *</label>
-          <select class="form-inp" id="g-${n}" style="cursor:pointer;">
-            <option value="">Select gender</option>
-            <option value="male">Male</option>
-            <option value="female">Female</option>
-            <option value="other">Other / Prefer not to say</option>
-          </select>
-          <div class="field-err" id="ge-${n}"><i class="bi bi-exclamation-circle"></i> Gender required</div>
-        </div>
-      </div>
-      <div class="special-toggle" onclick="document.getElementById('sp-${n}').classList.toggle('show')">
-        <i class="bi bi-chat-left-text"></i> Add special request
-      </div>
-      <textarea class="special-inp" id="sp-${n}" rows="2" placeholder="E.g. wheelchair access..."></textarea>`;
-  }
-
-  // ── Real-time validation wiring ──────────────────────────────────
-  setTimeout(function(){
-    const nf = document.getElementById('n-' + n);
-    const af = document.getElementById('a-' + n);
-    const gf = document.getElementById('g-' + n);
-    const _minAge = (selTicketData && selTicketData.ageLimit > 0) ? selTicketData.ageLimit : 1;
-
-    function clearErr(inp, errId){ inp.classList.remove('err'); document.getElementById(errId).classList.remove('show'); }
-    function showErrInp(inp, errId, msg){
-      inp.classList.add('err');
-      const errEl = document.getElementById(errId);
-      errEl.classList.add('show');
-      if(msg){ const span = document.getElementById('ae-msg-' + n); if(span && errId === 'ae-' + n) span.textContent = msg; }
-    }
-    if(nf){
-      nf.addEventListener('blur',  () => { if(nf.value.trim().length >= 2) clearErr(nf,'ne-'+n); else showErrInp(nf,'ne-'+n); });
-      nf.addEventListener('input', () => { if(nf.classList.contains('err') && nf.value.trim().length >= 2) clearErr(nf,'ne-'+n); });
-    }
-    if(af){
-      function ageOk(v){ return !isNaN(v) && v >= _minAge && v <= 120; }
-      function getAgeErrMsg(v){
-        if(isNaN(v) || !af.value) return 'Age is required';
-        if(_minAge > 1 && v < _minAge) return 'Must be ' + _minAge + '+ years old for this ticket';
-        if(v > 120) return 'Please enter a valid age';
-        return 'Valid age required';
-      }
-      af.addEventListener('blur',  () => { const v=parseInt(af.value); if(ageOk(v)) clearErr(af,'ae-'+n); else showErrInp(af,'ae-'+n, getAgeErrMsg(v)); });
-      af.addEventListener('input', () => { if(af.classList.contains('err') && ageOk(parseInt(af.value))) clearErr(af,'ae-'+n); });
-    }
-    if(gf){
-      gf.addEventListener('change', () => { if(gf.value) clearErr(gf,'ge-'+n); else showErrInp(gf,'ge-'+n); });
-    }
-  }, 0);
-
-  return el;
-}
-
-// ─── EMAIL VERIFY HELPERS ────────────────────────────────────────
-function onBookingEmailInput(inp) {
-  const val = inp.value.trim();
-  const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
-  const btn  = document.getElementById('bk-emailVerifyBtn');
-  const wrap = document.getElementById('bk-emailWrap');
-  if (!btn) return;
-
-  // If user edits email after already verifying, reset verification state
-  if (_bookingEmailVerified && val !== _bookingVerifiedEmail) {
-    _bookingEmailVerified = false;
-    _bookingVerifiedEmail = '';
-    if (wrap) wrap.style.borderColor = '';
-    const badge = document.getElementById('bk-emailVerifiedBadge');
-    if (badge) badge.style.display = 'none';
-    btn.innerHTML = '<i class="bi bi-patch-check-fill"></i> VERIFY';
-    btn.style.background = '';
-    btn.style.color = '#bf80ff';
-    btn.style.borderLeftColor = 'rgba(106,13,173,0.3)';
-    btn.style.pointerEvents = '';
-  }
-
-btn.style.display = (valid && !_bookingEmailVerified) ? 'flex' : 'none';
-const emErr2 = document.getElementById('em-err-1');
-  if(emErr2) emErr2.classList.remove('show');
-  inp.classList.remove('err');
-  const wrap2 = document.getElementById('bk-emailWrap');
-  if(wrap2 && !_bookingEmailVerified) wrap2.style.borderColor = '';
-
-}
-
-async function triggerBookingEmailVerify() {
-  const inp   = document.getElementById('em-1');
-  const email = inp ? inp.value.trim() : '';
-  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
-
-  const btn = document.getElementById('bk-emailVerifyBtn');
-  btn.innerHTML = '<i class="bi bi-hourglass-split"></i>';
-  btn.style.pointerEvents = 'none';
-
-  try {
-    const r = await fetch('/auth/send-email-otp', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ email }),
-    });
-    const d = await r.json();
-
-    btn.style.pointerEvents = '';
-    btn.innerHTML = '<i class="bi bi-patch-check-fill"></i> VERIFY';
-
-    if (!d.success) {
-      const errEl = document.getElementById('em-err-1');
-      if (errEl) { errEl.innerHTML = `<i class="bi bi-exclamation-circle"></i> ${d.message || 'Failed to send OTP.'}`; errEl.classList.add('show'); }
-      return;
-    }
-
-    EmailOTPModal.open({
-      email,
-      onVerified(verifiedAddr) {
-        _bookingEmailVerified = true;
-        _bookingVerifiedEmail = verifiedAddr;
-        if (inp) { inp.value = verifiedAddr; inp.setAttribute('readonly', true); inp.style.opacity = '.7'; inp.style.cursor = 'not-allowed'; }
-        const wrap = document.getElementById('bk-emailWrap');
-        if (wrap) wrap.style.borderColor = 'rgba(0,255,136,0.3)';
-        btn.innerHTML = '<i class="bi bi-check-circle-fill"></i> VERIFIED';
-        btn.style.background    = 'rgba(0,255,136,0.1)';
-        btn.style.color         = '#00FF88';
-        btn.style.borderLeftColor = 'rgba(0,255,136,0.3)';
-        btn.style.pointerEvents = 'none';
-        const badge = document.getElementById('bk-emailVerifiedBadge');
-        if (badge) badge.style.display = 'flex';
-        const errEl = document.getElementById('em-err-1');
-        if (errEl) errEl.classList.remove('show');
-      },
-    });
-  } catch(e) {
-    btn.style.pointerEvents = '';
-    btn.innerHTML = '<i class="bi bi-patch-check-fill"></i> VERIFY';
-    showToast('Network error', 'Could not send verification email. Try again.', 'error');
-  }
-}
-
-// ─── SUMMARY ─────────────────────────────────────────────────────
-function setEl(id, val){ var e=document.getElementById(id); if(e) e.textContent=val; }
-
+// ── SUMMARY ──
+function setEl(id,v){const e=document.getElementById(id);if(e)e.textContent=v;}
 function updateSummary(){
-  const sub = qty * price;
-  let comboDisc = 0, comboNudgeMsg = '';
-  const tiers = (selTicketData && Array.isArray(selTicketData.discountTiers) && selTicketData.discountTiers.length > 0)
-    ? selTicketData.discountTiers.filter(d=>d.minQty>0&&d.discount>0).sort((a,b)=>a.minQty-b.minQty)
-    : (selTicketData && selTicketData.comboOfferMinQty>0
-        ? [{minQty:selTicketData.comboOfferMinQty, discount:selTicketData.comboOfferDiscount}]
-        : []);
+  const sub=qty*price;
+  let comboDisc=0;
+  const tiers=(selTicketData&&Array.isArray(selTicketData.discountTiers)&&selTicketData.discountTiers.length>0)
+    ?selTicketData.discountTiers.filter(d=>d.minQty>0&&d.discount>0).sort((a,b)=>a.minQty-b.minQty)
+    :(selTicketData&&selTicketData.comboOfferMinQty>0?[{minQty:selTicketData.comboOfferMinQty,discount:selTicketData.comboOfferDiscount}]:[]);
+  if(tiers.length>0){const ap=tiers.filter(d=>qty>=d.minQty).sort((a,b)=>b.minQty-a.minQty);if(ap.length>0){const best=ap[0];comboDisc=Math.floor(qty/best.minQty)*best.discount;}}
+  const disc=Math.max(couponApplied?discAmt:0,comboDisc);
+  const total=Math.max(sub-disc+CONV_FEE,0);
 
-  if(tiers.length > 0){
-    const applicable = tiers.filter(d=>qty>=d.minQty).sort((a,b)=>b.minQty-a.minQty);
-    if(applicable.length > 0){ const best=applicable[0]; comboDisc=Math.floor(qty/best.minQty)*best.discount; }
-    const next = tiers.find(d=>qty<d.minQty);
-    if(next){ const need=next.minQty-qty; comboNudgeMsg=`Add ${need} more ticket${need>1?'s':''} → unlock ₹${next.discount.toLocaleString('en-IN')} off!`; }
-  }
-
-  const disc  = Math.max(couponApplied ? discAmt : 0, comboDisc);
-  const total = Math.max(sub - disc + CONV_FEE, 0);
-
-  setEl('sumType',    selTypeName||'—');
-  setEl('sumPrice',   price?'₹'+price.toLocaleString('en-IN'):'—');
-  setEl('sumQty',     '× '+qty);
-  setEl('sumSub',     price?'₹'+sub.toLocaleString('en-IN'):'—');
-  setEl('sumTotal',   price?'₹'+total.toLocaleString('en-IN'):'—');
-  setEl('qtyTotalAmt',price?'₹'+sub.toLocaleString('en-IN'):'—');
-  setEl('mobTotal',   price?'₹'+total.toLocaleString('en-IN'):'—');
-
-  const discRow    = document.getElementById('discRow');
-  const discVal    = document.getElementById('discVal');
-  const comboNudge = document.getElementById('comboOfferNudge');
-
-  if(comboDisc > 0){
-    if(discRow) discRow.classList.add('show');
-    if(discVal){ discVal.textContent='-₹'+disc.toLocaleString('en-IN'); discVal.style.color='#f5c842'; }
-    if(comboNudge) comboNudge.style.display = comboNudgeMsg ? 'flex' : 'none';
-    if(comboNudgeMsg){ var cnTxt=comboNudge.querySelector('.cn-text'); if(cnTxt) cnTxt.textContent=comboNudgeMsg; }
-  } else if(tiers.length > 0 && comboNudgeMsg){
-    if(comboNudge){ comboNudge.style.display='flex'; var cnTxt2=comboNudge.querySelector('.cn-text'); if(cnTxt2) cnTxt2.textContent=comboNudgeMsg; }
-    if(!couponApplied){ if(discRow) discRow.classList.remove('show'); }
-    else { if(discRow) discRow.classList.add('show'); if(discVal){ discVal.textContent='-₹'+discAmt.toLocaleString('en-IN'); discVal.style.color='#00FF88'; } }
-  } else {
-    if(comboNudge) comboNudge.style.display='none';
-    if(couponApplied){ if(discRow) discRow.classList.add('show'); if(discVal){ discVal.textContent='-₹'+discAmt.toLocaleString('en-IN'); discVal.style.color='#00FF88'; } }
-    else { if(discRow) discRow.classList.remove('show'); }
-  }
+  // Both columns
+  ['','2'].forEach(sfx=>{
+    setEl('sumZone'+sfx, selZone||selTypeName||'—');
+    setEl('sumPrice'+sfx, price?'₹'+price.toLocaleString('en-IN'):'—');
+    setEl('sumQty'+sfx, '× '+qty);
+    setEl('sumSub'+sfx, price?'₹'+sub.toLocaleString('en-IN'):'—');
+    const dr=document.getElementById('discRow'+sfx);
+    const dv=document.getElementById('discVal'+sfx);
+    if(disc>0){if(dr)dr.classList.add('show');if(dv)dv.textContent='-₹'+disc.toLocaleString('en-IN');}
+    else{if(dr)dr.classList.remove('show');}
+  });
+  setEl('sumTotal', price?'₹'+total.toLocaleString('en-IN'):'—');
+  setEl('bbTotal',  price?'₹'+total.toLocaleString('en-IN'):'—');
+  const bbDisc=document.getElementById('bbDiscount');
+  const tdEl=document.getElementById('sumTotalDisc');
+  if(disc>0){if(bbDisc){bbDisc.textContent='-₹'+disc.toLocaleString('en-IN');bbDisc.style.display='block';}if(tdEl){tdEl.textContent='-₹'+disc.toLocaleString('en-IN');tdEl.style.display='block';}}
+  else{if(bbDisc)bbDisc.style.display='none';if(tdEl)tdEl.style.display='none';}
+   renderOfferBadge();
   return total;
 }
 
-// ─── TERMS & CONDITIONS ───────────────────────────────────────────
-var _termsOpen = false;
 
-function renderTerms(){
-  var terms = selTicketData && selTicketData.terms ? selTicketData.terms.trim() : '';
-  var sec   = document.getElementById('termsSection');
-  if(!terms || !sec) return;
-  document.getElementById('termsContent').textContent = terms;
-  var displayName = (selTicketData.name || selTypeName).toUpperCase();
-  document.getElementById('termsCatBadge').textContent   = displayName;
-  document.getElementById('termsAgreeLabel').textContent = displayName;
-  sec.style.display = 'block';
-  setTimeout(function(){ openTerms(); }, 450);
-}
-function openTerms(){
-  _termsOpen = true;
-  document.getElementById('termsBody').classList.add('open');
-  document.getElementById('termsChevron').classList.add('open');
-  document.getElementById('termsHd').classList.add('open');
-}
-function toggleTerms(){
-  _termsOpen = !_termsOpen;
-  document.getElementById('termsBody').classList.toggle('open', _termsOpen);
-  document.getElementById('termsChevron').classList.toggle('open', _termsOpen);
-  document.getElementById('termsHd').classList.toggle('open', _termsOpen);
-}
-function onTermsChange(){
-  if(document.getElementById('termsCheckbox').checked)
-    document.getElementById('termsErr').classList.remove('show');
-}
-function termsAccepted(){
-  var sec = document.getElementById('termsSection');
-  if(!sec || sec.style.display === 'none') return true;
-  var cb = document.getElementById('termsCheckbox');
-  if(!cb.checked){
-    document.getElementById('termsErr').classList.add('show');
-    openTerms();
-    cb.scrollIntoView({ behavior:'smooth', block:'center' });
-    showToast('Terms & Conditions', 'Please read and accept the terms before paying.', 'warning', 4000);
-    return false;
-  }
-  return true;
-}
-
-// ─── COUPON ────────────────────────────────────────────────────────
-function applyCoupon(){
-  var code = document.getElementById('couponInp').value.trim().toUpperCase();
-  if(!code){ showCouponMsg('Enter a coupon code first.', false); return; }
-  if(!selTypeName){ showCouponMsg('Select a ticket type first.', false); return; }
-  var btn = document.querySelector('.coupon-btn');
-  btn.textContent = '...'; btn.disabled = true;
-  fetch('/superadmin/api/validate-coupon', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    credentials: 'include',
-    body: JSON.stringify({ code, orderAmount: qty * price, quantity: qty })
-  })
-  .then(r => r.json())
-  .then(d => {
-    if(d.success){
-      couponApplied=true; discAmt=d.discount; couponCode=d.code;
-      showCouponMsg(d.code + ' applied — ' + formatRupee(d.discount) + ' off!', true);
-      document.getElementById('couponInp').style.borderColor='#00FF88';
-      document.getElementById('couponInp').disabled=true;
-      btn.textContent='REMOVE'; btn.disabled=false; btn.onclick=removeCoupon;
-    } else {
-      couponApplied=false; discAmt=0; couponCode=null;
-      showCouponMsg(d.message||'Invalid coupon code.', false);
-      document.getElementById('couponInp').style.borderColor='#FF4444';
-      setTimeout(()=>{ document.getElementById('couponInp').style.borderColor=''; }, 3000);
-    }
-    updateSummary();
-  })
-  .catch(()=>{ showCouponMsg('Network error. Please try again.', false); })
-  .finally(()=>{ btn.textContent='APPLY'; btn.disabled=false; });
-}
-function removeCoupon(){
-  couponApplied=false; discAmt=0; couponCode=null;
-  var inp=document.getElementById('couponInp');
-  inp.value=''; inp.disabled=false; inp.style.borderColor='';
-  var btn=document.querySelector('.coupon-btn');
-  btn.textContent='APPLY'; btn.onclick=applyCoupon;
-  document.getElementById('couponMsg').classList.remove('show');
-  updateSummary();
-}
-function showCouponMsg(text, isSuccess){
-  var msgEl=document.getElementById('couponMsg');
-  var icon=isSuccess
-    ? '<i class="bi bi-check-circle-fill" style="color:#00FF88;"></i><span style="color:#00FF88;">'
-    : '<i class="bi bi-x-circle-fill" style="color:#FF4444;"></i><span style="color:#FF4444;">';
-  msgEl.innerHTML=icon+text+'</span>';
-  msgEl.classList.add('show');
-  if(!isSuccess) setTimeout(()=>{ msgEl.classList.remove('show'); }, 4000);
-}
-function formatRupee(n){ return '\u20b9' + n.toLocaleString('en-IN'); }
-
-document.getElementById('couponInp').addEventListener('keydown', function(e){
-  if(e.key==='Enter') applyCoupon();
+document.querySelector('.back-btn').addEventListener('click', () => {
+  window.location.href = '/booking/seatmap/' + EVENT_DATA._id;
 });
 
-// ─── VALIDATE ─────────────────────────────────────────────────────
+// ── COUPON ──
+function applyCoupon(sfx){
+  sfx=sfx||'';
+  const id='couponInp'+(sfx==='D'?'D':'');
+  const code=document.getElementById(id).value.trim().toUpperCase();
+  if(!code){showCouponMsg('Enter a coupon code first.',false,sfx);return;}
+  const btn=document.querySelector(sfx==='D'?'.col-right .coupon-btn':'.col-left .coupon-btn');
+  if(btn){btn.textContent='...';btn.disabled=true;}
+  fetch('/superadmin/api/validate-coupon',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({code,orderAmount:qty*price,quantity:qty})})
+  .then(r=>r.json())
+  .then(d=>{
+    if(d.success){couponApplied=true;discAmt=d.discount;couponCode=d.code;showCouponMsg(d.code+' applied — ₹'+d.discount+' off!',true,sfx);['','2','D'].forEach(s=>{const inp=document.getElementById('couponInp'+(s==='D'?'D':s?'2':''));if(inp){inp.style.borderColor='#00C864';inp.disabled=true;}});}
+    else{couponApplied=false;discAmt=0;couponCode=null;showCouponMsg(d.message||'Invalid coupon code.',false,sfx);}
+    updateSummary();
+  })
+  .catch(()=>showCouponMsg('Network error.',false,sfx))
+  .finally(()=>{if(btn){btn.textContent='APPLY';btn.disabled=false;}});
+}
+function showCouponMsg(text,ok,sfx){
+  ['couponMsg','couponMsgD'].forEach(id=>{const el=document.getElementById(id);if(!el)return;el.innerHTML=(ok?'<i class="bi bi-check-circle-fill" style="color:#00C864;flex-shrink:0;"></i><span style="color:#00C864;">':'<i class="bi bi-x-circle-fill" style="color:#FF5555;flex-shrink:0;"></i><span style="color:#FF5555;">')+text+'</span>';el.classList.add('show');if(!ok)setTimeout(()=>el.classList.remove('show'),4000);});
+}
+
+function liveVal(inputId, errId, checkFn){
+  const el = document.getElementById(inputId);
+  const er = document.getElementById(errId);
+  if(!el || !er) return;
+  const valid = checkFn(el.value);
+  el.classList.toggle('err', !valid);
+  er.classList.toggle('show', !valid);
+}
+function liveValAge(){
+  const el = document.getElementById('a-1');
+  const er = document.getElementById('ae-1');
+  const msg = document.getElementById('ae-msg-1');
+  if(!el||!er) return;
+  const age = parseInt(el.value);
+  const _min = (selTicketData&&selTicketData.ageLimit>0)?selTicketData.ageLimit:1;
+  const valid = el.value && !isNaN(age) && age>=_min && age<=120;
+  el.classList.toggle('err', !valid);
+  er.classList.toggle('show', !valid);
+  if(msg) msg.textContent = (!el.value||isNaN(age)) ? 'Age is required' : (_min>1&&age<_min) ? 'Must be '+_min+'+ years old' : 'Please enter a valid age';
+}
+
+
+// ── VALIDATE ──
 function validate(){
-  let ok = true;
-  const total = isMultiEntry ? multiCount : qty;
-  const _minAge = (selTicketData && selTicketData.ageLimit > 0) ? selTicketData.ageLimit : 1;
-  let firstErrScrolled = false;
-
-  for(let i = 1; i <= total; i++){
-    const n = document.getElementById('n-' + i);
-    const a = document.getElementById('a-' + i);
-    const g = document.getElementById('g-' + i);
-
-    document.getElementById('ne-'+i).classList.remove('show'); n.classList.remove('err');
-    document.getElementById('ae-'+i).classList.remove('show'); a.classList.remove('err');
-    if(g){ document.getElementById('ge-'+i).classList.remove('show'); g.classList.remove('err'); }
-
-    if(!n.value.trim() || n.value.trim().length < 2){
-      n.classList.add('err'); document.getElementById('ne-'+i).classList.add('show');
-      if(!firstErrScrolled){ n.scrollIntoView({behavior:'smooth',block:'center'}); firstErrScrolled=true; }
-      ok=false;
-    }
-    const age=parseInt(a.value);
-    const ageValid=!isNaN(age) && age>=_minAge && age<=120;
-    if(!a.value || !ageValid){
-      a.classList.add('err'); document.getElementById('ae-'+i).classList.add('show');
-      const ageErrMsg=document.getElementById('ae-msg-'+i);
-      if(ageErrMsg){
-        if(!a.value||isNaN(age)) ageErrMsg.textContent='Age is required';
-        else if(_minAge>1&&age<_minAge) ageErrMsg.textContent='Attendee '+i+' must be '+_minAge+'+ years old for this ticket';
-        else if(age>120) ageErrMsg.textContent='Please enter a valid age';
-        else ageErrMsg.textContent='Valid age required';
-      }
-      if(!firstErrScrolled){ a.scrollIntoView({behavior:'smooth',block:'center'}); firstErrScrolled=true; }
-      ok=false;
-    }
-    if(g && !g.value){
-      g.classList.add('err'); document.getElementById('ge-'+i).classList.add('show');
-      if(!firstErrScrolled){ g.scrollIntoView({behavior:'smooth',block:'center'}); firstErrScrolled=true; }
-      ok=false;
-    }
-  }
-
-  // ── Email entered but not verified ──────────────────────────────
-  const emInp = document.getElementById('em-1');
-  const emErr = document.getElementById('em-err-1');
-  if(emInp && !emInp.readOnly && emErr){
-    const emVal = emInp.value.trim();
-    const emHasValue = emVal.length > 0;
-    const emValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emVal);
-    if(emHasValue && emValid && !_bookingEmailVerified){
-      emInp.classList.add('err');
-      emErr.innerHTML = '<i class="bi bi-exclamation-circle"></i> Please verify your email before proceeding';
-      emErr.classList.add('show');
-      const wrap = document.getElementById('bk-emailWrap');
-      if(wrap) wrap.style.borderColor = 'rgba(255,68,68,0.5)';
-      if(!firstErrScrolled){ emInp.scrollIntoView({behavior:'smooth',block:'center'}); firstErrScrolled=true; }
-      showToast('Email not verified', 'Please verify your email or leave it empty to skip.', 'warning', 5000);
-      ok = false;
-    } else if(emHasValue && !emValid){
-      // invalid format — also flag it
-      emInp.classList.add('err');
-      emErr.innerHTML = '<i class="bi bi-exclamation-circle"></i> Enter a valid email address';
-      emErr.classList.add('show');
-      if(!firstErrScrolled){ emInp.scrollIntoView({behavior:'smooth',block:'center'}); firstErrScrolled=true; }
-      ok = false;
-  } else {
-      emInp.classList.remove('err');
-      emErr.classList.remove('show');
-      const emWrapClear = document.getElementById('bk-emailWrap');
-      if(emWrapClear) emWrapClear.style.borderColor = '';
-    }
-  }
-
-  if(!USER.whatsapp){
-    const waEl=document.getElementById('wa-1');
-    const waErr=document.getElementById('wa-err-1');
-    if(waEl && waErr){
-      waErr.classList.remove('show'); waEl.classList.remove('err');
-      if(!waEl.value.trim() || waEl.value.trim().length < 10){
-        waEl.classList.add('err'); waErr.classList.add('show');
-        if(!firstErrScrolled){ waEl.scrollIntoView({behavior:'smooth',block:'center'}); firstErrScrolled=true; }
-        ok=false;
-      }
-    }
-  }
-
-  if(!ok && _minAge > 1){
-    const ageViolators=[];
-    for(let i=1;i<=total;i++){
-      const a=document.getElementById('a-'+i);
-      const age=parseInt(a?a.value:'');
-      if(!isNaN(age) && age<_minAge) ageViolators.push('Attendee '+i);
-    }
-    if(ageViolators.length>0){
-      showToast('Age restriction',
-        ageViolators.join(', ')+(ageViolators.length===1?' does':' do')+' not meet the minimum age of '+_minAge+' for this ticket.',
-        'warning', 6000);
-    }
-  }
+  let ok=true,scrolled=false;
+  const _min=(selTicketData&&selTicketData.ageLimit>0)?selTicketData.ageLimit:1;
+  const n=document.getElementById('n-1');
+  const a=document.getElementById('a-1');
+  const g=document.getElementById('g-1');
+  [['ne-1',n],['ae-1',a],['ge-1',g]].forEach(([eid,el])=>{if(el){el.classList.remove('err');document.getElementById(eid).classList.remove('show');}});
+  if(!n.value.trim()||n.value.trim().length<2){n.classList.add('err');document.getElementById('ne-1').classList.add('show');if(!scrolled){n.scrollIntoView({behavior:'smooth',block:'center'});scrolled=true;}ok=false;}
+  const age=parseInt(a.value);
+  if(!a.value||isNaN(age)||age<_min||age>120){a.classList.add('err');document.getElementById('ae-1').classList.add('show');const m=document.getElementById('ae-msg-1');if(m)m.textContent=(!a.value||isNaN(age))?'Age is required':(_min>1&&age<_min)?'Must be '+_min+'+ years old':'Please enter a valid age';if(!scrolled){a.scrollIntoView({behavior:'smooth',block:'center'});scrolled=true;}ok=false;}
+  if(g&&!g.value){g.classList.add('err');document.getElementById('ge-1').classList.add('show');if(!scrolled){g.scrollIntoView({behavior:'smooth',block:'center'});scrolled=true;}ok=false;}
+  if(!USER.whatsapp){const wa=document.getElementById('wa-1'),waErr=document.getElementById('wa-err-1');if(wa&&waErr){waErr.classList.remove('show');wa.classList.remove('err');if(!wa.value.trim()||wa.value.trim().length<10){wa.classList.add('err');waErr.classList.add('show');if(!scrolled){wa.scrollIntoView({behavior:'smooth',block:'center'});scrolled=true;}ok=false;}}}
   return ok;
 }
 
-// ─── TOAST ────────────────────────────────────────────────────────
-function showToast(title, msg, type, duration){
-  duration = duration || 4000;
-  var icons = { success:'bi-check-circle-fill', error:'bi-x-circle-fill', warning:'bi-exclamation-triangle-fill', info:'bi-info-circle-fill' };
-  var container = document.getElementById('toast-container');
-  var el = document.createElement('div');
-  el.className = 'toast-msg ' + (type||'info');
-  el.innerHTML = '<i class="bi '+(icons[type]||icons.info)+' toast-icon"></i>' +
-    '<div class="toast-body"><div class="toast-title">'+title+'</div>' +
-    (msg?'<div class="toast-sub">'+msg+'</div>':'')+
-    '</div>';
-  container.appendChild(el);
-  setTimeout(function(){
-    el.style.animation='toastOut 0.3s ease forwards';
-    setTimeout(function(){ el.remove(); }, 300);
-  }, duration);
+function buildAttendeesArray(){
+  const name=document.getElementById('n-1').value.trim();
+  const age=document.getElementById('a-1').value;
+  const g=document.getElementById('g-1');
+  const gender=g?g.value:'';
+  const count=isMultiEntry?multiCount:qty;
+  return Array.from({length:count},()=>({name,age,gender,special:''}));
 }
 
-// ─── PAYMENT FAILED OVERLAY ────────────────────────────────────────
-var _lastOrderId = null, _lastPayData = null, _paymentCompleted = false, _paymentFailed = false;
 
-function showPayFailed(errMsg){
-  document.getElementById('pfErrorMsg').textContent = errMsg || 'Please try again or use a different payment method.';
-  document.getElementById('payFailedOverlay').classList.add('show');
-  setLoading(false);
+
+// ── TOAST ──
+function showToast(title,msg,type,duration){
+  duration=duration||4000;
+  const icons={success:'bi-check-circle-fill',error:'bi-x-circle-fill',warning:'bi-exclamation-triangle-fill',info:'bi-info-circle-fill'};
+  const c=document.getElementById('toast-container');
+  const el=document.createElement('div');el.className='toast-msg '+(type||'info');
+  el.innerHTML='<i class="bi '+(icons[type]||icons.info)+'" style="flex-shrink:0;margin-top:2px;"></i><div class="toast-body"><div class="toast-title">'+title+'</div>'+(msg?'<div class="toast-sub">'+msg+'</div>':'')+'</div>';
+  c.appendChild(el);
+  setTimeout(()=>{el.style.animation='toastOut 0.3s ease forwards';setTimeout(()=>el.remove(),300);},duration);
 }
-function closePayFailed(){
-  document.getElementById('payFailedOverlay').classList.remove('show');
-  setLoading(false);
+
+// ── PAYMENT ──
+var _razorpayOpen=false,_paymentCompleted=false,_paymentFailed=false,_pendingBookingId=null,_lastPayData=null;
+history.pushState(null,'',window.location.href);
+window.addEventListener('popstate',()=>{
+  if(_razorpayOpen&&!_paymentCompleted&&!_paymentFailed){
+    history.pushState(null,'',window.location.href);
+    showToast('Payment in progress','Please complete or cancel your payment first.','warning',4000);
+  }
+});
+
+function setLoading(on){
+  ['payBtn','payBtnD'].forEach(id=>{const b=document.getElementById(id);if(b)b.disabled=on;});
+  ['payBtnTxt','payBtnTxtD'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display=on?'none':'flex';});
+  ['paySpinner','paySpinnerD'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display=on?'block':'none';});
 }
+function showPayFailed(errMsg){if(_paymentCompleted)return;document.getElementById('pfErrorMsg').textContent=errMsg||'Please try again.';document.getElementById('payFailedOverlay').classList.add('show');setLoading(false);}
+function closePayFailed(){document.getElementById('payFailedOverlay').classList.remove('show');setLoading(false);}
+
+function doPayment(){
+  if(!selTypeName){showToast('Select a ticket','Please choose a ticket category.','warning');return;}
+  if(!validate())return;
+  const attendees=buildAttendeesArray();
+  const waVal=((document.getElementById('wa-1')&&document.getElementById('wa-1').value)||'').trim()||USER.whatsapp||'';
+  setLoading(true);
+  fetch('/booking/create-order',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({eventId:EVENT_DATA._id,ticketType:selTypeName,quantity:isMultiEntry?1:qty,couponCode,attendees,zone:selZone,comboCount:isMultiEntry?multiCount:1,email:USER.email||'',whatsapp:waVal})})
+  .then(r=>r.json())
+  .then(data=>{if(!data.success){showToast('Order failed',data.message||'Please try again.','error');setLoading(false);return;}_lastPayData=data;launchRazorpay(data);})
+  .catch(()=>{showToast('Network error','Check your connection.','error');setLoading(false);});
+}
+
 function retryFromOverlay(){
   document.getElementById('payFailedOverlay').classList.remove('show');
-  setLoading(false);
-  if(_lastPayData){ _paymentFailed=false; setTimeout(function(){ launchRazorpay(_lastPayData); }, 200); }
-}
-
-// ─── PAYMENT ──────────────────────────────────────────────────────
-function doPayment(){
-  if(!selTypeName){ showToast('Select a ticket type','Please choose a ticket category before proceeding.','warning'); return; }
-  if(!validate()) return;
-  if(!termsAccepted()) return;
-
-  var attendees = [];
-  var total = isMultiEntry ? multiCount : qty;
-  for(var i = 1; i <= total; i++){
-    var gEl=document.getElementById('g-'+i);
-    var spEl=document.getElementById('sp-'+i);
-    attendees.push({
-      name:    document.getElementById('n-'+i).value.trim(),
-      age:     document.getElementById('a-'+i).value,
-      gender:  gEl ? gEl.value : '',
-      special: spEl ? spEl.value : ''
-    });
-  }
-  var emailVal    = (document.getElementById('em-1')?.value||'').trim() || USER.email    || '';
-  var whatsappVal = (document.getElementById('wa-1')?.value||'').trim() || USER.whatsapp || '';
-  var submitQty   = isMultiEntry ? 1 : qty;
-
-  setLoading(true);
-  fetch('/booking/create-order', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    credentials: 'include',
-    body: JSON.stringify({
-      eventId: EVENT_DATA._id, ticketType: selTypeName,
-      quantity: submitQty, couponCode: couponCode,
-      attendees: attendees, zone: selZone,
-      comboCount: isMultiEntry ? multiCount : 1,
-      email: emailVal, whatsapp: whatsappVal
-    })
-  })
-  .then(r => r.json())
-  .then(data => {
-    if(!data.success){ showToast('Order failed', data.message||'Please try again.', 'error'); setLoading(false); return; }
-    _lastPayData = data;
-    launchRazorpay(data);
-  })
-  .catch(()=>{ showToast('Network error','Please check your connection and try again.','error'); setLoading(false); });
+  if(!selTypeName){showToast('Session expired','Please refresh.','error');return;}
+  const attendees=buildAttendeesArray();
+  const waVal=((document.getElementById('wa-1')&&document.getElementById('wa-1').value)||'').trim()||USER.whatsapp||'';
+  setLoading(true);_paymentFailed=false;_paymentCompleted=false;
+  fetch('/booking/create-order',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({eventId:EVENT_DATA._id,ticketType:selTypeName,quantity:isMultiEntry?1:qty,couponCode,attendees,zone:selZone,comboCount:isMultiEntry?multiCount:1,email:USER.email||'',whatsapp:waVal})})
+  .then(r=>r.json())
+  .then(data=>{if(!data.success){showToast('Retry failed',data.message||'Please try again.','error');setLoading(false);return;}_lastPayData=data;launchRazorpay(data);})
+  .catch(()=>{showToast('Network error','','error');setLoading(false);});
 }
 
 function launchRazorpay(data){
-  _paymentFailed=false; _paymentCompleted=false;
-  var rzp = new Razorpay({
-    key: data.key, amount: data.amount, currency: data.currency,
-    name: 'Melattur Entertainment Events',
-    description: selTypeName.toUpperCase() + ' x ' + qty,
-    order_id: data.orderId, prefill: data.prefill,
-    theme: { color:'#6A0DAD', backdrop_color:'#0B0B0F' },
-    modal: {
-      ondismiss: function(){
-        if(_paymentCompleted||_paymentFailed){ setLoading(false); return; }
-        setTimeout(function(){
-          if(_paymentCompleted||_paymentFailed) return;
-          fetch('/booking/save-pending',{
-            method:'POST', headers:{'Content-Type':'application/json'},
-            credentials:'include', body:JSON.stringify({orderId:data.orderId})
-          }).catch(()=>{});
-          setLoading(false);
-        }, 900);
-      }
-    },
-    handler: function(response){
-      _paymentCompleted=true;
-      showToast('Verifying payment','Please wait a moment...','info',9000);
-      fetch('/booking/verify-payment',{
-        method:'POST', headers:{'Content-Type':'application/json'},
-        credentials:'include',
-        body:JSON.stringify({
-          razorpay_payment_id: response.razorpay_payment_id,
-          razorpay_order_id:   response.razorpay_order_id,
-          razorpay_signature:  response.razorpay_signature
-        })
-      })
+  _paymentFailed=false;_paymentCompleted=false;_pendingBookingId=data.bookingId||null;_razorpayOpen=true;
+  history.pushState(null,'',window.location.href);
+  var rzp=new Razorpay({
+    key:data.key,amount:data.amount,currency:data.currency,
+    name:'Melattur Entertainment Events',
+    description:selTypeName.toUpperCase()+' × '+qty,
+    order_id:data.orderId,prefill:data.prefill,
+    theme:{color:'#7B2FFF',backdrop_color:'#0D0D0D'},
+    modal:{ondismiss:function(){_razorpayOpen=false;if(_paymentCompleted||_paymentFailed){setLoading(false);return;}setTimeout(function(){if(_paymentCompleted||_paymentFailed)return;fetch('/booking/save-pending',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({orderId:data.orderId})}).catch(()=>{});setLoading(false);},900);}},
+    handler:function(response){
+      _paymentCompleted=true;_paymentFailed=false;
+      document.getElementById('payFailedOverlay').classList.remove('show');
+      showToast('Verifying payment','Please wait…','info',9000);
+      fetch('/booking/verify-payment',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({razorpay_payment_id:response.razorpay_payment_id,razorpay_order_id:response.razorpay_order_id,razorpay_signature:response.razorpay_signature})})
       .then(r=>r.json())
       .then(vdata=>{
-        if(vdata.success){
-          sessionStorage.removeItem('np_sel');
-          window.location.href='/booking/success/'+vdata.bookingId;
-        } else {
-          showToast('Confirmation failed','Payment ID: '+response.razorpay_payment_id+'. Contact support.','error',12000);
-          setLoading(false);
-        }
+        if(vdata.success){sessionStorage.removeItem('np_sel');window.location.href='/booking/success/'+vdata.bookingId;}
+        else{const tid=vdata.bookingId||_pendingBookingId;if(tid){sessionStorage.removeItem('np_sel');window.location.href='/booking/success/'+tid;}else{_razorpayOpen=false;showToast('Payment received','Check My Bookings in a moment.','warning',15000);setLoading(false);}}
       })
-      .catch(()=>{ showToast('Network error','Could not verify payment. Please contact support.','error',12000); setLoading(false); });
+      .catch(()=>{_razorpayOpen=false;showToast('Network error','Check My Bookings.','error',12000);setTimeout(()=>{window.location.href='/booking/my-bookings';},4000);});
     }
   });
-  rzp.on('payment.failed', function(r){
-    _paymentFailed=true;
-    var errMsg = r.error&&r.error.description ? r.error.description : 'Payment could not be processed.';
-    fetch('/booking/save-failed',{
-      method:'POST', headers:{'Content-Type':'application/json'},
-      credentials:'include', body:JSON.stringify({orderId:data.orderId, error:errMsg})
-    }).catch(()=>{});
-    showPayFailed(errMsg);
-  });
+  rzp.on('payment.failed',function(r){if(_paymentCompleted)return;_razorpayOpen=false;_paymentFailed=true;const errMsg=r.error&&r.error.description?r.error.description:'Payment could not be processed.';fetch('/booking/save-failed',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({orderId:data.orderId,error:errMsg})}).catch(()=>{});showPayFailed(errMsg);});
   rzp.open();
 }
 
-function setLoading(on){
-  document.getElementById('payBtn').disabled=on;
-  document.getElementById('payBtnTxt').style.display=on?'none':'flex';
-  document.getElementById('paySpinner').style.display=on?'block':'none';
+document.getElementById('couponInp').addEventListener('keydown',e=>{if(e.key==='Enter')applyCoupon('');});
+document.getElementById('couponInpD').addEventListener('keydown',e=>{if(e.key==='Enter')applyCoupon('D');});
+
+// Hide mobile sum card on desktop
+function resizeSync(){
+  const mc=document.getElementById('mobileSumCard');
+  if(mc) mc.style.display=window.innerWidth>=768?'none':'block';
 }
-</script>
+resizeSync();window.addEventListener('resize',resizeSync);
+
+// Hide sticky bottom bar when the in-card pay button is visible
+function syncBottomBar(){
+  if(window.innerWidth >= 768){ 
+    document.getElementById('bottomBar').style.display = 'none';
+    return; 
+  }
+  const btn = document.getElementById('payBtnD');
+  const bar = document.getElementById('bottomBar');
+  if(!btn || !bar) return;
+  const rect = btn.getBoundingClientRect();
+  const inView = rect.top < window.innerHeight && rect.bottom > 0;
+  bar.style.display = inView ? 'none' : '';
+}
+window.addEventListener('scroll', syncBottomBar, { passive: true });
+window.addEventListener('resize', syncBottomBar);
+syncBottomBar(); // run once on load
+
+  </script>
 </body>
 </html>

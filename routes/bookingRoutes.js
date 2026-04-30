@@ -28,6 +28,13 @@
   // Step 1 — Seat picker
   router.get('/seatmap/:eventId',  requireAuth, guardBookingEvent, bc.getSeatPicker);
 
+// router.post('/webhook', bc.razorpayWebhook);
+
+router.post(
+  '/webhook',
+  require('express').raw({ type: '*/*' }),  // ✅ THIS is the fix
+  bc.razorpayWebhook
+);
 
   // Step 1 → Step 2 redirect helper (API seat-hold check kept)
   router.post('/seatmap/:eventId/hold', async (req, res) => {
@@ -63,6 +70,7 @@
   router.post('/save-failed',       requireAuth, bc.saveFailed);
   router.get('/api/event',          bc.getEventData);
   router.get('/api/events',         bc.getAllEvents);
+  router.get('/status/:bookingId', requireAuth, bc.getBookingStatus);
 
   // ── PDF DOWNLOAD — converts HTML ticket to real PDF via Puppeteer ────────────
   router.get('/pdf/:bookingId', requireAuth, async (req, res) => {

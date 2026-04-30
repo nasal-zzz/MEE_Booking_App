@@ -45,7 +45,7 @@
       --surface: #14141C;
       --card: #14141C;
       --border: rgba(255, 255, 255, 0.08);
-      --accent: #6A0DAD;
+      --accent: #9500ff;
       --accent-dim: rgba(106, 13, 173, 0.12);
       --text: #FFFFFF;
       --muted: #B3B3B3;
@@ -1174,7 +1174,7 @@
 
   <%- include('../partials/navbar') %>
 
-    <% const tierColors={ standard: `#a0a0a0`, silver: `#c0c8d8`, gold: `#f5c842`, platinum: `#6A0DAD`, vip: `#bf80ff`,
+    <% const tierColors={ standard: `#a0a0a0`, silver: `#c0c8d8`, gold: `#f5c842`, platinum: `#9500ff`, vip: `#bf80ff`,
       general: `#a0a0a0` }; const activeTiers=event.ticketTypes.filter(t=> t.isActive);
       const availTiers = activeTiers.filter(t => t.bookedSeats < t.totalSeats); const isHouseFull=activeTiers.length> 0
         && activeTiers.every(t => t.bookedSeats >= t.totalSeats);
@@ -1527,7 +1527,7 @@
                       <div style="display:flex;flex-direction:column;gap:.4rem;margin-bottom:1.2rem;">
                         <% activeTiers.forEach(function(t){ %>
                           <% const avail=t.totalSeats - t.bookedSeats, isOut=avail <=0, tc=tierColors[t.category]
-                            || '#6A0DAD' ; %>
+                            || '#9500ff' ; %>
                             <div
                               style="display:flex;align-items:center;justify-content:space-between;padding:.6rem .8rem;border-radius:8px;background:<%= isOut?`rgba(255,68,68,.04)`:`rgba(255,255,255,.025)` %>;border:1px solid <%= isOut?`rgba(255,68,68,.2)`:`rgba(255,255,255,.06)` %>;">
                               <div style="display:flex;align-items:center;gap:.5rem;">

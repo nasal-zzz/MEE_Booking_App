@@ -40,20 +40,34 @@ app.use(cors({
   credentials: true,
 }));
 
-// Razorpay webhook raw body
-app.use('/booking/webhook/razorpay', (req, res, next) => {
-  let rawData = '';
-  req.setEncoding('utf8');
-  req.on('data', chunk => { rawData += chunk; });
-  req.on('end', () => {
-    req.rawBody = rawData;
-    try { req.body = JSON.parse(rawData); } catch (e) { req.body = {}; }
-    next();
-  });
-});
+// In app.js / server.js — after DB connects
+const { cleanupStaleBookings } = require('./utils/bookingCleanup');
+cleanupStaleBookings(1.5 * 60 * 1000)
+  .then(() => console.log('✅ Startup cleanup complete'))
+  .catch(e => console.warn('Cleanup startup error:', e.message));
+
+setInterval(() => {
+  console.log('🕐 Running scheduled cleanup...');
+  cleanupStaleBookings(1.5 * 60 * 1000)
+    .catch(e => console.warn('Cleanup interval error:', e.message));
+}, 30 * 1000);
+
 
 app.use(morgan('dev'));
-app.use(express.json({ limit: '25mb' }));
+// app.use(express.json({ limit: '25mb' }));
+
+app.use((req, res, next) => {
+
+  if (req.originalUrl === '/booking/webhook') {
+    return next(); // ⛔
+    //  skip JSON parsing for webhook
+  }
+  express.json({ limit: '25mb' })(req, res, next);
+  console.log(req.originalUrl);
+
+});
+
+
 app.use(express.urlencoded({ extended: true, limit: '25mb' }));
 app.use(cookieParser());
 app.use(methodOverride('_method'));

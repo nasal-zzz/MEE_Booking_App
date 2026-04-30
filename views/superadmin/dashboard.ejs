@@ -158,7 +158,7 @@
       const catColors = {platinum:'#9D4EDD',gold:'#f5c842',silver:'#c0c8d8',vip:'#bf80ff',general:'#a0a0a0',standard:'#a0a0a0',family:'#FF6B6B',fanfit:'#00FF88'};
       const catMap = {};
       activeEvent.ticketTypes.forEach(t => {
-        catMap[t.category] = { name: t.name||t.category, total: t.totalSeats, booked:0, price: t.price, color: t.color || catColors[t.category] || '#6A0DAD', attendees: [] };
+        catMap[t.category] = { name: t.name||t.category, total: t.totalSeats, booked:0, price: t.price, color: t.color || catColors[t.category] || '#9500ff', attendees: [] };
       });
       activeEventBookings.forEach(b => {
         if (catMap[b.ticketType]) {
@@ -468,14 +468,24 @@ async function repairQR(el) {
 let _refreshSecs = 300;
 const _timerEl = document.getElementById('refreshTimer');
 const _pad = n => String(n).padStart(2, '0');
-function _tick() {
-  const m = Math.floor(_refreshSecs/60), s = _refreshSecs%60;
-  _timerEl.textContent = m + ':' + _pad(s);
-  if (--_refreshSecs < 0) location.reload();
-}
-setInterval(_tick, 1000);
-_tick();
+let _refreshInterval = null; // track the interval
 
+function _tick() {
+  // Display first, then decrement
+  const m = Math.floor(_refreshSecs / 60);
+  const s = _refreshSecs % 60;
+  _timerEl.textContent = m + ':' + _pad(s);
+
+  if (_refreshSecs <= 0) {
+    clearInterval(_refreshInterval); // stop the interval BEFORE reloading
+    location.reload();
+    return;
+  }
+  _refreshSecs--;
+}
+
+_refreshInterval = setInterval(_tick, 1000);
+_tick(); // show "5:00" immediately without decrementing
 function doRefresh() {
   document.getElementById('refreshIcon').style.animation = 'spin 0.7s linear infinite';
   document.getElementById('refreshBtn').disabled = true;

@@ -19,7 +19,7 @@
       --surf2: #1a1a28;
       --border: rgba(255, 255, 255, 0.08);
       --accent: #9D4EDD;
-      --accent2: #6A0DAD;
+      --accent2: #9500ff;
       --text: #fff;
       --muted: #888;
       --muted2: #B3B3B3;
@@ -159,7 +159,7 @@
     @media(min-width:420px) { .contact-section .row2 { grid-template-columns: 1fr 1fr; } }
 
     .sell-sticky { position: sticky; bottom: 0; background: linear-gradient(to top, #0B0B0F 70%, transparent); padding: .6rem 0 env(safe-area-inset-bottom, .3rem); margin-top: .35rem; z-index: 50; }
-    .btn-sell { width: 100%; padding: .88rem; background: linear-gradient(135deg, #6A0DAD, #9D4EDD); border: none; border-radius: 8px; color: #fff; font-family: 'Outfit', sans-serif; font-size: .95rem; font-weight: 700; cursor: pointer; letter-spacing: .5px; transition: all .18s; display: flex; align-items: center; justify-content: center; gap: .45rem; -webkit-tap-highlight-color: transparent; }
+    .btn-sell { width: 100%; padding: .88rem; background: linear-gradient(135deg, #9500ff, #9D4EDD); border: none; border-radius: 8px; color: #fff; font-family: 'Outfit', sans-serif; font-size: .95rem; font-weight: 700; cursor: pointer; letter-spacing: .5px; transition: all .18s; display: flex; align-items: center; justify-content: center; gap: .45rem; -webkit-tap-highlight-color: transparent; }
     .btn-sell:active:not(:disabled) { transform: scale(.98); }
     .btn-sell:disabled { opacity: .4; cursor: not-allowed; }
 
@@ -397,35 +397,41 @@
           </div>
 
           <div id="secAtt" style="display:none;">
-            <div class="fg">
-              <label>Attendee Details</label>
-              <div class="att-list" id="attList"></div>
-            </div>
-          </div>
+  <div class="fg">
+    <label>Attendee Details</label>
+    <div class="att-row">
+      <div class="att-num">Attendee Info (applies to all tickets)</div>
+      <div class="row2">
+        <div class="fg" style="margin-bottom:.35rem;">
+          <label>Name <span class="req">*</span></label>
+          <input id="att-name" type="text" placeholder="Full name" autocomplete="off"/>
+        </div>
+        <div class="fg" style="margin-bottom:.35rem;">
+          <label>Age <span class="req">*</span></label>
+          <input id="att-age" type="number" placeholder="Age" min="1" max="120" inputmode="numeric"/>
+        </div>
+      </div>
+      <div class="row2">
+        <div class="fg" style="margin-bottom:.35rem;">
+          <label>Gender <span class="req">*</span></label>
+          <select id="att-gender">
+            <option value="">— Select —</option>
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="fg" style="margin-bottom:.35rem;">
+          <label>WhatsApp / Phone <span class="req">*</span></label>
+          <input type="tel" id="bPhone" placeholder="XXXXX XXXXX" maxlength="10" inputmode="numeric" autocomplete="tel"/>
+          <div class="hint">QR ticket sent via WhatsApp</div>
+        </div>
+      </div>
+      <div id="contactErr" style="color:var(--error);font-size:.73rem;display:none;margin-top:.2rem;"></div>
+    </div>
+  </div>
+</div>
 
-          <div id="secContact" style="display:none;" class="contact-section">
-            <div class="card-hd" style="margin-bottom:.75rem;">
-              <i class="bi bi-person-lines-fill"></i> Buyer Contact
-            </div>
-            <div class="fg">
-              <label>Buyer Name</label>
-              <input type="text" id="bName" placeholder="Full name of buyer" autocomplete="name" />
-            </div>
-            <div class="row2">
-              <div class="fg">
-                <!-- ✅ Phone is required, email is now optional -->
-                <label>WhatsApp / Phone <span class="req">*</span></label>
-                <input type="tel" id="bPhone" placeholder="XXXXX XXXXX" maxlength="10" inputmode="numeric" autocomplete="tel" />
-                <div class="hint">QR ticket sent via WhatsApp</div>
-              </div>
-              <div class="fg">
-                <label>Email <span class="opt">(optional)</span></label>
-                <input type="email" id="bEmail" placeholder="buyer@example.com" inputmode="email" autocomplete="email" />
-                <div class="hint">Confirmation sent here if provided</div>
-              </div>
-            </div>
-            <div id="contactErr" style="color:var(--error);font-size:.73rem;display:none;margin-top:-.2rem;margin-bottom:.4rem;"></div>
-          </div>
 
           <div class="sell-sticky">
             <button class="btn-sell" id="sellBtn" onclick="doSell()" disabled>
@@ -527,7 +533,7 @@
     const CAT_COLORS = {
       platinum: '#9D4EDD', gold: '#E9B84A', silver: '#A8B5C8',
       vip: '#E9B84A', fanfit: '#2ECC94', family: '#FF7A7A',
-      standard: '#6B7280', general: '#6A0DAD', bronze: '#CD7F32',
+      standard: '#6B7280', general: '#9500ff', bronze: '#CD7F32',
     };
     const cc = cat => CAT_COLORS[(cat || '').toLowerCase()] || '#9D4EDD';
 
@@ -634,19 +640,40 @@
     }
 
     function selectType(t, card) {
-      selType = t; selZone = '';
-      document.querySelectorAll('.ttype-card').forEach(c => c.classList.remove('selected'));
-      card.classList.add('selected');
-      setZoneBar('');
+  selType = t; selZone = '';
+  document.querySelectorAll('.ttype-card').forEach(c => c.classList.remove('selected'));
+  card.classList.add('selected');
+  setZoneBar('');
+  showAgeAlert(t.ageLimit || 0);
 
-      // ✅ Show age alert when a ticket type with ageLimit is selected
-      showAgeAlert(t.ageLimit || 0);
+  if (selSeatMap) {
+    renderZones(selSeatMap, t.category);
+    show('secMap');
+    hide('secZoneFb');
 
-      if (selSeatMap) { renderZones(selSeatMap, t.category); show('secMap'); hide('secZoneFb'); }
-      else { hide('secMap'); hide('secZoneFb'); }
-      show('secQty'); show('secContact');
-      selQty = 1; document.getElementById('qtyInp').value = 1; onQty(1);
+    // ✅ Auto-select zone if only one section matches this category
+    const matchingSections = (selSeatMap.sections || []).filter(
+      s => s.category === t.category && (s.totalSeats - s.bookedSeats) > 0
+    );
+    if (matchingSections.length === 1) {
+      selZone = matchingSections[0].name;
+      setZoneBar(selZone);
+      // Also visually activate the zone hit element once rendered
+      setTimeout(() => {
+        document.querySelectorAll('.zone-hit').forEach(z => {
+          if (z.querySelector('.zone-label')?.textContent === selZone) {
+            z.classList.add('active');
+          }
+        });
+      }, 50);
     }
+  } else {
+    hide('secMap'); hide('secZoneFb');
+  }
+
+show('secQty'); show('secAtt');  
+  selQty = 1; document.getElementById('qtyInp').value = 1; onQty(1);
+}
 
     function buildSeatMap(sm) {
       const img = document.getElementById('mapImg'); const svg = document.getElementById('mapSvg');
@@ -655,7 +682,7 @@
       const cw = sm.canvasWidth || 960, ch = sm.canvasHeight || 760;
       svg.setAttribute('viewBox', `0 0 ${cw} ${ch}`);
       const st = sm.stage || {}, stX = (st.x !== undefined) ? st.x : Math.round((cw - (st.width || 500)) / 2), stY = (st.y !== undefined) ? st.y : 30;
-      const stW = st.width || 500, stH = st.height || 100, stC = st.color || '#6A0DAD', stLbl = st.label || 'STAGE', stShp = st.shape || 'rectangle';
+      const stW = st.width || 500, stH = st.height || 100, stC = st.color || '#9500ff', stLbl = st.label || 'STAGE', stShp = st.shape || 'rectangle';
       const scx = stX + stW / 2, scy = stY + stH / 2;
       let html = `<rect width="${cw}" height="${ch}" fill="#0f0f18"/>`;
       html += `<pattern id="gdot" width="40" height="40" patternUnits="userSpaceOnUse"><circle cx="20" cy="20" r="0.7" fill="rgba(255,255,255,0.07)"/></pattern><rect width="${cw}" height="${ch}" fill="url(#gdot)"/>`;
@@ -742,79 +769,72 @@
       updateHint();
     }
 
-    function buildAttRows(qty) {
-      const list=document.getElementById('attList'); list.innerHTML='';
-      const ageLimit = selType?.ageLimit || 0;
-      for (let i=0;i<qty;i++) {
-        const div=document.createElement('div'); div.className='att-row';
-        div.innerHTML=`<div class="att-num">Attendee ${i+1}</div>
-          <div class="row2">
-            <div class="fg" style="margin-bottom:.35rem;"><label>Name <span class="req">*</span></label><input class="att-name" type="text" placeholder="Full name" autocomplete="off"/></div>
-            <div class="fg" style="margin-bottom:.35rem;"><label>Age <span class="req">*</span>${ageLimit > 0 ? `<span style="color:var(--warn);font-size:.6rem;margin-left:4px;">(min. ${ageLimit})</span>` : ''}</label><input class="att-age" type="number" placeholder="Age" min="${ageLimit > 0 ? ageLimit : 1}" max="120" inputmode="numeric"/></div>
-          </div>
-          <div class="fg" style="margin-bottom:0;"><label>Gender</label><select class="att-gender"><option value="">—</option><option value="male">Male</option><option value="female">Female</option><option value="other">Other</option></select></div>`;
-        list.appendChild(div);
-      }
+
+function checkReady() {
+  const name = document.getElementById('att-name')?.value?.trim();
+  const age = parseInt(document.getElementById('att-age')?.value) || 0;
+  const gender = document.getElementById('att-gender')?.value;
+  const phone = document.getElementById('bPhone')?.value?.trim();
+  const phoneValid = /^[6-9]\d{9}$/.test(phone || '');
+  const ready = !!(selEvt && selType && name && age > 0 && gender && phoneValid);
+  const btn = document.getElementById('sellBtn');
+  if (btn) btn.disabled = !ready;
+}
+
+
+async function doSell() {
+  const name = document.getElementById('att-name')?.value?.trim() || '';
+  const age = parseInt(document.getElementById('att-age')?.value) || 0;
+  const gender = document.getElementById('att-gender')?.value || '';
+  const phone = document.getElementById('bPhone')?.value?.trim() || '';
+  const errEl = document.getElementById('contactErr');
+  if (errEl) errEl.style.display = 'none';
+
+  if (!name) { if(errEl){errEl.textContent='Attendee name is required.';errEl.style.display='block';} return; }
+  if (!age || age < 1) { if(errEl){errEl.textContent='Attendee age is required.';errEl.style.display='block';} return; }
+  if (!gender) { if(errEl){errEl.textContent='Please select a gender.';errEl.style.display='block';} return; }
+  if (!phone) { if(errEl){errEl.textContent='WhatsApp number is required.';errEl.style.display='block';} return; }
+  if (!/^[6-9]\d{9}$/.test(phone)) { if(errEl){errEl.textContent='Invalid phone — enter 10-digit Indian mobile.';errEl.style.display='block';} return; }
+
+  const ageLimit = selType?.ageLimit || 0;
+  if (ageLimit > 0 && age < ageLimit) { showToast(`Age must be ${ageLimit}+ for this ticket category.`, true); return; }
+
+  const attendees = Array.from({ length: selQty }, () => ({ name, age, gender }));
+
+  const btn = document.getElementById('sellBtn');
+  btn.disabled = true; btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Processing…';
+  const currentEvtId = selEvt._id;
+  try {
+    const resp = await fetch('/staff/api/sell', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        eventId: selEvt._id, ticketType: selType.category, quantity: selQty,
+        attendees, buyerPhone: phone, buyerEmail: '', buyerName: name, zone: selZone
+      })
+    });
+    const data = await resp.json();
+    if (!data.success) {
+      showToast(data.message || 'Sale failed.', true);
+      btn.disabled = false; btn.innerHTML = '<i class="bi bi-cash-coin"></i> Confirm Cash Sale';
+      if (selEvt) fetchAndShowSeatmap(selEvt._id); return;
     }
+    _lockedEvtId = currentEvtId;
+    showModal(data); prependRow(data);
+    if (selEvt) fetchAndShowSeatmap(selEvt._id);
+  } catch(e) {
+    showToast('Network error. Try again.', true);
+    btn.disabled = false; btn.innerHTML = '<i class="bi bi-cash-coin"></i> Confirm Cash Sale';
+  }
+}
 
-    function checkReady() { document.getElementById('sellBtn').disabled = !(selEvt && selType); }
 
-    async function doSell() {
-      const phone = document.getElementById('bPhone').value.trim();
-      const email = document.getElementById('bEmail').value.trim();
-      const errEl = document.getElementById('contactErr'); errEl.style.display='none';
-
-      // ✅ Phone required, email optional
-      if (!phone){errEl.textContent='WhatsApp number is required.';errEl.style.display='block';return;}
-      if (!/^[6-9]\d{9}$/.test(phone)){errEl.textContent='Invalid phone — enter 10-digit Indian mobile.';errEl.style.display='block';return;}
-      // Validate email only if it's been filled in
-      if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){errEl.textContent='Invalid email address.';errEl.style.display='block';return;}
-
-      // ✅ Age limit validation
-      const ageLimit = selType?.ageLimit || 0;
-      const attendees=[]; let valid=true;
-      document.querySelectorAll('.att-row').forEach((row, idx) => {
-        const name=row.querySelector('.att-name')?.value?.trim()||'';
-        const age=parseInt(row.querySelector('.att-age')?.value)||0;
-        const gender=row.querySelector('.att-gender')?.value||'';
-        if(!name||!age){valid=false;return;}
-        if (ageLimit > 0 && age < ageLimit) {
-          showToast(`Attendee ${idx+1}: Age must be ${ageLimit}+ for this ticket category.`, true);
-          valid = false;
-          return;
-        }
-        attendees.push({name,age,gender});
-      });
-      if (!valid) return;
-
-      const btn=document.getElementById('sellBtn');
-      btn.disabled=true; btn.innerHTML='<i class="bi bi-hourglass-split"></i> Processing…';
-      const currentEvtId = selEvt._id;
-      try {
-        const resp = await fetch('/staff/api/sell',{
-          method:'POST',headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({
-            eventId:selEvt._id,ticketType:selType.category,quantity:selQty,
-            attendees,buyerPhone:phone,
-            buyerEmail: email || '',   // ✅ pass empty string if not filled
-            buyerName:document.getElementById('bName').value.trim()||attendees[0]?.name||'',
-            zone:selZone
-          })
-        });
-        const data = await resp.json();
-        if (!data.success){
-          showToast(data.message||'Sale failed.',true);
-          btn.disabled=false; btn.innerHTML='<i class="bi bi-cash-coin"></i> Confirm Cash Sale';
-          if(selEvt)fetchAndShowSeatmap(selEvt._id); return;
-        }
-        _lockedEvtId = currentEvtId;
-        showModal(data); prependRow(data);
-        if(selEvt)fetchAndShowSeatmap(selEvt._id);
-      } catch(e) {
-        showToast('Network error. Try again.',true);
-        btn.disabled=false; btn.innerHTML='<i class="bi bi-cash-coin"></i> Confirm Cash Sale';
-      }
-    }
+// ── Live validation listeners for attendee fields ──
+document.addEventListener('DOMContentLoaded', () => {
+  ['att-name','att-age','att-gender','bPhone'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.addEventListener('input', checkReady); el.addEventListener('change', checkReady); }
+  });
+});
 
     function buildTicketHTML(data) {
       const typeCategory = selType?.category||data.ticketType||'';
@@ -920,7 +940,9 @@
       _lockedEvtId = null;
       document.getElementById('modalBg').classList.remove('show');
       _currentModalData = null;
-      ['bPhone','bEmail','bName'].forEach(id=>document.getElementById(id).value='');
+['att-name','att-age','bPhone'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+const genderEl = document.getElementById('att-gender'); if(genderEl) genderEl.value='';      
+      
       selType=null; selZone='';
       showAgeAlert(0);
       document.querySelectorAll('.ttype-card').forEach(c=>c.classList.remove('selected'));
@@ -948,9 +970,10 @@
           </button>
         </td>
         <td>
-          <div style="font-weight:600;font-size:.78rem;">${document.getElementById('bName').value||data.tickets[0]?.attendee||'—'}</div>
-          <div style="font-size:.65rem;color:var(--muted2);">${document.getElementById('bPhone').value}</div>
-        </td>
+          <div style="font-weight:600;font-size:.78rem;">${document.getElementById('att-name')?.value||data.tickets[0]?.attendee||'—'}</div>
+<div style="font-size:.65rem;color:var(--muted2);">${document.getElementById('bPhone')?.value||''}</div>
+    
+          </td>
         <td style="font-size:.77rem;color:#d8b4fe;">${selEvt?.name||'—'}</td>
         <td style="font-size:.77rem;text-transform:capitalize;">${selType?.name||selType?.category||'—'}</td>
         <td style="text-align:center;font-family:'Space Mono',monospace;">${selQty}</td>

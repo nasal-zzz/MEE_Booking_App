@@ -7,6 +7,10 @@ const Event = require('../models/Event');
 const ScanLog = require('../models/ScanLog');
 const User = require('../models/User');
 
+ const Razorpay   = require('razorpay');
+    const WebhookLog = require('../models/WebhookLog');
+
+
 const adminController = require('../controllers/adminController');
 // ── Default superadmin credentials ──
 const SUPER_ADMIN = {
@@ -21,6 +25,13 @@ router.post('/users/:id/block', userController.blockUser);
 router.post('/users/:id/unblock', userController.unblockUser);
 router.delete('/users/:id', userController.deleteUser); // superadmin-only
 
+
+    function getRazorpay() {
+      return new Razorpay({
+        key_id:     process.env.RAZORPAY_KEY_ID,
+        key_secret: process.env.RAZORPAY_KEY_SECRET,
+      });
+    }
 
 // ── Auth middleware ── accepts superAdminLoggedIn OR staffLoggedIn with superadmin role
 
@@ -1213,6 +1224,162 @@ console.log('🎫 Ticket seat numbers:', booking.tickets.map(t => ({
     }
 
     res.json({ success: true, sent, failed, total: bookingIds.length, results });
+  } catch (err) {
+    res.json({ success: false, message: err.message });
+  }
+});
+
+
+// GET /superadmin/transactions
+router.get('/transactions', async (req, res) => {
+  try {
+    const WebhookLog = require('../models/WebhookLog');
+    const currentAdmin = req.session.staffUser ||
+      { username: req.session.superAdminUser || 'superadmin', name: 'Super Admin', role: 'superadmin' };
+ 
+    const { status, eventType, method, from, to, search, page = 1 } = req.query;
+    const PAGE_SIZE  = 50;
+    const skip       = (Math.max(1, parseInt(page)) - 1) * PAGE_SIZE;
+ 
+    const match = {};
+    if (status)    match.processingStatus = status;
+    if (eventType) match.eventType = eventType;
+    if (method)    match.method    = method;
+    if (from || to) {
+      match.createdAt = {};
+      if (from) match.createdAt.$gte = new Date(from);
+      if (to)   { const d = new Date(to); d.setHours(23, 59, 59, 999); match.createdAt.$lte = d; }
+    }
+    if (search && search.trim()) {
+      const s = search.trim();
+      match.$or = [
+        { orderId:    { $regex: s, $options: 'i' } },
+        { paymentId:  { $regex: s, $options: 'i' } },
+        { bookingRef: { $regex: s, $options: 'i' } },
+        { contact:    { $regex: s, $options: 'i' } },
+        { email:      { $regex: s, $options: 'i' } },
+      ];
+    }
+ 
+    const [logs, total, aggregates] = await Promise.all([
+      WebhookLog.find(match).sort({ createdAt: -1 }).skip(skip).limit(PAGE_SIZE).lean(),
+      WebhookLog.countDocuments(match),
+      WebhookLog.aggregate([
+        {
+          $facet: {
+            byStatus: [
+              { $group: { _id: '$processingStatus', count: { $sum: 1 }, revenue: { $sum: '$amount' } } },
+            ],
+            byMethod: [
+              { $match: { method: { $ne: '' } } },
+              { $group: { _id: '$method', count: { $sum: 1 } } },
+              { $sort: { count: -1 } },
+            ],
+            byEvent: [
+              { $group: { _id: '$eventType', count: { $sum: 1 } } },
+            ],
+            recentRevenue: [
+              {
+                $match: {
+                  processingStatus: { $in: ['ok', 'already_processed', 'already_processed_by_verify'] },
+                  eventType: { $in: ['payment.captured', 'order.paid'] },
+                }
+              },
+              { $group: { _id: null, total: { $sum: '$amount' }, count: { $sum: 1 } } },
+            ],
+          },
+        },
+      ]),
+    ]);
+ 
+    const stats = {};
+    const agg   = aggregates[0] || {};
+    let totalRevPaise = 0;
+ 
+    (agg.byStatus || []).forEach(s => {
+      stats[s._id] = s.count;
+      if (['ok', 'already_processed', 'already_processed_by_verify'].includes(s._id)) {
+        totalRevPaise += s.revenue || 0;
+      }
+    });
+    stats.totalRevenue  = totalRevPaise / 100;
+    stats.totalCount    = total;
+    stats.byMethod      = agg.byMethod  || [];
+    stats.byEvent       = agg.byEvent   || [];
+    const recentRev     = agg.recentRevenue?.[0] || {};
+    stats.capturedCount = recentRev.count || 0;
+ 
+    res.render('superadmin/transactions', {
+      title: 'Transactions — Super Admin',
+      logs,
+      stats,
+      total,
+      totalPages:  Math.ceil(total / PAGE_SIZE),
+      currentPage: parseInt(page),
+      filters: { status, eventType, method, from, to, search },
+      currentAdmin,
+      isSuperAdmin: true,
+      baseUrl: '/superadmin',
+    });
+  } catch (err) {
+    console.error('[superadmin] transactions error:', err);
+    res.status(500).send('Error: ' + err.message);
+  }
+});
+ 
+ 
+// GET /superadmin/api/transaction/:id
+router.get('/api/transaction/:id', async (req, res) => {
+  try {
+    const WebhookLog = require('../models/WebhookLog');
+    const Razorpay   = require('razorpay');
+ 
+    const log = await WebhookLog.findById(req.params.id).lean();
+    if (!log) return res.json({ success: false, message: 'Not found' });
+ 
+    let livePayment = null;
+    let liveOrder   = null;
+ 
+    try {
+      const rzp = new Razorpay({
+        key_id:     process.env.RAZORPAY_KEY_ID,
+        key_secret: process.env.RAZORPAY_KEY_SECRET,
+      });
+ 
+      const [payRes, ordRes] = await Promise.allSettled([
+        log.paymentId ? rzp.payments.fetch(log.paymentId) : Promise.resolve(null),
+        log.orderId   ? rzp.orders.fetch(log.orderId)     : Promise.resolve(null),
+      ]);
+ 
+      if (payRes.status === 'fulfilled') livePayment = payRes.value;
+      if (ordRes.status === 'fulfilled') liveOrder   = ordRes.value;
+ 
+      if (livePayment && log._id) {
+        await WebhookLog.findByIdAndUpdate(log._id, {
+          liveEnrichedAt: new Date(),
+          liveMethod:     livePayment.method || '',
+          liveStatus:     livePayment.status || '',
+          liveNotes:      livePayment.notes  || null,
+        }).catch(() => {});
+      }
+    } catch (apiErr) {
+      console.warn('Razorpay API fetch error:', apiErr.message);
+    }
+ 
+    let booking = null;
+    if (log.bookingId) {
+      booking = await Booking.findById(log.bookingId)
+        .populate('user', 'firstName lastName phone email')
+        .populate('event', 'name date venue')
+        .lean().catch(() => null);
+    } else if (log.bookingRef) {
+      booking = await Booking.findOne({ bookingRef: log.bookingRef })
+        .populate('user', 'firstName lastName phone email')
+        .populate('event', 'name date venue')
+        .lean().catch(() => null);
+    }
+ 
+    res.json({ success: true, log, livePayment, liveOrder, booking });
   } catch (err) {
     res.json({ success: false, message: err.message });
   }

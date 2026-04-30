@@ -1,0 +1,1038 @@
+<%
+  /* Detect which panel we are in based on the title */
+  const isSA    = title && title.includes('Super Admin');
+  const baseUrl = isSA ? '/superadmin' : '/mee-admin';
+%>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title><%= title %></title>
+
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"/>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+
+  <style>
+    /* ══════════════════════════════════════════════
+       GLOBAL DESIGN TOKENS  (replaces admin.css)
+    ══════════════════════════════════════════════ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      /* Layout */
+      --sidebar-w: 230px;
+
+      /* Palette */
+      --bg:        #0b0f1a;
+      --surface:   #111827;
+      --card:      #1a2235;
+      --border:    rgba(255,255,255,0.08);
+      --border-hi: rgba(106,13,173,0.35);
+      --text:      #f1f5f9;
+      --muted:     #8892a4;
+      --subtext:   #64748b;
+
+      /* Accent (purple brand) */
+      --accent:    #9500ff;
+      --accent-2:  #9D4EDD;
+      --accent-glow: rgba(106,13,173,0.18);
+
+      /* Semantic */
+      --ok:        #22c55e;
+      --warn:      #f59e0b;
+      --err:       #ef4444;
+      --info:      #6366f1;
+      --error:     #ef4444;
+
+      /* Typography */
+      --font-body: 'DM Sans', sans-serif;
+      --font-mono: 'Space Mono', monospace;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 15px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ══════════════════════════════════════════════
+       LAYOUT SHELL
+    ══════════════════════════════════════════════ */
+    .admin-layout {
+      display: grid;
+      grid-template-columns: var(--sidebar-w) 1fr;
+      min-height: 100vh;
+    }
+    .main-content {
+      overflow-x: hidden;
+      min-width: 0;
+    }
+
+    /* ══════════════════════════════════════════════
+       SIDEBAR — SHARED BASE
+    ══════════════════════════════════════════════ */
+    .sidebar {
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      padding: 1.5rem 1rem;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      z-index: 100;
+      overflow-y: auto;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+      transition: transform 0.28s cubic-bezier(0.4,0,0.2,1);
+    }
+    .sidebar::-webkit-scrollbar { display: none; }
+
+    .s-logo {
+      display: block;
+      padding: 0 0.5rem 1rem;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 0.5rem;
+      text-decoration: none;
+      flex-shrink: 0;
+    }
+    .s-logo img { height: 28px; width: auto; object-fit: contain; }
+
+    .s-badge {
+      font-family: var(--font-mono);
+      font-size: 0.52rem;
+      letter-spacing: 2px;
+      color: var(--accent-2);
+      text-transform: uppercase;
+      padding: 0.3rem 0.5rem;
+      margin-bottom: 0.3rem;
+      border: 1px solid rgba(157,78,221,0.25);
+      border-radius: 4px;
+      background: rgba(157,78,221,0.07);
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .s-section {
+      font-family: var(--font-mono);
+      font-size: 0.5rem;
+      letter-spacing: 2px;
+      color: var(--subtext);
+      text-transform: uppercase;
+      padding: 0.6rem 0.5rem 0.2rem;
+      margin-top: 0.25rem;
+      flex-shrink: 0;
+    }
+
+    .s-link {
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      padding: 0.65rem 0.8rem;
+      color: var(--muted);
+      text-decoration: none;
+      border-radius: 7px;
+      font-size: 0.84rem;
+      font-weight: 500;
+      transition: all 0.15s;
+      border: 1px solid transparent;
+      flex-shrink: 0;
+    }
+    .s-link:hover,
+    .s-link.active {
+      background: var(--accent-glow);
+      border-color: var(--border-hi);
+      color: #fff;
+    }
+    .s-link i {
+      color: var(--accent-2);
+      width: 18px;
+      flex-shrink: 0;
+      font-size: 0.95rem;
+    }
+    .s-link.active i { color: #c084fc; }
+
+    .s-logout {
+      margin-top: auto;
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      padding: 0.65rem 0.8rem;
+      color: var(--error);
+      text-decoration: none;
+      border-radius: 7px;
+      font-size: 0.84rem;
+      border: 1px solid transparent;
+      transition: all 0.15s;
+      flex-shrink: 0;
+    }
+    .s-logout:hover { background: rgba(239,68,68,0.08); border-color: rgba(239,68,68,0.2); }
+    .s-logout i { width: 18px; }
+
+    /* ── Mobile top bar ── */
+    .mobile-topbar {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 54px;
+      z-index: 200;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 1rem;
+      gap: 0.75rem;
+    }
+    .mobile-topbar img { height: 24px; width: auto; object-fit: contain; }
+    .mobile-topbar-title {
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      letter-spacing: 2px;
+      color: var(--muted);
+      text-transform: uppercase;
+      flex: 1;
+      text-align: center;
+    }
+    .mobile-topbar-title.sa { color: var(--accent-2); }
+
+    .hamburger {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      width: 36px; height: 36px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+      transition: background 0.15s;
+    }
+    .hamburger:hover { background: rgba(255,255,255,0.1); }
+    .hamburger.sa { background: rgba(157,78,221,0.07); border-color: rgba(157,78,221,0.25); color: var(--accent-2); }
+    .hamburger.sa:hover { background: rgba(157,78,221,0.15); }
+
+    /* ── Overlay ── */
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.65);
+      z-index: 150;
+      backdrop-filter: blur(2px);
+    }
+    .sidebar-overlay.open { display: block; }
+
+    /* ── Responsive ── */
+    @media (max-width: 900px) {
+      .admin-layout { grid-template-columns: 1fr !important; }
+      .main-content { padding-top: 54px !important; }
+      .mobile-topbar { display: flex; }
+      .sidebar {
+        position: fixed;
+        top: 0; left: 0; bottom: 0;
+        width: 260px;
+        transform: translateX(-100%);
+        box-shadow: 6px 0 32px rgba(0,0,0,0.55);
+        z-index: 160;
+      }
+      .sidebar.open { transform: translateX(0); }
+      .s-logo { padding: 0.75rem 0.5rem; }
+    }
+
+    /* ══════════════════════════════════════════════
+       TRANSACTION PAGE
+    ══════════════════════════════════════════════ */
+    .txn-page { padding: 1.75rem 2rem; }
+
+    /* ── Stat cards ── */
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+    }
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem 1.1rem;
+      text-align: center;
+      transition: border-color 0.2s;
+    }
+    .stat-card:hover { border-color: var(--border-hi); }
+    .stat-card .val {
+      font-size: 1.5rem;
+      font-weight: 700;
+      line-height: 1.2;
+      font-family: var(--font-mono);
+    }
+    .stat-card .lbl {
+      font-size: 0.68rem;
+      color: var(--subtext);
+      margin-top: 0.3rem;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+    }
+    .c-ok    { color: var(--ok);   }
+    .c-warn  { color: var(--warn); }
+    .c-err   { color: var(--err);  }
+    .c-info  { color: var(--info); }
+    .c-muted { color: var(--muted); }
+
+    /* ── Filter bar ── */
+    .filter-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: center;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.8rem 1rem;
+      margin-bottom: 1rem;
+    }
+    .filter-bar input,
+    .filter-bar select {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 6px;
+      padding: 0.38rem 0.7rem;
+      font-size: 0.82rem;
+      font-family: var(--font-body);
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .filter-bar input::placeholder { color: var(--subtext); }
+    .filter-bar input:focus,
+    .filter-bar select:focus { border-color: var(--info); }
+    .filter-bar select option { background: var(--surface); }
+    .filter-bar .btn-filter {
+      background: var(--info);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 0.4rem 1.1rem;
+      font-size: 0.82rem;
+      font-family: var(--font-body);
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .filter-bar .btn-filter:hover { opacity: 0.88; }
+    .filter-bar .btn-clear {
+      background: transparent;
+      color: var(--subtext);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.38rem 0.9rem;
+      font-size: 0.82rem;
+      cursor: pointer;
+      text-decoration: none;
+      font-family: var(--font-body);
+      transition: all 0.15s;
+    }
+    .filter-bar .btn-clear:hover { border-color: var(--muted); color: var(--text); }
+
+    /* ── Table ── */
+    .txn-table-wrap {
+      overflow-x: auto;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+    }
+    .txn-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+    }
+    .txn-table th {
+      background: var(--bg);
+      color: var(--subtext);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 0.7rem 0.9rem;
+      text-align: left;
+      white-space: nowrap;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.7rem;
+    }
+    .txn-table td {
+      padding: 0.6rem 0.9rem;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      vertical-align: middle;
+      color: var(--text);
+    }
+    .txn-table tr:last-child td { border-bottom: none; }
+    .txn-table tr:hover td { background: rgba(99,102,241,0.05); }
+
+    .mono {
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+      color: var(--subtext);
+    }
+    .mono.copy-btn {
+      cursor: pointer;
+      padding: 2px 6px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      transition: background 0.15s;
+    }
+    .mono.copy-btn:hover { background: var(--border); color: #fff; }
+
+    /* Badges */
+    .badge {
+      display: inline-block;
+      border-radius: 9999px;
+      padding: 2px 10px;
+      font-size: 0.69rem;
+      font-weight: 700;
+      white-space: nowrap;
+      letter-spacing: 0.02em;
+    }
+    .badge-ok        { background: #14532d; color: #4ade80; }
+    .badge-already   { background: #1e3a5f; color: #60a5fa; }
+    .badge-nobooking { background: #431407; color: #fb923c; }
+    .badge-error     { background: #450a0a; color: #f87171; }
+    .badge-ignored   { background: #1a2235; color: #64748b; }
+    .badge-verify    { background: #2d1b69; color: #a78bfa; }
+    .badge-missing   { background: #3b2a00; color: #fbbf24; }
+
+    .badge-evt-captured { background: #14532d; color: #4ade80; }
+    .badge-evt-failed   { background: #450a0a; color: #f87171; }
+    .badge-evt-other    { background: #1a2235; color: #64748b; }
+
+    .amt      { font-weight: 700; color: var(--ok); font-family: var(--font-mono); font-size: 0.8rem; }
+    .amt-zero { color: var(--subtext); font-family: var(--font-mono); font-size: 0.8rem; }
+
+    .btn-detail {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--subtext);
+      border-radius: 6px;
+      padding: 3px 10px;
+      font-size: 0.74rem;
+      font-family: var(--font-body);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-detail:hover { border-color: var(--info); color: #a5b4fc; }
+
+    /* Pagination */
+    .pagination {
+      display: flex;
+      justify-content: center;
+      gap: 0.35rem;
+      margin-top: 1.25rem;
+      flex-wrap: wrap;
+    }
+    .pagination a, .pagination span {
+      display: inline-block;
+      padding: 0.3rem 0.7rem;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      color: var(--subtext);
+      font-size: 0.8rem;
+      text-decoration: none;
+      transition: all 0.15s;
+    }
+    .pagination a:hover   { border-color: var(--info); color: #a5b4fc; }
+    .pagination .active   { background: var(--info); color: #fff; border-color: var(--info); }
+    .pagination .disabled { opacity: 0.35; pointer-events: none; }
+
+    /* Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.72);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-box {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      width: min(700px, 95vw);
+      max-height: 88vh;
+      overflow-y: auto;
+      padding: 1.5rem;
+      position: relative;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+    .modal-box h3 { margin: 0 0 1rem; font-size: 1rem; color: var(--text); }
+    .modal-close {
+      position: absolute;
+      top: 0.75rem; right: 1rem;
+      background: none;
+      border: none;
+      color: var(--subtext);
+      font-size: 1.4rem;
+      cursor: pointer;
+      line-height: 1;
+      transition: color 0.15s;
+    }
+    .modal-close:hover { color: var(--text); }
+
+    .detail-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem 0.75rem;
+      margin-bottom: 1rem;
+    }
+    .detail-row { display: flex; flex-direction: column; gap: 3px; }
+    .detail-row .dk { font-size: 0.66rem; color: var(--subtext); text-transform: uppercase; letter-spacing: 0.06em; }
+    .detail-row .dv { font-size: 0.82rem; color: var(--text); word-break: break-all; }
+
+    .raw-payload {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.75rem;
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--subtext);
+      white-space: pre-wrap;
+      max-height: 260px;
+      overflow-y: auto;
+    }
+    .section-label {
+      font-size: 0.7rem;
+      color: var(--subtext);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin: 0.85rem 0 0.35rem;
+      font-family: var(--font-mono);
+    }
+
+    .empty-state { text-align: center; padding: 3rem; color: var(--subtext); }
+    .empty-state .icon { font-size: 2.5rem; margin-bottom: 0.5rem; }
+
+    /* Copy toast */
+    #copy-toast {
+      position: fixed;
+      bottom: 1.5rem; left: 50%;
+      transform: translateX(-50%);
+      background: var(--ok);
+      color: #fff;
+      padding: 0.45rem 1.2rem;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      z-index: 9999;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+    }
+    #copy-toast.show { opacity: 1; }
+
+    /* Page header refresh btn */
+    .btn-refresh {
+      background: transparent;
+      color: var(--subtext);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.4rem 0.9rem;
+      font-size: 0.82rem;
+      cursor: pointer;
+      font-family: var(--font-body);
+      text-decoration: none;
+      transition: all 0.15s;
+    }
+    .btn-refresh:hover { border-color: var(--muted); color: var(--text); }
+
+    @media (max-width: 640px) {
+      .txn-page { padding: 1rem; }
+      .detail-grid { grid-template-columns: 1fr; }
+      .stat-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+<div class="admin-layout">
+
+  <!-- ═══════════════════════════════════════════
+       SIDEBAR — switches between admin & superadmin
+  ════════════════════════════════════════════ -->
+  <% if (isSA) { %>
+
+    <!-- ── SUPER ADMIN SIDEBAR ── -->
+    <div class="mobile-topbar" id="mobileTopbar">
+      <img src="/images/brandings/logo.webp" alt="MEE"/>
+      <span class="mobile-topbar-title sa">⬡ Super Admin</span>
+      <button class="hamburger sa" onclick="toggleSidebar()" aria-label="Menu">
+        <i class="bi bi-list" id="hamburgerIcon"></i>
+      </button>
+    </div>
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+    <aside class="sidebar" id="adminSidebar">
+      <a href="/superadmin" class="s-logo">
+        <img src="/images/brandings/logo.webp" alt="MEE"/>
+      </a>
+      <span class="s-badge">&#11041; SUPER ADMIN</span>
+
+      <div class="s-section">Overview</div>
+      <a href="/superadmin"                 class="s-link <%= locals.activePage === 'dashboard'       ? 'active' : '' %>" onclick="closeSidebar()"><i class="bi bi-speedometer2"></i>           Dashboard</a>
+      <a href="/superadmin/bookings"        class="s-link <%= locals.activePage === 'bookings'        ? 'active' : '' %>" onclick="closeSidebar()"><i class="bi bi-ticket-perforated-fill"></i>  Bookings</a>
+      <a href="/superadmin/users"           class="s-link <%= locals.activePage === 'users'           ? 'active' : '' %>" onclick="closeSidebar()"><i class="bi bi-person-lines-fill"></i>       Users</a>
+      <a href="/superadmin/payments"        class="s-link <%= locals.activePage === 'payments'        ? 'active' : '' %>" onclick="closeSidebar()"><i class="bi bi-cash-stack"></i>              Payments</a>
+      <a href="/superadmin/transactions"    class="s-link <%= locals.activePage === 'transactions'    ? 'active' : '' %>" onclick="closeSidebar()"><i class="bi bi-lightning-charge-fill"></i>   Transactions</a>
+
+      <div class="s-section">Events</div>
+      <a href="/superadmin/entered-tickets" class="s-link <%= locals.activePage === 'entered-tickets' ? 'active' : '' %>" onclick="closeSidebar()"><i class="bi bi-door-open-fill"></i>          Entered Tickets</a>
+      <a href="/superadmin/users-by-event"  class="s-link <%= locals.activePage === 'users-by-event'  ? 'active' : '' %>" onclick="closeSidebar()"><i class="bi bi-people-fill"></i>             Attendees</a>
+
+      <div class="s-section">Promotions</div>
+      <a href="/superadmin/coupons"         class="s-link <%= locals.activePage === 'coupons'         ? 'active' : '' %>" onclick="closeSidebar()"><i class="bi bi-tag-fill"></i>               Coupons</a>
+      <a href="/superadmin/referrals"       class="s-link <%= locals.activePage === 'referrals'       ? 'active' : '' %>" onclick="closeSidebar()"><i class="bi bi-qr-code"></i>                Referral Links</a>
+      <a href="/superadmin/sponsors"        class="s-link <%= locals.activePage === 'sponsors'        ? 'active' : '' %>" onclick="closeSidebar()"><i class="bi bi-building-fill"></i>          Sponsors</a>
+
+      <div class="s-section">Team</div>
+      <a href="/superadmin/staff"           class="s-link <%= locals.activePage === 'staff'           ? 'active' : '' %>" onclick="closeSidebar()"><i class="bi bi-person-badge-fill"></i>       Staff &amp; Admins</a>
+      <a href="/superadmin/seller-activity" class="s-link <%= locals.activePage === 'seller-activity' ? 'active' : '' %>" onclick="closeSidebar()"><i class="bi bi-graph-up-arrow"></i>          Seller Activity</a>
+
+      <div class="s-section">Switch</div>
+      <a href="/mee-admin" class="s-link" onclick="closeSidebar()"><i class="bi bi-grid-fill"></i> Admin Panel</a>
+      <a href="/" class="s-link" target="_blank" rel="noopener"><i class="bi bi-box-arrow-up-right"></i> View Site</a>
+
+      <a href="/superadmin/logout" class="s-logout"><i class="bi bi-box-arrow-right"></i> Logout</a>
+    </aside>
+
+  <% } else { %>
+
+    <!-- ── REGULAR ADMIN SIDEBAR ── -->
+    <div class="mobile-topbar" id="mobileTopbar">
+      <img src="/images/brandings/logo.webp" alt="MEE"/>
+      <span class="mobile-topbar-title">Admin</span>
+      <button class="hamburger" onclick="toggleSidebar()" aria-label="Menu">
+        <i class="bi bi-list" id="hamburgerIcon"></i>
+      </button>
+    </div>
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+    <aside class="sidebar" id="adminSidebar">
+      <a href="/mee-admin" class="s-logo">
+        <img src="/images/brandings/logo.webp" alt="MEE"/>
+      </a>
+
+      <div class="s-section">Main</div>
+      <a href="/mee-admin"                 class="s-link <%= locals.activePage === 'dashboard'       ? 'active' : '' %>" onclick="closeSidebar()"><i class="bi bi-speedometer2"></i>           Dashboard</a>
+      <a href="/mee-admin/bookings"        class="s-link <%= locals.activePage === 'bookings'        ? 'active' : '' %>" onclick="closeSidebar()"><i class="bi bi-ticket-perforated-fill"></i>  Bookings</a>
+      <a href="/mee-admin/users"           class="s-link <%= locals.activePage === 'users'           ? 'active' : '' %>" onclick="closeSidebar()"><i class="bi bi-person-lines-fill"></i>       Users</a>
+      <a href="/mee-admin/participants"    class="s-link <%= locals.activePage === 'participants'     ? 'active' : '' %>" onclick="closeSidebar()"><i class="bi bi-person-badge-fill"></i>       Staff Activity</a>
+      <a href="/mee-admin/entered-tickets" class="s-link <%= locals.activePage === 'entered-tickets' ? 'active' : '' %>" onclick="closeSidebar()"><i class="bi bi-door-open-fill"></i>          Entered Tickets</a>
+      <a href="/mee-admin/users-by-event"  class="s-link <%= locals.activePage === 'users-by-event'  ? 'active' : '' %>" onclick="closeSidebar()"><i class="bi bi-people-fill"></i>             Attendees</a>
+      <a href="/mee-admin/transactions"    class="s-link <%= locals.activePage === 'transactions'    ? 'active' : '' %>" onclick="closeSidebar()"><i class="bi bi-lightning-charge-fill"></i>   Transactions</a>
+
+      <div class="s-section">Events</div>
+      <a href="/mee-admin/events/new" class="s-link <%= locals.activePage === 'new-event' ? 'active' : '' %>" onclick="closeSidebar()"><i class="bi bi-plus-circle-fill"></i>  New Event</a>
+      <a href="/mee-admin/reviews"    class="s-link <%= locals.activePage === 'reviews'   ? 'active' : '' %>" onclick="closeSidebar()"><i class="bi bi-star-fill"></i>          Reviews</a>
+      <a href="/mee-admin/banners"    class="s-link <%= locals.activePage === 'banners'   ? 'active' : '' %>" onclick="closeSidebar()"><i class="bi bi-image-fill"></i>         Banners</a>
+      <a href="/mee-admin/coupons"    class="s-link <%= locals.activePage === 'coupons'   ? 'active' : '' %>" onclick="closeSidebar()"><i class="bi bi-tag-fill"></i>           Coupons</a>
+      <a href="/mee-admin/referrals"  class="s-link <%= locals.activePage === 'referrals' ? 'active' : '' %>" onclick="closeSidebar()"><i class="bi bi-qr-code"></i>            Referral Links</a>
+
+      <div class="s-section">Marketing</div>
+      <a href="/mee-admin/sponsors" class="s-link <%= locals.activePage === 'sponsors' ? 'active' : '' %>" onclick="closeSidebar()"><i class="bi bi-building-fill"></i> Sponsors</a>
+
+      <div class="s-section">Team</div>
+      <a href="/mee-admin/staff"   class="s-link <%= locals.activePage === 'staff'   ? 'active' : '' %>" onclick="closeSidebar()"><i class="bi bi-people-fill"></i>   Staff</a>
+      <a href="/mee-admin/profile" class="s-link <%= locals.activePage === 'profile' ? 'active' : '' %>" onclick="closeSidebar()"><i class="bi bi-person-circle"></i>  My Profile</a>
+      <a href="/" class="s-link" target="_blank" rel="noopener"><i class="bi bi-box-arrow-up-right"></i> View Site</a>
+
+      <% if (locals.isSuperAdmin) { %>
+      <div class="s-section">Super</div>
+      <a href="/superadmin" class="s-link" style="color:var(--accent-2);border-color:rgba(157,78,221,0.2);background:rgba(157,78,221,0.06);" onclick="closeSidebar()">
+        <i class="bi bi-shield-lock-fill" style="color:var(--accent-2);"></i> SuperAdmin Panel
+      </a>
+      <% } %>
+
+      <a href="/mee-admin/logout" class="s-logout"><i class="bi bi-box-arrow-right"></i> Logout</a>
+    </aside>
+
+  <% } %>
+
+  <!-- ═══════════════════════════════════════════
+       MAIN CONTENT
+  ════════════════════════════════════════════ -->
+  <div class="main-content">
+    <div class="txn-page">
+
+      <!-- Header -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:.5rem;">
+        <div>
+          <h1 style="font-size:1.3rem;font-weight:700;margin:0;display:flex;align-items:center;gap:.5rem;">
+            <i class="bi bi-lightning-charge-fill" style="color:var(--warn);"></i> Transactions
+          </h1>
+          <p style="margin:.25rem 0 0;color:var(--subtext);font-size:.81rem;">
+            Live webhook event log — every Razorpay event, never lost.
+            <strong style="color:var(--text);"><%= total %></strong> records total.
+          </p>
+        </div>
+        <a href="<%= baseUrl %>/transactions" class="btn-refresh">↻ Refresh</a>
+      </div>
+
+      <!-- Stat cards -->
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="val c-ok">₹<%= stats.totalRevenue.toLocaleString('en-IN') %></div>
+          <div class="lbl">Revenue Logged</div>
+        </div>
+        <div class="stat-card">
+          <div class="val c-ok"><%= stats.ok || 0 %></div>
+          <div class="lbl">Processed OK</div>
+        </div>
+        <div class="stat-card">
+          <div class="val c-info"><%= (stats.already_processed || 0) + (stats.already_processed_by_verify || 0) %></div>
+          <div class="lbl">Already Processed</div>
+        </div>
+        <div class="stat-card">
+          <div class="val c-warn"><%= stats.no_booking_found || 0 %></div>
+          <div class="lbl">No Booking Found</div>
+        </div>
+        <div class="stat-card">
+          <div class="val c-err"><%= stats.error || 0 %></div>
+          <div class="lbl">Errors</div>
+        </div>
+        <div class="stat-card">
+          <div class="val c-muted"><%= stats.ignored || 0 %></div>
+          <div class="lbl">Ignored Events</div>
+        </div>
+        <div class="stat-card">
+          <div class="val" style="color:var(--text)"><%= stats.total %></div>
+          <div class="lbl">Total Events</div>
+        </div>
+      </div>
+
+      <!-- Filter bar -->
+      <form method="GET" action="<%= baseUrl %>/transactions" class="filter-bar">
+        <input
+          type="text"
+          name="search"
+          placeholder="Order ID / Payment ID / Booking Ref / Phone / Email"
+          value="<%= filters.search || '' %>"
+          style="min-width:250px;flex:1;"
+        />
+        <select name="status">
+          <option value="">All Statuses</option>
+          <option value="ok"                          <%= filters.status === 'ok'                          ? 'selected' : '' %>>✅ OK</option>
+          <option value="already_processed"           <%= filters.status === 'already_processed'           ? 'selected' : '' %>>🔵 Already Processed</option>
+          <option value="already_processed_by_verify" <%= filters.status === 'already_processed_by_verify' ? 'selected' : '' %>>🟣 Done by Verify</option>
+          <option value="no_booking_found"            <%= filters.status === 'no_booking_found'            ? 'selected' : '' %>>🟠 No Booking Found</option>
+          <option value="missing_references"          <%= filters.status === 'missing_references'          ? 'selected' : '' %>>🟡 Missing Refs</option>
+          <option value="error"                       <%= filters.status === 'error'                       ? 'selected' : '' %>>🔴 Error</option>
+          <option value="ignored"                     <%= filters.status === 'ignored'                     ? 'selected' : '' %>>⚫ Ignored</option>
+        </select>
+        <select name="eventType">
+          <option value="">All Event Types</option>
+          <option value="payment.captured" <%= filters.eventType === 'payment.captured' ? 'selected' : '' %>>payment.captured</option>
+          <option value="order.paid"       <%= filters.eventType === 'order.paid'       ? 'selected' : '' %>>order.paid</option>
+          <option value="payment.failed"   <%= filters.eventType === 'payment.failed'   ? 'selected' : '' %>>payment.failed</option>
+        </select>
+        <input type="date" name="from" value="<%= filters.from || '' %>" title="From date"/>
+        <input type="date" name="to"   value="<%= filters.to   || '' %>" title="To date"/>
+        <button type="submit" class="btn-filter">Search</button>
+        <a href="<%= baseUrl %>/transactions" class="btn-clear">Clear</a>
+      </form>
+
+      <!-- Table -->
+      <% if (!logs || logs.length === 0) { %>
+        <div class="empty-state">
+          <div class="icon">📭</div>
+          <p>No webhook events found.<br/>
+            <% if (filters.search || filters.status || filters.eventType) { %>
+              Try clearing your filters.
+            <% } else { %>
+              Transactions will appear here as Razorpay sends webhooks.
+            <% } %>
+          </p>
+        </div>
+      <% } else { %>
+        <div class="txn-table-wrap">
+          <table class="txn-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Received At</th>
+                <th>Event</th>
+                <th>Order ID</th>
+                <th>Payment ID</th>
+                <th>Booking Ref</th>
+                <th>Amount</th>
+                <th>Method</th>
+                <th>Contact</th>
+                <th>Status</th>
+                <th>Detail</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% logs.forEach(function(log, idx) { %>
+                <%
+                  const evtBadge =
+                    log.eventType === 'payment.captured' ? 'badge-evt-captured' :
+                    log.eventType === 'payment.failed'   ? 'badge-evt-failed'   :
+                    'badge-evt-other';
+
+                  const statusBadge =
+                    log.processingStatus === 'ok'                          ? 'badge-ok'        :
+                    log.processingStatus === 'already_processed'           ? 'badge-already'   :
+                    log.processingStatus === 'already_processed_by_verify' ? 'badge-verify'    :
+                    log.processingStatus === 'no_booking_found'            ? 'badge-nobooking' :
+                    log.processingStatus === 'missing_references'          ? 'badge-missing'   :
+                    log.processingStatus === 'error'                       ? 'badge-error'     :
+                    'badge-ignored';
+
+                  const statusLabel =
+                    log.processingStatus === 'ok'                          ? '✅ OK'          :
+                    log.processingStatus === 'already_processed'           ? '🔵 Duplicate'   :
+                    log.processingStatus === 'already_processed_by_verify' ? '🟣 By Verify'   :
+                    log.processingStatus === 'no_booking_found'            ? '🟠 No Booking'  :
+                    log.processingStatus === 'missing_references'          ? '🟡 Missing Refs':
+                    log.processingStatus === 'error'                       ? '🔴 Error'       :
+                    '⚫ Ignored';
+
+                  const amt = log.amountInRupees || 0;
+                  const dateStr = log.createdAt
+                    ? new Date(log.createdAt).toLocaleString('en-IN', {
+                        timeZone:'Asia/Kolkata',
+                        day:'2-digit', month:'short', year:'numeric',
+                        hour:'2-digit', minute:'2-digit'
+                      })
+                    : '—';
+                %>
+                <tr>
+                  <td style="color:var(--subtext);font-size:.75rem;"><%= ((currentPage - 1) * 50) + idx + 1 %></td>
+                  <td style="white-space:nowrap;font-size:.76rem;color:var(--subtext);"><%= dateStr %></td>
+                  <td><span class="badge <%= evtBadge %>"><%= log.eventType || '—' %></span></td>
+                  <td>
+                    <% if (log.orderId) { %>
+                      <span class="mono copy-btn" onclick="copyText('<%= log.orderId %>')"><%= log.orderId.slice(0,14) %>…</span>
+                    <% } else { %><span class="mono">—</span><% } %>
+                  </td>
+                  <td>
+                    <% if (log.paymentId) { %>
+                      <span class="mono copy-btn" onclick="copyText('<%= log.paymentId %>')"><%= log.paymentId.slice(0,14) %>…</span>
+                    <% } else { %><span class="mono">—</span><% } %>
+                  </td>
+                  <td>
+                    <% if (log.bookingRef) { %>
+                      <span class="mono copy-btn" onclick="copyText('<%= log.bookingRef %>')"><%= log.bookingRef %></span>
+                    <% } else { %><span class="mono" style="color:var(--subtext);">—</span><% } %>
+                  </td>
+                  <td>
+                    <% if (amt > 0) { %>
+                      <span class="amt">₹<%= amt.toLocaleString('en-IN') %></span>
+                    <% } else { %>
+                      <span class="amt-zero">₹0</span>
+                    <% } %>
+                  </td>
+                  <td style="text-transform:capitalize;color:var(--subtext);font-size:.78rem;"><%= log.method || '—' %></td>
+                  <td style="color:var(--subtext);font-size:.76rem;"><%= log.contact || log.email || '—' %></td>
+                  <td>
+                    <span class="badge <%= statusBadge %>"><%= statusLabel %></span>
+                    <% if (log.processingError) { %>
+                      <br/><span style="font-size:.66rem;color:var(--err);" title="<%= log.processingError %>">⚠ error</span>
+                    <% } %>
+                  </td>
+                  <td>
+                    <button class="btn-detail" onclick="openDetail('<%= log._id %>')">Detail</button>
+                  </td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <% if (totalPages > 1) { %>
+          <div class="pagination">
+            <%
+              const buildUrl = (p) => {
+                const params = new URLSearchParams({
+                  ...(filters.status    ? { status:    filters.status }    : {}),
+                  ...(filters.eventType ? { eventType: filters.eventType } : {}),
+                  ...(filters.from      ? { from:      filters.from }      : {}),
+                  ...(filters.to        ? { to:        filters.to }        : {}),
+                  ...(filters.search    ? { search:    filters.search }    : {}),
+                  page: p,
+                });
+                return baseUrl + '/transactions?' + params.toString();
+              };
+            %>
+            <a href="<%= buildUrl(1) %>"               class="<%= currentPage === 1          ? 'disabled' : '' %>">«</a>
+            <a href="<%= buildUrl(currentPage - 1) %>" class="<%= currentPage === 1          ? 'disabled' : '' %>">‹</a>
+            <% for (let p = Math.max(1, currentPage-2); p <= Math.min(totalPages, currentPage+2); p++) { %>
+              <% if (p === currentPage) { %>
+                <span class="active"><%= p %></span>
+              <% } else { %>
+                <a href="<%= buildUrl(p) %>"><%= p %></a>
+              <% } %>
+            <% } %>
+            <a href="<%= buildUrl(currentPage + 1) %>" class="<%= currentPage === totalPages ? 'disabled' : '' %>">›</a>
+            <a href="<%= buildUrl(totalPages) %>"       class="<%= currentPage === totalPages ? 'disabled' : '' %>">»</a>
+          </div>
+        <% } %>
+      <% } %>
+
+    </div><!-- /txn-page -->
+  </div><!-- /main-content -->
+
+</div><!-- /admin-layout -->
+
+<!-- Detail Modal -->
+<div class="modal-overlay" id="detailModal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeDetail()">×</button>
+    <h3><i class="bi bi-file-text" style="color:var(--info);margin-right:.4rem;"></i> Transaction Detail</h3>
+    <div id="modalContent">
+      <p style="color:var(--subtext);text-align:center;padding:2rem 0;">Loading…</p>
+    </div>
+  </div>
+</div>
+
+<!-- Copy toast -->
+<div id="copy-toast">Copied!</div>
+
+<script>
+  /* Sidebar toggle */
+  function toggleSidebar() {
+    const sb  = document.getElementById('adminSidebar');
+    const ov  = document.getElementById('sidebarOverlay');
+    const ico = document.getElementById('hamburgerIcon');
+    const open = sb.classList.toggle('open');
+    ov.classList.toggle('open', open);
+    ico.className = open ? 'bi bi-x-lg' : 'bi bi-list';
+    document.body.style.overflow = open ? 'hidden' : '';
+  }
+  function closeSidebar() {
+    const sb  = document.getElementById('adminSidebar');
+    const ov  = document.getElementById('sidebarOverlay');
+    const ico = document.getElementById('hamburgerIcon');
+    sb.classList.remove('open');
+    ov.classList.remove('open');
+    ico.className = 'bi bi-list';
+    document.body.style.overflow = '';
+  }
+
+  /* Copy helper */
+  function copyText(txt) {
+    navigator.clipboard.writeText(txt).catch(() => {
+      const el = document.createElement('textarea');
+      el.value = txt;
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand('copy');
+      document.body.removeChild(el);
+    });
+    const t = document.getElementById('copy-toast');
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 1800);
+  }
+
+  /* Detail modal */
+  async function openDetail(id) {
+    document.getElementById('detailModal').classList.add('open');
+    document.getElementById('modalContent').innerHTML =
+      '<p style="color:var(--subtext,#64748b);text-align:center;padding:2rem 0;">Loading…</p>';
+    try {
+      const res  = await fetch('<%= baseUrl %>/api/transaction/' + id);
+      const data = await res.json();
+      if (!data.success) throw new Error(data.message || 'Failed');
+      const log  = data.log;
+
+      const fmt     = (v) => v || '<span style="color:#475569">—</span>';
+      const fmtDate = (v) => v ? new Date(v).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }) : '—';
+      const fmtRs   = (p) => p ? '₹' + (p/100).toLocaleString('en-IN') : '₹0';
+
+      const statusColors = {
+        ok: '#4ade80',
+        already_processed: '#60a5fa',
+        already_processed_by_verify: '#a78bfa',
+        no_booking_found: '#fb923c',
+        error: '#f87171',
+        missing_references: '#fbbf24',
+        ignored: '#64748b',
+      };
+      const sc = statusColors[log.processingStatus] || '#94a3b8';
+
+      document.getElementById('modalContent').innerHTML = `
+        <div class="detail-grid">
+          <div class="detail-row"><span class="dk">Received At (IST)</span><span class="dv">${fmtDate(log.createdAt)}</span></div>
+          <div class="detail-row"><span class="dk">Event Type</span><span class="dv" style="font-weight:700;">${fmt(log.eventType)}</span></div>
+          <div class="detail-row"><span class="dk">Processing Status</span><span class="dv" style="font-weight:700;color:${sc};">${log.processingStatus}</span></div>
+          <div class="detail-row"><span class="dk">Razorpay Status</span><span class="dv">${fmt(log.razorpayStatus)}</span></div>
+          <div class="detail-row"><span class="dk">Amount</span><span class="dv" style="color:#4ade80;font-weight:700;">${fmtRs(log.amount)}</span></div>
+          <div class="detail-row"><span class="dk">Currency</span><span class="dv">${fmt(log.currency)}</span></div>
+          <div class="detail-row"><span class="dk">Payment Method</span><span class="dv" style="text-transform:capitalize;">${fmt(log.method)}</span></div>
+          <div class="detail-row"><span class="dk">Signature Valid</span><span class="dv" style="color:${log.signatureValid ? '#4ade80' : '#f87171'}">${log.signatureValid ? '✅ Yes' : '❌ No'}</span></div>
+        </div>
+
+        <div class="section-label">IDs</div>
+        <div class="detail-grid">
+          <div class="detail-row"><span class="dk">Order ID</span><span class="dv mono" style="cursor:pointer;" onclick="copyText('${log.orderId||''}')">${fmt(log.orderId)}</span></div>
+          <div class="detail-row"><span class="dk">Payment ID</span><span class="dv mono" style="cursor:pointer;" onclick="copyText('${log.paymentId||''}')">${fmt(log.paymentId)}</span></div>
+          <div class="detail-row"><span class="dk">Booking Ref</span><span class="dv mono" style="cursor:pointer;" onclick="copyText('${log.bookingRef||''}')">${fmt(log.bookingRef)}</span></div>
+          <div class="detail-row"><span class="dk">Booking DB Status</span><span class="dv">${fmt(log.bookingStatus)}</span></div>
+          <div class="detail-row"><span class="dk">Razorpay Event ID</span><span class="dv mono">${fmt(log.razorpayEventId)}</span></div>
+          <div class="detail-row"><span class="dk">Razorpay Created At</span><span class="dv">${fmtDate(log.razorpayCreatedAt)}</span></div>
+        </div>
+
+        <div class="section-label">Customer</div>
+        <div class="detail-grid">
+          <div class="detail-row"><span class="dk">Contact</span><span class="dv">${fmt(log.contact)}</span></div>
+          <div class="detail-row"><span class="dk">Email</span><span class="dv">${fmt(log.email)}</span></div>
+          <div class="detail-row" style="grid-column:1/-1;"><span class="dk">Description</span><span class="dv">${fmt(log.description)}</span></div>
+        </div>
+
+        ${log.errorCode || log.errorDescription ? `
+        <div class="section-label" style="color:#f87171;">Error Info</div>
+        <div class="detail-grid">
+          <div class="detail-row"><span class="dk">Error Code</span><span class="dv" style="color:#f87171;">${fmt(log.errorCode)}</span></div>
+          <div class="detail-row"><span class="dk">Error Description</span><span class="dv" style="color:#fca5a5;">${fmt(log.errorDescription)}</span></div>
+        </div>` : ''}
+
+        ${log.processingError ? `
+        <div class="section-label" style="color:#f87171;">Processing Error</div>
+        <div class="raw-payload" style="color:#fca5a5;">${escHtml(log.processingError)}</div>` : ''}
+
+        <div class="section-label" style="margin-top:1rem;">Raw Razorpay Payload</div>
+        <div class="raw-payload">${escHtml(JSON.stringify(log.rawPayload, null, 2))}</div>
+      `;
+    } catch (e) {
+      document.getElementById('modalContent').innerHTML =
+        `<p style="color:#f87171;text-align:center;padding:1rem;">Failed to load: ${e.message}</p>`;
+    }
+  }
+
+  function escHtml(s) {
+    return String(s || '')
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function closeDetail() {
+    document.getElementById('detailModal').classList.remove('open');
+  }
+
+  document.getElementById('detailModal').addEventListener('click', function(e) {
+    if (e.target === this) closeDetail();
+  });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDetail(); });
+</script>
+
+</body>
+</html>

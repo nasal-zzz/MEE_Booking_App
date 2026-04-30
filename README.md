@@ -136,7 +136,7 @@ Mobile camera scanner — validates tickets, logs entry to `ScanLog`, supports g
 
 ```css
 /* public/css/theme.css — change accent color */
---accent: #6A0DAD;
+--accent: #9500ff;
 
 /* public/css/typography.css — scale all text */
 --scale: 1;          /* 1.1 = 10% bigger everywhere */

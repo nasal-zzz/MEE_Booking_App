@@ -38,7 +38,7 @@ function _isActive(page) { return _active === page ? ' active' : ''; }
     transition:all 0.15s;border:1px solid transparent;flex-shrink:0;
   }
   .s-link:hover,.s-link.active{background:rgba(106,13,173,0.08);border-color:rgba(106,13,173,0.2);color:#fff;}
-  .s-link i{color:var(--accent,#6A0DAD);width:18px;flex-shrink:0;}
+  .s-link i{color:var(--accent,#9500ff);width:18px;flex-shrink:0;}
   .s-logout{
     margin-top:auto;display:flex;align-items:center;gap:0.7rem;
     padding:0.7rem 0.8rem;color:var(--error,#FF4444);
@@ -121,6 +121,8 @@ function _isActive(page) { return _active === page ? ' active' : ''; }
   <a href="/mee-admin/participants"    class="s-link<%- _isActive('participants') %>"     onclick="closeSidebar()"><i class="bi bi-person-badge-fill"></i>       Staff Activity</a>
   <a href="/mee-admin/entered-tickets" class="s-link<%- _isActive('entered-tickets') %>" onclick="closeSidebar()"><i class="bi bi-door-open-fill"></i>          Entered Tickets</a>
   <a href="/mee-admin/users-by-event"  class="s-link<%- _isActive('users-by-event') %>"  onclick="closeSidebar()"><i class="bi bi-people-fill"></i>             Attendees</a>
+    <a href="/mee-admin/transactions"        class="s-link<%- _isActive('transactions') %>"        onclick="closeSidebar()"><i class="bi bi-ticket-perforated-fill"></i>  Transactions</a>
+
 
   <div class="s-section">Events</div>
   <a href="/mee-admin/events/new" class="s-link<%- _isActive('new-event') %>" onclick="closeSidebar()"><i class="bi bi-plus-circle-fill"></i>  New Event</a>
