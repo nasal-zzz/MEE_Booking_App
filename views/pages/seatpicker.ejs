@@ -1,22 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
-  <title>Select Zone · <%= event.name %>
-  </title>
-  <link
-    href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&family=Space+Mono:wght@400;700&display=swap"
-    rel="stylesheet" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+  <title>Select Zone · <%= event.name %></title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
   <style>
-    *,
-    *::before,
-    *::after {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
       --accent: #7C3AED;
@@ -24,108 +14,61 @@
       --bg: #0B0B12;
       --surface: #111118;
       --surface2: #18181F;
-      --border: rgba(255, 255, 255, 0.07);
+      --border: rgba(255,255,255,0.07);
       --text: #fff;
       --muted: #6B7280;
       --yellow: #F5C518;
       --topbar: 88px;
     }
 
-    html,
-    body {
-      width: 100%;
-      height: 100%;
+    html, body {
+      width: 100%; height: 100%;
       overflow: hidden;
       background: var(--bg);
       color: var(--text);
       font-family: 'Poppins', sans-serif;
     }
 
-    /* ══ TOP BAR — taller, bigger title ══ */
     .top-bar {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      z-index: 50;
+      position: fixed; top: 0; left: 0; right: 0; z-index: 50;
       height: var(--topbar);
       background: var(--surface);
       border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      padding: 0 1.25rem;
-      gap: 1rem;
+      display: flex; align-items: center;
+      padding: 0 1.25rem; gap: 1rem;
     }
-
     .btn-back {
-      width: 54px;
-      height: 54px;
-      border-radius: 50%;
-      background: var(--accent);
-      border: none;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      flex-shrink: 0;
+      width: 54px; height: 54px; border-radius: 50%;
+      background: var(--accent); border: none;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; flex-shrink: 0;
       transition: box-shadow 0.15s, transform 0.15s;
-      box-shadow: 0 4px 16px rgba(124, 58, 237, .4);
+      box-shadow: 0 4px 16px rgba(124,58,237,.4);
     }
+    .btn-back:hover { box-shadow: 0 0 22px rgba(124,58,237,.65); transform: scale(1.06); }
+    .btn-back svg { width: 22px; height: 22px; stroke: #fff; fill: none; stroke-width: 2.8; stroke-linecap: round; stroke-linejoin: round; }
 
-    .btn-back:hover {
-      box-shadow: 0 0 22px rgba(124, 58, 237, .65);
-      transform: scale(1.06);
-    }
-
-    .btn-back svg {
-      width: 22px;
-      height: 22px;
-      stroke: #fff;
-      fill: none;
-      stroke-width: 2.8;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-    }
-
-    .bar-title {
-      font-weight: 800;
-      font-size: 1.5rem;
-      letter-spacing: -.02em;
-    }
-
-    .bar-sub {
-      font-size: 0.92rem;
-      color: #9CA3AF;
-      margin-top: 3px;
-      font-weight: 500;
-      display: none;
-    }
-
-    /* ══ MAP AREA ══ */
-    .bar-sub-wrap {
-      position: fixed;
-      top: var(--topbar);
-      left: 0;
-      right: 0;
-      z-index: 49;
-      background: var(--bg);
-      padding: 0.55rem 1.25rem 0.55rem 1.25rem;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .bar-sub-wrap .bar-sub {
-      display: block;
-      font-size: 0.92rem;
-      color: #9CA3AF;
-      font-weight: 500;
-    }
-
+    .bar-title { font-weight: 800; font-size: 1.5rem; letter-spacing: -.02em; }
+.bar-sub   { font-size: 0.92rem; color: #9CA3AF; margin-top: 3px; font-weight: 500; display: none; }
+   .bar-sub-wrap {
+  position: fixed;
+  top: var(--topbar);
+  left: 0; right: 0;
+  z-index: 49;
+  background: var(--bg);
+  padding: 0.55rem 1.25rem 0.55rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+}
+.bar-sub-wrap .bar-sub {
+  display: block;
+  font-size: 0.92rem;
+  color: #9CA3AF;
+  font-weight: 500;
+}
+   
     .map-area {
       position: fixed;
-      top: calc(var(--topbar) + 36px);
-      left: 0;
-      right: 0;
-      bottom: 0;
+  top: calc(var(--topbar) + 36px); left: 0; right: 0; bottom: 0;
       padding-bottom: env(safe-area-inset-bottom, 0px);
       display: flex;
       align-items: center;
@@ -148,97 +91,36 @@
       background: #090910;
     }
 
-    /* ══ TOOLTIP ══ */
     .cv-tip {
       position: fixed;
-      background: rgba(8, 8, 15, 0.97);
+      background: rgba(8,8,15,0.97);
       backdrop-filter: blur(10px);
-      border: 1.5px solid var(--tc, #7C3AED);
+      border: 1.5px solid var(--tc,#7C3AED);
       border-radius: 11px;
       padding: 0.6rem 0.85rem;
-      pointer-events: none;
-      white-space: nowrap;
-      display: none;
-      z-index: 100;
-      box-shadow: 0 6px 28px rgba(0, 0, 0, 0.65);
+      pointer-events: none; white-space: nowrap;
+      display: none; z-index: 100;
+      box-shadow: 0 6px 28px rgba(0,0,0,0.65);
     }
+    .tip-zone  { font-weight: 800; font-size: 0.82rem; color:#fff; margin-bottom:.14rem; }
+    .tip-cat   { font-family:'Space Mono',monospace; font-size:.52rem; letter-spacing:1.5px; color:var(--tc,#A78BFA); margin-bottom:.28rem; }
+    .tip-row   { display:flex; align-items:center; justify-content:space-between; gap:.9rem; }
+    .tip-price { font-family:'Space Mono',monospace; font-size:.7rem; font-weight:700; color: var(--yellow); }
+    .tip-avail { font-family:'Space Mono',monospace; font-size:.58rem; font-weight:700; padding:.1rem .4rem; border-radius:4px; }
+    .ta-ok   { background:rgba(0,255,136,.10); color:#00FF88; border:1px solid rgba(0,255,136,.20); }
+    .ta-warn { background:rgba(245,200,66,.10); color:#f5c842; border:1px solid rgba(245,200,66,.25); }
+    .ta-crit { background:rgba(255,68,68,.12);  color:#FF4444; border:1px solid rgba(255,68,68,.30); }
+    .ta-sold { background:rgba(255,68,68,.15);  color:#FF4444; border:1px solid rgba(255,68,68,.35); letter-spacing:1px; }
 
-    .tip-zone {
-      font-weight: 800;
-      font-size: 0.82rem;
-      color: #fff;
-      margin-bottom: .14rem;
-    }
-
-    .tip-cat {
-      font-family: 'Space Mono', monospace;
-      font-size: .52rem;
-      letter-spacing: 1.5px;
-      color: var(--tc, #A78BFA);
-      margin-bottom: .28rem;
-    }
-
-    .tip-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: .9rem;
-    }
-
-    .tip-price {
-      font-family: 'Space Mono', monospace;
-      font-size: .7rem;
-      font-weight: 700;
-      color: var(--yellow);
-    }
-
-    .tip-avail {
-      font-family: 'Space Mono', monospace;
-      font-size: .58rem;
-      font-weight: 700;
-      padding: .1rem .4rem;
-      border-radius: 4px;
-    }
-
-    .ta-ok {
-      background: rgba(0, 255, 136, .10);
-      color: #00FF88;
-      border: 1px solid rgba(0, 255, 136, .20);
-    }
-
-    .ta-warn {
-      background: rgba(245, 200, 66, .10);
-      color: #f5c842;
-      border: 1px solid rgba(245, 200, 66, .25);
-    }
-
-    .ta-crit {
-      background: rgba(255, 68, 68, .12);
-      color: #FF4444;
-      border: 1px solid rgba(255, 68, 68, .30);
-    }
-
-    .ta-sold {
-      background: rgba(255, 68, 68, .15);
-      color: #FF4444;
-      border: 1px solid rgba(255, 68, 68, .35);
-      letter-spacing: 1px;
-    }
-
-    /* ══ MODAL — bottom sheet / right panel ══ */
     .modal-bg {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.65);
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.65);
       backdrop-filter: blur(6px);
       z-index: 200;
       display: none;
       align-items: flex-end;
     }
-
-    .modal-bg.open {
-      display: flex;
-    }
+    .modal-bg.open { display: flex; }
 
     .sheet {
       width: 100%;
@@ -246,429 +128,262 @@
       border-radius: 24px 24px 0 0;
       padding: 0 1.4rem 2.5rem;
       transform: translateY(105%);
-      transition: transform .38s cubic-bezier(.32, .72, 0, 1);
+      transition: transform .38s cubic-bezier(.32,.72,0,1);
       max-height: 90vh;
       overflow-y: auto;
     }
-
-    .modal-bg.open .sheet {
-      transform: translateY(0);
-    }
+    .modal-bg.open .sheet { transform: translateY(0); }
 
     .drag-handle {
-      width: 40px;
-      height: 4px;
-      border-radius: 2px;
-      background: rgba(255, 255, 255, 0.12);
+      width: 40px; height: 4px; border-radius: 2px;
+      background: rgba(255,255,255,0.12);
       margin: .9rem auto 1.4rem;
     }
 
     .sh-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+      display: flex; align-items: center; justify-content: space-between;
       margin-bottom: 1.6rem;
     }
-
-    .sh-title {
-      font-weight: 800;
-      font-size: 1.05rem;
-    }
-
-    .sh-close {
-      width: 30px;
-      height: 30px;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, .06);
-      border: none;
-      color: var(--muted);
-      font-size: 1rem;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+    .sh-title  { font-weight: 800; font-size: 1.05rem; }
+    .sh-close  {
+      width: 30px; height: 30px; border-radius: 50%;
+      background: rgba(255,255,255,.06); border: none;
+      color: var(--muted); font-size: 1rem; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
       transition: background .15s;
     }
-
-    .sh-close:hover {
-      background: rgba(255, 255, 255, .1);
-      color: #fff;
-    }
+    .sh-close:hover { background: rgba(255,255,255,.1); color: #fff; }
 
     .zone-info-pill {
-      display: flex;
-      align-items: center;
-      gap: 0.8rem;
-      background: rgba(255, 255, 255, .04);
-      border: 1px solid rgba(255, 255, 255, .08);
+      display: flex; align-items: center; gap: 0.8rem;
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.08);
       border-radius: 14px;
       padding: 0.75rem 1rem;
       margin-bottom: 1.5rem;
     }
-
-    .zip-dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      flex-shrink: 0;
-    }
-
-    .zip-name {
-      font-size: 0.95rem;
-      font-weight: 800;
-      flex: 1;
-    }
-
-    .zip-price {
-      font-family: 'Space Mono', monospace;
-      font-size: 0.82rem;
-      color: var(--yellow);
-      font-weight: 700;
-    }
+    .zip-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .zip-name { font-size: 0.95rem; font-weight: 800; flex: 1; }
+    .zip-price { font-family: 'Space Mono', monospace; font-size: 0.82rem; color: var(--yellow); font-weight: 700; }
 
     .qty-wrap {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 2rem;
-      margin-bottom: 1.5rem;
+      display: flex; align-items: center; justify-content: center;
+      gap: 2rem; margin-bottom: 1.5rem;
     }
-
     .qty-btn {
-      width: 48px;
-      height: 48px;
-      border-radius: 13px;
+      width: 48px; height: 48px; border-radius: 13px;
       background: #1E1E2A;
-      border: 1.5px solid rgba(255, 255, 255, .10);
-      color: #fff;
-      font-size: 1.5rem;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      border: 1.5px solid rgba(255,255,255,.10);
+      color: #fff; font-size: 1.5rem; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
       transition: border-color .15s, background .15s, opacity .15s;
       user-select: none;
     }
-
-    .qty-btn:hover {
-      border-color: var(--accent2);
-      background: rgba(124, 58, 237, .12);
-    }
-
-    .qty-btn.plus {
-      border-color: var(--accent);
-      background: rgba(124, 58, 237, .18);
-      color: #A78BFA;
-    }
-
-    .qty-btn:disabled {
-      opacity: .3;
-      pointer-events: none;
-    }
+    .qty-btn:hover { border-color: var(--accent2); background: rgba(124,58,237,.12); }
+    .qty-btn.plus  { border-color: var(--accent); background: rgba(124,58,237,.18); color: #A78BFA; }
+    .qty-btn:disabled { opacity: .3; pointer-events: none; }
 
     .qty-num {
       font-family: 'Poppins', sans-serif;
-      font-weight: 900;
-      font-size: 4rem;
-      color: #fff;
-      min-width: 60px;
-      text-align: center;
-      line-height: 1;
+      font-weight: 900; font-size: 4rem; color: #fff;
+      min-width: 60px; text-align: center; line-height: 1;
     }
 
     .offer-box {
-      background: rgba(245, 197, 24, .06);
-      border: 1px solid rgba(245, 197, 24, .22);
+      background: rgba(245,197,24,.06);
+      border: 1px solid rgba(245,197,24,.22);
       border-radius: 12px;
       padding: .85rem 1rem;
-      font-size: .8rem;
-      color: var(--yellow);
-      line-height: 1.55;
+      font-size: .8rem; color: var(--yellow); line-height: 1.55;
       margin-bottom: 1.4rem;
     }
+    .offer-box.hidden { display: none; }
 
-    .offer-box.hidden {
-      display: none;
-    }
+    .divider { height: 1px; background: rgba(255,255,255,.06); }
 
-    .divider {
-      height: 1px;
-      background: rgba(255, 255, 255, .06);
-    }
-
-    .totals {
-      padding: .9rem 0 0;
-      margin-bottom: .3rem;
-    }
-
+    .totals { padding: .9rem 0 0; margin-bottom: .3rem; }
     .t-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
+      display: flex; justify-content: space-between; align-items: baseline;
       margin-bottom: .35rem;
     }
+    .t-row .lbl { font-size: .82rem; color: var(--muted); }
+    .t-row .val { font-size: 1.55rem; font-weight: 900; color: #fff; font-family: 'Poppins', sans-serif; }
 
-    .t-row .lbl {
-      font-size: .82rem;
-      color: var(--muted);
-    }
-
-    .t-row .val {
-      font-size: 1.55rem;
-      font-weight: 900;
-      color: #fff;
-      font-family: 'Poppins', sans-serif;
-    }
-
-    /* ── FIX 4: Discount rows — clear layout ── */
-    .t-breakdown {
-      padding: .5rem 0;
-      margin-bottom: .3rem;
-      display: none;
-    }
-
+    .t-breakdown { padding: .5rem 0; margin-bottom: .3rem; display: none; }
     .tb-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+      display: flex; justify-content: space-between; align-items: center;
       padding: .18rem 0;
     }
-
-    .tb-row .lbl {
-      font-size: .78rem;
-      color: var(--muted);
-    }
-
-    .tb-row .val-sm {
-      font-family: 'Space Mono', monospace;
-      font-size: .78rem;
-      color: var(--muted);
-    }
-
-    .tb-row .val-disc {
-      font-family: 'Space Mono', monospace;
-      font-size: .82rem;
-      font-weight: 700;
-      color: #4ade80;
-    }
-
-    .tb-row .val-conv {
-      font-family: 'Space Mono', monospace;
-      font-size: .78rem;
-      color: #f87171;
-    }
+    .tb-row .lbl { font-size: .78rem; color: var(--muted); }
+    .tb-row .val-sm { font-family: 'Space Mono', monospace; font-size: .78rem; color: var(--muted); }
+    .tb-row .val-disc { font-family: 'Space Mono', monospace; font-size: .82rem; font-weight: 700; color: #4ade80; }
+    .tb-row .val-conv { font-family: 'Space Mono', monospace; font-size: .78rem; color: #f87171; }
 
     .t-total-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
+      display: flex; justify-content: space-between; align-items: baseline;
       padding-top: .55rem;
-      border-top: 1px solid rgba(255, 255, 255, .06);
+      border-top: 1px solid rgba(255,255,255,.06);
       margin-top: .3rem;
     }
-
-    .t-total-row .lbl {
-      font-size: .9rem;
-      font-weight: 700;
-      color: #fff;
-    }
-
-    .t-total-row .val {
-      font-size: 1.65rem;
-      font-weight: 900;
-      color: #fff;
-      font-family: 'Poppins', sans-serif;
-    }
+    .t-total-row .lbl { font-size: .9rem; font-weight: 700; color: #fff; }
+    .t-total-row .val { font-size: 1.65rem; font-weight: 900; color: #fff; font-family: 'Poppins', sans-serif; }
 
     .children-note {
-      font-size: .72rem;
-      color: #d5d5f4;
-      line-height: 1.55;
+      font-size: .72rem; color: #d5d5f4; line-height: 1.55;
       margin: 1rem 0 1.3rem;
       padding: .6rem .85rem;
       border-radius: 8px;
-      background: rgba(255, 255, 255, .022);
-      border: 1px solid rgba(255, 255, 255, .05);
+      background: rgba(255,255,255,.022);
+      border: 1px solid rgba(255,255,255,.05);
     }
 
     .btn-proceed {
-      width: 100%;
-      padding: 1rem;
-      background: var(--accent);
-      color: #fff;
-      border: none;
-      border-radius: 14px;
-      font-family: 'Poppins', sans-serif;
-      font-weight: 700;
-      font-size: 1rem;
-      cursor: pointer;
+      width: 100%; padding: 1rem;
+      background: var(--accent); color: #fff; border: none;
+      border-radius: 14px; font-family: 'Poppins', sans-serif;
+      font-weight: 700; font-size: 1rem; cursor: pointer;
       transition: box-shadow .2s, transform .12s;
-      box-shadow: 0 6px 28px rgba(124, 58, 237, .35);
+      box-shadow: 0 6px 28px rgba(124,58,237,.35);
       letter-spacing: .02em;
     }
-
-    .btn-proceed:hover {
-      box-shadow: 0 0 40px rgba(124, 58, 237, .6);
-      transform: translateY(-1px);
-    }
+    .btn-proceed:hover { box-shadow: 0 0 40px rgba(124,58,237,.6); transform: translateY(-1px); }
 
     @media (min-width: 768px) {
-      .modal-bg {
-        align-items: stretch;
-        justify-content: flex-end;
-      }
-
+      .modal-bg { align-items: stretch; justify-content: flex-end; }
       .sheet {
-        width: 400px;
-        max-height: 100vh;
-        height: 100%;
+        width: 400px; max-height: 100vh; height: 100%;
         border-radius: 0;
         transform: translateX(110%);
-        transition: transform .38s cubic-bezier(.32, .72, 0, 1);
+        transition: transform .38s cubic-bezier(.32,.72,0,1);
         padding: 2rem 2rem 2.5rem;
       }
-
-      .modal-bg.open .sheet {
-        transform: translateX(0);
-      }
-
-      .drag-handle {
-        display: none;
-      }
+      .modal-bg.open .sheet { transform: translateX(0); }
+      .drag-handle { display: none; }
     }
   </style>
 </head>
-
 <body>
 
-  <div class="top-bar"><a href="/event/69c6078cb267972f82b8ed45">
-      <button class="btn-back">
-
-        <svg viewBox="0 0 24 24">
-          <polyline points="15 18 9 12 15 6" />
-        </svg>
-      </button>
-    </a>
-    <div>
-      <!-- FIX 2: Bigger title, FIX 3: event name removed -->
-      <div class="bar-title">Select Zone</div>
-    </div>
-
-
-    <!-- bar-right with event name intentionally removed -->
+<div class="top-bar"><a href="/event/69c6078cb267972f82b8ed45">
+  <button class="btn-back">
+   
+    <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+  </button>
+  </a>
+  <div>
+    <!-- FIX 2: Bigger title, FIX 3: event name removed -->
+    <div class="bar-title">Select Zone</div>
   </div>
 
-  <div class="top-bar"><a href="/event/69c6078cb267972f82b8ed45">
-      <button class="btn-back">
+  
+  <!-- bar-right with event name intentionally removed -->
+</div>
 
-        <svg viewBox="0 0 24 24">
-          <polyline points="15 18 9 12 15 6" />
-        </svg>
-      </button>
-    </a>
-    <div>
-      <!-- FIX 2: Bigger title, FIX 3: event name removed -->
-      <div class="bar-title">Select Zone</div>
-    </div>
-
-    <div class="bar-sub-wrap">
-      <div class="bar-sub">Tap your preferred section on the map below.</div>
-    </div>
-    <!-- bar-right with event name intentionally removed -->
+<div class="top-bar"><a href="/event/69c6078cb267972f82b8ed45">
+  <button class="btn-back">
+   
+    <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+  </button>
+  </a>
+  <div>
+    <!-- FIX 2: Bigger title, FIX 3: event name removed -->
+    <div class="bar-title">Select Zone</div>
   </div>
 
+  <div class="bar-sub-wrap">
+  <div class="bar-sub">Tap your preferred section on the map below.</div>
+</div>
+  <!-- bar-right with event name intentionally removed -->
+</div>
 
 
 
 
 
-  <div class="map-area" id="mapArea">
-    <div id="canvasWrap">
-      <canvas id="vc"></canvas>
-    </div>
-    <div class="cv-tip" id="cvTip">
-      <div class="tip-zone" id="tipZone"></div>
-      <div class="tip-cat" id="tipCat"></div>
-      <div class="tip-row">
-        <div class="tip-price" id="tipPrice"></div>
-        <div class="tip-avail" id="tipAvail"></div>
-      </div>
+
+<div class="map-area" id="mapArea">
+  <div id="canvasWrap">
+    <canvas id="vc"></canvas>
+  </div>
+  <div class="cv-tip" id="cvTip">
+    <div class="tip-zone"  id="tipZone"></div>
+    <div class="tip-cat"   id="tipCat"></div>
+    <div class="tip-row">
+      <div class="tip-price" id="tipPrice"></div>
+      <div class="tip-avail" id="tipAvail"></div>
     </div>
   </div>
+</div>
 
-  <!-- TICKET COUNT MODAL -->
-  <div class="modal-bg" id="modalBg" onclick="bgClick(event)">
-    <div class="sheet" id="sheet">
-      <div class="drag-handle"></div>
-      <div class="sh-head">
-        <div class="sh-title">Number of Tickets</div>
-        <button class="sh-close" onclick="closeModal()">✕</button>
-      </div>
-
-      <div class="zone-info-pill" id="zonePill">
-        <div class="zip-dot" id="pillDot"></div>
-        <div class="zip-name" id="pillName">—</div>
-        <div class="zip-price" id="pillPrice">—</div>
-      </div>
-
-      <div class="qty-wrap">
-        <button class="qty-btn minus" id="btnMinus" onclick="changeQty(-1)">−</button>
-        <div class="qty-num" id="qtyNum">1</div>
-        <button class="qty-btn plus" id="btnPlus" onclick="changeQty(1)">+</button>
-      </div>
-
-      <div class="offer-box hidden" id="offerBox"></div>
-
-      <div class="divider"></div>
-
-      <!-- FIX 4: Proper breakdown + total -->
-      <div class="totals">
-        <div class="t-row">
-          <span class="lbl" id="tBaseLabel">Tickets</span>
-          <span class="val" id="tBase" style="font-size:1rem;color:var(--muted)"></span>
-        </div>
-      </div>
-
-      <!-- Breakdown rows (shown when conv fee or discount applies) -->
-      <div class="t-breakdown" id="tBreakdown">
-        <div class="tb-row" id="tDiscRow" style="display:none">
-          <span class="lbl">Group Discount</span>
-          <span class="val-disc" id="tDisc"></span>
-        </div>
-        <div class="tb-row" id="tConvRow" style="display:none">
-          <span class="lbl">Convenience Fee</span>
-          <span class="val-conv" id="tConv"></span>
-        </div>
-      </div>
-
-      <div class="t-total-row">
-        <span class="lbl">Total to Pay</span>
-        <span class="val" id="tTotal"></span>
-      </div>
-
-      <div class="divider" style="margin-top:.6rem"></div>
-
-      <div class="children-note" id="childrenNote">
-        Children above 5 years of age must have a valid ticket for entry.
-      </div>
-
-      <button class="btn-proceed" onclick="goNext()">Proceed</button>
+<!-- TICKET COUNT MODAL -->
+<div class="modal-bg" id="modalBg" onclick="bgClick(event)">
+  <div class="sheet" id="sheet">
+    <div class="drag-handle"></div>
+    <div class="sh-head">
+      <div class="sh-title">Number of Tickets</div>
+      <button class="sh-close" onclick="closeModal()">✕</button>
     </div>
+
+    <div class="zone-info-pill" id="zonePill">
+      <div class="zip-dot" id="pillDot"></div>
+      <div class="zip-name" id="pillName">—</div>
+      <div class="zip-price" id="pillPrice">—</div>
+    </div>
+
+    <div class="qty-wrap">
+      <button class="qty-btn minus" id="btnMinus" onclick="changeQty(-1)">−</button>
+      <div class="qty-num" id="qtyNum">1</div>
+      <button class="qty-btn plus"  id="btnPlus"  onclick="changeQty(1)">+</button>
+    </div>
+
+    <div class="offer-box hidden" id="offerBox"></div>
+
+    <div class="divider"></div>
+
+    <!-- FIX 4: Proper breakdown + total -->
+    <div class="totals">
+      <div class="t-row">
+        <span class="lbl" id="tBaseLabel">Tickets</span>
+        <span class="val" id="tBase" style="font-size:1rem;color:var(--muted)"></span>
+      </div>
+    </div>
+
+    <!-- Breakdown rows (shown when conv fee or discount applies) -->
+    <div class="t-breakdown" id="tBreakdown">
+      <div class="tb-row" id="tDiscRow" style="display:none">
+        <span class="lbl">Group Discount</span>
+        <span class="val-disc" id="tDisc"></span>
+      </div>
+      <div class="tb-row" id="tConvRow" style="display:none">
+        <span class="lbl">Convenience Fee</span>
+        <span class="val-conv" id="tConv"></span>
+      </div>
+    </div>
+
+    <div class="t-total-row">
+      <span class="lbl">Total to Pay</span>
+      <span class="val" id="tTotal"></span>
+    </div>
+
+    <div class="divider" style="margin-top:.6rem"></div>
+
+    <div class="children-note" id="childrenNote">
+      Children above 5 years of age must have a valid ticket for entry.
+    </div>
+
+    <button class="btn-proceed" onclick="goNext()">Proceed</button>
   </div>
+</div>
 
-  <script>
-    /* ═══════════════════════════════════════════
-       SERVER-INJECTED DATA
-    ═══════════════════════════════════════════ */
-    const EVENT_ID = '<%= event._id %>';
-    const CONV_FEE = <%= event.convenienceFee || 0 %>;
-    const SEAT_MAP = <% - JSON.stringify(seatMap) %>;
-    const TT = <% - JSON.stringify(event.ticketTypes) %>;
-    const EVT_NOTICE = `<%= (event.ageNotice||'Children above 5 years of age must have a valid ticket for entry.').replace(/` / g,"'") %> `;
+<script>
 
-/* ── FIX 3: bar-right / event name element removed, no textContent set ── */
+const EVENT_ID   = '<%= event._id %>';
+const CONV_FEE   = <%= event.convenienceFee || 0 %>;
+const SEAT_MAP   = <%- JSON.stringify(seatMap) %>;
+const TT         = <%- JSON.stringify(event.ticketTypes) %>;
+const EVT_NOTICE = `<%= (event.ageNotice||'Children above 5 years of age must have a valid ticket for entry.').replace(/`/g,"'") %>`;
 
-/* ── Color resolution ── */
+
 const CAT_C_BASE = {
   platinum:'#9D4EDD', gold:'#f5c842',    silver:'#c0c8d8',
   fanfit:'#00C896',   family:'#E8914A',  vip:'#FF4088',
@@ -740,9 +455,7 @@ function maxQty(z) {
 }
 
 
-/* ═══════════════════════════════════════════
-   CANVAS SETUP
-═══════════════════════════════════════════ */
+
 const canvas = document.getElementById('vc');
 const ctx    = canvas.getContext('2d');
 const DB_W   = SEAT_MAP.canvasWidth  || 960;
@@ -783,8 +496,7 @@ function sizeCanvas() {
   const aH = mapArea.clientHeight;
   const b = getContentBounds();
 
-  /* On mobile (narrow viewport) fill ~95% of available area.
-     On desktop keep a small breathing margin (90%).             */
+
   const isMobile = aW < 600;
   const FILL = isMobile ? 0.95 : 0.88;
 
@@ -812,7 +524,6 @@ function sizeCanvas() {
 let _rsz;
 window.addEventListener('resize', () => { clearTimeout(_rsz); _rsz = setTimeout(sizeCanvas, 60); });
 
-/* ── Helpers ── */
 const d2r    = d => d * Math.PI / 180;
 const avail  = z => Math.max(0, (z.totalSeats || 0) - (z.bookedSeats || 0));
 const isSO   = z => z.totalSeats > 0 && avail(z) <= 0;
@@ -826,9 +537,7 @@ function maxQty(z) {
 
 let selIdx = null, hovIdx = -1, qty = 1;
 
-/* ═══════════════════════════════════════════
-   DRAW
-═══════════════════════════════════════════ */
+
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   drawGrid();
@@ -861,7 +570,7 @@ function drawStage(s) {
   else                           { ctx.roundRect(x, y, w, h, 10); }
   ctx.fill(); ctx.stroke();
   ctx.fillStyle    = sc;
-  ctx.font         = `bold ${ Math.max(10, Math.min(15, w / label.length * 0.75)) }px "Space Mono", monospace`;
+  ctx.font         = `bold ${Math.max(10, Math.min(15, w / label.length * 0.75))}px "Space Mono",monospace`;
   ctx.textAlign    = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText(label, x + w/2, y + h/2);
@@ -882,7 +591,6 @@ function drawZone(z, isSel, isHov) {
 
 ctx.rotate(rot);
 
-/* Clamp text to fit within the zone bounds */
 ctx.save();
 ctx.beginPath();
 if (shape === 'triangle') {
@@ -915,13 +623,9 @@ ctx.clip();
   ctx.shadowBlur = 0;
   ctx.stroke();
 
-  /* ── Text vertical layout ──────────────────────────────
-     For triangles the visual centroid is at h/6 above centre.
-     For rect/round it is at the geometric centre (0,0).
-     We centre the name+price block on the visual centroid.   */
+
   const hasPrice  = !SO;
 
-/* For rotated zones the effective readable width is smaller */
 const effectiveW = (z.rot % 180 !== 0) ? Math.min(w, h) * 0.85 : w;
 const nameFs    = Math.max(10, Math.min(22, effectiveW / Math.max(displayLabel.length * 0.6, 1)));
  
@@ -929,29 +633,26 @@ const nameFs    = Math.max(10, Math.min(22, effectiveW / Math.max(displayLabel.l
   const lineGap   = 5;
   const totalH    = hasPrice ? nameFs + lineGap + priceFs : nameFs;
 
-  /* Visual centroid offset inside the rotated-local frame */
   const centroidY = shape === 'triangle' ? -h / 4 : 0;
 
   const nameY  = centroidY - totalH / 2 + nameFs / 2;
   const priceY = centroidY - totalH / 2 + nameFs + lineGap + priceFs / 2;
 
-  /* ── Zone name ── */
-ctx.rotate(-rot); /* counter-rotate so text is always horizontal */
+ctx.rotate(-rot); 
   ctx.fillStyle    = SO ? '#4A4A5A' : '#fff';
-  ctx.font         = `900 ${ nameFs }px "Poppins", sans - serif`;
+  ctx.font         = `900 ${nameFs}px "Poppins",sans-serif`;
   ctx.textAlign    = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText(displayLabel, 0, 0);
 
-  /* ── Price or SOLD OUT ── */
   if (!SO) {
     ctx.fillStyle = '#F5C518';
-    ctx.font      = `800 ${ priceFs }px "Space Mono", monospace`;
+    ctx.font      = `800 ${priceFs}px "Space Mono",monospace`;
     ctx.fillText('₹' + price.toLocaleString('en-IN'), 0, nameFs + 6);
 
   } else {
     ctx.fillStyle = 'rgba(255,68,68,0.8)';
-    ctx.font      = `bold 11px "Space Mono", monospace`;
+    ctx.font      = `bold 11px "Space Mono",monospace`;
     ctx.fillText('SOLD OUT', 0, nameFs * 0.7);
   }
 
@@ -1011,7 +712,7 @@ function drawOverlay(o) {
       ctx.fillText(icon || '🔒', -w/2 + 13, -h/2 + 13);
     }
     ctx.fillStyle    = 'rgba(255,255,255,0.65)';
-    ctx.font         = `bold ${ Math.max(8, Math.min(11, w / (Math.max(label.length, 1) * 0.9))) }px "Poppins", sans - serif`;
+    ctx.font         = `bold ${Math.max(8, Math.min(11, w / (Math.max(label.length, 1) * 0.9)))}px "Poppins",sans-serif`;
     ctx.textAlign    = 'center'; ctx.textBaseline = 'middle';
     const lY2 = shape === 'triangle' ? h * 0.1 : (note ? -7 : 0);
     ctx.fillText(label, 0, lY2);
@@ -1027,7 +728,7 @@ function drawOverlay(o) {
     ctx.setLineDash([]);
     ctx.restore();
     const is = Math.max(13, Math.min(20, Math.min(w, h) * 0.4));
-    ctx.font = `${ is }px sans - serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.font = `${is}px sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillText(icon || '📌', 0, shape === 'triangle' ? h * 0.05 : -1);
     ctx.fillStyle = color + 'cc';
     ctx.font      = 'bold 8px "Space Mono",monospace';
@@ -1040,9 +741,7 @@ function drawOverlay(o) {
 
 
 
-/* ═══════════════════════════════════════════
-   HIT TEST
-═══════════════════════════════════════════ */
+
 function toWorld(clientX, clientY) {
   const r = canvas.getBoundingClientRect();
   return { wx: (clientX - r.left) / scale, wy: (clientY - r.top) / scale };
@@ -1105,7 +804,7 @@ canvas.addEventListener('mousemove', e => {
 
     canvas.style.cursor = SO ? 'not-allowed' : 'pointer';
     const cls  = SO ? 'ta-sold' : a <= 3 ? 'ta-crit' : a <= 10 ? 'ta-warn' : 'ta-ok';
-    const aTxt = SO ? 'SOLD OUT' : a <= 3 ? `⚠ ${ a } left` : a <= 10 ? `${ a } remaining` : 'Available';
+    const aTxt = SO ? 'SOLD OUT' : a <= 3 ? `⚠ ${a} left` : a <= 10 ? `${a} remaining` : 'Available';
     document.getElementById('tipZone').textContent  = (z.name || z.category).toUpperCase();
     document.getElementById('tipCat').textContent   = z.category.toUpperCase() + ' ZONE';
     document.getElementById('tipPrice').textContent = '₹' + p.toLocaleString('en-IN') + ' / ticket';
@@ -1128,9 +827,7 @@ canvas.addEventListener('mouseleave', () => {
   document.getElementById('cvTip').style.display = 'none';
 });
 
-/* ═══════════════════════════════════════════
-   MODAL
-═══════════════════════════════════════════ */
+
 let _mz = null;
 
 function openModal(zi) {
@@ -1155,19 +852,19 @@ function openModal(zi) {
     avBadge = document.createElement('div');
     avBadge.id = 'pillAvail';
     avBadge.style.cssText = `
-    font - family: 'Space Mono', monospace;
-    font - size: 0.7rem; font - weight: 700;
-    padding: 0.18rem 0.55rem;
-    border - radius: 6px; white - space: nowrap; flex - shrink: 0;
+      font-family:'Space Mono',monospace;
+      font-size:0.7rem;font-weight:700;
+      padding:0.18rem 0.55rem;
+      border-radius:6px;white-space:nowrap;flex-shrink:0;
     `;
     document.getElementById('zonePill').appendChild(avBadge);
   }
   if (z.totalSeats > 0) {
     if (av <= 3) {
-      avBadge.textContent = `⚠ ${ av } left`;
+      avBadge.textContent = `⚠ ${av} left`;
       avBadge.style.cssText += 'background:rgba(255,68,68,0.12);color:#FF4444;border:1px solid rgba(255,68,68,0.3);display:block;';
     } else if (av <= 10) {
-      avBadge.textContent = `${ av } remaining`;
+      avBadge.textContent = `${av} remaining`;
       avBadge.style.cssText += 'background:rgba(245,200,66,0.10);color:#F5C842;border:1px solid rgba(245,200,66,0.25);display:block;';
     } else {
       avBadge.style.display = 'none';
@@ -1181,13 +878,13 @@ function openModal(zi) {
     const warn = document.createElement('div');
     warn.id = 'qtyWarn';
     warn.style.cssText = `
-    display: none;
-    text - align: center;
-    font - size: 0.75rem; font - weight: 600;
-    margin: -0.5rem 0 1rem;
-    padding: 0.45rem 0.75rem;
-    border - radius: 8px;
-    font - family: 'Poppins', sans - serif;
+      display:none;
+      text-align:center;
+      font-size:0.75rem;font-weight:600;
+      margin:-0.5rem 0 1rem;
+      padding:0.45rem 0.75rem;
+      border-radius:8px;
+      font-family:'Poppins',sans-serif;
     `;
     document.getElementById('offerBox').before(warn);
   }
@@ -1221,17 +918,11 @@ function changeQty(d) {
   updateModal();
 }
 
-/* ═══════════════════════════════════════════
-   FIX 4: calcDiscount — robust tier lookup
-   Supports both discountTiers[] array AND
-   legacy comboOfferMinQty / comboOfferDiscount fields.
-   discount values are treated as per-ticket rupee amounts.
-═══════════════════════════════════════════ */
+
 function calcDiscount(tt, q) {
   if (!tt) return { discPerTicket: 0, nextTier: null, tiers: [] };
 
   let tiers = [];
-  /* Prefer explicit tiers array */
   if (Array.isArray(tt.discountTiers) && tt.discountTiers.length > 0) {
     tiers = tt.discountTiers
       .filter(d => d.minQty > 0 && d.discount > 0)
@@ -1240,14 +931,13 @@ function calcDiscount(tt, q) {
     tiers = [{ minQty: tt.comboOfferMinQty, discount: tt.comboOfferDiscount }];
   }
 
-  /* Find best applicable tier (highest minQty <= qty) */
   let discPerTicket = 0, nextTier = null;
   for (const tier of tiers) {
     if (q >= tier.minQty) {
   discPerTicket = tier.discount;} else if (!nextTier) {
-      nextTier = tier;               /* next unlock */
-    }
+      nextTier = tier;              
   }
+}
   return { discPerTicket, nextTier, tiers };
 }
 
@@ -1275,25 +965,25 @@ function updateModal() {
     if (tt && tt.totalSeats > 0 && av <= 10 && av > 0) {
       qtyWarn.style.display = 'block';
       if (av <= 3) {
-        qtyWarn.innerHTML        = `🔴 Only < strong > ${ av } seat${ av > 1 ? 's' : '' }</strong > left in this zone!`;
+        qtyWarn.innerHTML        = `🔴 Only <strong>${av} seat${av > 1 ? 's' : ''}</strong> left in this zone!`;
         qtyWarn.style.background = 'rgba(255,68,68,0.08)';
         qtyWarn.style.color      = '#FF6B6B';
         qtyWarn.style.border     = '1px solid rgba(255,68,68,0.25)';
       } else {
-        qtyWarn.innerHTML        = `⚠ Only < strong > ${ av } seats</strong > remaining in this zone`;
+        qtyWarn.innerHTML        = `⚠ Only <strong>${av} seats</strong> remaining in this zone`;
         qtyWarn.style.background = 'rgba(245,200,66,0.07)';
         qtyWarn.style.color      = '#F5C842';
         qtyWarn.style.border     = '1px solid rgba(245,200,66,0.22)';
       }
       if (qty >= mq) {
         const capReason = av <= maxOrder
-          ? `Maximum ${ mq } ticket${ mq > 1 ? 's' : '' } available`
-          : `Max ${ maxOrder } ticket${ maxOrder > 1 ? 's' : '' } per order`;
-        qtyWarn.innerHTML += `< br > <span style="font-size:0.7rem;opacity:0.8;">${capReason}</span>`;
+          ? `Maximum ${mq} ticket${mq > 1 ? 's' : ''} available`
+          : `Max ${maxOrder} ticket${maxOrder > 1 ? 's' : ''} per order`;
+        qtyWarn.innerHTML += `<br><span style="font-size:0.7rem;opacity:0.8;">${capReason}</span>`;
       }
     } else if (tt && tt.totalSeats > 0 && qty >= mq) {
       qtyWarn.style.display    = 'block';
-      qtyWarn.innerHTML        = `🔒 Max < strong > ${ maxOrder } ticket${ maxOrder > 1 ? 's' : '' }</strong > per order`;
+      qtyWarn.innerHTML        = `🔒 Max <strong>${maxOrder} ticket${maxOrder > 1 ? 's' : ''}</strong> per order`;
       qtyWarn.style.background = 'rgba(124,58,237,0.08)';
       qtyWarn.style.color      = '#A78BFA';
       qtyWarn.style.border     = '1px solid rgba(124,58,237,0.25)';
@@ -1310,7 +1000,7 @@ function updateModal() {
   const convTotal  = CONV_FEE;
   const grandTotal = baseTotal - discTotal + convTotal;
 
-  document.getElementById('tBaseLabel').textContent = `${ qty } × ₹${ p.toLocaleString('en-IN') } `;
+  document.getElementById('tBaseLabel').textContent = `${qty} × ₹${p.toLocaleString('en-IN')}`;
   document.getElementById('tBase').textContent      = '₹' + baseTotal.toLocaleString('en-IN');
 
   const breakdown = document.getElementById('tBreakdown');
@@ -1341,9 +1031,9 @@ function updateModal() {
   if (tiers.length > 0) {
     if (nextTier) {
       const need = nextTier.minQty - qty;
-      box.innerHTML = `⚡ Add < strong > ${ need } more ticket${ need > 1 ? 's' : '' }</strong > to get ₹${ nextTier.discount.toLocaleString('en-IN') } OFF your order!`;
+      box.innerHTML = `⚡ Add <strong>${need} more ticket${need > 1 ? 's' : ''}</strong> to get ₹${nextTier.discount.toLocaleString('en-IN')} OFF your order!`;
     } else if (discTotal > 0) {
-      box.innerHTML = `🎉 Group discount applied — saving < strong >₹${ discTotal.toLocaleString('en-IN') }</strong > on your order!`;
+      box.innerHTML = `🎉 Group discount applied — saving <strong>₹${discTotal.toLocaleString('en-IN')}</strong> on your order!`;
     } else {
       box.innerHTML = '';
     }
@@ -1370,9 +1060,7 @@ function goNext() {
 
 
 
-/* ══ INIT ══ */
 document.fonts.ready.then(sizeCanvas);
-  </script>
+</script>
 </body>
-
 </html>
