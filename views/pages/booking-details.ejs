@@ -16,7 +16,7 @@
       --surface2:#1E1E1E;
       --border:rgba(255,255,255,0.08);
       --text:#fff;
-      --muted:#bebebe;
+      --muted:#888;
       --yellow:#F5C842;
     }
     body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;display:flex;flex-direction:column;padding-bottom:120px;}
@@ -275,7 +275,17 @@
     .terms-modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;}
     .terms-modal-title{font-size:1rem;font-weight:800;color:#fff;}
     .terms-modal-close{background:rgba(255,255,255,0.07);border:none;color:#888;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;}
-    .terms-modal-body{font-size:0.85rem;color:#aaa;line-height:1.7;}
+   
+.terms-modal-body {
+  font-size: 0.85rem;
+  color: #aaa;
+  line-height: 1.7;
+  padding: 0.25rem 0;
+}
+.terms-modal-body > div:last-child {
+  border-bottom: none !important;
+}
+
     @media(min-width:520px){
       .terms-modal-bg{align-items:center;}
       .terms-modal{border-radius:20px;max-height:70vh;}
@@ -432,7 +442,22 @@
             <div class="terms-modal-title">Terms &amp; Conditions</div>
             <button class="terms-modal-close" onclick="closeTermsModal()">✕</button>
           </div>
-          <div class="terms-modal-body"><%= selTT.terms %></div>
+
+          <div class="terms-modal-body">
+  <% selTT.terms.split('\n').filter(t => t.trim().length > 0).forEach(line => { %>
+    <div style="
+      display: flex;
+      gap: 0.65rem;
+      align-items: flex-start;
+      padding: 0.6rem 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    ">
+      <span style="color:#7B2FFF; font-size:1rem; flex-shrink:0; margin-top:1px;">›</span>
+      <span style="font-size:0.85rem; color:#ccc; line-height:1.5;"><%= line.trim().replace(/^>+\s*/, '') %></span>
+    </div>
+  <% }) %>
+</div>
+
         </div>
       </div>
       <% } %>
