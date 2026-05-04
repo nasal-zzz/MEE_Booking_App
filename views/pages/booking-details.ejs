@@ -683,23 +683,46 @@ document.querySelector('.back-btn').addEventListener('click', () => {
 });
 
 // ── COUPON ──
+
 function applyCoupon(sfx){
-  sfx=sfx||'';
-  const id='couponInp'+(sfx==='D'?'D':'');
-  const code=document.getElementById(id).value.trim().toUpperCase();
-  if(!code){showCouponMsg('Enter a coupon code first.',false,sfx);return;}
-  const btn=document.querySelector(sfx==='D'?'.col-right .coupon-btn':'.col-left .coupon-btn');
-  if(btn){btn.textContent='...';btn.disabled=true;}
-  fetch('/superadmin/api/validate-coupon',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({code,orderAmount:qty*price,quantity:qty})})
-  .then(r=>r.json())
-  .then(d=>{
-    if(d.success){couponApplied=true;discAmt=d.discount;couponCode=d.code;showCouponMsg(d.code+' applied — ₹'+d.discount+' off!',true,sfx);['','2','D'].forEach(s=>{const inp=document.getElementById('couponInp'+(s==='D'?'D':s?'2':''));if(inp){inp.style.borderColor='#00C864';inp.disabled=true;}});}
-    else{couponApplied=false;discAmt=0;couponCode=null;showCouponMsg(d.message||'Invalid coupon code.',false,sfx);}
+  sfx = sfx || '';
+  const id = 'couponInp' + (sfx === 'D' ? 'D' : '');
+  const code = document.getElementById(id).value.trim().toUpperCase();
+  if (!code) { showCouponMsg('Enter a coupon code first.', false, sfx); return; }
+  const btn = document.querySelector(sfx === 'D' ? '.col-right .coupon-btn' : '.col-left .coupon-btn');
+  if (btn) { btn.textContent = '...'; btn.disabled = true; }
+
+  fetch('/superadmin/api/validate-coupon', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({
+      code,
+      orderAmount:    qty * price,
+      quantity:       qty,
+      ticketCategory: selTypeName,   // ← ADD THIS
+    })
+  })
+  .then(r => r.json())
+  .then(d => {
+    if (d.success) {
+      couponApplied = true; discAmt = d.discount; couponCode = d.code;
+      showCouponMsg(d.code + ' applied — ₹' + d.discount + ' off!', true, sfx);
+      ['', '2', 'D'].forEach(s => {
+        const inp = document.getElementById('couponInp' + (s === 'D' ? 'D' : s ? '2' : ''));
+        if (inp) { inp.style.borderColor = '#00C864'; inp.disabled = true; }
+      });
+    } else {
+      couponApplied = false; discAmt = 0; couponCode = null;
+      showCouponMsg(d.message || 'Invalid coupon code.', false, sfx);
+    }
     updateSummary();
   })
-  .catch(()=>showCouponMsg('Network error.',false,sfx))
-  .finally(()=>{if(btn){btn.textContent='APPLY';btn.disabled=false;}});
+  .catch(() => showCouponMsg('Network error.', false, sfx))
+  .finally(() => { if (btn) { btn.textContent = 'APPLY'; btn.disabled = false; } });
 }
+
+
 function showCouponMsg(text,ok,sfx){
   ['couponMsg','couponMsgD'].forEach(id=>{const el=document.getElementById(id);if(!el)return;el.innerHTML=(ok?'<i class="bi bi-check-circle-fill" style="color:#00C864;flex-shrink:0;"></i><span style="color:#00C864;">':'<i class="bi bi-x-circle-fill" style="color:#FF5555;flex-shrink:0;"></i><span style="color:#FF5555;">')+text+'</span>';el.classList.add('show');if(!ok)setTimeout(()=>el.classList.remove('show'),4000);});
 }

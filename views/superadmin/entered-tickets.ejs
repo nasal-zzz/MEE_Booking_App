@@ -129,12 +129,35 @@
     </div>
 
     <% if(logs.length > 0){ %>
-    <div class="stat-row">
-      <div class="stat-box"><i class="bi bi-door-open-fill"></i><div><div class="stat-val"><%= logs.length %></div><div class="stat-lbl">Total Entries</div></div></div>
-      <div class="stat-box"><i class="bi bi-person-fill" style="color:#64b5f6;"></i><div><div class="stat-val"><%= logs.filter(function(l){return l.attendeeGender==='male';}).length %></div><div class="stat-lbl">Male</div></div></div>
-      <div class="stat-box"><i class="bi bi-person-fill" style="color:#f48fb1;"></i><div><div class="stat-val"><%= logs.filter(function(l){return l.attendeeGender==='female';}).length %></div><div class="stat-lbl">Female</div></div></div>
-      <div class="stat-box"><i class="bi bi-people-fill" style="color:#f5c842;"></i><div><div class="stat-val"><%= logs.filter(function(l){return l.isGroup;}).length %></div><div class="stat-lbl">Group Entries</div></div></div>
+
+
+<div class="stat-row">
+  <div class="stat-box">
+    <i class="bi bi-door-open-fill"></i>
+    <div><div class="stat-val"><%= logs.length %></div><div class="stat-lbl">Total Entries</div></div>
+  </div>
+  <div class="stat-box">
+    <i class="bi bi-phone-fill" style="color:#64b5f6;"></i>
+    <div>
+      <div class="stat-val"><%= logs.filter(function(l){return l.platform==='ios';}).length %></div>
+      <div class="stat-lbl">iOS Scans</div>
     </div>
+  </div>
+  <div class="stat-box">
+    <i class="bi bi-phone-fill" style="color:#a5d6a7;"></i>
+    <div>
+      <div class="stat-val"><%= logs.filter(function(l){return l.platform==='android';}).length %></div>
+      <div class="stat-lbl">Android Scans</div>
+    </div>
+  </div>
+  <div class="stat-box">
+    <i class="bi bi-globe" style="color:#f5c842;"></i>
+    <div>
+      <div class="stat-val"><%= logs.filter(function(l){return l.platform==='web';}).length %></div>
+      <div class="stat-lbl">Web Scans</div>
+    </div>
+  </div>
+</div>
 
     <div class="search-bar" style="display:flex;align-items:center;gap:0.6rem;">
       <input class="search-inp" type="text" id="searchInp" placeholder="Search name, ticket ID, ref, staff..." oninput="filterTable(this.value)" style="flex:1;"/>
@@ -148,31 +171,41 @@
       <div class="empty"><i class="bi bi-door-closed"></i>No entries recorded yet for this event.<br/><span style="font-size:0.75rem;margin-top:0.4rem;display:block;">Records appear here when QR codes are scanned at the gate.</span></div>
       <% } else { %>
       <table id="etTable">
-        <thead><tr>
-          <th>#</th><th>Attendee</th><th>Age</th><th>Gender</th><th>Ticket Type</th><th>Entry Type</th><th>Ticket ID</th><th>Booking Ref</th><th>Scanned By</th><th>Time</th>
-        </tr></thead>
+
+
+<thead><tr>
+  <th>#</th>
+  <th>Attendee</th>
+  <th>Ticket ID</th>
+  <th>Booking Ref</th>
+  <th>Gate</th>
+  <th>Zone</th>
+  <th>Platform</th>
+  <th>Scanned By</th>
+  <th>Time</th>
+</tr></thead>
+
+
         <tbody>
-        <% logs.forEach(function(log, i){ %>
-        <tr>
-          <td style="color:var(--muted);font-family:'Space Mono',monospace;font-size:0.72rem;"><%= i+1 %></td>
-          <td><strong><%= log.attendeeName || '—' %></strong></td>
-          <td style="color:var(--muted);"><%= log.attendeeAge > 0 ? log.attendeeAge : '—' %></td>
-          <td>
-            <% if(log.attendeeGender==='male'){ %><span class="gender-m"><i class="bi bi-gender-male"></i> M</span>
-            <% } else if(log.attendeeGender==='female'){ %><span class="gender-f"><i class="bi bi-gender-female"></i> F</span>
-            <% } else { %><span style="color:#555;">—</span><% } %>
-          </td>
-          <td><span class="badge badge-type"><%= (log.ticketType||'—').toUpperCase() %></span></td>
-          <td>
-            <% if(log.isGroup){ %><span class="badge badge-grp"><i class="bi bi-people-fill"></i> GROUP (<%= log.groupSize %>)</span>
-            <% } else { %><span class="badge badge-single"><i class="bi bi-person-fill"></i> SINGLE</span><% } %>
-          </td>
-          <td style="font-family:'Space Mono',monospace;font-size:0.68rem;color:var(--muted);"><%= log.ticketId %></td>
-          <td style="font-family:'Space Mono',monospace;font-size:0.68rem;color:#bf80ff;"><%= log.bookingRef %></td>
-          <td style="font-size:0.8rem;color:var(--muted);"><%= log.staffName || log.scannedBy || '—' %></td>
-          <td style="font-family:'Space Mono',monospace;font-size:0.7rem;color:var(--muted);white-space:nowrap;"><%= new Date(log.scannedAt).toLocaleString('en-IN',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}) %></td>
-        </tr>
-        <% }); %>
+
+
+<% logs.forEach(function(log, i){ %>
+<tr>
+  <td style="color:var(--muted);font-family:'Space Mono',monospace;font-size:0.72rem;"><%= i+1 %></td>
+  <td><strong><%= log.attendeeName || '—' %></strong></td>
+  <td style="font-family:'Space Mono',monospace;font-size:0.68rem;color:var(--muted);"><%= log.ticketId %></td>
+  <td style="font-family:'Space Mono',monospace;font-size:0.68rem;color:#bf80ff;"><%= log.bookingRef %></td>
+  <td style="font-family:'Space Mono',monospace;font-size:0.72rem;color:#00FF88;"><%= log.location?.gate || '—' %></td>
+  <td style="font-family:'Space Mono',monospace;font-size:0.72rem;color:#bf80ff;"><%= log.location?.zone || '—' %></td>
+  <td style="font-size:0.78rem;color:var(--muted);text-transform:uppercase;"><%= log.platform || '—' %></td>
+  <td style="font-size:0.8rem;color:var(--muted);"><%= log.scannedBy?.staffName || '—' %></td>
+  <td style="font-family:'Space Mono',monospace;font-size:0.7rem;color:var(--muted);white-space:nowrap;">
+    <%= new Date(log.scannedAt).toLocaleString('en-IN',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}) %>
+  </td>
+</tr>
+<% }); %>
+
+
         </tbody>
       </table>
       <% } %>
@@ -184,19 +217,35 @@
 <script>
 
   // ── Entered Tickets Export ──
+// var ET_FIELDS = [
+//   { key:'num',     label:'#',             get:function(r){ return r.querySelector('td:nth-child(1)')?r.querySelector('td:nth-child(1)').textContent.trim():''; } },
+//   { key:'name',    label:'Attendee Name', get:function(r){ return r.querySelector('td:nth-child(2) strong')?r.querySelector('td:nth-child(2) strong').textContent.trim():''; } },
+//   { key:'age',     label:'Age',           get:function(r){ return r.querySelector('td:nth-child(3)')?r.querySelector('td:nth-child(3)').textContent.trim():''; } },
+//   { key:'gender',  label:'Gender',        get:function(r){ var e=r.querySelector('td:nth-child(4)'); if(!e) return ''; var t=e.textContent.trim(); return t==='—'?'':t; } },
+//   { key:'ticket',  label:'Ticket Type',   get:function(r){ var e=r.querySelector('.badge-type'); return e?e.textContent.trim():''; } },
+//   { key:'etype',   label:'Entry Type',    get:function(r){ var g=r.querySelector('.badge-grp'); if(g) return g.textContent.replace(/\s+/g,' ').trim(); var s=r.querySelector('.badge-single'); return s?s.textContent.trim():''; } },
+//   { key:'ticketid',label:'Ticket ID',     get:function(r){ return r.querySelector('td:nth-child(7)')?r.querySelector('td:nth-child(7)').textContent.trim():''; } },
+//   { key:'ref',     label:'Booking Ref',   get:function(r){ return r.querySelector('td:nth-child(8)')?r.querySelector('td:nth-child(8)').textContent.trim():''; } },
+//   { key:'staff',   label:'Scanned By',    get:function(r){ return r.querySelector('td:nth-child(9)')?r.querySelector('td:nth-child(9)').textContent.trim():''; } },
+//   { key:'time',    label:'Entry Time',    get:function(r){ return r.querySelector('td:nth-child(10)')?r.querySelector('td:nth-child(10)').textContent.trim():''; } },
+// ];
+// var etDefaultOn = ['num','name','age','gender','ticket','etype','ref','staff','time'];
+
 var ET_FIELDS = [
-  { key:'num',     label:'#',             get:function(r){ return r.querySelector('td:nth-child(1)')?r.querySelector('td:nth-child(1)').textContent.trim():''; } },
-  { key:'name',    label:'Attendee Name', get:function(r){ return r.querySelector('td:nth-child(2) strong')?r.querySelector('td:nth-child(2) strong').textContent.trim():''; } },
-  { key:'age',     label:'Age',           get:function(r){ return r.querySelector('td:nth-child(3)')?r.querySelector('td:nth-child(3)').textContent.trim():''; } },
-  { key:'gender',  label:'Gender',        get:function(r){ var e=r.querySelector('td:nth-child(4)'); if(!e) return ''; var t=e.textContent.trim(); return t==='—'?'':t; } },
-  { key:'ticket',  label:'Ticket Type',   get:function(r){ var e=r.querySelector('.badge-type'); return e?e.textContent.trim():''; } },
-  { key:'etype',   label:'Entry Type',    get:function(r){ var g=r.querySelector('.badge-grp'); if(g) return g.textContent.replace(/\s+/g,' ').trim(); var s=r.querySelector('.badge-single'); return s?s.textContent.trim():''; } },
-  { key:'ticketid',label:'Ticket ID',     get:function(r){ return r.querySelector('td:nth-child(7)')?r.querySelector('td:nth-child(7)').textContent.trim():''; } },
-  { key:'ref',     label:'Booking Ref',   get:function(r){ return r.querySelector('td:nth-child(8)')?r.querySelector('td:nth-child(8)').textContent.trim():''; } },
-  { key:'staff',   label:'Scanned By',    get:function(r){ return r.querySelector('td:nth-child(9)')?r.querySelector('td:nth-child(9)').textContent.trim():''; } },
-  { key:'time',    label:'Entry Time',    get:function(r){ return r.querySelector('td:nth-child(10)')?r.querySelector('td:nth-child(10)').textContent.trim():''; } },
+  { key:'num',      label:'#',            get:function(r){ return r.querySelector('td:nth-child(1)')?r.querySelector('td:nth-child(1)').textContent.trim():''; } },
+  { key:'name',     label:'Attendee',     get:function(r){ return r.querySelector('td:nth-child(2) strong')?r.querySelector('td:nth-child(2) strong').textContent.trim():''; } },
+  { key:'ticketid', label:'Ticket ID',    get:function(r){ return r.querySelector('td:nth-child(3)')?r.querySelector('td:nth-child(3)').textContent.trim():''; } },
+  { key:'ref',      label:'Booking Ref',  get:function(r){ return r.querySelector('td:nth-child(4)')?r.querySelector('td:nth-child(4)').textContent.trim():''; } },
+  { key:'gate',     label:'Gate',         get:function(r){ return r.querySelector('td:nth-child(5)')?r.querySelector('td:nth-child(5)').textContent.trim():''; } },
+  { key:'zone',     label:'Zone',         get:function(r){ return r.querySelector('td:nth-child(6)')?r.querySelector('td:nth-child(6)').textContent.trim():''; } },
+  { key:'platform', label:'Platform',     get:function(r){ return r.querySelector('td:nth-child(7)')?r.querySelector('td:nth-child(7)').textContent.trim():''; } },
+  { key:'staff',    label:'Scanned By',   get:function(r){ return r.querySelector('td:nth-child(8)')?r.querySelector('td:nth-child(8)').textContent.trim():''; } },
+  { key:'time',     label:'Entry Time',   get:function(r){ return r.querySelector('td:nth-child(9)')?r.querySelector('td:nth-child(9)').textContent.trim():''; } },
 ];
-var etDefaultOn = ['num','name','age','gender','ticket','etype','ref','staff','time'];
+var etDefaultOn = ['num','name','ticketid','ref','gate','zone','platform','staff','time'];
+
+
+
 var etExScope = 'filtered';
 
 function openEtExport(){

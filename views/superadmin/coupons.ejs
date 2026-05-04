@@ -12,23 +12,16 @@
     body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(255,255,255,0.012) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.012) 1px,transparent 1px);background-size:50px 50px;pointer-events:none;}
     .admin-layout{display:grid;grid-template-columns:220px 1fr;min-height:100vh;}
     .main{padding:2rem;position:relative;z-index:1;overflow-x:hidden;}
-
-    /* Sidebar styles live in partials/admin-sidebar.ejs */
-
     .page-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem;}
     .page-title{font-family:'Poppins',sans-serif;font-size:2rem;letter-spacing:2px;}
     .btn-new{display:inline-flex;align-items:center;gap:0.5rem;background:var(--accent);color:#fff;padding:0.65rem 1.4rem;border-radius:7px;font-weight:700;font-size:0.85rem;letter-spacing:1px;border:none;cursor:pointer;transition:box-shadow 0.2s;}
     .btn-new:hover{box-shadow:0 0 24px rgba(106,13,173,0.5);}
-
-    /* Stats */
     .stats-row{display:grid;grid-template-columns:repeat(5,1fr);gap:0.9rem;margin-bottom:1.8rem;}
     .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1.1rem 1.2rem;position:relative;overflow:hidden;}
     .stat-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(106,13,173,0.04),transparent);pointer-events:none;}
     .stat-val{font-family:'Poppins',sans-serif;font-size:1.9rem;color:var(--accent2);}
     .stat-lbl{font-size:0.72rem;color:var(--muted);margin-top:0.15rem;}
     .stat-icon{position:absolute;right:0.9rem;top:50%;transform:translateY(-50%);font-size:1.8rem;opacity:0.06;}
-
-    /* Toolbar */
     .toolbar{background:var(--surface);border:1px solid var(--border);border-radius:10px 10px 0 0;border-bottom:none;}
     .tabs{display:flex;border-bottom:1px solid var(--border);overflow-x:auto;}
     .tab-btn{display:flex;align-items:center;gap:0.4rem;padding:0.9rem 1.2rem;font-family:'Space Mono',monospace;font-size:0.6rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);background:none;border:none;cursor:pointer;transition:all 0.15s;border-bottom:2px solid transparent;white-space:nowrap;}
@@ -36,7 +29,6 @@
     .tab-btn.active{color:#fff;border-bottom-color:var(--accent);}
     .tc{background:rgba(106,13,173,0.2);border:1px solid rgba(144,78,221,0.3);border-radius:10px;padding:0.1rem 0.45rem;font-size:0.58rem;margin-left:0.2rem;}
     .tab-btn.active .tc{background:rgba(106,13,173,0.4);}
-
     .filters-row{display:flex;align-items:center;gap:0.8rem;padding:0.8rem 1.2rem;flex-wrap:wrap;border-bottom:1px solid var(--border);}
     .sw{position:relative;flex:1;min-width:200px;}
     .sw i{position:absolute;left:0.75rem;top:50%;transform:translateY(-50%);color:var(--muted);font-size:0.9rem;}
@@ -46,17 +38,7 @@
     .fs:focus{border-color:var(--accent);}
     .fs option{background:#1a1a2e;}
     .fc{font-family:'Space Mono',monospace;font-size:0.63rem;color:var(--muted);white-space:nowrap;}
-
-    /* Table */
     .table-wrap{background:var(--surface);border:1px solid var(--border);border-top:none;border-radius:0 0 10px 10px;overflow:hidden;}
-    .tscroll{overflow-x:auto;}
-    table{width:100%;border-collapse:collapse;}
-    th{font-family:'Space Mono',monospace;font-size:0.54rem;letter-spacing:2px;color:var(--muted);text-transform:uppercase;padding:0.8rem 1rem;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap;}
-    td{padding:0.9rem 1rem;border-bottom:1px solid rgba(255,255,255,0.04);font-size:0.83rem;vertical-align:middle;}
-    tr:last-child td{border-bottom:none;}
-    tr:hover td{background:rgba(255,255,255,0.015);}
-
-    /* Badges */
     .b{display:inline-flex;align-items:center;gap:0.25rem;font-family:'Space Mono',monospace;font-size:0.55rem;letter-spacing:1px;padding:0.18rem 0.52rem;border-radius:20px;white-space:nowrap;}
     .b-act{background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.25);color:var(--success);}
     .b-exp{background:rgba(255,68,68,0.08);border:1px solid rgba(255,68,68,0.25);color:var(--error);}
@@ -64,33 +46,16 @@
     .b-feat{background:rgba(245,200,66,0.1);border:1px solid rgba(245,200,66,0.3);color:var(--warn);}
     .b-pct{background:rgba(106,13,173,0.15);border:1px solid rgba(144,78,221,0.3);color:var(--accent2);}
     .b-flt{background:rgba(0,200,255,0.08);border:1px solid rgba(0,200,255,0.25);color:#00C8FF;}
-
+    .b-cat{background:rgba(255,107,107,0.08);border:1px solid rgba(255,107,107,0.25);color:#ff6b6b;font-size:0.5rem;padding:0.1rem 0.35rem;}
     .code-pill{font-family:'Space Mono',monospace;font-size:0.8rem;letter-spacing:2px;background:rgba(106,13,173,0.12);border:1px solid rgba(144,78,221,0.25);border-radius:5px;padding:0.25rem 0.6rem;color:#d8b4fe;cursor:pointer;transition:all 0.15s;}
     .code-pill:hover{background:rgba(106,13,173,0.28);border-color:rgba(144,78,221,0.5);}
-
-    /* Usage bar */
-    .ur{display:flex;align-items:center;gap:0.5rem;}
     .ubw{flex:1;background:rgba(255,255,255,0.06);border-radius:20px;height:4px;min-width:50px;}
     .ub{height:4px;border-radius:20px;background:linear-gradient(90deg,var(--accent),var(--accent2));}
     .ut{font-family:'Space Mono',monospace;font-size:0.63rem;color:var(--muted);white-space:nowrap;}
-
-    /* Small buttons */
     .bs{display:inline-flex;align-items:center;gap:0.3rem;padding:0.32rem 0.72rem;border-radius:5px;font-size:0.72rem;font-weight:600;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text);transition:all 0.15s;white-space:nowrap;}
     .bs:hover{border-color:var(--accent);color:var(--accent);}
-    .bs.d{border-color:rgba(255,68,68,0.3);color:var(--error);}
-    .bs.d:hover{background:rgba(255,68,68,0.08);}
-    .bs.w{border-color:rgba(245,200,66,0.3);color:var(--warn);}
-    .bs.w:hover{background:rgba(245,200,66,0.08);}
-    .bs.s{border-color:rgba(0,255,136,0.3);color:var(--success);}
-    .bs.s:hover{background:rgba(0,255,136,0.08);}
     .bs.a{border-color:rgba(106,13,173,0.4);color:var(--accent2);}
     .bs.a:hover{background:rgba(106,13,173,0.12);}
-    .ar{display:flex;gap:0.35rem;flex-wrap:wrap;}
-
-    /* Usage Drawer */
-    .udr{display:none;}
-
-    /* ── Coupon Grid Layout ── */
     .cpn-hdr,.cpn-row{display:grid;grid-template-columns:24fr 12fr 14fr 13fr 13fr 10fr 14fr;align-items:center;padding:0 1.2rem;}
     .cpn-hdr{padding-top:0.75rem;padding-bottom:0.75rem;border-bottom:1px solid var(--border);}
     .cpn-hdr>div{font-family:'Space Mono',monospace;font-size:0.52rem;letter-spacing:2px;color:var(--muted);text-transform:uppercase;}
@@ -100,7 +65,6 @@
     .cpn-cell{min-width:0;overflow:hidden;}
     .udr{display:none;background:rgba(157,78,221,0.03);border-bottom:1px solid var(--border);}
     .udr.open{display:block;}
-    .udr td{padding:0;border-bottom:none;}
     .udi{padding:1rem 1.4rem 1.4rem;background:rgba(106,13,173,0.03);border-top:1px solid rgba(106,13,173,0.1);}
     .udt{font-family:'Space Mono',monospace;font-size:0.58rem;letter-spacing:2px;color:var(--accent2);text-transform:uppercase;margin-bottom:0.9rem;display:flex;align-items:center;gap:0.5rem;}
     .us{display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1rem;}
@@ -112,11 +76,9 @@
     .utbl td{padding:0.6rem 0.8rem;border-bottom:1px solid rgba(255,255,255,0.03);}
     .utbl tr:last-child td{border-bottom:none;}
     .nou{color:var(--muted);font-size:0.8rem;text-align:center;padding:1.5rem;font-family:'Space Mono',monospace;}
-
-    /* Modal */
     .mo{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.78);backdrop-filter:blur(6px);z-index:1000;align-items:center;justify-content:center;padding:1rem;}
     .mo.open{display:flex;}
-    .mc{background:var(--surface);border:1px solid var(--border);border-radius:14px;width:100%;max-width:680px;max-height:92vh;overflow-y:auto;box-shadow:0 24px 60px rgba(0,0,0,0.6);}
+    .mc{background:var(--surface);border:1px solid var(--border);border-radius:14px;width:100%;max-width:720px;max-height:92vh;overflow-y:auto;box-shadow:0 24px 60px rgba(0,0,0,0.6);}
     .mh{padding:1.3rem 1.6rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--surface);z-index:2;}
     .mt{font-family:'Poppins',sans-serif;font-size:1.3rem;letter-spacing:2px;}
     .mx{background:none;border:none;color:var(--muted);font-size:1.3rem;cursor:pointer;padding:0.2rem 0.4rem;border-radius:4px;transition:color 0.15s;}
@@ -137,18 +99,14 @@
     .bg:hover{border-color:var(--muted);color:#fff;}
     .bsv{display:inline-flex;align-items:center;gap:0.4rem;background:var(--accent);color:#fff;padding:0.65rem 1.4rem;border-radius:6px;font-weight:700;font-size:0.85rem;border:none;cursor:pointer;transition:box-shadow 0.2s;}
     .bsv:hover{box-shadow:0 0 20px rgba(106,13,173,0.4);}
-
-    /* Delete confirm */
     .dc{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.82);z-index:1100;align-items:center;justify-content:center;}
     .dc.open{display:flex;}
     .dcb{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:2rem;width:380px;max-width:95vw;text-align:center;}
     .dcb h3{font-family:'Poppins',sans-serif;font-size:1.4rem;margin-bottom:0.6rem;color:var(--error);}
     .dcb p{font-size:0.87rem;color:var(--muted);margin-bottom:1.5rem;}
     .dcbt{display:flex;gap:0.8rem;justify-content:center;}
-
     .nr{padding:3rem;text-align:center;color:var(--muted);}
     .nr i{font-size:2.2rem;display:block;margin-bottom:0.8rem;opacity:0.4;}
-
     .iab{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:rgba(255,255,255,0.03);color:var(--muted);cursor:pointer;transition:all 0.15s;font-size:0.8rem;}
     .iab:hover{border-color:rgba(157,78,221,0.4);color:var(--accent);background:rgba(157,78,221,0.06);}
     .iab-s{border-color:rgba(0,255,136,0.25);color:var(--success);}
@@ -159,6 +117,18 @@
     .iab-d{border-color:rgba(255,68,68,0.25);color:var(--error);}
     .iab-d:hover{background:rgba(255,68,68,0.08);}
     #toast{display:none;position:fixed;bottom:1.5rem;right:1.5rem;background:var(--surface);border:1px solid rgba(0,255,136,0.3);border-radius:8px;padding:0.75rem 1.2rem;font-size:0.83rem;color:var(--success);z-index:9999;box-shadow:0 8px 30px rgba(0,0,0,0.5);}
+
+    /* ── Category multi-select ── */
+    .cat-select-wrap{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:0.5rem;display:flex;flex-direction:column;gap:0.4rem;max-height:160px;overflow-y:auto;}
+    .cat-select-wrap:focus-within{border-color:var(--accent);}
+    .cat-option{display:flex;align-items:center;gap:0.5rem;padding:0.3rem 0.4rem;border-radius:4px;cursor:pointer;transition:background 0.12s;}
+    .cat-option:hover{background:rgba(255,255,255,0.04);}
+    .cat-option input[type=checkbox]{width:14px;height:14px;accent-color:var(--accent);cursor:pointer;flex-shrink:0;}
+    .cat-option label{font-size:0.82rem;cursor:pointer;flex:1;}
+    .cat-all-row{display:flex;align-items:center;gap:0.5rem;padding:0.3rem 0.4rem;border-bottom:1px solid var(--border);margin-bottom:0.2rem;cursor:pointer;}
+    .cat-all-row input{width:14px;height:14px;accent-color:var(--accent);cursor:pointer;}
+    .cat-all-row label{font-size:0.75rem;font-family:'Space Mono',monospace;color:var(--accent2);cursor:pointer;text-transform:uppercase;letter-spacing:1px;}
+    .cat-badges{display:flex;flex-wrap:wrap;gap:0.3rem;margin-top:0.4rem;}
 
     @media(max-width:960px){
       .admin-layout{grid-template-columns:1fr;}
@@ -184,45 +154,32 @@
       function cpnExpired(c){ return c.validUntil && now2 > new Date(c.validUntil); }
       function cpnActive(c){ return c.isActive && !cpnExpired(c) && (!c.validFrom||now2>=new Date(c.validFrom)) && (!c.maxUses||c.usedCount<c.maxUses); }
       function cpnStatus(c){ return cpnExpired(c)?'expired':(cpnActive(c)?'active':'inactive'); }
-      const totAll     = coupons.length;
-      const totAct     = coupons.filter(function(c){return cpnActive(c);}).length;
-      const totExp     = coupons.filter(function(c){return cpnExpired(c);}).length;
-      const totFeat    = coupons.filter(function(c){return c.isFeatured;}).length;
-      const totIna     = coupons.filter(function(c){return !cpnActive(c)&&!cpnExpired(c);}).length;
-      const totUses    = coupons.reduce(function(s,c){return s+(c.usedCount||0);},0);
-      const totSaved   = coupons.reduce(function(s,c){return s+(c.usages||[]).reduce(function(ss,b){return ss+(b.discount||0);},0);},0);
+      const totAll   = coupons.length;
+      const totAct   = coupons.filter(function(c){return cpnActive(c);}).length;
+      const totExp   = coupons.filter(function(c){return cpnExpired(c);}).length;
+      const totFeat  = coupons.filter(function(c){return c.isFeatured;}).length;
+      const totIna   = coupons.filter(function(c){return !cpnActive(c)&&!cpnExpired(c);}).length;
+      const totUses  = coupons.reduce(function(s,c){return s+(c.usedCount||0);},0);
+      const totSaved = coupons.reduce(function(s,c){return s+(c.usages||[]).reduce(function(ss,b){return ss+(b.discount||0);},0);},0);
+
+      /* collect all ticket categories from events for the UI */
+      var allCategories = [];
+      (events||[]).forEach(function(ev){
+        (ev.ticketTypes||[]).forEach(function(tt){
+          var cat = (tt.category||'').trim();
+          if(cat && allCategories.indexOf(cat)===-1) allCategories.push(cat);
+        });
+      });
     %>
 
-    <!-- Stats -->
     <div class="stats-row">
-      <div class="stat-card">
-        <div class="stat-val"><%= totAll %></div>
-        <div class="stat-lbl">Total Coupons</div>
-        <i class="bi bi-tag stat-icon"></i>
-      </div>
-      <div class="stat-card">
-        <div class="stat-val"><%= totAct %></div>
-        <div class="stat-lbl">Active Now</div>
-        <i class="bi bi-lightning-fill stat-icon"></i>
-      </div>
-      <div class="stat-card">
-        <div class="stat-val"><%= totExp %></div>
-        <div class="stat-lbl">Expired</div>
-        <i class="bi bi-clock-history stat-icon"></i>
-      </div>
-      <div class="stat-card">
-        <div class="stat-val"><%= totUses %></div>
-        <div class="stat-lbl">Total Redemptions</div>
-        <i class="bi bi-graph-up stat-icon"></i>
-      </div>
-      <div class="stat-card">
-        <div class="stat-val">₹<%= totSaved.toLocaleString('en-IN') %></div>
-        <div class="stat-lbl">Total Discounted</div>
-        <i class="bi bi-cash stat-icon"></i>
-      </div>
+      <div class="stat-card"><div class="stat-val"><%= totAll %></div><div class="stat-lbl">Total Coupons</div><i class="bi bi-tag stat-icon"></i></div>
+      <div class="stat-card"><div class="stat-val"><%= totAct %></div><div class="stat-lbl">Active Now</div><i class="bi bi-lightning-fill stat-icon"></i></div>
+      <div class="stat-card"><div class="stat-val"><%= totExp %></div><div class="stat-lbl">Expired</div><i class="bi bi-clock-history stat-icon"></i></div>
+      <div class="stat-card"><div class="stat-val"><%= totUses %></div><div class="stat-lbl">Total Redemptions</div><i class="bi bi-graph-up stat-icon"></i></div>
+      <div class="stat-card"><div class="stat-val">₹<%= totSaved.toLocaleString('en-IN') %></div><div class="stat-lbl">Total Discounted</div><i class="bi bi-cash stat-icon"></i></div>
     </div>
 
-    <!-- Toolbar: tabs + search + filters -->
     <div class="toolbar">
       <div class="tabs">
         <button class="tab-btn active" data-tab="all"      onclick="swTab('all',this)"><i class="bi bi-grid-fill"></i> All <span class="tc" id="tc-all"><%= totAll %></span></button>
@@ -251,17 +208,9 @@
       </div>
     </div>
 
-    <!-- Grid List -->
     <div class="table-wrap">
-      <!-- Header row -->
       <div class="cpn-hdr">
-        <div>Code</div>
-        <div>Discount</div>
-        <div>Validity</div>
-        <div>Usage</div>
-        <div>Restrictions</div>
-        <div>Status</div>
-        <div style="text-align:right;">Actions</div>
+        <div>Code</div><div>Discount</div><div>Validity</div><div>Usage</div><div>Restrictions</div><div>Status</div><div style="text-align:right;">Actions</div>
       </div>
       <div id="cpnBody">
         <% coupons.forEach(function(c){ %>
@@ -274,6 +223,7 @@
             var dL     = c.validUntil?Math.ceil((new Date(c.validUntil)-now2)/86400000):9999;
             var tSaved = (c.usages||[]).reduce(function(s,b){return s+(b.discount||0);},0);
             var tTix   = (c.usages||[]).reduce(function(s,b){return s+(b.quantity||0);},0);
+            var appCats = c.applicableCategories||[];
           %>
           <div class="cpn-row cr"
               data-code="<%= c.code.toLowerCase() %>"
@@ -293,6 +243,13 @@
                 <% if(c.isFeatured){ %><span class="b b-feat" style="font-size:0.5rem;padding:0.12rem 0.4rem;"><i class="bi bi-star-fill"></i></span><% } %>
               </div>
               <div style="font-size:0.68rem;color:var(--muted);margin-top:0.3rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="<%= c.description %>"><%= c.description||'' %></div>
+              <% if(appCats.length>0){ %>
+                <div style="display:flex;flex-wrap:wrap;gap:0.2rem;margin-top:0.3rem;">
+                  <% appCats.forEach(function(cat){ %>
+                    <span class="b b-cat" style="font-size:0.48rem;padding:0.08rem 0.3rem;"><i class="bi bi-ticket-fill" style="font-size:0.45rem;"></i> <%= cat %></span>
+                  <% }); %>
+                </div>
+              <% } %>
             </div>
 
             <!-- DISCOUNT -->
@@ -339,7 +296,8 @@
             <div class="cpn-cell" style="font-size:0.75rem;">
               <% if(c.minOrder>0){ %><div style="color:var(--muted);">Min ₹<%= c.minOrder %></div><% } %>
               <% if(c.minTickets>0){ %><div style="color:var(--warn);">Min <%= c.minTickets %> ticket<%= c.minTickets>1?'s':'' %></div><% } %>
-              <% if(!c.minOrder&&!c.minTickets){ %><span style="color:#444;">—</span><% } %>
+              <% if(appCats.length>0){ %><div style="color:#ff6b6b;font-size:0.68rem;margin-top:0.2rem;"><i class="bi bi-ticket-fill"></i> <%= appCats.length %> cat<%= appCats.length>1?'s':'' %> only</div><% } %>
+              <% if(!c.minOrder&&!c.minTickets&&!appCats.length){ %><span style="color:#444;">—</span><% } %>
             </div>
 
             <!-- STATUS -->
@@ -351,7 +309,7 @@
 
             <!-- ACTIONS -->
             <div class="cpn-cell" style="justify-content:flex-end;display:flex;align-items:center;gap:0.3rem;">
-              <button class="iab" title="Edit" onclick="openEdit(this)" data-coupon='<%- JSON.stringify({_id:String(c._id),code:c.code,type:c.type||"fixed",value:c.value,minOrder:c.minOrder||0,minTickets:c.minTickets||0,maxUses:c.maxUses||0,validFrom:c.validFrom?new Date(c.validFrom).toISOString().slice(0,10):"",validUntil:c.validUntil?new Date(c.validUntil).toISOString().slice(0,10):"",description:c.description||"",isActive:!!c.isActive,isFeatured:!!c.isFeatured}) %>'><i class="bi bi-pencil"></i></button>
+              <button class="iab" title="Edit" onclick="openEdit(this)" data-coupon='<%- JSON.stringify({_id:String(c._id),code:c.code,type:c.type||"fixed",value:c.value,minOrder:c.minOrder||0,minTickets:c.minTickets||0,maxUses:c.maxUses||0,validFrom:c.validFrom?new Date(c.validFrom).toISOString().slice(0,10):"",validUntil:c.validUntil?new Date(c.validUntil).toISOString().slice(0,10):"",description:c.description||"",isActive:!!c.isActive,isFeatured:!!c.isFeatured,applicableCategories:c.applicableCategories||[]}) %>'><i class="bi bi-pencil"></i></button>
               <button class="iab <%= act2?'iab-w':'iab-s' %>" title="<%= act2?'Pause':'Enable' %>" onclick="submitForm('/superadmin/coupons/<%= c._id %>/toggle')"><i class="bi bi-<%= act2?'pause':'play' %>-fill"></i></button>
               <button class="iab <%= c.isFeatured?'iab-y':'' %>" title="<%= c.isFeatured?'Unfeature':'Feature' %>" onclick="submitForm('/superadmin/coupons/<%= c._id %>/feature')"><i class="bi bi-star<%= c.isFeatured?'-fill':'' %>"></i></button>
               <button class="iab iab-d" title="Delete" onclick="confDel('<%= c._id %>','<%= c.code %>')"><i class="bi bi-trash3"></i></button>
@@ -360,13 +318,10 @@
 
           <!-- Usage Drawer -->
           <div class="udr" id="udr-<%= c._id %>">
-            <div style="padding:0;">
             <div class="udi">
               <div class="udt"><i class="bi bi-receipt-cutoff"></i> Redemption Details — <%= c.code %></div>
               <% if(c.usages&&c.usages.length>0){ %>
-                <%
-                  var uAvg = Math.round(tSaved/(c.usages.length||1));
-                %>
+                <% var uAvg = Math.round(tSaved/(c.usages.length||1)); %>
                 <div class="us">
                   <div class="usc"><div class="usv"><%= c.usages.length %></div><div class="usl">Orders</div></div>
                   <div class="usc"><div class="usv"><%= tTix %></div><div class="usl">Tickets</div></div>
@@ -393,7 +348,11 @@
                     </td>
                     <td style="text-transform:capitalize;font-size:0.78rem;"><%= u.ticketType||'—' %></td>
                     <td style="text-align:center;font-family:'Space Mono',monospace;font-size:0.75rem;"><%= u.quantity %></td>
-                    <td style="color:var(--muted);font-family:'Space Mono',monospace;font-size:0.73rem;">₹<%= ((u.subtotal||0)+(u.discount||0)).toFixed(0) %></td>
+                    <%
+                      /* FIX: Original = subtotal (price before discount), NOT subtotal+discount */
+                      var origAmt = u.subtotal || 0;
+                    %>
+                    <td style="color:var(--muted);font-family:'Space Mono',monospace;font-size:0.73rem;">₹<%= origAmt.toFixed(0) %></td>
                     <td style="color:var(--success);font-family:'Space Mono',monospace;font-size:0.73rem;">−₹<%= (u.discount||0).toFixed(0) %></td>
                     <td style="font-weight:700;font-family:'Space Mono',monospace;font-size:0.73rem;">₹<%= (u.totalAmount||0).toFixed(0) %></td>
                     <td style="color:var(--muted);font-size:0.7rem;white-space:nowrap;"><%= new Date(u.createdAt).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}) %></td>
@@ -404,7 +363,6 @@
               <% }else{ %>
                 <div class="nou"><i class="bi bi-inbox" style="display:block;font-size:1.8rem;margin-bottom:0.5rem;opacity:0.3;"></i>No redemptions yet.</div>
               <% } %>
-            </div>
             </div>
           </div>
 
@@ -443,6 +401,29 @@
           <div class="fg"><label class="fl">Valid From</label><input class="fi" name="validFrom" id="f_vf" type="date"/></div>
           <div class="fg"><label class="fl">Valid Until</label><input class="fi" name="validUntil" id="f_vu" type="date"/></div>
           <div class="fg s2"><label class="fl">Description</label><input class="fi" name="description" id="f_ds" placeholder="e.g. Early bird discount for Silver tickets"/></div>
+
+          <!-- ── Applicable Categories ── -->
+          <div class="fg s2">
+            <label class="fl">Applicable Categories <span style="color:#555;font-size:0.65rem;">(leave all unchecked = applies to ALL)</span></label>
+            <div class="cat-select-wrap" id="catWrap">
+              <div class="cat-all-row" onclick="toggleAllCats(this)">
+                <input type="checkbox" id="cat_all" onchange="onAllCatChange(this)"/>
+                <label for="cat_all">All Categories (no restriction)</label>
+              </div>
+              <% allCategories.forEach(function(cat){ %>
+                <div class="cat-option">
+                  <input type="checkbox" name="applicableCategories" value="<%= cat %>" id="cat_<%= cat %>" class="cat-cb" onchange="onCatCbChange()"/>
+                  <label for="cat_<%= cat %>"><%= cat %></label>
+                </div>
+              <% }); %>
+              <% if(allCategories.length===0){ %>
+                <div style="font-size:0.75rem;color:var(--muted);padding:0.3rem 0.4rem;font-family:'Space Mono',monospace;">No ticket categories found. Create an event with ticket types first.</div>
+              <% } %>
+            </div>
+            <div class="cat-badges" id="catBadges"></div>
+            <span class="fh">Select specific categories this coupon applies to. Leave all unchecked for universal use.</span>
+          </div>
+
           <div class="fg"><label class="fl">Status</label><div class="cr"><input type="checkbox" name="isActive" id="f_ia" value="on" checked/><span>Active (usable now)</span></div></div>
           <div class="fg"><label class="fl">Featured</label><div class="cr"><input type="checkbox" name="isFeatured" id="f_if" value="on"/><span>Mark as Featured</span></div></div>
         </div>
@@ -471,7 +452,52 @@
 
 <script>
 var curTab = 'all';
+var ALL_CATS = <%- JSON.stringify(allCategories) %>;
 
+/* ── Category checkbox helpers ── */
+function renderCatBadges(){
+  var checked = Array.from(document.querySelectorAll('.cat-cb:checked')).map(function(el){return el.value;});
+  var badges = document.getElementById('catBadges');
+  if(!badges) return;
+  if(checked.length===0){
+    badges.innerHTML='<span style="font-size:0.72rem;color:var(--muted);font-family:Space Mono,monospace;">All categories</span>';
+  } else {
+    badges.innerHTML = checked.map(function(c){
+      return '<span class="b b-cat" style="font-size:0.65rem;padding:0.15rem 0.45rem;">'+c+'</span>';
+    }).join('');
+  }
+}
+
+function onCatCbChange(){
+  var all = document.querySelectorAll('.cat-cb');
+  var checked = document.querySelectorAll('.cat-cb:checked');
+  var allCb = document.getElementById('cat_all');
+  if(allCb) allCb.checked = (checked.length===0);
+  renderCatBadges();
+}
+
+function onAllCatChange(cb){
+  if(cb.checked){
+    document.querySelectorAll('.cat-cb').forEach(function(el){el.checked=false;});
+  }
+  renderCatBadges();
+}
+
+function toggleAllCats(row){
+  var cb = row.querySelector('input');
+  if(cb){ cb.checked=!cb.checked; onAllCatChange(cb); }
+}
+
+function setCatSelections(selectedCats){
+  document.querySelectorAll('.cat-cb').forEach(function(el){
+    el.checked = selectedCats.indexOf(el.value) !== -1;
+  });
+  var allCb = document.getElementById('cat_all');
+  if(allCb) allCb.checked = (selectedCats.length===0);
+  renderCatBadges();
+}
+
+/* ── Tab + filter ── */
 function swTab(tab, btn) {
   curTab = tab;
   document.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.remove('active'); });
@@ -498,7 +524,6 @@ function applyF() {
     r._sh = tok&&sqk&&ttk;
   });
 
-  // Gather pairs (row + its drawer siblings)
   var tbody = document.getElementById('cpnBody');
   var kids  = Array.from(tbody.children);
   var pairs = [];
@@ -586,6 +611,7 @@ function openCreate(){
   document.getElementById('f_ds').value       = '';
   document.getElementById('f_ia').checked     = true;
   document.getElementById('f_if').checked     = false;
+  setCatSelections([]);
   document.getElementById('cpnMo').classList.add('open');
 }
 
@@ -606,6 +632,7 @@ function openEdit(btn){
   document.getElementById('f_ds').value       = c.description||'';
   document.getElementById('f_ia').checked     = c.isActive!==false;
   document.getElementById('f_if').checked     = !!c.isFeatured;
+  setCatSelections(c.applicableCategories||[]);
   document.getElementById('cpnMo').classList.add('open');
 }
 
@@ -627,8 +654,8 @@ function confDel(id,code){
 document.getElementById('cpnMo').addEventListener('click',function(e){ if(e.target===this)closeMo(); });
 document.getElementById('dcMo').addEventListener('click',function(e){ if(e.target===this)this.classList.remove('open'); });
 
-// Add feature route if missing
 // Init
+renderCatBadges();
 applyF();
 </script>
 </body>

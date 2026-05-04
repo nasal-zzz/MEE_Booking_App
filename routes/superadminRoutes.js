@@ -107,37 +107,75 @@ router.get('/logout', (req, res) => {
   });
 });
 
-
-
 // ── PUBLIC: Coupon validation (used by checkout — no auth needed) ──
+ 
 router.post('/api/validate-coupon', async (req, res) => {
   try {
-    const { code, orderAmount } = req.body;
+    const { code, orderAmount, quantity, ticketCategory } = req.body;
     if (!code) return res.json({ success: false, message: 'No coupon code provided.' });
+
     const coupon = await Coupon.findOne({ code: code.toUpperCase().trim(), isActive: true });
     if (!coupon) return res.json({ success: false, message: 'Invalid coupon code.' });
+
+    // ── FIRST: category restriction check ──
+    const appCats = coupon.applicableCategories || [];
+    if (appCats.length > 0 && ticketCategory) {
+      const normalised = appCats.map(c => c.toLowerCase());
+      if (!normalised.includes((ticketCategory || '').trim().toLowerCase())) {
+        const catList = appCats.join(', ');
+        return res.json({ success: false,
+          message: `This coupon is only valid for: ${catList}.` });
+      }
+    }
+
     const now = new Date();
-    if (coupon.validFrom && now < new Date(coupon.validFrom)) return res.json({ success: false, message: 'Coupon not yet active.' });
+
+    if (coupon.validFrom && now < new Date(coupon.validFrom))
+      return res.json({ success: false, message: 'Coupon not yet active.' });
+
     if (coupon.validUntil) {
-      const expiry = new Date(coupon.validUntil); expiry.setHours(23, 59, 59, 999);
+      const expiry = new Date(coupon.validUntil);
+      expiry.setHours(23, 59, 59, 999);
       if (now > expiry) return res.json({ success: false, message: 'Coupon has expired.' });
     }
-    if (coupon.maxUses > 0 && coupon.usedCount >= coupon.maxUses) return res.json({ success: false, message: 'Coupon usage limit reached.' });
-    // One-per-user check
+
+    if (coupon.maxUses > 0 && coupon.usedCount >= coupon.maxUses)
+      return res.json({ success: false, message: 'Coupon usage limit reached.' });
+
     const userId = req.session?.userId || req.session?.user?._id || null;
-    if (userId && coupon.usedBy && coupon.usedBy.map(id => id.toString()).includes(userId.toString())) {
+    if (userId && coupon.usedBy &&
+        coupon.usedBy.map(id => id.toString()).includes(userId.toString()))
       return res.json({ success: false, message: 'You have already used this coupon.' });
-    }
+
     const amount = parseFloat(orderAmount) || 0;
-    const quantity = parseInt(req.body.quantity) || 1;
-    if (coupon.minOrder > 0 && amount < coupon.minOrder) return res.json({ success: false, message: 'Minimum order amount ₹' + coupon.minOrder + ' required.' });
-    if (coupon.minTickets > 0 && quantity < coupon.minTickets) return res.json({ success: false, message: 'Minimum ' + coupon.minTickets + ' ticket' + (coupon.minTickets > 1 ? 's' : '') + ' required to use this coupon.' });
+    const qty    = parseInt(quantity) || 1;
+
+    if (coupon.minOrder > 0 && amount < coupon.minOrder)
+      return res.json({ success: false,
+        message: `Minimum order amount ₹${coupon.minOrder} required.` });
+
+    if (coupon.minTickets > 0 && qty < coupon.minTickets)
+      return res.json({ success: false,
+        message: `Minimum ${coupon.minTickets} ticket${coupon.minTickets > 1 ? 's' : ''} required to use this coupon.` });
+
     const discount = coupon.type === 'percent'
       ? Math.round((amount * coupon.value) / 100)
       : coupon.value;
-    res.json({ success: true, discount: Math.min(discount, amount), code: coupon.code, description: coupon.description });
-  } catch (err) { console.error('Coupon validate error:', err); res.json({ success: false, message: 'Server error.' }); }
+
+    res.json({
+      success:              true,
+      discount:             Math.min(discount, amount),
+      code:                 coupon.code,
+      description:          coupon.description,
+      applicableCategories: appCats,
+    });
+  } catch (err) {
+    console.error('Coupon validate error:', err);
+    res.json({ success: false, message: 'Server error.' });
+  }
 });
+ 
+
 
 router.use(superAuth);
 
@@ -537,78 +575,218 @@ router.post('/staff/:id/credentials', async (req, res) => {
   }
 });
 // ── COUPON MANAGEMENT ──
+
+
+// router.get('/coupons', async (req, res) => {
+//   try {
+//     const currentAdmin = req.session.staffUser || { username: req.session.superAdminUser || 'superadmin', name: 'Super Admin', role: 'superadmin' };
+//     const events = await Event.find({}, 'name date').sort({ date: -1 }).lean();
+//     const rawCoupons = await Coupon.find().sort({ createdAt: -1 }).lean();
+
+//     const codes = rawCoupons.map(c => c.code);
+//     const usageBookings = await Booking.find({
+//       couponCode: { $in: codes }, paymentStatus: 'paid',
+//     }).populate('event', 'name date venue').populate('user', 'firstName lastName phone email').sort({ createdAt: -1 }).lean();
+
+//     const usageMap = {};
+//     for (const b of usageBookings) {
+//       if (!usageMap[b.couponCode]) usageMap[b.couponCode] = [];
+//       usageMap[b.couponCode].push(b);
+//     }
+
+//     const now = new Date();
+//     const coupons = rawCoupons.map(c => ({
+//       ...c,
+//       usages: usageMap[c.code] || [],
+//       isExpired: !!(c.validUntil && now > new Date(c.validUntil)),
+//     }));
+
+//     res.render('superadmin/coupons', { title: 'Coupons — Super Admin', coupons, events, currentAdmin });
+//   } catch (err) {
+//     console.error('SA coupons error:', err);
+//     res.status(500).send('Error loading coupons: ' + err.message);
+//   }
+// });
+
+// router.post('/coupons', async (req, res) => {
+//   try {
+//     const { code, type, value, minOrder, minTickets, maxUses, validFrom, validUntil, description, isActive, isFeatured } = req.body;
+//     if (!code || !code.trim()) return res.redirect('/superadmin/coupons?err=Code+required');
+//     if (!value || parseFloat(value) <= 0) return res.redirect('/superadmin/coupons?err=Value+must+be+greater+than+0');
+//     const cleanCode = code.toUpperCase().trim();
+//     const existing = await Coupon.findOne({ code: cleanCode });
+//     if (existing) return res.redirect('/superadmin/coupons?err=' + encodeURIComponent(`Coupon code "${cleanCode}" already exists.`));
+//     await Coupon.create({
+//       code: cleanCode, type: type || 'fixed',
+//       value: parseFloat(value), minOrder: parseFloat(minOrder) || 0,
+//       minTickets: parseInt(minTickets) || 0, maxUses: parseInt(maxUses) || 0,
+//       validFrom: validFrom || null, validUntil: validUntil || null,
+//       description: description || '',
+//       isActive: isActive === 'on' || isActive === true,
+//       isFeatured: isFeatured === 'on' || isFeatured === true,
+//     });
+//     res.redirect('/superadmin/coupons');
+//   } catch (err) {
+//     res.redirect('/superadmin/coupons?err=' + encodeURIComponent(err.code === 11000 ? 'Coupon code already exists.' : err.message));
+//   }
+// });
+
+// router.post('/coupons/:id/edit', async (req, res) => {
+//   try {
+//     const { code, type, value, minOrder, minTickets, maxUses, validFrom, validUntil, description, isActive, isFeatured } = req.body;
+//     await Coupon.findByIdAndUpdate(req.params.id, {
+//       code: code.toUpperCase().trim(), type: type || 'fixed',
+//       value: parseFloat(value), minOrder: parseFloat(minOrder) || 0,
+//       minTickets: parseInt(minTickets) || 0, maxUses: parseInt(maxUses) || 0,
+//       validFrom: validFrom || null, validUntil: validUntil || null,
+//       description: description || '',
+//       isActive: isActive === 'on' || isActive === true,
+//       isFeatured: isFeatured === 'on' || isFeatured === true,
+//     });
+//     res.redirect('/superadmin/coupons');
+//   } catch (err) {
+//     res.redirect('/superadmin/coupons?err=' + encodeURIComponent(err.message));
+//   }
+// });
+
+// router.post('/coupons/:id/toggle', async (req, res) => {
+//   try {
+//     const c = await Coupon.findById(req.params.id);
+//     if (c) { c.isActive = !c.isActive; await c.save(); }
+//     res.redirect('/superadmin/coupons');
+//   } catch (err) { res.redirect('/superadmin/coupons'); }
+// });
+
+// router.post('/coupons/:id/feature', async (req, res) => {
+//   try {
+//     const c = await Coupon.findById(req.params.id);
+//     if (c) { c.isFeatured = !c.isFeatured; await c.save(); }
+//     res.redirect('/superadmin/coupons');
+//   } catch (err) { res.redirect('/superadmin/coupons'); }
+// });
+
+// router.post('/coupons/:id/delete', async (req, res) => {
+//   try {
+//     await Coupon.findByIdAndDelete(req.params.id);
+//     res.redirect('/superadmin/coupons');
+//   } catch (err) { res.redirect('/superadmin/coupons'); }
+// });
+
+
+function parseCouponBody(body) {
+  const { code, type, value, minOrder, minTickets, maxUses,
+          validFrom, validUntil, description, isActive, isFeatured,
+          applicableCategories } = body;
+ 
+  // applicableCategories arrives as:
+  //   undefined  → no checkboxes ticked → all categories allowed
+  //   string     → single checkbox
+  //   string[]   → multiple checkboxes
+  let cats = [];
+  if (applicableCategories) {
+    cats = Array.isArray(applicableCategories)
+      ? applicableCategories.map(c => c.trim()).filter(Boolean)
+      : [applicableCategories.trim()].filter(Boolean);
+  }
+ 
+  return {
+    code:       code ? code.toUpperCase().trim() : '',
+    type:       type || 'fixed',
+    value:      parseFloat(value),
+    minOrder:   parseFloat(minOrder) || 0,
+    minTickets: parseInt(minTickets) || 0,
+    maxUses:    parseInt(maxUses)    || 0,
+    validFrom:  validFrom  || null,
+    validUntil: validUntil || null,
+    description: description || '',
+    isActive:   isActive   === 'on' || isActive   === true,
+    isFeatured: isFeatured === 'on' || isFeatured === true,
+    applicableCategories: cats,
+  };
+}
+ 
+// ─── Shared coupon loader (attaches usages, isExpired) ────────
+async function loadCouponsWithUsages(Coupon, Booking, Event) {
+  // Pass all events with ticketTypes so the view can build category list
+  const events     = await Event.find({}, 'name date ticketTypes').sort({ date: -1 }).lean();
+  const rawCoupons = await Coupon.find().sort({ createdAt: -1 }).lean();
+ 
+  const codes = rawCoupons.map(c => c.code);
+  const usageBookings = await Booking.find({
+    couponCode:    { $in: codes },
+    paymentStatus: 'paid',
+  })
+    .populate('event', 'name date venue')
+    .populate('user',  'firstName lastName phone email')
+    .sort({ createdAt: -1 }).lean();
+ 
+  const usageMap = {};
+  for (const b of usageBookings) {
+    if (!usageMap[b.couponCode]) usageMap[b.couponCode] = [];
+    usageMap[b.couponCode].push(b);
+  }
+ 
+  const now = new Date();
+  const coupons = rawCoupons.map(c => ({
+    ...c,
+    usages:    usageMap[c.code] || [],
+    isExpired: !!(c.validUntil && now > new Date(c.validUntil)),
+  }));
+ 
+  return { coupons, events };
+}
+
+
+ 
+// GET /superadmin/coupons
 router.get('/coupons', async (req, res) => {
   try {
-    const currentAdmin = req.session.staffUser || { username: req.session.superAdminUser || 'superadmin', name: 'Super Admin', role: 'superadmin' };
-    const events = await Event.find({}, 'name date').sort({ date: -1 }).lean();
-    const rawCoupons = await Coupon.find().sort({ createdAt: -1 }).lean();
-
-    const codes = rawCoupons.map(c => c.code);
-    const usageBookings = await Booking.find({
-      couponCode: { $in: codes }, paymentStatus: 'paid',
-    }).populate('event', 'name date venue').populate('user', 'firstName lastName phone email').sort({ createdAt: -1 }).lean();
-
-    const usageMap = {};
-    for (const b of usageBookings) {
-      if (!usageMap[b.couponCode]) usageMap[b.couponCode] = [];
-      usageMap[b.couponCode].push(b);
-    }
-
-    const now = new Date();
-    const coupons = rawCoupons.map(c => ({
-      ...c,
-      usages: usageMap[c.code] || [],
-      isExpired: !!(c.validUntil && now > new Date(c.validUntil)),
-    }));
-
-    res.render('superadmin/coupons', { title: 'Coupons — Super Admin', coupons, events, currentAdmin });
+    const currentAdmin = req.session.staffUser ||
+      { username: req.session.superAdminUser || 'superadmin', name: 'Super Admin', role: 'superadmin' };
+ 
+    const { coupons, events } = await loadCouponsWithUsages(Coupon, Booking, Event);
+    res.render('superadmin/coupons', {
+      title: 'Coupons — Super Admin', coupons, events, currentAdmin,
+    });
   } catch (err) {
     console.error('SA coupons error:', err);
     res.status(500).send('Error loading coupons: ' + err.message);
   }
 });
-
+ 
+// POST /superadmin/coupons  (create)
 router.post('/coupons', async (req, res) => {
   try {
-    const { code, type, value, minOrder, minTickets, maxUses, validFrom, validUntil, description, isActive, isFeatured } = req.body;
-    if (!code || !code.trim()) return res.redirect('/superadmin/coupons?err=Code+required');
-    if (!value || parseFloat(value) <= 0) return res.redirect('/superadmin/coupons?err=Value+must+be+greater+than+0');
-    const cleanCode = code.toUpperCase().trim();
-    const existing = await Coupon.findOne({ code: cleanCode });
-    if (existing) return res.redirect('/superadmin/coupons?err=' + encodeURIComponent(`Coupon code "${cleanCode}" already exists.`));
-    await Coupon.create({
-      code: cleanCode, type: type || 'fixed',
-      value: parseFloat(value), minOrder: parseFloat(minOrder) || 0,
-      minTickets: parseInt(minTickets) || 0, maxUses: parseInt(maxUses) || 0,
-      validFrom: validFrom || null, validUntil: validUntil || null,
-      description: description || '',
-      isActive: isActive === 'on' || isActive === true,
-      isFeatured: isFeatured === 'on' || isFeatured === true,
-    });
+    const data = parseCouponBody(req.body);
+    if (!data.code) return res.redirect('/superadmin/coupons?err=Code+required');
+    if (!data.value || data.value <= 0)
+      return res.redirect('/superadmin/coupons?err=Value+must+be+greater+than+0');
+ 
+    const existing = await Coupon.findOne({ code: data.code });
+    if (existing)
+      return res.redirect('/superadmin/coupons?err=' +
+        encodeURIComponent(`Coupon code "${data.code}" already exists.`));
+ 
+    await Coupon.create(data);
     res.redirect('/superadmin/coupons');
   } catch (err) {
-    res.redirect('/superadmin/coupons?err=' + encodeURIComponent(err.code === 11000 ? 'Coupon code already exists.' : err.message));
+    res.redirect('/superadmin/coupons?err=' +
+      encodeURIComponent(err.code === 11000 ? 'Coupon code already exists.' : err.message));
   }
 });
-
+ 
+// POST /superadmin/coupons/:id/edit
 router.post('/coupons/:id/edit', async (req, res) => {
   try {
-    const { code, type, value, minOrder, minTickets, maxUses, validFrom, validUntil, description, isActive, isFeatured } = req.body;
-    await Coupon.findByIdAndUpdate(req.params.id, {
-      code: code.toUpperCase().trim(), type: type || 'fixed',
-      value: parseFloat(value), minOrder: parseFloat(minOrder) || 0,
-      minTickets: parseInt(minTickets) || 0, maxUses: parseInt(maxUses) || 0,
-      validFrom: validFrom || null, validUntil: validUntil || null,
-      description: description || '',
-      isActive: isActive === 'on' || isActive === true,
-      isFeatured: isFeatured === 'on' || isFeatured === true,
-    });
+    const data = parseCouponBody(req.body);
+    await Coupon.findByIdAndUpdate(req.params.id, data);
     res.redirect('/superadmin/coupons');
   } catch (err) {
     res.redirect('/superadmin/coupons?err=' + encodeURIComponent(err.message));
   }
 });
-
+ 
+// POST /superadmin/coupons/:id/toggle
 router.post('/coupons/:id/toggle', async (req, res) => {
   try {
     const c = await Coupon.findById(req.params.id);
@@ -616,7 +794,8 @@ router.post('/coupons/:id/toggle', async (req, res) => {
     res.redirect('/superadmin/coupons');
   } catch (err) { res.redirect('/superadmin/coupons'); }
 });
-
+ 
+// POST /superadmin/coupons/:id/feature
 router.post('/coupons/:id/feature', async (req, res) => {
   try {
     const c = await Coupon.findById(req.params.id);
@@ -624,13 +803,15 @@ router.post('/coupons/:id/feature', async (req, res) => {
     res.redirect('/superadmin/coupons');
   } catch (err) { res.redirect('/superadmin/coupons'); }
 });
-
+ 
+// POST /superadmin/coupons/:id/delete
 router.post('/coupons/:id/delete', async (req, res) => {
-  try {
-    await Coupon.findByIdAndDelete(req.params.id);
-    res.redirect('/superadmin/coupons');
-  } catch (err) { res.redirect('/superadmin/coupons'); }
+  try { await Coupon.findByIdAndDelete(req.params.id); res.redirect('/superadmin/coupons'); }
+  catch (err) { res.redirect('/superadmin/coupons'); }
 });
+ 
+
+
 
 // ── USERS BY EVENT (ATTENDEES) ──
 router.get('/users-by-event', async (req, res) => {
@@ -645,7 +826,7 @@ router.get('/users-by-event', async (req, res) => {
       bookings = await Booking.find({ event: selectedEventId, paymentStatus: 'paid' })
         .populate('user', 'firstName lastName email phone').sort({ createdAt: -1 }).lean();
       const enteredRefs = new Set(
-        (await ScanLog.find({ event: selectedEventId }).select('bookingRef').lean()).map(l => l.bookingRef)
+        (await ScanLog.find({ eventId: selectedEventId }).select('bookingRef').lean()).map(l => l.bookingRef)
       );
       const attendees = [];
       bookings.forEach(b => {
@@ -726,11 +907,26 @@ router.get('/entered-tickets', async (req, res) => {
     let selectedEvent = null;
     if (selectedEventId) {
       selectedEvent = await Event.findById(selectedEventId).lean();
-      logs = await ScanLog.find({ event: selectedEventId })
-        .populate('booking', 'bookingRef ticketType quantity totalAmount')
-        .sort({ scannedAt: -1 })
-        .lean();
-    }
+
+// logs = await ScanLog.find({ eventId: selectedEventId })  // ← FIXED
+//   .sort({ scannedAt: -1 })
+//   .lean();
+
+const mongoose = require('mongoose');
+
+// Convert to ObjectId to match both string and ObjectId stored values
+const eventObjId = new mongoose.Types.ObjectId(selectedEventId);
+
+logs = await ScanLog.find({ 
+  $or: [
+    { eventId: eventObjId },
+    { eventId: selectedEventId }  // catches any stored as string
+  ]
+})
+  .sort({ scannedAt: -1 })
+  .lean();
+    
+      }
     res.render('superadmin/entered-tickets', { title: 'Entered Tickets — SuperAdmin', events, logs, selectedEvent, selectedEventId, currentAdmin });
   } catch (err) { console.error(err); res.status(500).send('Error loading entered tickets'); }
 });

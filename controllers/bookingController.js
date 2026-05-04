@@ -208,30 +208,41 @@ exports.createOrder = async (req, res) => {
       discount = groups * ttype.comboOfferDiscount;
     }
 
+
     if (couponCode) {
-      try {
-        const Coupon = require('../models/Coupon');
-        const coupon = await Coupon.findOne({ code: couponCode.toUpperCase(), isActive: true });
-        if (coupon) {
-          const now = new Date();
-          const validFrom = coupon.validFrom ? new Date(coupon.validFrom) : null;
-          const validUntil = coupon.validUntil ? new Date(coupon.validUntil) : null;
-          if (validUntil) validUntil.setHours(23, 59, 59, 999);
-          const notYet = validFrom && now < validFrom;
-          const expired = validUntil && now > validUntil;
-          const maxedOut = coupon.maxUses > 0 && coupon.usedCount >= coupon.maxUses;
-          const belowMin = coupon.minOrder > 0 && subtotal < coupon.minOrder;
-          const userId = req.session?.userId || req.session?.user?._id || null;
-          const alreadyUsed = userId && coupon.usedBy && coupon.usedBy.map(id => id.toString()).includes(userId.toString());
-          if (!notYet && !expired && !maxedOut && !belowMin && !alreadyUsed) {
-            const couponDisc = coupon.type === 'percent'
-              ? Math.round(subtotal * coupon.value / 100)
-              : coupon.value;
-            discount = Math.max(discount, couponDisc);
-          }
-        }
-      } catch (e) { console.warn('Coupon error in createOrder:', e.message); }
+  try {
+    const Coupon = require('../models/Coupon');
+    const coupon = await Coupon.findOne({ code: couponCode.toUpperCase(), isActive: true });
+    if (coupon) {
+      const now = new Date();
+      const validFrom  = coupon.validFrom  ? new Date(coupon.validFrom)  : null;
+      const validUntil = coupon.validUntil ? new Date(coupon.validUntil) : null;
+      if (validUntil) validUntil.setHours(23, 59, 59, 999);
+ 
+      const notYet     = validFrom  && now < validFrom;
+      const expired    = validUntil && now > validUntil;
+      const maxedOut   = coupon.maxUses > 0 && coupon.usedCount >= coupon.maxUses;
+      const belowMin   = coupon.minOrder > 0 && subtotal < coupon.minOrder;
+      const userId     = req.session?.userId || req.session?.user?._id || null;
+      const alreadyUsed = userId && coupon.usedBy &&
+        coupon.usedBy.map(id => id.toString()).includes(userId.toString());
+ 
+      // ── NEW: category restriction check ──
+      const appCats = coupon.applicableCategories || [];
+      const wrongCat = appCats.length > 0 &&
+        !appCats.map(c => c.toLowerCase()).includes((ttype.category || '').toLowerCase());
+ 
+      if (!notYet && !expired && !maxedOut && !belowMin && !alreadyUsed && !wrongCat) {
+        const couponDisc = coupon.type === 'percent'
+          ? Math.round(subtotal * coupon.value / 100)
+          : coupon.value;
+        discount = Math.max(discount, couponDisc);
+      }
     }
+  } catch (e) { console.warn('Coupon error in createOrder:', e.message); }
+}
+ 
+
 
     const totalAmount = Math.max(subtotal - discount + convFee, 0);
 

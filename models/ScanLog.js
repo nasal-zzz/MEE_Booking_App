@@ -1,20 +1,27 @@
 const mongoose = require('mongoose');
 
-// Records every successful QR scan (entry granted)
 const scanLogSchema = new mongoose.Schema({
-  booking:    { type: mongoose.Schema.Types.ObjectId, ref: 'Booking', required: true },
-  event:      { type: mongoose.Schema.Types.ObjectId, ref: 'Event',   required: true },
-  ticketId:   { type: String, required: true },
-  bookingRef: { type: String, required: true },
-  attendeeName:  { type: String, default: '' },
-  attendeeAge:   { type: Number, default: 0 },
-  attendeeGender:{ type: String, default: '' },
-  ticketType: { type: String, default: '' },
-  scannedBy:  { type: String, default: '' },  // staff username
-  staffName:  { type: String, default: '' },  // staff full name
-  scannedAt:  { type: Date,   default: Date.now },
-  isGroup:    { type: Boolean, default: false },
-  groupSize:  { type: Number,  default: 1 },
+  bookingId:      { type: mongoose.Schema.Types.ObjectId, ref: 'Booking', required: true },
+  bookingRef:     { type: String, required: true },
+  ticketId:       { type: String, required: true },
+  eventId:        { type: mongoose.Schema.Types.ObjectId, ref: 'Event', required: true },
+  userId:         { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  attendeeName:   { type: String, default: '' },
+  attendeeGender: { type: String, default: '' },   // ← added back
+  scannedAt:      { type: Date, default: Date.now },
+  scannedBy: {
+    staffId:   { type: mongoose.Schema.Types.ObjectId, ref: 'Staff' },
+    staffName: { type: String, default: '' },
+  },
+  platform:   { type: String, default: '' },
+  location: {
+    gate: { type: String, default: '' },
+    zone: { type: String, default: '' },
+  },
+  qrSnapshot: {
+    bookingRef: { type: String, default: '' },
+    ticketId:   { type: String, default: '' },
+  },
 }, { timestamps: true });
 
 module.exports = mongoose.model('ScanLog', scanLogSchema);

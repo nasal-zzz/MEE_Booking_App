@@ -704,115 +704,149 @@ router.post('/staff/:id/delete', async (req, res) => {
   // ── COUPON MANAGEMENT — updated for new coupons.ejs page ──
   // ════════════════════════════════════════════════════════════
 
-  // GET /mee-admin/coupons — loads coupons with full redemption details attached
-  router.get('/coupons', async (req, res) => {
-    try {
-      const currentAdmin = getCurrentAdmin(req);
-      const isSuperAdmin = req.session.superAdminLoggedIn || (req.session.staffUser && req.session.staffUser.role === 'superadmin');
-      const events     = await Event.find({}, 'name date').sort({ date: -1 }).lean();
-      const rawCoupons = await Coupon.find().sort({ createdAt: -1 }).lean();
+// ─── helper used in BOTH routers ──────────────────────────────
+function parseCouponBody(body) {
+  const { code, type, value, minOrder, minTickets, maxUses,
+          validFrom, validUntil, description, isActive, isFeatured,
+          applicableCategories } = body;
+ 
+  // applicableCategories arrives as:
+  //   undefined  → no checkboxes ticked → all categories allowed
+  //   string     → single checkbox
+  //   string[]   → multiple checkboxes
+  let cats = [];
+  if (applicableCategories) {
+    cats = Array.isArray(applicableCategories)
+      ? applicableCategories.map(c => c.trim()).filter(Boolean)
+      : [applicableCategories.trim()].filter(Boolean);
+  }
+ 
+  return {
+    code:       code ? code.toUpperCase().trim() : '',
+    type:       type || 'fixed',
+    value:      parseFloat(value),
+    minOrder:   parseFloat(minOrder) || 0,
+    minTickets: parseInt(minTickets) || 0,
+    maxUses:    parseInt(maxUses)    || 0,
+    validFrom:  validFrom  || null,
+    validUntil: validUntil || null,
+    description: description || '',
+    isActive:   isActive   === 'on' || isActive   === true,
+    isFeatured: isFeatured === 'on' || isFeatured === true,
+    applicableCategories: cats,
+  };
+}
+ 
+// ─── Shared coupon loader (attaches usages, isExpired) ────────
+async function loadCouponsWithUsages(Coupon, Booking, Event) {
+  // Pass all events with ticketTypes so the view can build category list
+  const events     = await Event.find({}, 'name date ticketTypes').sort({ date: -1 }).lean();
+  const rawCoupons = await Coupon.find().sort({ createdAt: -1 }).lean();
+ 
+  const codes = rawCoupons.map(c => c.code);
+  const usageBookings = await Booking.find({
+    couponCode:    { $in: codes },
+    paymentStatus: 'paid',
+  })
+    .populate('event', 'name date venue')
+    .populate('user',  'firstName lastName phone email')
+    .sort({ createdAt: -1 }).lean();
+ 
+  const usageMap = {};
+  for (const b of usageBookings) {
+    if (!usageMap[b.couponCode]) usageMap[b.couponCode] = [];
+    usageMap[b.couponCode].push(b);
+  }
+ 
+  const now = new Date();
+  const coupons = rawCoupons.map(c => ({
+    ...c,
+    usages:    usageMap[c.code] || [],
+    isExpired: !!(c.validUntil && now > new Date(c.validUntil)),
+  }));
+ 
+  return { coupons, events };
+}
+ 
+ 
+// ══════════════════════════════════════════════════════════════
+// ADMIN ROUTER  —  replace the existing coupon block with this
+// ══════════════════════════════════════════════════════════════
+ 
+// GET /mee-admin/coupons
+router.get('/coupons', async (req, res) => {
+  try {
+    const currentAdmin = getCurrentAdmin(req);
+    const isSuperAdmin = req.session.superAdminLoggedIn ||
+      (req.session.staffUser && req.session.staffUser.role === 'superadmin');
+ 
+    const { coupons, events } = await loadCouponsWithUsages(Coupon, Booking, Event);
+    res.render('mee-admin/coupons', {
+      title: 'Coupons — Admin', coupons, events, currentAdmin, isSuperAdmin,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Error loading coupons');
+  }
+});
+ 
+// POST /mee-admin/coupons  (create)
+router.post('/coupons', async (req, res) => {
+  try {
+    const data = parseCouponBody(req.body);
+    if (!data.code) return res.redirect('/mee-admin/coupons?err=Code+required');
+    if (!data.value || data.value <= 0)
+      return res.redirect('/mee-admin/coupons?err=Value+must+be+greater+than+0');
+ 
+    const existing = await Coupon.findOne({ code: data.code });
+    if (existing)
+      return res.redirect('/mee-admin/coupons?err=' +
+        encodeURIComponent(`Coupon code "${data.code}" already exists.`));
+ 
+    await Coupon.create(data);
+    res.redirect('/mee-admin/coupons');
+  } catch (err) {
+    res.redirect('/mee-admin/coupons?err=' +
+      encodeURIComponent(err.code === 11000 ? 'Coupon code already exists.' : err.message));
+  }
+});
+ 
+// POST /mee-admin/coupons/:id/edit
+router.post('/coupons/:id/edit', async (req, res) => {
+  try {
+    const data = parseCouponBody(req.body);
+    await Coupon.findByIdAndUpdate(req.params.id, data);
+    res.redirect('/mee-admin/coupons');
+  } catch (err) {
+    res.redirect('/mee-admin/coupons?err=' + encodeURIComponent(err.message));
+  }
+});
+ 
+// POST /mee-admin/coupons/:id/toggle
+router.post('/coupons/:id/toggle', async (req, res) => {
+  try {
+    const c = await Coupon.findById(req.params.id);
+    if (c) { c.isActive = !c.isActive; await c.save(); }
+    res.redirect('/mee-admin/coupons');
+  } catch (err) { res.redirect('/mee-admin/coupons'); }
+});
+ 
+// POST /mee-admin/coupons/:id/feature
+router.post('/coupons/:id/feature', async (req, res) => {
+  try {
+    const c = await Coupon.findById(req.params.id);
+    if (c) { c.isFeatured = !c.isFeatured; await c.save(); }
+    res.redirect('/mee-admin/coupons');
+  } catch (err) { res.redirect('/mee-admin/coupons'); }
+});
+ 
+// POST /mee-admin/coupons/:id/delete
+router.post('/coupons/:id/delete', async (req, res) => {
+  try { await Coupon.findByIdAndDelete(req.params.id); res.redirect('/mee-admin/coupons'); }
+  catch (err) { res.redirect('/mee-admin/coupons'); }
+});
+ 
 
-      // Attach redemption details from paid bookings
-      const codes = rawCoupons.map(c => c.code);
-      const usageBookings = await Booking.find({
-        couponCode:    { $in: codes },
-        paymentStatus: 'paid',
-      })
-        .populate('event', 'name date venue')
-        .populate('user',  'firstName lastName phone email')
-        .sort({ createdAt: -1 }).lean();
-
-      const usageMap = {};
-      for (const b of usageBookings) {
-        if (!usageMap[b.couponCode]) usageMap[b.couponCode] = [];
-        usageMap[b.couponCode].push(b);
-      }
-
-      const now = new Date();
-      const coupons = rawCoupons.map(c => ({
-        ...c,
-        usages:    usageMap[c.code] || [],
-        isExpired: !!(c.validUntil && now > new Date(c.validUntil)),
-      }));
-
-      res.render('mee-admin/coupons', { title: 'Coupons — Admin', coupons, events, currentAdmin, isSuperAdmin });
-    } catch(err) { console.error(err); res.status(500).send('Error loading coupons'); }
-  });
-
-  // POST /mee-admin/coupons — create new coupon (form-based, redirects)
-  router.post('/coupons', async (req, res) => {
-    try {
-      const { code, type, value, minOrder, minTickets, maxUses, validFrom, validUntil, description, isActive, isFeatured } = req.body;
-      if (!code || !code.trim()) return res.redirect('/mee-admin/coupons?err=Code+required');
-      if (!value || parseFloat(value) <= 0) return res.redirect('/mee-admin/coupons?err=Value+must+be+greater+than+0');
-      const cleanCode = code.toUpperCase().trim();
-      const existing = await Coupon.findOne({ code: cleanCode });
-      if (existing) return res.redirect('/mee-admin/coupons?err=' + encodeURIComponent(`Coupon code "${cleanCode}" already exists.`));
-      await Coupon.create({
-        code:       cleanCode,
-        type:       type       || 'fixed',
-        value:      parseFloat(value),
-        minOrder:   parseFloat(minOrder)   || 0,
-        minTickets: parseInt(minTickets)   || 0,
-        maxUses:    parseInt(maxUses)      || 0,
-        validFrom:  validFrom  || null,
-        validUntil: validUntil || null,
-        description: description || '',
-        isActive:   isActive   === 'on' || isActive   === true,
-        isFeatured: isFeatured === 'on' || isFeatured === true,
-      });
-      res.redirect('/mee-admin/coupons');
-    } catch(err) {
-      res.redirect('/mee-admin/coupons?err=' + encodeURIComponent(err.code === 11000 ? 'Coupon code already exists.' : err.message));
-    }
-  });
-
-  // POST /mee-admin/coupons/:id/edit — edit existing coupon
-  router.post('/coupons/:id/edit', async (req, res) => {
-    try {
-      const { code, type, value, minOrder, minTickets, maxUses, validFrom, validUntil, description, isActive, isFeatured } = req.body;
-      await Coupon.findByIdAndUpdate(req.params.id, {
-        code:       code.toUpperCase().trim(),
-        type:       type       || 'fixed',
-        value:      parseFloat(value),
-        minOrder:   parseFloat(minOrder)   || 0,
-        minTickets: parseInt(minTickets)   || 0,
-        maxUses:    parseInt(maxUses)      || 0,
-        validFrom:  validFrom  || null,
-        validUntil: validUntil || null,
-        description: description || '',
-        isActive:   isActive   === 'on' || isActive   === true,
-        isFeatured: isFeatured === 'on' || isFeatured === true,
-      });
-      res.redirect('/mee-admin/coupons');
-    } catch(err) {
-      res.redirect('/mee-admin/coupons?err=' + encodeURIComponent(err.message));
-    }
-  });
-
-  // POST /mee-admin/coupons/:id/toggle — flip isActive
-  router.post('/coupons/:id/toggle', async (req, res) => {
-    try {
-      const c = await Coupon.findById(req.params.id);
-      if (c) { c.isActive = !c.isActive; await c.save(); }
-      res.redirect('/mee-admin/coupons');
-    } catch(err) { res.redirect('/mee-admin/coupons'); }
-  });
-
-  // POST /mee-admin/coupons/:id/feature — flip isFeatured
-  router.post('/coupons/:id/feature', async (req, res) => {
-    try {
-      const c = await Coupon.findById(req.params.id);
-      if (c) { c.isFeatured = !c.isFeatured; await c.save(); }
-      res.redirect('/mee-admin/coupons');
-    } catch(err) { res.redirect('/mee-admin/coupons'); }
-  });
-
-  // POST /mee-admin/coupons/:id/delete
-  router.post('/coupons/:id/delete', async (req, res) => {
-    try { await Coupon.findByIdAndDelete(req.params.id); res.redirect('/mee-admin/coupons'); }
-    catch(err) { res.redirect('/mee-admin/coupons'); }
-  });
 
 
   // ── Participants (QR scan log) by event ──
@@ -825,7 +859,7 @@ router.post('/staff/:id/delete', async (req, res) => {
       const selectedEvent = selectedId ? await Event.findById(selectedId).select('name date venue').lean() : null;
       let logs = [];
       if (selectedId) {
-        logs = await ScanLog.find({ event: selectedId })
+        logs = await ScanLog.find({ eventId: selectedId })
           .populate('booking', 'bookingRef ticketType quantity totalAmount')
           .sort({ scannedAt: -1 })
           .lean();
@@ -850,7 +884,7 @@ router.post('/staff/:id/delete', async (req, res) => {
           .sort({ createdAt: -1 })
           .lean();
         const enteredRefs = new Set(
-          (await ScanLog.find({ event: selectedEventId }).select('bookingRef').lean())
+          (await ScanLog.find({ eventId: selectedEventId }).select('bookingRef').lean())
             .map(l => l.bookingRef)
         );
         const attendees = [];
@@ -911,11 +945,27 @@ router.post('/staff/:id/delete', async (req, res) => {
       let selectedEvent = null;
       if (selectedEventId) {
         selectedEvent = await Event.findById(selectedEventId).lean();
-        logs = await ScanLog.find({ event: selectedEventId })
-          .populate('booking', 'bookingRef ticketType quantity totalAmount')
-          .sort({ scannedAt: -1 })
-          .lean();
-      }
+        
+        // logs = await ScanLog.find({ eventId: selectedEventId })  // ← FIXED
+        //   .sort({ scannedAt: -1 })
+        //   .lean();
+
+        const mongoose = require('mongoose');
+
+// Convert to ObjectId to match both string and ObjectId stored values
+const eventObjId = new mongoose.Types.ObjectId(selectedEventId);
+
+logs = await ScanLog.find({ 
+  $or: [
+    { eventId: eventObjId },
+    { eventId: selectedEventId }  // catches any stored as string
+  ]
+})
+  .sort({ scannedAt: -1 })
+  .lean();
+        
+      
+        }
       res.render('mee-admin/entered-tickets', { title: 'Entered Tickets — Admin', events, logs, selectedEvent, selectedEventId, currentAdmin, isSuperAdmin });
     } catch(err) { console.error(err); res.status(500).send('Error loading entered tickets'); }
   });

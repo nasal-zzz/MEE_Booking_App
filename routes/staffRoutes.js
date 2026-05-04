@@ -552,20 +552,31 @@ if (u.canScanQR && u.assignedCategory) {
         const ScanLog = require('../models/ScanLog');
         for (const t of booking.tickets) {
           if (t.usedAt?.getTime() === now.getTime()) {
+
             await ScanLog.create({
-              booking: booking._id,
-              event: booking.event._id,
-              ticketId: t.ticketId,
-              bookingRef: booking.bookingRef,
-              attendeeName: t.attendee?.name || '',
-              attendeeAge: t.attendee?.age || 0,
-              attendeeGender: t.attendee?.gender || '',
-              ticketType: booking.ticketType || '',
-              scannedBy: u.username,
-              staffName: u.name || u.username,
-              isGroup: booking.tickets.length > 1,
-              groupSize: booking.tickets.length,
+        bookingId:    booking._id,
+        bookingRef:   booking.bookingRef,
+        ticketId:     t.ticketId,
+        eventId:      booking.event._id,
+        userId:       booking.user || null,
+        attendeeName: t.attendee?.name || '',
+        attendeeGender: t.attendee?.gender || '',
+        scannedAt:    new Date(),
+        scannedBy: {
+          staffId:   u.id,
+          staffName: u.name || u.username,
+        },
+        platform: 'web',
+        location: {
+          gate: u.gateNo   || '',
+          zone: booking.zone || '',
+        },
+        qrSnapshot: {
+          bookingRef: booking.bookingRef,
+          ticketId:   t.ticketId,
+        },
             });
+
           }
         }
       } catch (e) { console.error('ScanLog error:', e.message); }
@@ -601,6 +612,7 @@ if (u.canScanQR && u.assignedCategory) {
 // ─────────────────────────────────────────────────────────────
 // API: Check in a SINGLE attendee
 // ─────────────────────────────────────────────────────────────
+
 router.post('/api/scan-ticket', staffAuth, async (req, res) => {
   try {
     const u = req.session.staffUser;
@@ -618,23 +630,21 @@ router.post('/api/scan-ticket', staffAuth, async (req, res) => {
       paymentStatus: 'paid',
     }).populate('event', 'name date venue');
 
-
-
     if (!booking) {
       return res.json({ success: false, status: 'invalid', message: 'Booking not found.' });
     }
 
     // ── Gate/category enforcement ──
-if (u.canScanQR && u.assignedCategory) {
-  const ticketCat = (booking.ticketType || '').toLowerCase();
-  if (ticketCat !== u.assignedCategory.toLowerCase()) {
-    return res.json({
-      success: false,
-      status: 'wrong_gate',
-      message: `❌ Wrong gate. This ${booking.ticketType} ticket is not valid at ${u.gateNo || 'your gate'}.`,
-    });
-  }
-}
+    if (u.canScanQR && u.assignedCategory) {
+      const ticketCat = (booking.ticketType || '').toLowerCase();
+      if (ticketCat !== u.assignedCategory.toLowerCase()) {
+        return res.json({
+          success: false,
+          status: 'wrong_gate',
+          message: `❌ Wrong gate. This ${booking.ticketType} ticket is not valid at ${u.gateNo || 'your gate'}.`,
+        });
+      }
+    }
 
     const ticket = booking.tickets.find(t => t.ticketId === ticketId);
     if (!ticket) {
@@ -660,18 +670,27 @@ if (u.canScanQR && u.assignedCategory) {
     try {
       const ScanLog = require('../models/ScanLog');
       await ScanLog.create({
-        booking: booking._id,
-        event: booking.event._id,
-        ticketId: ticket.ticketId,
-        bookingRef: booking.bookingRef,
-        attendeeName: ticket.attendee?.name || '',
-        attendeeAge: ticket.attendee?.age || 0,
+        bookingId:      booking._id,
+        bookingRef:     booking.bookingRef,
+        ticketId:       ticket.ticketId,
+        eventId:        booking.event._id,
+        userId:         booking.user || null,
+        attendeeName:   ticket.attendee?.name   || '',
         attendeeGender: ticket.attendee?.gender || '',
-        ticketType: booking.ticketType || '',
-        scannedBy: u.username,
-        staffName: u.name || u.username,
-        isGroup: booking.tickets.length > 1,
-        groupSize: booking.tickets.length,
+        scannedAt:      new Date(),
+        scannedBy: {
+          staffId:   u.id,
+          staffName: u.name || u.username,
+        },
+        platform: 'web',
+        location: {
+          gate: u.gateNo     || '',
+          zone: booking.zone || '',
+        },
+        qrSnapshot: {
+          bookingRef: booking.bookingRef,
+          ticketId:   ticket.ticketId,
+        },
       });
     } catch (e) { console.error('ScanLog error:', e.message); }
 
@@ -682,7 +701,7 @@ if (u.canScanQR && u.assignedCategory) {
       ticketId: ticket.ticketId,
       attendee: ticket.attendee?.name,
       seatNumber: ticket.isStanding ? null : (ticket.seatNumber || null),
-      gateNumber: booking.gateNumber || null,  // ✅ include gate number in scan response
+      gateNumber: booking.gateNumber || null,
       booking: _buildBookingResponse(booking, u),
       scannedBy: u.name,
     });
