@@ -15,8 +15,7 @@
     .page-title{font-family:'Poppins',sans-serif;font-size:2rem;letter-spacing:2px;margin-bottom:0.2rem;}
     .page-sub{font-size:0.78rem;color:var(--muted);margin-bottom:1.5rem;}
 
-    /* ── Sidebar ── */
-    .sidebar{background:var(--surface);border-right:1px solid var(--border);padding:1.5rem 1rem;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:0.3rem;z-index:10;overflow-y:auto;scrollbar-width:none;-ms-overflow-style:none;}
+    .sidebar{background:var(--surface);border-right:1px solid var(--border);padding:1.5rem 1rem;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:0.3rem;z-index:10;overflow-y:auto;scrollbar-width:none;}
     .sidebar::-webkit-scrollbar{display:none;}
     .s-logo{display:block;padding:0 0.5rem 1rem;border-bottom:1px solid var(--border);margin-bottom:0.5rem;text-decoration:none;}
     .s-section{font-family:'Space Mono',monospace;font-size:0.52rem;letter-spacing:2px;color:var(--muted);text-transform:uppercase;padding:0.5rem 0.5rem 0.2rem;margin-top:0.3rem;}
@@ -26,22 +25,33 @@
     .s-logout{margin-top:auto;display:flex;align-items:center;gap:0.7rem;padding:0.7rem 0.8rem;color:var(--error);text-decoration:none;border-radius:6px;font-size:0.85rem;border:1px solid transparent;transition:all 0.15s;}
     .s-logout:hover{background:rgba(255,68,68,0.08);}
 
-    .page-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem;}
-    .page-title{font-family:'Poppins',sans-serif;font-size:2rem;letter-spacing:2px;}
-    .btn-new{display:inline-flex;align-items:center;gap:0.5rem;background:var(--accent);color:#fff;padding:0.65rem 1.4rem;border-radius:7px;font-weight:700;font-size:0.85rem;letter-spacing:1px;border:none;cursor:pointer;transition:box-shadow 0.2s;}
-    .btn-new:hover{box-shadow:0 0 24px rgba(106,13,173,0.5);}
+    /* Event header */
+    .event-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem;}
+    .event-info{display:flex;align-items:center;gap:0.8rem;}
+    .live-badge{background:rgba(0,255,136,0.1);border:1px solid rgba(0,255,136,0.3);color:#00FF88;font-family:'Space Mono',monospace;font-size:0.6rem;padding:0.2rem 0.6rem;border-radius:4px;letter-spacing:1px;}
+    .event-name{font-weight:700;font-size:1rem;}
+    .event-meta{font-size:0.72rem;color:var(--muted);}
 
-
-    .filter-bar{display:flex;gap:0.8rem;align-items:center;margin-bottom:1.5rem;flex-wrap:wrap;}
-    .f-sel{background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:7px;color:#fff;font-family:'Outfit',sans-serif;font-size:0.88rem;padding:0.6rem 0.85rem;outline:none;min-width:260px;}
+    /* Filter bar */
+    .filter-bar{display:flex;gap:0.7rem;align-items:center;margin-bottom:1.5rem;flex-wrap:wrap;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:0.9rem 1rem;}
+    .filter-label{font-family:'Space Mono',monospace;font-size:0.55rem;letter-spacing:2px;color:#555;text-transform:uppercase;white-space:nowrap;}
+    .f-sel{background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:7px;color:#fff;font-family:'Outfit',sans-serif;font-size:0.82rem;padding:0.5rem 0.75rem;outline:none;cursor:pointer;}
+    .f-sel:focus{border-color:rgba(149,0,255,0.45);}
     .f-sel option{background:#1a1a2e;}
-    .search-inp{flex:1;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:7px;color:#fff;font-family:'Outfit',sans-serif;font-size:0.85rem;padding:0.6rem 0.85rem;outline:none;min-width:180px;}
-    .search-inp:focus,.f-sel:focus{border-color:rgba(106,13,173,0.45);}
+    .search-inp{flex:1;min-width:160px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:7px;color:#fff;font-family:'Outfit',sans-serif;font-size:0.82rem;padding:0.5rem 0.75rem;outline:none;}
+    .search-inp:focus{border-color:rgba(149,0,255,0.45);}
+    .btn-reset{background:transparent;border:1px solid var(--border);border-radius:7px;color:var(--muted);font-family:'Outfit',sans-serif;font-size:0.78rem;padding:0.5rem 0.9rem;cursor:pointer;transition:all 0.15s;white-space:nowrap;}
+    .btn-reset:hover{border-color:var(--error);color:var(--error);}
+
+    /* Stats strip */
+    .stats-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:0.8rem;margin-bottom:1.5rem;}
+    .stat-box{background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:0.9rem 1rem;}
+    .stat-val{font-family:'Poppins',sans-serif;font-size:1.6rem;font-weight:700;}
+    .stat-lbl{font-family:'Space Mono',monospace;font-size:0.5rem;letter-spacing:2px;color:#555;text-transform:uppercase;margin-top:0.1rem;}
 
     /* Staff cards */
-    .staff-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem;margin-bottom:2rem;}
-    .staff-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;transition:border-color 0.2s;}
-    .staff-card:hover{border-color:rgba(106,13,173,0.3);}
+    .staff-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1rem;margin-bottom:1.5rem;}
+    .staff-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
     .sc-head{padding:1rem 1.2rem 0.8rem;display:flex;align-items:center;gap:0.8rem;border-bottom:1px solid var(--border);}
     .sc-avatar{width:40px;height:40px;border-radius:50%;background:rgba(106,13,173,0.2);border:2px solid rgba(106,13,173,0.4);display:flex;align-items:center;justify-content:center;font-family:'Poppins',sans-serif;font-size:1.1rem;color:var(--accent);flex-shrink:0;}
     .sc-name{font-weight:700;font-size:0.92rem;}
@@ -52,7 +62,7 @@
     .sc-stat-lbl{font-size:0.58rem;color:#555;font-family:'Space Mono',monospace;letter-spacing:1px;}
     .sc-last{padding:0 1.2rem 0.8rem;font-size:0.7rem;color:#555;}
 
-    /* Scan log table */
+    /* Table */
     .section-title{font-family:'Space Mono',monospace;font-size:0.55rem;letter-spacing:3px;color:#555;text-transform:uppercase;margin-bottom:0.8rem;}
     .table-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
     .table-scroll{overflow-x:auto;}
@@ -61,13 +71,11 @@
     td{padding:0.7rem 1rem;border-bottom:1px solid rgba(255,255,255,0.04);font-size:0.82rem;vertical-align:middle;}
     tr:last-child td{border-bottom:none;}
     tr:hover td{background:rgba(255,255,255,0.015);}
-
     .b{font-family:'Space Mono',monospace;font-size:0.55rem;padding:0.14rem 0.42rem;border-radius:4px;display:inline-block;}
     .b-staff{background:rgba(106,13,173,0.1);border:1px solid rgba(106,13,173,0.3);color:#bf80ff;}
-    .b-admin{background:rgba(245,200,66,0.1);border:1px solid rgba(245,200,66,0.3);color:#f5c842;}
-    .b-grp{background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.2);color:#00FF88;}
-    .b-single{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);color:#888;}
-
+    .b-cat{background:rgba(245,200,66,0.08);border:1px solid rgba(245,200,66,0.25);color:#f5c842;}
+    .b-gate{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);color:#888;}
+    .no-results{text-align:center;padding:2.5rem;color:#555;font-size:0.85rem;display:none;}
     .empty{text-align:center;padding:3rem;color:#555;}
     .empty i{font-size:2.5rem;display:block;margin-bottom:0.8rem;}
     @media(max-width:900px){.admin-layout{grid-template-columns:1fr;}}
@@ -77,42 +85,77 @@
 <div class="admin-layout">
   <%- include('../partials/admin-sidebar', { activePage: 'participants' }) %>
   <%- include('../partials/admin-confirm') %>
-               
+
   <main class="main">
     <div class="page-title">STAFF ACTIVITY</div>
-    <p class="page-sub">Scan logs per staff member — who scanned what, when, and how many.</p>
+    <p class="page-sub">Scan logs — filter by scanner, gender, or ticket category.</p>
 
-    <form method="GET" action="/mee-admin/participants" class="filter-bar" id="filterForm">
-      <select class="f-sel" name="event" onchange="this.form.submit()">
-        <% events.forEach(function(ev){ %>
-        <option value="<%= ev._id %>" <%= selectedId===ev._id.toString()?'selected':'' %>>
-          <%= ev.name %> — <%= new Date(ev.date).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}) %>
-        </option>
-        <% }); %>
-      </select>
-      <input class="search-inp" id="searchInp" placeholder="Search by attendee name, ref, staff…" oninput="filterTable()"/>
-    </form>
+    <% if(selectedEvent){ %>
+
+    <!-- Event header -->
+    <div class="event-header">
+      <div class="event-info">
+        <span class="live-badge">● LIVE</span>
+        <div>
+          <div class="event-name"><%= selectedEvent.name %></div>
+          <div class="event-meta">
+            <%= new Date(selectedEvent.date).toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'}) %>
+            <% if(selectedEvent.venue){ %> · <%= selectedEvent.venue %><% } %>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <% if(logs.length > 0){ %>
+
     <%
-      // Build per-staff summary
+      // Build per-staff summary from ALL logs (unfiltered, for cards)
       var staffMap = {};
       logs.forEach(function(log){
-        var key = log.staffName || log.scannedBy || 'Unknown';
-        if(!staffMap[key]) staffMap[key] = { name:key, scans:0, group:0, single:0, lastScan:null };
+        var key = (log.scannedBy && log.scannedBy.staffName) ? log.scannedBy.staffName : 'Unknown';
+        if(!staffMap[key]) staffMap[key] = { name:key,scans:0, male:0, female:0, lastScan:null };
         staffMap[key].scans++;
-        if(log.isGroup) staffMap[key].group++; else staffMap[key].single++;
+        if(log.attendeeGender==='male') staffMap[key].male++;
+        else if(log.attendeeGender==='female') staffMap[key].female++;
         if(!staffMap[key].lastScan || new Date(log.scannedAt) > new Date(staffMap[key].lastScan))
           staffMap[key].lastScan = log.scannedAt;
       });
       var staffList = Object.values(staffMap).sort(function(a,b){ return b.scans-a.scans; });
+
+      var totalMale   = logs.filter(l => l.attendeeGender==='male').length;
+      var totalFemale = logs.filter(l => l.attendeeGender==='female').length;
+      var totalOther  = logs.length - totalMale - totalFemale;
     %>
 
+    <!-- Stats strip -->
+    <div class="stats-strip">
+      <div class="stat-box">
+        <div class="stat-val"><%= logs.length %></div>
+        <div class="stat-lbl">Total Scans</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val" style="color:#64b5f6;"><%= totalMale %></div>
+        <div class="stat-lbl">Male</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val" style="color:#f48fb1;"><%= totalFemale %></div>
+        <div class="stat-lbl">Female</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val" style="color:#888;"><%= totalOther %></div>
+        <div class="stat-lbl">Other / Unknown</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val" style="color:var(--accent);"><%= staffList.length %></div>
+        <div class="stat-lbl">Scanners</div>
+      </div>
+    </div>
+
     <!-- Staff summary cards -->
-    <div class="section-title">Staff Scan Summary</div>
-    <div class="staff-grid">
+    <div class="section-title">Scanner Summary</div>
+    <div class="staff-grid" id="staffGrid">
       <% staffList.forEach(function(s){ %>
-      <div class="staff-card">
+      <div class="staff-card" data-scanner="<%= s.name %>">
         <div class="sc-head">
           <div class="sc-avatar"><%= s.name.charAt(0).toUpperCase() %></div>
           <div>
@@ -122,73 +165,187 @@
         </div>
         <div class="sc-stats">
           <div class="sc-stat"><div class="sc-stat-val"><%= s.scans %></div><div class="sc-stat-lbl">Total</div></div>
-          <div class="sc-stat"><div class="sc-stat-val" style="color:#00FF88;"><%= s.single %></div><div class="sc-stat-lbl">Single</div></div>
-          <div class="sc-stat"><div class="sc-stat-val" style="color:#f5c842;"><%= s.group %></div><div class="sc-stat-lbl">Group</div></div>
+          <div class="sc-stat"><div class="sc-stat-val" style="color:#64b5f6;"><%= s.male %></div><div class="sc-stat-lbl">Male</div></div>
+          <div class="sc-stat"><div class="sc-stat-val" style="color:#f48fb1;"><%= s.female %></div><div class="sc-stat-lbl">Female</div></div>
         </div>
         <div class="sc-last">Last scan: <%= s.lastScan ? new Date(s.lastScan).toLocaleString('en-IN',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}) : '—' %></div>
       </div>
       <% }); %>
     </div>
 
-    <!-- Full scan log table -->
-    <div class="section-title" style="margin-top:1rem;">Full Scan Log</div>
+    <!-- Filter bar -->
+    <div class="filter-bar">
+      <span class="filter-label">Filter</span>
+
+      <select class="f-sel" id="fScanner">
+        <option value="">All Scanners</option>
+        <% scanners.forEach(function(s){ %>
+        <option value="<%= s %>"><%= s %></option>
+        <% }); %>
+      </select>
+
+      <select class="f-sel" id="fGender">
+        <option value="">All Genders</option>
+        <option value="male">♂ Male</option>
+        <option value="female">♀ Female</option>
+        <option value="other">Other / Unknown</option>
+      </select>
+
+      <select class="f-sel" id="fCategory">
+        <option value="">All Categories</option>
+        <% categories.forEach(function(c){ %>
+        <option value="<%= c %>"><%= c %></option>
+        <% }); %>
+      </select>
+
+      <input class="search-inp" id="searchInp" placeholder="Search name, ref, gate…"/>
+
+      <button class="btn-reset" onclick="resetFilters()"><i class="bi bi-x-circle"></i> Reset</button>
+
+      <span style="font-family:'Space Mono',monospace;font-size:0.65rem;color:#555;white-space:nowrap;">
+        Showing <span id="visCount"><%= logs.length %></span> / <%= logs.length %>
+      </span>
+    </div>
+
+    <!-- Scan log table -->
+    <div class="section-title">Full Scan Log</div>
     <div class="table-card">
       <div class="table-scroll">
-      <table id="partTable">
-        <thead><tr>
-          <th>#</th>
-          <th>Attendee</th>
-          <th>Age</th>
-          <th>Gender</th>
-          <th>Ticket Type</th>
-          <th>Entry</th>
-          <th>Booking Ref</th>
-          <th>Scanned By</th>
-          <th>Scanned At</th>
-        </tr></thead>
-        <tbody>
-          <% logs.forEach(function(log, idx){ %>
-          <tr>
-            <td style="color:#555;font-size:0.7rem;"><%= idx+1 %></td>
-            <td style="font-weight:600;"><%= log.attendeeName||'—' %></td>
-            <td style="color:var(--muted);text-align:center;"><%= log.attendeeAge>0?log.attendeeAge:'—' %></td>
-            <td>
-              <% if(log.attendeeGender==='male'){ %><span style="color:#64b5f6;font-size:0.78rem;">♂ M</span>
-              <% }else if(log.attendeeGender==='female'){ %><span style="color:#f48fb1;font-size:0.78rem;">♀ F</span>
-              <% }else{ %><span style="color:#444;">—</span><% } %>
-            </td>
-            <td style="font-size:0.75rem;color:var(--muted);"><%= log.ticketType||'—' %></td>
-            <td>
-              <% if(log.isGroup){ %><span class="b b-grp">Group × <%= log.groupSize %></span>
-              <% }else{ %><span class="b b-single">Single</span><% } %>
-            </td>
-            <td style="font-family:'Space Mono',monospace;font-size:0.67rem;color:var(--accent);"><%= log.bookingRef||'—' %></td>
-            <td>
-              <span class="b b-staff"><%= log.staffName||log.scannedBy||'—' %></span>
-            </td>
-            <td style="font-family:'Space Mono',monospace;font-size:0.68rem;color:var(--muted);white-space:nowrap;"><%= new Date(log.scannedAt).toLocaleString('en-IN',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}) %></td>
-          </tr>
-          <% }); %>
-        </tbody>
-      </table>
+        <table id="partTable">
+          <thead><tr>
+            <th>#</th>
+            <th>Attendee</th>
+            <th>Gender</th>
+            <th>Category</th>
+            <th>Gate</th>
+            <th>Booking Ref</th>
+            <th>Scanned By</th>
+            <th>Scanned At</th>
+          </tr></thead>
+          <tbody>
+            <% logs.forEach(function(log, idx){ %>
+            <tr
+              data-scanner="<%= (log.scannedBy && log.scannedBy.staffName) ? log.scannedBy.staffName : '' %>"
+              data-gender="<%= log.attendeeGender || 'other' %>"
+              data-category="<%= log.ticketType || '' %>"
+              data-search="<%= ((log.attendeeName||'') + ' ' + (log.bookingRef||'') + ' ' + (log.scannedBy&&log.scannedBy.staffName||'') + ' ' + (log.location&&log.location.gate||'')).toLowerCase() %>"
+            >
+              <td style="color:#555;font-size:0.7rem;" class="row-num"><%= idx+1 %></td>
+              <td style="font-weight:600;"><%= log.attendeeName || '—' %></td>
+              <td>
+                <% if(log.attendeeGender==='male'){ %>
+                  <span style="color:#64b5f6;font-size:0.78rem;">♂ Male</span>
+                <% }else if(log.attendeeGender==='female'){ %>
+                  <span style="color:#f48fb1;font-size:0.78rem;">♀ Female</span>
+                <% }else{ %>
+                  <span style="color:#444;font-size:0.78rem;">—</span>
+                <% } %>
+              </td>
+              <td><span class="b b-cat"><%= log.ticketType || '—' %></span></td>
+              <td><span class="b b-gate"><i class="bi bi-door-open"></i> <%= (log.location && log.location.gate) ? log.location.gate : '—' %></span></td>
+              <td style="font-family:'Space Mono',monospace;font-size:0.67rem;color:var(--accent);"><%= log.bookingRef || '—' %></td>
+              <td><span class="b b-staff"><%= (log.scannedBy && log.scannedBy.staffName) ? log.scannedBy.staffName : '—' %></span></td>
+              <td style="font-family:'Space Mono',monospace;font-size:0.68rem;color:var(--muted);white-space:nowrap;">
+                <%= new Date(log.scannedAt).toLocaleString('en-IN',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}) %>
+              </td>
+            </tr>
+            <% }); %>
+          </tbody>
+        </table>
+        <div class="no-results" id="noResults">
+          <i class="bi bi-funnel" style="font-size:1.8rem;display:block;margin-bottom:0.5rem;color:#333;"></i>
+          No records match the selected filters.
+        </div>
       </div>
     </div>
+
     <% }else{ %>
     <div class="empty">
-      <i class="bi bi-qr-code-scan" style="font-size:2.5rem;display:block;margin-bottom:0.8rem;color:#333;"></i>
+      <i class="bi bi-qr-code-scan" style="color:#333;"></i>
       <div style="font-size:0.88rem;">No scan records for this event yet.</div>
       <div style="font-size:0.72rem;margin-top:0.3rem;color:#444;">Staff scan activity will appear here after QR codes are scanned at the gate.</div>
     </div>
     <% } %>
+
+    <% }else{ %>
+    <div style="margin-top:2rem;padding:1rem;background:rgba(255,68,68,0.06);border:1px solid rgba(255,68,68,0.2);border-radius:8px;color:#FF4444;font-size:0.85rem;">
+      <i class="bi bi-exclamation-triangle"></i> No active event found. Please activate an event from the Events page.
+    </div>
+    <% } %>
   </main>
 </div>
+
 <script>
-function filterTable(){
-  var q=document.getElementById('searchInp').value.toLowerCase();
-  document.querySelectorAll('#partTable tbody tr').forEach(function(r){
-    r.style.display=r.textContent.toLowerCase().includes(q)?'':'none';
+var allRows = Array.from(document.querySelectorAll('#partTable tbody tr'));
+
+function applyFilters() {
+  var scanner  = document.getElementById('fScanner').value;
+  var gender   = document.getElementById('fGender').value;
+  var category = document.getElementById('fCategory').value;
+  var search   = document.getElementById('searchInp').value.toLowerCase().trim();
+
+  var visible = 0;
+  var rowNum  = 1;
+
+  allRows.forEach(function(r) {
+    var rScanner  = r.dataset.scanner;
+    var rGender   = r.dataset.gender;
+    var rCategory = r.dataset.category;
+    var rSearch   = r.dataset.search;
+
+    // Gender "other" means not male and not female
+    var genderMatch = !gender ||
+      (gender === 'other' ? (rGender !== 'male' && rGender !== 'female') : rGender === gender);
+
+    var show =
+      (!scanner  || rScanner === scanner) &&
+      genderMatch &&
+      (!category || rCategory === category) &&
+      (!search   || rSearch.includes(search));
+
+    r.style.display = show ? '' : 'none';
+    if (show) {
+      r.querySelector('.row-num').textContent = rowNum++;
+      visible++;
+    }
+  });
+
+  document.getElementById('visCount').textContent = visible;
+  document.getElementById('noResults').style.display = visible === 0 ? 'block' : 'none';
+
+  // Highlight active scanner card
+  var sc = scanner;
+  document.querySelectorAll('.staff-card').forEach(function(card) {
+    card.style.borderColor = (!sc || card.dataset.scanner === sc)
+      ? 'rgba(149,0,255,0.4)'
+      : 'rgba(255,255,255,0.08)';
+    card.style.opacity = (!sc || card.dataset.scanner === sc) ? '1' : '0.4';
   });
 }
+
+function resetFilters() {
+  document.getElementById('fScanner').value  = '';
+  document.getElementById('fGender').value   = '';
+  document.getElementById('fCategory').value = '';
+  document.getElementById('searchInp').value = '';
+  applyFilters();
+}
+
+document.getElementById('fScanner').addEventListener('change', applyFilters);
+document.getElementById('fGender').addEventListener('change', applyFilters);
+document.getElementById('fCategory').addEventListener('change', applyFilters);
+document.getElementById('searchInp').addEventListener('input', applyFilters);
+
+// Clicking a staff card filters by that scanner
+document.querySelectorAll('.staff-card').forEach(function(card) {
+  card.style.cursor = 'pointer';
+  card.addEventListener('click', function() {
+    var sel = document.getElementById('fScanner');
+    var name = card.dataset.scanner;
+    sel.value = sel.value === name ? '' : name;  // toggle
+    applyFilters();
+  });
+});
 </script>
 </body>
 </html>

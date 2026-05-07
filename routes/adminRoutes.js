@@ -850,73 +850,109 @@ router.post('/coupons/:id/delete', async (req, res) => {
 
 
   // ── Participants (QR scan log) by event ──
-  router.get('/participants', async (req, res) => {
-    try {
-      const currentAdmin = getCurrentAdmin(req);
-      const isSuperAdmin = req.session.superAdminLoggedIn || (req.session.staffUser && req.session.staffUser.role === 'superadmin');
-      const events = await Event.find().sort({ date: -1 }).lean();
-      const selectedId = req.query.event || (events[0]?._id?.toString() || '');
-      const selectedEvent = selectedId ? await Event.findById(selectedId).select('name date venue').lean() : null;
-      let logs = [];
-      if (selectedId) {
-        logs = await ScanLog.find({ eventId: selectedId })
-          .populate('booking', 'bookingRef ticketType quantity totalAmount')
-          .sort({ scannedAt: -1 })
-          .lean();
-      }
-      res.render('mee-admin/participants', { title: 'Staff Activity — Admin', events, logs, selectedId, selectedEvent, currentAdmin, isSuperAdmin });
-    } catch(err) { console.error(err); res.status(500).send('Error'); }
-  });
+router.get('/participants', async (req, res) => {
+  try {
+    const currentAdmin = getCurrentAdmin(req);
+    const isSuperAdmin = req.session.superAdminLoggedIn || (req.session.staffUser && req.session.staffUser.role === 'superadmin');
+
+    const selectedEvent = await Event.findOne({ isActive: true }).select('name date venue ticketTypes').lean();
+    const selectedId = selectedEvent?._id?.toString() || '';
+
+    let logs = [];
+    if (selectedId) {
+      logs = await ScanLog.find({ eventId: selectedId })
+        .populate('bookingId', 'ticketType')   // ← get category from booking
+        .sort({ scannedAt: -1 })
+        .lean();
+    }
+
+    // Attach ticketType directly on log for easy use in template
+    logs = logs.map(log => ({
+      ...log,
+      ticketType: log.bookingId?.ticketType || '—',
+    }));
+
+    // Build unique scanner names for filter dropdown
+    const scanners = [...new Set(
+      logs.map(l => l.scannedBy?.staffName).filter(Boolean)
+    )];
+
+    // Build unique ticket categories for filter dropdown
+    const categories = [...new Set(
+      logs.map(l => l.ticketType).filter(s => s && s !== '—')
+    )];
+
+    
+    res.render('mee-admin/participants', {
+      title: 'Staff Activity — Admin',
+      logs,
+      selectedEvent,
+      scanners,
+      categories,
+      currentAdmin,
+      isSuperAdmin
+    });
+  } catch(err) { console.error(err); res.status(500).send('Error'); }
+});
 
   // ── Admin: Users by Event ──
-  router.get('/users-by-event', async (req, res) => {
-    try {
-      const currentAdmin = getCurrentAdmin(req);
-      const isSuperAdmin = req.session.superAdminLoggedIn || (req.session.staffUser && req.session.staffUser.role === 'superadmin');
-      const events = await Event.find().sort({ date: -1 }).select('name date').lean();
-      const selectedEventId = req.query.eventId || '';
-      let bookings = [];
-      let selectedEvent = null;
-      if (selectedEventId) {
-        selectedEvent = await Event.findById(selectedEventId).select('name date venue').lean();
-        bookings = await Booking.find({ event: selectedEventId, paymentStatus: 'paid' })
-          .populate('user', 'firstName lastName email phone')
-          .sort({ createdAt: -1 })
-          .lean();
-        const enteredRefs = new Set(
-          (await ScanLog.find({ eventId: selectedEventId }).select('bookingRef').lean())
-            .map(l => l.bookingRef)
-        );
-        const attendees = [];
-        bookings.forEach(b => {
-          (b.tickets||[]).forEach(t => {
-            attendees.push({
-              bookingRef:  b.bookingRef,
-              ticketType:  b.ticketType,
-              totalAmount: b.totalAmount,
-              quantity:    b.quantity,
-              couponCode:  b.couponCode||null,
-              createdAt:   b.createdAt,
-              user:        b.user,
-              ticketId:    t.ticketId,
-              name:        t.attendee?.name || (b.user ? (b.user.firstName+' '+(b.user.lastName||'')) : '—'),
-              age:         t.attendee?.age  || null,
-              gender:      t.attendee?.gender || '',
-              seatNumber:  t.seatNumber || null,
-              isUsed:      t.isUsed || false,
-              usedAt:      t.usedAt  || null,
-              entered:     enteredRefs.has(b.bookingRef),
-            });
+router.get('/users-by-event', async (req, res) => {
+  try {
+    const currentAdmin = getCurrentAdmin(req);
+    const isSuperAdmin = req.session.superAdminLoggedIn || (req.session.staffUser && req.session.staffUser.role === 'superadmin');
+    const events = await Event.find().sort({ date: -1 }).select('name date').lean();
+
+    // Auto-select the active event instead of requiring dropdown
+    const activeEvent = await Event.findOne({ isActive: true }).select('name date venue').lean();
+    const selectedEventId = activeEvent?._id?.toString() || '';
+    let attendees = [];
+    let selectedEvent = activeEvent;
+
+    if (selectedEventId) {
+      const bookings = await Booking.find({ event: selectedEventId, paymentStatus: 'paid' })
+        .populate('user', 'firstName lastName email phone')
+        .sort({ createdAt: -1 })
+        .lean();
+
+      // Use per-ticket isUsed flag for accurate entry status
+      bookings.forEach(b => {
+        (b.tickets || []).forEach(t => {
+          attendees.push({
+            bookingRef:  b.bookingRef,
+            ticketType:  b.ticketType,
+            totalAmount: b.totalAmount,
+            quantity:    b.quantity,
+            couponCode:  b.couponCode || null,
+            createdAt:   b.createdAt,
+            user:        b.user,
+            ticketId:    t.ticketId,
+            name:        t.attendee?.name || (b.user ? (b.user.firstName + ' ' + (b.user.lastName || '')) : '—'),
+            age:         t.attendee?.age  || null,
+            gender:      t.attendee?.gender || '',
+            seatNumber:  t.seatNumber || null,
+            entered:     t.isUsed || false,   // ← use per-ticket flag, not scanlog
+            usedAt:      t.usedAt  || null,
+            usedBy:      t.usedBy  || null,
           });
         });
-        return res.render('mee-admin/users-by-event', { title: 'Users by Event — Admin', events, bookings, attendees, selectedEvent, selectedEventId, currentAdmin, isSuperAdmin });
-      }
-      res.render('mee-admin/users-by-event', { title: 'Users by Event — Admin', events, bookings:[], attendees:[], selectedEvent:null, selectedEventId, currentAdmin, isSuperAdmin });
-    } catch(err) {
-      console.error('/mee-admin/users-by-event error:', err);
-      res.status(500).send('Error loading users by event');
+      });
     }
-  });
+
+    return res.render('mee-admin/users-by-event', {
+      title: 'Attendees — Admin',
+      events,
+      attendees,
+      selectedEvent,
+      selectedEventId,
+      currentAdmin,
+      isSuperAdmin,
+      bookings: [],
+    });
+  } catch (err) {
+    console.error('/mee-admin/users-by-event error:', err);
+    res.status(500).send('Error loading users by event');
+  }
+});
 
   // ── Admin: Send WhatsApp event reminder to a phone number ──
   router.post('/api/send-reminder', async (req, res) => {

@@ -538,14 +538,17 @@ if (u.canScanQR && u.assignedCategory) {
 
       const now = new Date();
       let checkedInCount = 0;
-      booking.tickets.forEach(t => {
-        if (!t.isUsed) {
-          t.isUsed = true;
-          t.usedAt = now;
-          t.usedBy = u.username;
-          checkedInCount++;
-        }
-      });
+booking.tickets.forEach(t => {
+  if (!t.isUsed) {
+    t.isUsed = true;
+    t.usedAt = now;
+    t.usedBy = u.username;
+    t.usedByDevice = 'web';
+    t.scannedById = u.id || '';
+    t.scannedBy = u.name || u.username;
+    checkedInCount++;
+  }
+});
       await booking.save();
 
       try {
@@ -662,10 +665,13 @@ router.post('/api/scan-ticket', staffAuth, async (req, res) => {
       });
     }
 
-    ticket.isUsed = true;
-    ticket.usedAt = new Date();
-    ticket.usedBy = u.username;
-    await booking.save();
+ticket.isUsed = true;
+ticket.usedAt = new Date();
+ticket.usedBy = u.username;
+ticket.usedByDevice = 'web';
+ticket.scannedById = u.id || '';
+ticket.scannedBy = u.name || u.username;
+await booking.save();
 
     try {
       const ScanLog = require('../models/ScanLog');

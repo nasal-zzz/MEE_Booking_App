@@ -10,9 +10,10 @@
     *{box-sizing:border-box;margin:0;padding:0;}
     body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;min-height:100vh;}
     .layout{display:grid;grid-template-columns:220px 1fr;min-height:100vh;}
-    .sidebar{background:var(--surface);border-right:1px solid var(--border);padding:1.5rem 1rem;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:0.3rem;overflow-y:auto;}
-    .s-logo{display:block;padding:0 0.5rem 1rem;border-bottom:1px solid var(--border);margin-bottom:0.5rem;}
-    .s-section{font-family:'Space Mono',monospace;font-size:0.48rem;letter-spacing:2px;color:#333;text-transform:uppercase;padding:0.6rem 0.8rem 0.2rem;}
+    .sidebar{background:var(--surface);border-right:1px solid var(--border);padding:1.5rem 1rem;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:0.3rem;z-index:10;overflow-y:auto;scrollbar-width:none;-ms-overflow-style:none;}
+    .sidebar::-webkit-scrollbar{display:none;}
+    .s-logo{display:block;padding:0 0.5rem 1rem;border-bottom:1px solid var(--border);margin-bottom:0.5rem;text-decoration:none;}
+    .s-section{font-family:'Space Mono',monospace;font-size:0.52rem;letter-spacing:2px;color:var(--muted);text-transform:uppercase;padding:0.5rem 0.5rem 0.2rem;margin-top:0.3rem;}
     .s-link{display:flex;align-items:center;gap:0.7rem;padding:0.7rem 0.8rem;color:var(--muted);text-decoration:none;border-radius:6px;font-size:0.85rem;transition:all 0.15s;border:1px solid transparent;}
     .s-link:hover,.s-link.active{background:rgba(106,13,173,0.08);border-color:rgba(106,13,173,0.2);color:#fff;}
     .s-link i{color:var(--accent);width:18px;}
@@ -22,17 +23,16 @@
     .page-title{font-family:'Poppins',sans-serif;font-size:1.8rem;letter-spacing:2px;margin-bottom:0.3rem;}
     .page-sub{font-size:0.78rem;color:var(--muted);margin-bottom:2rem;}
     .filter-bar{display:flex;gap:1rem;align-items:flex-end;margin-bottom:1.5rem;flex-wrap:wrap;}
-    .f-grp{display:flex;flex-direction:column;gap:0.3rem;flex:1;min-width:260px;}
+    .f-grp{display:flex;flex-direction:column;gap:0.3rem;flex:1;min-width:200px;}
     .f-lbl{font-family:'Space Mono',monospace;font-size:0.52rem;letter-spacing:1px;color:#555;text-transform:uppercase;}
     .f-sel{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:7px;color:#fff;font-family:'Outfit',sans-serif;font-size:0.88rem;padding:0.65rem 0.85rem;outline:none;width:100%;}
     .f-sel option{background:#1a1a2e;}
-    .filter-btn{padding:0.7rem 1.5rem;background:var(--accent);color:#fff;border:none;border-radius:7px;font-weight:700;font-size:0.85rem;cursor:pointer;}
     .stat-row{display:flex;gap:1rem;margin-bottom:1.5rem;flex-wrap:wrap;}
     .stat-box{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:0.9rem 1.2rem;display:flex;align-items:center;gap:0.8rem;min-width:140px;}
     .stat-box i{font-size:1.4rem;color:var(--accent);}
     .stat-val{font-family:'Poppins',sans-serif;font-size:1.4rem;letter-spacing:1px;}
     .stat-lbl{font-size:0.68rem;color:var(--muted);}
-    .search-bar{display:flex;gap:0.5rem;margin-bottom:1rem;}
+    .search-bar{display:flex;gap:0.5rem;margin-bottom:1rem;align-items:center;}
     .search-inp{flex:1;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:7px;color:#fff;font-family:'Outfit',sans-serif;font-size:0.85rem;padding:0.6rem 0.85rem;outline:none;}
     .search-inp::placeholder{color:#444;}
     .table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
@@ -43,9 +43,6 @@
     tr:last-child td{border-bottom:none;}
     tr:hover td{background:rgba(255,255,255,0.015);}
     .badge{font-family:'Space Mono',monospace;font-size:0.58rem;letter-spacing:1px;padding:0.18rem 0.55rem;border-radius:4px;display:inline-block;}
-    .badge-type{background:rgba(106,13,173,0.12);border:1px solid rgba(106,13,173,0.3);color:#bf80ff;}
-    .badge-grp{background:rgba(245,200,66,0.1);border:1px solid rgba(245,200,66,0.3);color:#f5c842;}
-    .badge-single{background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.25);color:#00FF88;}
     .gender-m{color:#64b5f6;}.gender-f{color:#f48fb1;}.gender-o{color:#ce93d8;}
     .empty{text-align:center;padding:3rem;color:#555;}
     .empty i{font-size:2.5rem;display:block;margin-bottom:0.8rem;}
@@ -53,9 +50,34 @@
     .ev-name{font-family:'Poppins',sans-serif;font-size:1.1rem;letter-spacing:2px;}
     .ev-meta{font-size:0.78rem;color:var(--muted);margin-top:0.2rem;}
     @media(max-width:900px){.layout{grid-template-columns:1fr;}.sidebar{display:none;}}
-    .btn-back-dash{display:inline-flex;align-items:center;gap:0.3rem;color:var(--muted);text-decoration:none;font-size:0.78rem;font-family:'Space Mono',monospace;letter-spacing:1px;padding:0.35rem 0.75rem;border:1px solid var(--border);border-radius:5px;background:rgba(255,255,255,0.03);margin-bottom:1.5rem;transition:all 0.15s;}
-    .btn-back-dash:hover{color:#fff;border-color:rgba(255,255,255,0.2);background:rgba(255,255,255,0.06);}
-  
+
+    /* ── Filter chips ── */
+.filter-chips {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  align-items: center;
+  min-height: 30px; /* keeps rows same height even if a chip wraps */
+}
+.chip-lbl {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.52rem;
+  letter-spacing: 1px;
+  color: #555;
+  text-transform: uppercase;
+  min-width: 80px;    /* ← fixed width so all labels align in a column */
+  flex-shrink: 0;
+}
+   
+    .chip{display:inline-flex;align-items:center;gap:0.3rem;padding:0.28rem 0.65rem;border-radius:20px;font-size:0.7rem;font-family:'Space Mono',monospace;cursor:pointer;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:#B3B3B3;transition:all 0.15s;user-select:none;}
+    .chip:hover{border-color:rgba(106,13,173,0.3);background:rgba(106,13,173,0.06);color:#fff;}
+    .chip.active{border-color:rgba(149,0,255,0.5);background:rgba(149,0,255,0.14);color:#bf80ff;}
+    .chip-reset{border-color:rgba(255,68,68,0.25);color:var(--error);background:rgba(255,68,68,0.06);}
+    .chip-reset:hover{background:rgba(255,68,68,0.12);}
+
+    /* ── Result counter ── */
+    .result-count{font-family:'Space Mono',monospace;font-size:0.62rem;color:#555;letter-spacing:1px;padding:0.25rem 0;}
+
     /* ── Export ── */
     .export-btn{display:inline-flex;align-items:center;gap:0.5rem;padding:0.38rem 0.85rem;background:rgba(0,255,136,0.07);border:1px solid rgba(0,255,136,0.28);border-radius:6px;color:#00FF88;font-family:'Space Mono',monospace;font-size:0.68rem;font-weight:700;cursor:pointer;transition:all 0.2s;letter-spacing:0.5px;white-space:nowrap;}
     .export-btn:hover{background:rgba(0,255,136,0.15);border-color:rgba(0,255,136,0.5);}
@@ -84,13 +106,14 @@
     .ex-dl{display:inline-flex;align-items:center;gap:0.4rem;padding:0.52rem 1.25rem;background:rgba(0,255,136,0.09);border:1px solid rgba(0,255,136,0.35);border-radius:7px;color:#00FF88;font-family:'Space Mono',monospace;font-size:0.74rem;font-weight:700;cursor:pointer;transition:all 0.2s;}
     .ex-dl:hover{background:rgba(0,255,136,0.17);}
     .ex-dl:disabled{opacity:0.4;cursor:not-allowed;}
-
   </style>
 </head>
 <body>
 <div class="layout">
-    <%- include('../partials/superadmin-sidebar', { activePage: 'entered-tickets' }) %>
+  <%- include('../partials/superadmin-sidebar', { activePage: 'entered-tickets' }) %>
+
   <main class="main">
+    <!-- ── Page header ── -->
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.8rem;margin-bottom:0.3rem;">
       <h1 class="page-title">ENTERED TICKETS</h1>
       <div style="display:flex;align-items:center;gap:0.6rem;">
@@ -99,16 +122,10 @@
         <button onclick="manualRefresh()" style="padding:0.35rem 0.8rem;background:rgba(106,13,173,0.1);border:1px solid rgba(106,13,173,0.3);color:#bf80ff;border-radius:5px;font-size:0.72rem;cursor:pointer;font-family:'Space Mono',monospace;">↻ Refresh</button>
       </div>
     </div>
-    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.8rem;margin-bottom:1.5rem;">
-      <p class="page-sub" style="margin-bottom:0;">Real-time gate log. <span id="lastRefreshed" style="color:#555;font-size:0.7rem;"></span></p>
-      <div style="display:flex;align-items:center;gap:0.7rem;">
-        <span id="autoRefreshStatus" style="font-family:'Space Mono',monospace;font-size:0.58rem;color:#555;letter-spacing:1px;"></span>
-        <button onclick="manualRefresh()" style="background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.2);color:#00FF88;padding:0.4rem 0.9rem;border-radius:6px;font-size:0.75rem;font-family:'Space Mono',monospace;cursor:pointer;display:flex;align-items:center;gap:0.4rem;"><i class="bi bi-arrow-clockwise"></i> Refresh</button>
-        <button id="autoBtn" onclick="toggleAuto()" style="background:rgba(106,13,173,0.1);border:1px solid rgba(106,13,173,0.3);color:#bf80ff;padding:0.4rem 0.9rem;border-radius:6px;font-size:0.75rem;font-family:'Space Mono',monospace;cursor:pointer;">⏱ Auto: OFF</button>
-      </div>
-    </div>
+    <p class="page-sub">Real-time gate log. <span id="lastRefreshed" style="color:#555;font-size:0.7rem;"></span></p>
 
-    <form method="GET" action="/mee-admin/entered-tickets" class="filter-bar">
+    <!-- ── Event selector ── -->
+    <form method="GET" action="/superadmin/entered-tickets" class="filter-bar">
       <div class="f-grp">
         <label class="f-lbl">Select Event</label>
         <select class="f-sel" name="eventId" onchange="this.form.submit()">
@@ -120,92 +137,162 @@
     </form>
 
     <% if(selectedEvent){ %>
+    <!-- ── Event header ── -->
     <div class="ev-header">
       <div>
         <div class="ev-name"><%= selectedEvent.name.toUpperCase() %></div>
         <div class="ev-meta"><%= new Date(selectedEvent.date).toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'}) %></div>
       </div>
-      <div style="font-family:'Space Mono',monospace;font-size:0.7rem;letter-spacing:2px;color:var(--accent);"><%= logs.length %> ENTRIES</div>
+      <div id="entryCount" style="font-family:'Space Mono',monospace;font-size:0.7rem;letter-spacing:2px;color:var(--accent);"><%= logs.length %> ENTRIES</div>
     </div>
 
     <% if(logs.length > 0){ %>
 
+    <!-- ── Stats row ── -->
+    <div class="stat-row">
+      <div class="stat-box">
+        <i class="bi bi-door-open-fill"></i>
+        <div><div class="stat-val" id="statTotal"><%= logs.length %></div><div class="stat-lbl">Visible Entries</div></div>
+      </div>
+      <div class="stat-box">
+        <i class="bi bi-person-fill" style="color:#64b5f6;"></i>
+        <div>
+          <div class="stat-val" id="statMale"><%= logs.filter(function(l){ return (l.attendeeGender||'').toLowerCase()==='male'; }).length %></div>
+          <div class="stat-lbl">Male</div>
+        </div>
+      </div>
+      <div class="stat-box">
+        <i class="bi bi-person-fill" style="color:#f48fb1;"></i>
+        <div>
+          <div class="stat-val" id="statFemale"><%= logs.filter(function(l){ return (l.attendeeGender||'').toLowerCase()==='female'; }).length %></div>
+          <div class="stat-lbl">Female</div>
+        </div>
+      </div>
+      <div class="stat-box">
+        <i class="bi bi-geo-alt-fill" style="color:#00FF88;"></i>
+        <div>
+          <div class="stat-val"><%= [...new Set(logs.map(function(l){ return l.location && l.location.gate; }).filter(Boolean))].length %></div>
+          <div class="stat-lbl">Gates Active</div>
+        </div>
+      </div>
+    </div>
 
-<div class="stat-row">
-  <div class="stat-box">
-    <i class="bi bi-door-open-fill"></i>
-    <div><div class="stat-val"><%= logs.length %></div><div class="stat-lbl">Total Entries</div></div>
-  </div>
-  <div class="stat-box">
-    <i class="bi bi-phone-fill" style="color:#64b5f6;"></i>
-    <div>
-      <div class="stat-val"><%= logs.filter(function(l){return l.platform==='ios';}).length %></div>
-      <div class="stat-lbl">iOS Scans</div>
-    </div>
-  </div>
-  <div class="stat-box">
-    <i class="bi bi-phone-fill" style="color:#a5d6a7;"></i>
-    <div>
-      <div class="stat-val"><%= logs.filter(function(l){return l.platform==='android';}).length %></div>
-      <div class="stat-lbl">Android Scans</div>
-    </div>
-  </div>
-  <div class="stat-box">
-    <i class="bi bi-globe" style="color:#f5c842;"></i>
-    <div>
-      <div class="stat-val"><%= logs.filter(function(l){return l.platform==='web';}).length %></div>
-      <div class="stat-lbl">Web Scans</div>
-    </div>
-  </div>
-</div>
-
-    <div class="search-bar" style="display:flex;align-items:center;gap:0.6rem;">
-      <input class="search-inp" type="text" id="searchInp" placeholder="Search name, ticket ID, ref, staff..." oninput="filterTable(this.value)" style="flex:1;"/>
+    <!-- ── Search + Export ── -->
+    <div class="search-bar">
+      <input class="search-inp" type="text" id="searchInp" placeholder="Search name, ticket ID, ref, staff..." oninput="applyAllFilters()"/>
       <button class="export-btn" onclick="openEtExport()"><i class="bi bi-file-earmark-spreadsheet-fill"></i> Export Excel</button>
     </div>
+
+
+  <!-- ── Filter dropdowns ── -->
+<% var platforms = [...new Set(logs.map(function(l){ return (l.platform||'').toLowerCase(); }).filter(Boolean))].sort(); %>
+<% var gates     = [...new Set(logs.map(function(l){ return l.location && l.location.gate; }).filter(Boolean))].sort(); %>
+<% var scanners  = [...new Set(logs.map(function(l){ return l.scannedBy && l.scannedBy.staffName; }).filter(Boolean))].sort(); %>
+<% var zones     = [...new Set(logs.map(function(l){ return l.location && l.location.zone; }).filter(Boolean))].sort(); %>
+
+<div style="display:flex;gap:0.6rem;flex-wrap:wrap;align-items:center;margin-bottom:1rem;">
+
+  <select class="f-sel" style="flex:1;min-width:120px;padding:0.45rem 0.75rem;font-size:0.78rem;" onchange="setDropFilter('gender',this.value)">
+    <option value="all">Gender: All</option>
+    <option value="male">Male</option>
+    <option value="female">Female</option>
+    <option value="other">Other / —</option>
+  </select>
+
+  <select class="f-sel" style="flex:1;min-width:120px;padding:0.45rem 0.75rem;font-size:0.78rem;" onchange="setDropFilter('platform',this.value)">
+    <option value="all">Platform: All</option>
+    <% platforms.forEach(function(p){ %>
+    <option value="<%= p %>"><%= p.toUpperCase() %></option>
+    <% }); %>
+  </select>
+
+  <% if(gates.length > 1){ %>
+  <select class="f-sel" style="flex:1;min-width:120px;padding:0.45rem 0.75rem;font-size:0.78rem;" onchange="setDropFilter('gate',this.value)">
+    <option value="all">Gate: All</option>
+    <% gates.forEach(function(g){ %>
+    <option value="<%= g %>"><%= g %></option>
+    <% }); %>
+  </select>
+  <% } %>
+
+  <% if(scanners.length > 1){ %>
+  <select class="f-sel" style="flex:1;min-width:140px;padding:0.45rem 0.75rem;font-size:0.78rem;" onchange="setDropFilter('scanner',this.value)">
+    <option value="all">Scanned By: All</option>
+    <% scanners.forEach(function(s){ %>
+    <option value="<%= s.toLowerCase() %>"><%= s %></option>
+    <% }); %>
+  </select>
+  <% } %>
+
+  <% if(zones.length > 1){ %>
+<select class="f-sel" style="flex:1;min-width:120px;padding:0.45rem 0.75rem;font-size:0.78rem;" onchange="setDropFilter('zone',this.value)">
+  <option value="all">Zone: All</option>
+  <% zones.forEach(function(z){ %>
+  <option value="<%= z.toLowerCase() %>"><%= z %></option>
+  <% }); %>
+</select>
+<% } %>
+
+  <button class="chip chip-reset" onclick="resetAllFilters()" style="white-space:nowrap;border-radius:6px;padding:0.45rem 0.9rem;">
+    <i class="bi bi-x-circle"></i> Reset
+  </button>
+
+  <span class="result-count" id="resultCount"></span>
+
+</div>
+
     <% } %>
 
+    <!-- ── Table ── -->
     <div class="table-wrap">
       <div class="table-scroll">
       <% if(logs.length === 0){ %>
       <div class="empty"><i class="bi bi-door-closed"></i>No entries recorded yet for this event.<br/><span style="font-size:0.75rem;margin-top:0.4rem;display:block;">Records appear here when QR codes are scanned at the gate.</span></div>
       <% } else { %>
       <table id="etTable">
-
-
-<thead><tr>
-  <th>#</th>
-  <th>Attendee</th>
-  <th>Ticket ID</th>
-  <th>Booking Ref</th>
-  <th>Gate</th>
-  <th>Zone</th>
-  <th>Platform</th>
-  <th>Scanned By</th>
-  <th>Time</th>
-</tr></thead>
-
-
+        <thead><tr>
+          <th>#</th>
+          <th>Attendee</th>
+          <th>Gender</th>
+          <th>Ticket ID</th>
+          <th>Booking Ref</th>
+          <th>Gate</th>
+          <th>Zone</th>
+          <th>Platform</th>
+          <th>Scanned By</th>
+          <th>Time</th>
+        </tr></thead>
         <tbody>
-
-
 <% logs.forEach(function(log, i){ %>
-<tr>
+<tr
+  data-gender="<%= (log.attendeeGender||'').toLowerCase() %>"
+  data-platform="<%= (log.platform||'').toLowerCase() %>"
+  data-gate="<%= (log.location && log.location.gate) ? log.location.gate : '' %>"
+  data-scanner="<%= (log.scannedBy && log.scannedBy.staffName) ? log.scannedBy.staffName.toLowerCase() : '' %>"
+  data-zone="<%= (log.location && log.location.zone) ? log.location.zone.toLowerCase() : '' %>"
+>
   <td style="color:var(--muted);font-family:'Space Mono',monospace;font-size:0.72rem;"><%= i+1 %></td>
   <td><strong><%= log.attendeeName || '—' %></strong></td>
+  <td>
+    <% if((log.attendeeGender||'').toLowerCase()==='male'){ %>
+      <span class="gender-m"><i class="bi bi-gender-male"></i> M</span>
+    <% } else if((log.attendeeGender||'').toLowerCase()==='female'){ %>
+      <span class="gender-f"><i class="bi bi-gender-female"></i> F</span>
+    <% } else { %>
+      <span style="color:#555;">—</span>
+    <% } %>
+  </td>
   <td style="font-family:'Space Mono',monospace;font-size:0.68rem;color:var(--muted);"><%= log.ticketId %></td>
   <td style="font-family:'Space Mono',monospace;font-size:0.68rem;color:#bf80ff;"><%= log.bookingRef %></td>
-  <td style="font-family:'Space Mono',monospace;font-size:0.72rem;color:#00FF88;"><%= log.location?.gate || '—' %></td>
-  <td style="font-family:'Space Mono',monospace;font-size:0.72rem;color:#bf80ff;"><%= log.location?.zone || '—' %></td>
+  <td style="font-family:'Space Mono',monospace;font-size:0.72rem;color:#00FF88;"><%= (log.location && log.location.gate) ? log.location.gate : '—' %></td>
+  <td style="font-family:'Space Mono',monospace;font-size:0.72rem;color:#bf80ff;"><%= (log.location && log.location.zone) ? log.location.zone : '—' %></td>
   <td style="font-size:0.78rem;color:var(--muted);text-transform:uppercase;"><%= log.platform || '—' %></td>
-  <td style="font-size:0.8rem;color:var(--muted);"><%= log.scannedBy?.staffName || '—' %></td>
+  <td style="font-size:0.8rem;color:var(--muted);"><%= (log.scannedBy && log.scannedBy.staffName) ? log.scannedBy.staffName : '—' %></td>
   <td style="font-family:'Space Mono',monospace;font-size:0.7rem;color:var(--muted);white-space:nowrap;">
     <%= new Date(log.scannedAt).toLocaleString('en-IN',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}) %>
   </td>
 </tr>
 <% }); %>
-
-
         </tbody>
       </table>
       <% } %>
@@ -214,38 +301,131 @@
     <% } %>
   </main>
 </div>
+
+<!-- ══ Export Modal ══ -->
+<div class="ex-bg" id="etExModal">
+  <div class="ex-box">
+    <button class="ex-close" onclick="closeEtExport()"><i class="bi bi-x-lg"></i></button>
+    <h3><i class="bi bi-file-earmark-spreadsheet-fill" style="color:#00FF88;margin-right:6px;"></i>EXPORT GATE LOG</h3>
+    <div class="ex-sub">Choose scope and fields for your Excel download</div>
+    <div class="ex-sec">
+      <div class="ex-sec-ttl">Which rows to export</div>
+      <div class="ex-op">
+        <div class="ex-opl active" id="et-scope-filtered" onclick="setEtScope('filtered',this)"><i class="bi bi-funnel-fill"></i> Current View</div>
+        <div class="ex-opl" id="et-scope-all" onclick="setEtScope('all',this)"><i class="bi bi-door-open-fill"></i> All Entries</div>
+      </div>
+    </div>
+    <div class="ex-sec">
+      <div class="ex-sec-ttl">Fields to include</div>
+      <div class="ex-sl">
+        <button class="ex-lnk" onclick="etSelAll(true)">Select all</button>
+        <span style="color:#333;">·</span>
+        <button class="ex-lnk" onclick="etSelAll(false)">Clear all</button>
+      </div>
+      <div class="ex-fg" id="etFieldsGrid"></div>
+    </div>
+    <div class="ex-ft">
+      <span class="ex-cnt" id="etExCnt">—</span>
+      <button class="ex-dl" id="etExBtn" onclick="doEtExport()"><i class="bi bi-download"></i> Download Excel</button>
+    </div>
+  </div>
+</div>
+
 <script>
+// ══════════════════════════════════════════════════════════════
+// FILTER STATE
+// ══════════════════════════════════════════════════════════════
+var activeFilters = { gender: 'all', platform: 'all', gate: 'all', scanner: 'all', zone: 'all' };
 
-  // ── Entered Tickets Export ──
-// var ET_FIELDS = [
-//   { key:'num',     label:'#',             get:function(r){ return r.querySelector('td:nth-child(1)')?r.querySelector('td:nth-child(1)').textContent.trim():''; } },
-//   { key:'name',    label:'Attendee Name', get:function(r){ return r.querySelector('td:nth-child(2) strong')?r.querySelector('td:nth-child(2) strong').textContent.trim():''; } },
-//   { key:'age',     label:'Age',           get:function(r){ return r.querySelector('td:nth-child(3)')?r.querySelector('td:nth-child(3)').textContent.trim():''; } },
-//   { key:'gender',  label:'Gender',        get:function(r){ var e=r.querySelector('td:nth-child(4)'); if(!e) return ''; var t=e.textContent.trim(); return t==='—'?'':t; } },
-//   { key:'ticket',  label:'Ticket Type',   get:function(r){ var e=r.querySelector('.badge-type'); return e?e.textContent.trim():''; } },
-//   { key:'etype',   label:'Entry Type',    get:function(r){ var g=r.querySelector('.badge-grp'); if(g) return g.textContent.replace(/\s+/g,' ').trim(); var s=r.querySelector('.badge-single'); return s?s.textContent.trim():''; } },
-//   { key:'ticketid',label:'Ticket ID',     get:function(r){ return r.querySelector('td:nth-child(7)')?r.querySelector('td:nth-child(7)').textContent.trim():''; } },
-//   { key:'ref',     label:'Booking Ref',   get:function(r){ return r.querySelector('td:nth-child(8)')?r.querySelector('td:nth-child(8)').textContent.trim():''; } },
-//   { key:'staff',   label:'Scanned By',    get:function(r){ return r.querySelector('td:nth-child(9)')?r.querySelector('td:nth-child(9)').textContent.trim():''; } },
-//   { key:'time',    label:'Entry Time',    get:function(r){ return r.querySelector('td:nth-child(10)')?r.querySelector('td:nth-child(10)').textContent.trim():''; } },
-// ];
-// var etDefaultOn = ['num','name','age','gender','ticket','etype','ref','staff','time'];
+function setDropFilter(key, val) {
+  activeFilters[key] = val;
+  applyAllFilters();
+}
 
+function resetAllFilters() {
+  Object.keys(activeFilters).forEach(function(k) { activeFilters[k] = 'all'; });
+  document.querySelectorAll('.f-sel[onchange^="setDropFilter"]').forEach(function(s){ s.value = 'all'; });
+  document.getElementById('searchInp').value = '';
+  applyAllFilters();
+}
+
+function applyAllFilters() {
+  var q = (document.getElementById('searchInp').value || '').toLowerCase().trim();
+  var rows = document.querySelectorAll('#etTable tbody tr');
+  var visible = 0;
+
+  rows.forEach(function(r) {
+    // Text search
+    var textMatch = !q || r.textContent.toLowerCase().includes(q);
+
+    // Gender
+    var gender = activeFilters.gender;
+    var rowGender = r.dataset.gender || '';
+    var genderMatch = gender === 'all' ||
+      (gender === 'other' ? (rowGender !== 'male' && rowGender !== 'female') : rowGender === gender);
+
+    // Platform
+    var platform = activeFilters.platform;
+    var platformMatch = platform === 'all' || (r.dataset.platform || '') === platform;
+
+    // Gate
+    var gate = activeFilters.gate;
+    var gateMatch = gate === 'all' || (r.dataset.gate || '') === gate;
+
+    // Scanner
+    var scanner = activeFilters.scanner;
+    var scannerMatch = scanner === 'all' || (r.dataset.scanner || '') === scanner;
+
+    // Zone
+    var zone = activeFilters.zone;
+    var zoneMatch = zone === 'all' || (r.dataset.zone || '') === zone;
+
+    var show = textMatch && genderMatch && platformMatch && gateMatch && scannerMatch && zoneMatch;
+    r.style.display = show ? '' : 'none';
+    if (show) visible++;
+  });
+
+  // Update result count
+  var countEl = document.getElementById('resultCount');
+  if (countEl) countEl.textContent = visible + ' of ' + rows.length + ' entries shown';
+
+  // Update stat boxes dynamically
+  updateVisibleStats();
+}
+
+function updateVisibleStats() {
+  var rows = document.querySelectorAll('#etTable tbody tr');
+  var total = 0, male = 0, female = 0;
+  rows.forEach(function(r) {
+    if (r.style.display === 'none') return;
+    total++;
+    var g = r.dataset.gender || '';
+    if (g === 'male') male++;
+    else if (g === 'female') female++;
+  });
+  var el;
+  el = document.getElementById('statTotal'); if (el) el.textContent = total;
+  el = document.getElementById('statMale');  if (el) el.textContent = male;
+  el = document.getElementById('statFemale'); if (el) el.textContent = female;
+  el = document.getElementById('entryCount'); if (el) el.textContent = total + ' ENTRIES';
+}
+
+// ══════════════════════════════════════════════════════════════
+// EXPORT
+// ══════════════════════════════════════════════════════════════
 var ET_FIELDS = [
-  { key:'num',      label:'#',            get:function(r){ return r.querySelector('td:nth-child(1)')?r.querySelector('td:nth-child(1)').textContent.trim():''; } },
-  { key:'name',     label:'Attendee',     get:function(r){ return r.querySelector('td:nth-child(2) strong')?r.querySelector('td:nth-child(2) strong').textContent.trim():''; } },
-  { key:'ticketid', label:'Ticket ID',    get:function(r){ return r.querySelector('td:nth-child(3)')?r.querySelector('td:nth-child(3)').textContent.trim():''; } },
-  { key:'ref',      label:'Booking Ref',  get:function(r){ return r.querySelector('td:nth-child(4)')?r.querySelector('td:nth-child(4)').textContent.trim():''; } },
-  { key:'gate',     label:'Gate',         get:function(r){ return r.querySelector('td:nth-child(5)')?r.querySelector('td:nth-child(5)').textContent.trim():''; } },
-  { key:'zone',     label:'Zone',         get:function(r){ return r.querySelector('td:nth-child(6)')?r.querySelector('td:nth-child(6)').textContent.trim():''; } },
-  { key:'platform', label:'Platform',     get:function(r){ return r.querySelector('td:nth-child(7)')?r.querySelector('td:nth-child(7)').textContent.trim():''; } },
-  { key:'staff',    label:'Scanned By',   get:function(r){ return r.querySelector('td:nth-child(8)')?r.querySelector('td:nth-child(8)').textContent.trim():''; } },
-  { key:'time',     label:'Entry Time',   get:function(r){ return r.querySelector('td:nth-child(9)')?r.querySelector('td:nth-child(9)').textContent.trim():''; } },
+  { key:'num',      label:'#',           get:function(r){ return r.querySelector('td:nth-child(1)')?r.querySelector('td:nth-child(1)').textContent.trim():''; } },
+  { key:'name',     label:'Attendee',    get:function(r){ return r.querySelector('td:nth-child(2) strong')?r.querySelector('td:nth-child(2) strong').textContent.trim():''; } },
+  { key:'gender',   label:'Gender',      get:function(r){ var e=r.querySelector('td:nth-child(3)'); return e?e.textContent.trim().replace('—','').trim():''; } },
+  { key:'ticketid', label:'Ticket ID',   get:function(r){ return r.querySelector('td:nth-child(4)')?r.querySelector('td:nth-child(4)').textContent.trim():''; } },
+  { key:'ref',      label:'Booking Ref', get:function(r){ return r.querySelector('td:nth-child(5)')?r.querySelector('td:nth-child(5)').textContent.trim():''; } },
+  { key:'gate',     label:'Gate',        get:function(r){ return r.querySelector('td:nth-child(6)')?r.querySelector('td:nth-child(6)').textContent.trim():''; } },
+  { key:'zone',     label:'Zone',        get:function(r){ return r.querySelector('td:nth-child(7)')?r.querySelector('td:nth-child(7)').textContent.trim():''; } },
+  { key:'platform', label:'Platform',    get:function(r){ return r.querySelector('td:nth-child(8)')?r.querySelector('td:nth-child(8)').textContent.trim():''; } },
+  { key:'staff',    label:'Scanned By',  get:function(r){ return r.querySelector('td:nth-child(9)')?r.querySelector('td:nth-child(9)').textContent.trim():''; } },
+  { key:'time',     label:'Entry Time',  get:function(r){ return r.querySelector('td:nth-child(10)')?r.querySelector('td:nth-child(10)').textContent.trim():''; } },
 ];
-var etDefaultOn = ['num','name','ticketid','ref','gate','zone','platform','staff','time'];
-
-
-
+var etDefaultOn = ['num','name','gender','ref','gate','zone','platform','staff','time'];
 var etExScope = 'filtered';
 
 function openEtExport(){
@@ -267,46 +447,37 @@ function openEtExport(){
   updateEtCnt();
   document.getElementById('etExModal').classList.add('open');
 }
-
 function closeEtExport(){ document.getElementById('etExModal').classList.remove('open'); }
-
 function setEtScope(scope, el){
   etExScope = scope;
   document.querySelectorAll('.ex-opl').forEach(function(p){ p.classList.remove('active'); });
   el.classList.add('active'); updateEtCnt();
 }
-
 function etSelAll(val){
   document.querySelectorAll('#etFieldsGrid .ex-fld').forEach(function(el){
     el.classList.toggle('on', val); el.querySelector('input').checked = val;
   }); updateEtCnt();
 }
-
 function getEtRows(){
   var all = Array.from(document.querySelectorAll('#etTable tbody tr'));
   if(etExScope === 'all') return all;
   return all.filter(function(r){ return r.style.display !== 'none'; });
 }
-
 function updateEtCnt(){
   var rows = getEtRows();
   var checked = document.querySelectorAll('#etFieldsGrid input:checked').length;
   document.getElementById('etExCnt').textContent = rows.length+' entries · '+checked+' fields';
   document.getElementById('etExBtn').disabled = checked === 0 || rows.length === 0;
 }
-
 function doEtExport(){
   var rows = getEtRows();
   var keys = Array.from(document.querySelectorAll('#etFieldsGrid input:checked')).map(function(i){ return i.value; });
   var fields = ET_FIELDS.filter(function(f){ return keys.indexOf(f.key) !== -1; });
   if(!fields.length || !rows.length) return;
-
   var evName = document.querySelector('.ev-name');
   var sheetName = evName ? evName.textContent.trim().slice(0,28).replace(/[^\w\s]/g,'').trim()||'Gate Log' : 'Gate Log';
-
   var data = [fields.map(function(f){ return f.label; })];
   rows.forEach(function(r){ data.push(fields.map(function(f){ return f.get(r)||''; })); });
-
   function write(){
     var wb = XLSX.utils.book_new();
     var ws = XLSX.utils.aoa_to_sheet(data);
@@ -314,69 +485,23 @@ function doEtExport(){
       return { wch: Math.max(14, Math.max.apply(null, data.map(function(r){ return String(r[i]||'').length; }))) };
     });
     XLSX.utils.book_append_sheet(wb, ws, sheetName);
-    var evSlug = sheetName.replace(/\s+/g,'-').toLowerCase();
-    XLSX.writeFile(wb, 'gate-log-'+evSlug+'-'+new Date().toISOString().slice(0,10)+'.xlsx');
+    XLSX.writeFile(wb, 'gate-log-'+sheetName.replace(/\s+/g,'-').toLowerCase()+'-'+new Date().toISOString().slice(0,10)+'.xlsx');
     closeEtExport();
   }
-
   if(typeof XLSX === 'undefined'){
     var s = document.createElement('script');
     s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
-    s.onload = write;
-    document.head.appendChild(s);
+    s.onload = write; document.head.appendChild(s);
   } else { write(); }
 }
-
 document.getElementById('etExModal').addEventListener('click', function(e){ if(e.target===this) closeEtExport(); });
 
-
-function filterTable(q){
-  q = q.toLowerCase();
-  document.querySelectorAll('#etTable tbody tr').forEach(function(r){
-    r.style.display = r.textContent.toLowerCase().includes(q) ? '' : 'none';
-  });
-}
-
-// ── Auto-refresh ──
-var autoInterval = null;
-var autoOn = false;
-var refreshSecs = 30;
-var countdown = refreshSecs;
-
-function manualRefresh(){
-  window.location.reload();
-}
-
-function toggleAuto(){
-  autoOn = !autoOn;
-  var btn = document.getElementById('autoBtn');
-  if(autoOn){
-    countdown = refreshSecs;
-    btn.style.background = 'rgba(0,255,136,0.1)';
-    btn.style.borderColor = 'rgba(0,255,136,0.3)';
-    btn.style.color = '#00FF88';
-    btn.textContent = '⏱ Auto: ON';
-    autoInterval = setInterval(function(){
-      countdown--;
-      var st = document.getElementById('autoRefreshStatus');
-      if(st) st.textContent = 'Refreshing in '+countdown+'s';
-      if(countdown<=0){ window.location.reload(); }
-    }, 1000);
-  } else {
-    clearInterval(autoInterval);
-    btn.style.background = 'rgba(106,13,173,0.1)';
-    btn.style.borderColor = 'rgba(106,13,173,0.3)';
-    btn.style.color = '#bf80ff';
-    btn.textContent = '⏱ Auto: OFF';
-    var st = document.getElementById('autoRefreshStatus');
-    if(st) st.textContent = '';
-  }
-}
-
-// ── Single unified auto-refresh ──────────────────────────────────────────────
-var arInterval  = null;
-var arOn        = true;
-var AR_SECONDS  = 30;
+// ══════════════════════════════════════════════════════════════
+// AUTO-REFRESH  (single, clean implementation — no duplicates)
+// ══════════════════════════════════════════════════════════════
+var arInterval = null;
+var arOn = true;
+var AR_SECONDS = 30;
 
 function setLastRefreshed() {
   var el = document.getElementById('lastRefreshed');
@@ -389,8 +514,13 @@ function manualRefresh() {
 }
 
 function startAR() {
+  clearInterval(arInterval);           // always clear before starting
+  arInterval = setInterval(function() { location.reload(); }, AR_SECONDS * 1000);
+}
+
+function stopAR() {
   clearInterval(arInterval);
-  arInterval = setInterval(function () { location.reload(); }, AR_SECONDS * 1000);
+  arInterval = null;
 }
 
 function toggleAutoRefresh() {
@@ -405,7 +535,7 @@ function toggleAutoRefresh() {
     if (lbl) lbl.textContent = 'AUTO-REFRESH: ON';
     startAR();
   } else {
-    clearInterval(arInterval);
+    stopAR();
     btn.textContent       = '▶ Resume';
     btn.style.color       = '#f5c842';
     btn.style.borderColor = 'rgba(245,200,66,0.25)';
@@ -414,43 +544,10 @@ function toggleAutoRefresh() {
   }
 }
 
-// Remove the old toggleAuto() button from the HTML — only keep arBtn / toggleAutoRefresh()
+// ── Init ──
 setLastRefreshed();
 startAR();
-
+applyAllFilters();   // set initial result count
 </script>
-
-<!-- Entered Tickets Export Modal -->
-<div class="ex-bg" id="etExModal">
-  <div class="ex-box">
-    <button class="ex-close" onclick="closeEtExport()"><i class="bi bi-x-lg"></i></button>
-    <h3><i class="bi bi-file-earmark-spreadsheet-fill" style="color:#00FF88;margin-right:6px;"></i>EXPORT GATE LOG</h3>
-    <div class="ex-sub">Choose scope and fields for your Excel download</div>
-
-    <div class="ex-sec">
-      <div class="ex-sec-ttl">Which rows to export</div>
-      <div class="ex-op">
-        <div class="ex-opl active" id="et-scope-filtered" onclick="setEtScope('filtered',this)"><i class="bi bi-funnel-fill"></i> Current Search</div>
-        <div class="ex-opl" id="et-scope-all" onclick="setEtScope('all',this)"><i class="bi bi-door-open-fill"></i> All Entries</div>
-      </div>
-    </div>
-
-    <div class="ex-sec">
-      <div class="ex-sec-ttl">Fields to include</div>
-      <div class="ex-sl">
-        <button class="ex-lnk" onclick="etSelAll(true)">Select all</button>
-        <span style="color:#333;">·</span>
-        <button class="ex-lnk" onclick="etSelAll(false)">Clear all</button>
-      </div>
-      <div class="ex-fg" id="etFieldsGrid"></div>
-    </div>
-
-    <div class="ex-ft">
-      <span class="ex-cnt" id="etExCnt">—</span>
-      <button class="ex-dl" id="etExBtn" onclick="doEtExport()"><i class="bi bi-download"></i> Download Excel</button>
-    </div>
-  </div>
-</div>
-
 </body>
 </html>

@@ -576,103 +576,6 @@ router.post('/staff/:id/credentials', async (req, res) => {
 });
 // ── COUPON MANAGEMENT ──
 
-
-// router.get('/coupons', async (req, res) => {
-//   try {
-//     const currentAdmin = req.session.staffUser || { username: req.session.superAdminUser || 'superadmin', name: 'Super Admin', role: 'superadmin' };
-//     const events = await Event.find({}, 'name date').sort({ date: -1 }).lean();
-//     const rawCoupons = await Coupon.find().sort({ createdAt: -1 }).lean();
-
-//     const codes = rawCoupons.map(c => c.code);
-//     const usageBookings = await Booking.find({
-//       couponCode: { $in: codes }, paymentStatus: 'paid',
-//     }).populate('event', 'name date venue').populate('user', 'firstName lastName phone email').sort({ createdAt: -1 }).lean();
-
-//     const usageMap = {};
-//     for (const b of usageBookings) {
-//       if (!usageMap[b.couponCode]) usageMap[b.couponCode] = [];
-//       usageMap[b.couponCode].push(b);
-//     }
-
-//     const now = new Date();
-//     const coupons = rawCoupons.map(c => ({
-//       ...c,
-//       usages: usageMap[c.code] || [],
-//       isExpired: !!(c.validUntil && now > new Date(c.validUntil)),
-//     }));
-
-//     res.render('superadmin/coupons', { title: 'Coupons — Super Admin', coupons, events, currentAdmin });
-//   } catch (err) {
-//     console.error('SA coupons error:', err);
-//     res.status(500).send('Error loading coupons: ' + err.message);
-//   }
-// });
-
-// router.post('/coupons', async (req, res) => {
-//   try {
-//     const { code, type, value, minOrder, minTickets, maxUses, validFrom, validUntil, description, isActive, isFeatured } = req.body;
-//     if (!code || !code.trim()) return res.redirect('/superadmin/coupons?err=Code+required');
-//     if (!value || parseFloat(value) <= 0) return res.redirect('/superadmin/coupons?err=Value+must+be+greater+than+0');
-//     const cleanCode = code.toUpperCase().trim();
-//     const existing = await Coupon.findOne({ code: cleanCode });
-//     if (existing) return res.redirect('/superadmin/coupons?err=' + encodeURIComponent(`Coupon code "${cleanCode}" already exists.`));
-//     await Coupon.create({
-//       code: cleanCode, type: type || 'fixed',
-//       value: parseFloat(value), minOrder: parseFloat(minOrder) || 0,
-//       minTickets: parseInt(minTickets) || 0, maxUses: parseInt(maxUses) || 0,
-//       validFrom: validFrom || null, validUntil: validUntil || null,
-//       description: description || '',
-//       isActive: isActive === 'on' || isActive === true,
-//       isFeatured: isFeatured === 'on' || isFeatured === true,
-//     });
-//     res.redirect('/superadmin/coupons');
-//   } catch (err) {
-//     res.redirect('/superadmin/coupons?err=' + encodeURIComponent(err.code === 11000 ? 'Coupon code already exists.' : err.message));
-//   }
-// });
-
-// router.post('/coupons/:id/edit', async (req, res) => {
-//   try {
-//     const { code, type, value, minOrder, minTickets, maxUses, validFrom, validUntil, description, isActive, isFeatured } = req.body;
-//     await Coupon.findByIdAndUpdate(req.params.id, {
-//       code: code.toUpperCase().trim(), type: type || 'fixed',
-//       value: parseFloat(value), minOrder: parseFloat(minOrder) || 0,
-//       minTickets: parseInt(minTickets) || 0, maxUses: parseInt(maxUses) || 0,
-//       validFrom: validFrom || null, validUntil: validUntil || null,
-//       description: description || '',
-//       isActive: isActive === 'on' || isActive === true,
-//       isFeatured: isFeatured === 'on' || isFeatured === true,
-//     });
-//     res.redirect('/superadmin/coupons');
-//   } catch (err) {
-//     res.redirect('/superadmin/coupons?err=' + encodeURIComponent(err.message));
-//   }
-// });
-
-// router.post('/coupons/:id/toggle', async (req, res) => {
-//   try {
-//     const c = await Coupon.findById(req.params.id);
-//     if (c) { c.isActive = !c.isActive; await c.save(); }
-//     res.redirect('/superadmin/coupons');
-//   } catch (err) { res.redirect('/superadmin/coupons'); }
-// });
-
-// router.post('/coupons/:id/feature', async (req, res) => {
-//   try {
-//     const c = await Coupon.findById(req.params.id);
-//     if (c) { c.isFeatured = !c.isFeatured; await c.save(); }
-//     res.redirect('/superadmin/coupons');
-//   } catch (err) { res.redirect('/superadmin/coupons'); }
-// });
-
-// router.post('/coupons/:id/delete', async (req, res) => {
-//   try {
-//     await Coupon.findByIdAndDelete(req.params.id);
-//     res.redirect('/superadmin/coupons');
-//   } catch (err) { res.redirect('/superadmin/coupons'); }
-// });
-
-
 function parseCouponBody(body) {
   const { code, type, value, minOrder, minTickets, maxUses,
           validFrom, validUntil, description, isActive, isFeatured,
@@ -814,43 +717,63 @@ router.post('/coupons/:id/delete', async (req, res) => {
 
 
 // ── USERS BY EVENT (ATTENDEES) ──
+
 router.get('/users-by-event', async (req, res) => {
   try {
     const currentAdmin = req.session.staffUser || { username: req.session.superAdminUser || 'superadmin', name: 'Super Admin', role: 'superadmin' };
     const isSuperAdmin = true;
+
     const events = await Event.find().sort({ date: -1 }).select('name date').lean();
-    const selectedEventId = req.query.eventId || '';
-    let bookings = [], selectedEvent = null;
+
+    // Auto-select the active event instead of requiring dropdown
+    const activeEvent = await Event.findOne({ isActive: true }).select('name date venue').lean();
+    const selectedEventId = activeEvent?._id?.toString() || '';
+    let attendees = [];
+    let selectedEvent = activeEvent;
+
     if (selectedEventId) {
-      selectedEvent = await Event.findById(selectedEventId).select('name date venue').lean();
-      bookings = await Booking.find({ event: selectedEventId, paymentStatus: 'paid' })
-        .populate('user', 'firstName lastName email phone').sort({ createdAt: -1 }).lean();
-      const enteredRefs = new Set(
-        (await ScanLog.find({ eventId: selectedEventId }).select('bookingRef').lean()).map(l => l.bookingRef)
-      );
-      const attendees = [];
+      const bookings = await Booking.find({ event: selectedEventId, paymentStatus: 'paid' })
+        .populate('user', 'firstName lastName email phone')
+        .sort({ createdAt: -1 })
+        .lean();
+
+      // Use per-ticket isUsed flag for accurate entry status
       bookings.forEach(b => {
         (b.tickets || []).forEach(t => {
           attendees.push({
-            bookingRef: b.bookingRef, ticketType: b.ticketType,
-            totalAmount: b.totalAmount, quantity: b.quantity,
-            couponCode: b.couponCode || null, createdAt: b.createdAt,
-            user: b.user, ticketId: t.ticketId,
-            name: t.attendee?.name || (b.user ? (b.user.firstName + ' ' + (b.user.lastName || '')) : '—'),
-            age: t.attendee?.age || null,
-            gender: t.attendee?.gender || '',
-            seatNumber: t.seatNumber || null,
-            isUsed: t.isUsed || false, usedAt: t.usedAt || null,
-            entered: enteredRefs.has(b.bookingRef),
+            bookingRef:  b.bookingRef,
+            ticketType:  b.ticketType,
+            totalAmount: b.totalAmount,
+            quantity:    b.quantity,
+            couponCode:  b.couponCode || null,
+            createdAt:   b.createdAt,
+            user:        b.user,
+            ticketId:    t.ticketId,
+            name:        t.attendee?.name || (b.user ? (b.user.firstName + ' ' + (b.user.lastName || '')) : '—'),
+            age:         t.attendee?.age  || null,
+            gender:      t.attendee?.gender || '',
+            seatNumber:  t.seatNumber || null,
+            entered:     t.isUsed || false,   // ← use per-ticket flag, not scanlog
+            usedAt:      t.usedAt  || null,
+            usedBy:      t.usedBy  || null,
           });
         });
       });
-      return res.render('superadmin/users-by-event', { title: 'Attendees — Super Admin', events, bookings, attendees, selectedEvent, selectedEventId, currentAdmin, isSuperAdmin });
     }
-    res.render('superadmin/users-by-event', { title: 'Attendees — Super Admin', events, bookings: [], attendees: [], selectedEvent: null, selectedEventId, currentAdmin, isSuperAdmin });
+
+    return res.render('superadmin/users-by-event', {
+      title: 'Attendees — Super Admin',
+      events,
+      attendees,
+      selectedEvent,
+      selectedEventId,
+      currentAdmin,
+      isSuperAdmin,
+      bookings: [],
+    });
   } catch (err) {
-    console.error('[SA] users-by-event error:', err.message);
-    res.status(500).send('Error: ' + err.message);
+    console.error('/superadmin/users-by-event error:', err);
+    res.status(500).send('Error loading users by event');
   }
 });
 
