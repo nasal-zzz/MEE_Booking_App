@@ -4,9 +4,15 @@ const fs   = require('fs');
 const path = require('path');
 
 // ─────────────────────────────────────────────────────────────
-// BACKGROUND IMAGE
+// BACKGROUND IMAGE — cached in memory so we don't re-read disk
+// on every request, and so the base64 string is embedded ONCE
+// in the HTML (as a CSS variable) instead of once per ticket.
 // ─────────────────────────────────────────────────────────────
+let _bgBase64Cache = null;
+
 async function loadBgBase64() {
+  if (_bgBase64Cache) return _bgBase64Cache;
+
   const candidates = [
     path.join(__dirname, '..', 'public', 'images', 'brandings', 'ticket_print.webp'),
     path.join(__dirname, '..', 'public', 'images', 'brandings', 'ticket_BG.webp'),
@@ -23,7 +29,8 @@ async function loadBgBase64() {
       const sharp = require('sharp');
       const buf   = await sharp(p).jpeg({ quality: 80, mozjpeg: true }).toBuffer();
       console.log(`[bulkPdfHelper] BG loaded via sharp, size=${buf.length}`);
-      return `data:image/jpeg;base64,${buf.toString('base64')}`;
+      _bgBase64Cache = `data:image/jpeg;base64,${buf.toString('base64')}`;
+      return _bgBase64Cache;
     } catch (sharpErr) {
       console.warn(`[bulkPdfHelper] sharp failed (${sharpErr.message}), reading raw`);
       const ext  = path.extname(p).toLowerCase();
@@ -32,7 +39,8 @@ async function loadBgBase64() {
                  :                   'image/jpeg';
       const data = fs.readFileSync(p);
       console.log(`[bulkPdfHelper] BG loaded raw, mime=${mime}, size=${data.length}`);
-      return `data:${mime};base64,${data.toString('base64')}`;
+      _bgBase64Cache = `data:${mime};base64,${data.toString('base64')}`;
+      return _bgBase64Cache;
     }
   }
 
@@ -61,21 +69,11 @@ function fmtDate(d) {
 
 // ─────────────────────────────────────────────────────────────
 // ONE TICKET STRIP  210mm × 98.8mm
-//
-// LEFT ZONE (0 → 73%):
-//   • bg image fills the full ticket (object-fit:fill)
-//   • category name + price: top-right of left zone
-//   • date / time / venue:   vertically centred, left-aligned
-//   • bg image's sponsor/social strip sits in the bottom ~20% of the
-//     LEFT ZONE — the right panel must stop before that strip so it
-//     never overlaps. We achieve this by giving .rp bottom:20% so the
-//     right panel ends at the same height as the top of the sponsor strip.
-//
-// RIGHT PANEL (73% → 100%):
-//   • starts at top:0, ends at bottom:20% — clears the social strip area
-//   • TICKET DETAILS header, large QR, Ticket ID, divider, grid, valid badge
+// Background is now rendered via .ticket::before (CSS variable)
+// instead of a per-ticket <img> — this keeps the HTML small
+// regardless of how many tickets are in the bundle.
 // ─────────────────────────────────────────────────────────────
-function buildTicketStrip(ticket, meta, bgBase64) {
+function buildTicketStrip(ticket, meta) {
   const accentGreen = '#e4ff00';
   const accentPink  = '#ff00a2';
 
@@ -91,22 +89,13 @@ function buildTicketStrip(ticket, meta, bgBase64) {
   return `
 <div class="ticket">
 
-  <!-- FULL-TICKET BACKGROUND -->
-  ${bgBase64
-    ? `<img class="ticket-bg" src="${bgBase64}" alt=""/>`
-    : `<div class="ticket-bg-fallback"></div>`}
-
-  <!-- ░░ LEFT ZONE OVERLAYS ░░ -->
-
-  <!-- Category + Price — top-right corner of left zone -->
+  <!-- Category + Price — top-right of left zone -->
   <div class="evinfo">
     <div class="ev-name">${esc((meta.categoryName || '').toUpperCase())}</div>
     <div class="ev-price" style="color:${accentPink};">&#8377;&nbsp;${(meta.pricePerTicket || 0).toLocaleString('en-IN')}</div>
   </div>
 
-  <!-- Date / Time / Venue — vertically centred in the artist/content area
-       (top:8% to bottom:22% = the non-sponsor zone of the left side)
-       Uses flex column + justify-content:center to sit naturally in the middle -->
+  <!-- Date / Time / Venue — vertically centred in artist area -->
   <div class="evmeta">
     <div class="em-item">
       <span class="em-lbl">DATE</span>
@@ -118,26 +107,22 @@ function buildTicketStrip(ticket, meta, bgBase64) {
     </div>` : ''}
     <div class="em-divider"></div>
     <div class="em-venue-block">
-      <span class="em-venue" style="color:${accentGreen};">${venue}</span>
+      <span class="em-venue">${venue}</span>
       ${venueAddr ? `<span class="em-addr">${venueAddr}</span>` : ''}
     </div>
   </div>
 
-  <!-- ░░ RIGHT PANEL ░░
-       Stops at bottom:20% so the sponsor/social strip in the bg image
-       (which spans the full ticket width at the bottom) remains fully visible -->
+  <!-- RIGHT PANEL — stops at bottom:20% to keep social strip visible -->
   <div class="rp">
 
     <div class="rp-hdr">TICKET DETAILS</div>
 
-    <!-- Large QR -->
     <div class="rp-qr">
       ${qrSrc
         ? `<img src="${qrSrc}" alt="QR" class="rp-qr-img"/>`
         : `<div class="rp-qr-ph">QR</div>`}
     </div>
 
-    <!-- Ticket ID -->
     <div class="rp-ticketid-block">
       <div class="rp-lbl">TICKET ID</div>
       <div class="rp-ticketid">${ticketId}</div>
@@ -145,11 +130,10 @@ function buildTicketStrip(ticket, meta, bgBase64) {
 
     <div class="rp-divider"></div>
 
-    <!-- Grid: Category | Seat · Gate | Amount -->
     <div class="rp-grid">
       <div class="rp-cell">
         <div class="rp-lbl">CATEGORY</div>
-        <div class="rp-big rp-green">${esc((meta.categoryName || '').toUpperCase())}</div>
+        <div class="rp-big rp-pink">${esc((meta.categoryName || '').toUpperCase())}</div>
       </div>
       ${seatNum ? `<div class="rp-cell">
         <div class="rp-lbl">SEAT NO.</div>
@@ -161,7 +145,7 @@ function buildTicketStrip(ticket, meta, bgBase64) {
       </div>` : ''}
       <div class="rp-cell">
         <div class="rp-lbl">AMOUNT</div>
-        <div class="rp-val rp-green">&#8377;&nbsp;${(meta.pricePerTicket || 0).toLocaleString('en-IN')}/-</div>
+        <div class="rp-val rp-white">&#8377;&nbsp;${(meta.pricePerTicket || 0).toLocaleString('en-IN')}/-</div>
       </div>
     </div>
 
@@ -175,7 +159,7 @@ function buildTicketStrip(ticket, meta, bgBase64) {
 // ─────────────────────────────────────────────────────────────
 // GROUP tickets → A4 pages of 3
 // ─────────────────────────────────────────────────────────────
-function buildPages(tickets, meta, bgBase64) {
+function buildPages(tickets, meta) {
   const pages = [];
   for (let i = 0; i < tickets.length; i += 3) {
     const group = tickets.slice(i, i + 3);
@@ -184,7 +168,7 @@ function buildPages(tickets, meta, bgBase64) {
     let inner = '';
     group.forEach((t, idx) => {
       inner += t
-        ? buildTicketStrip(t, meta, bgBase64)
+        ? buildTicketStrip(t, meta)
         : `<div class="ticket ticket-empty"></div>`;
       if (idx < 2) {
         inner += `<div class="cut-gap"></div>`;
@@ -198,8 +182,16 @@ function buildPages(tickets, meta, bgBase64) {
 
 // ─────────────────────────────────────────────────────────────
 // HTML WRAPPER
+// bgBase64 is injected ONCE as a CSS custom property on :root.
+// Every .ticket picks it up via .ticket::before — so a 100-ticket
+// bundle has the base64 string in the HTML exactly once (~165KB)
+// instead of 100 times (~16MB), which is what caused the timeout.
 // ─────────────────────────────────────────────────────────────
-function buildHtml(pagesHtml, bookingRef) {
+function buildHtml(pagesHtml, bookingRef, bgBase64) {
+  const bgCss = bgBase64
+    ? `--ticket-bg-url: url("${bgBase64}");`
+    : `--ticket-bg-url: none;`;
+
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -207,6 +199,10 @@ function buildHtml(pagesHtml, bookingRef) {
 <title>MEE Tickets — ${esc(bookingRef)}</title>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+
+:root{
+  ${bgCss}
+}
 
 body{
   background:#1a1a1a;
@@ -246,33 +242,24 @@ body{
 }
 .ticket-empty{ background:#0a0a14; }
 
-/* Background fills full ticket — the bg image already contains
-   the sponsor/social strip baked into its bottom portion */
-.ticket-bg{
+/* Background rendered via ::before — single CSS variable, not per-ticket <img> */
+.ticket::before{
+  content:'';
   position:absolute;
   inset:0;
   width:100%;
   height:100%;
-  object-fit:fill;
-  object-position:center;
+  background-image:var(--ticket-bg-url);
+  background-size:100% 100%;   /* equivalent to object-fit:fill */
+  background-position:center;
+  background-repeat:no-repeat;
   display:block;
   z-index:0;
 }
-.ticket-bg-fallback{
-  position:absolute;
-  inset:0;
-  background:#0d0d18;
-  z-index:0;
-}
 
-/* All overlays above bg */
 .evinfo,.evmeta,.rp{ position:absolute; z-index:10; }
 
-/* ──────────────────────────────────────────────────────
-   Category + Price
-   Sits in the top-right area of the left zone.
-   left:3%  right:28%  text-align:right
-────────────────────────────────────────────────────── */
+/* Category + Price */
 .evinfo{
   left:3%;
   right:28%;
@@ -295,18 +282,12 @@ body{
   margin-top:1mm;
 }
 
-/* ──────────────────────────────────────────────────────
-   Date / Time / Venue block
-   Vertically centred in the usable content area of the left zone.
-   The bg image's sponsor strip occupies roughly the bottom 20% (~20mm).
-   So usable area = top:0 to bottom:20%.  We centre inside top:5% → bottom:22%.
-   Using top + transform keeps it truly centred regardless of content height.
-────────────────────────────────────────────────────── */
+/* Date / Time / Venue — vertically centred in artist area */
 .evmeta{
-  left:38%;
-  right:10%;
-  top:60%;
-  transform:translateY(-55%);   /* shift slightly above true centre — matches reference */
+  left:3%;
+  right:28%;
+  top:50%;
+  transform:translateY(-65%);
 }
 .em-item{
   display:flex;
@@ -316,7 +297,7 @@ body{
 .em-lbl{
   font-size:4.5pt;
   letter-spacing:2.5px;
-  color:rgb(248, 245, 245);
+  color:rgba(255,255,255,0.65);
   text-transform:uppercase;
   line-height:1;
 }
@@ -346,23 +327,18 @@ body{
 }
 .em-addr{
   font-size:5.2pt;
-  color:rgba(222, 230, 228, 0.94);
+  color:rgba(255,255,255,0.60);
   text-transform:uppercase;
   letter-spacing:0.9px;
   margin-top:0.3mm;
 }
 
-/* ══════════════════════════════════════════════════════
-   RIGHT PANEL
-   Runs from top:0 to bottom:20% so it sits entirely
-   above the bg image's sponsor/social strip, keeping
-   those icons fully visible at the bottom.
-══════════════════════════════════════════════════════ */
+/* RIGHT PANEL — stops at bottom:20% to keep social strip visible */
 .rp{
   left:73%;
   right:0;
   top:0;
-  bottom:15%;           /* ← key: stops before the social strip */
+  bottom:20%;
   display:flex;
   flex-direction:column;
   align-items:center;
@@ -372,11 +348,10 @@ body{
   overflow:hidden;
 }
 
-/* Header */
 .rp-hdr{
   font-size:4.5pt;
   letter-spacing:3px;
-  color:rgb(232, 239, 232);
+  color:rgba(255,255,255,0.70);
   text-transform:uppercase;
   text-align:center;
   width:100%;
@@ -384,7 +359,6 @@ body{
   flex-shrink:0;
 }
 
-/* Large QR */
 .rp-qr{
   width:100%;
   display:flex;
@@ -408,17 +382,16 @@ body{
   font-size:7pt;color:#666;
 }
 
-/* Ticket ID */
 .rp-ticketid-block{
   text-align:center;
   width:100%;
   flex-shrink:0;
-  margin-bottom:2.5mm;
+  margin-bottom:1.5mm;
 }
 .rp-lbl{
   font-size:4pt;
   letter-spacing:2px;
-  color:rgba(239, 243, 244, 0.92);
+  color:rgba(255,255,255,0.72);
   text-transform:uppercase;
   line-height:1;
   margin-bottom:0.7mm;
@@ -441,7 +414,6 @@ body{
   flex-shrink:0;
 }
 
-/* Grid */
 .rp-grid{
   display:grid;
   grid-template-columns:1fr 1fr;
@@ -465,13 +437,10 @@ body{
   line-height:1.2;
 }
 
-/* Explicit colour helpers — inline style on category was being
-   overridden in some Puppeteer builds; class-based is more reliable */
 .rp-pink  { color:#ff00a2 !important; }
 .rp-green { color:#e4ff00 !important; }
 .rp-white { color:#ffffff !important; }
 
-/* Valid badge — pinned to bottom of panel via margin-top:auto */
 .rp-valid{
   width:100%;
   margin-top:auto;
@@ -504,22 +473,50 @@ ${pagesHtml}
 
 // ─────────────────────────────────────────────────────────────
 // PUPPETEER RENDER
+//
+// WHY NOT networkidle0:
+//   Large base64 strings embedded in HTML confuse Puppeteer's
+//   network tracker — it never reaches "idle" and times out.
+//
+// FIX:
+//   1. waitUntil:'domcontentloaded' — fires as soon as DOM is parsed.
+//   2. waitForFunction — polls until every <img> is decoded.
+//      QR code <img> tags are the only real images now (bg is CSS).
+//   3. Small 300ms settle before PDF capture.
 // ─────────────────────────────────────────────────────────────
 async function renderHtmlToPdf(html) {
   const puppeteer = require('puppeteer');
   const browser   = await puppeteer.launch({
     headless: 'new',
-    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage',
+      '--disable-gpu',
+    ],
   });
   try {
     const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: 'networkidle0', timeout: 60000 });
+
+    // Step 1 — load DOM only, never waits on network activity
+    await page.setContent(html, { waitUntil: 'domcontentloaded', timeout: 60000 });
+
+    // Step 2 — wait until every <img> (QR codes) reports complete
+    await page.waitForFunction(
+      () => Array.from(document.images).every(img => img.complete),
+      { timeout: 30000 }
+    );
+
+    // Step 3 — small paint settle
+    await new Promise(r => setTimeout(r, 300));
+
     const pdfBuffer = await page.pdf({
       width:           '210mm',
       height:          '297mm',
       printBackground: true,
       margin:          { top: 0, right: 0, bottom: 0, left: 0 },
     });
+
     return pdfBuffer;
   } finally {
     await browser.close();
@@ -527,19 +524,19 @@ async function renderHtmlToPdf(html) {
 }
 
 // ─────────────────────────────────────────────────────────────
-// PUBLIC API — reads from BulkBooking.tickets subdocs
+// PUBLIC API
 // ─────────────────────────────────────────────────────────────
 async function generateSingleTicketPdf(ticket, meta) {
   const bgBase64  = await loadBgBase64();
-  const pagesHtml = buildPages([ticket], meta, bgBase64);
-  const html      = buildHtml(pagesHtml, ticket.ticketId || meta.bookingRef);
+  const pagesHtml = buildPages([ticket], meta);
+  const html      = buildHtml(pagesHtml, ticket.ticketId || meta.bookingRef, bgBase64);
   return renderHtmlToPdf(html);
 }
 
 async function generateBundlePdf(tickets, meta) {
   const bgBase64  = await loadBgBase64();
-  const pagesHtml = buildPages(tickets, meta, bgBase64);
-  const html      = buildHtml(pagesHtml, meta.bookingRef);
+  const pagesHtml = buildPages(tickets, meta);
+  const html      = buildHtml(pagesHtml, meta.bookingRef, bgBase64);
   return renderHtmlToPdf(html);
 }
 
