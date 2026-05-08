@@ -479,6 +479,140 @@ router.get('/api/seatmap/:eventId', staffAuth, async (req, res) => {
 // ─────────────────────────────────────────────────────────────
 // API: Scan QR
 // ─────────────────────────────────────────────────────────────
+// router.post('/api/scan', staffAuth, async (req, res) => {
+//   try {
+//     const u = req.session.staffUser;
+//     if (!u.canScanQR && u.role !== 'admin' && u.role !== 'superadmin') {
+//       return res.json({ success: false, message: 'No scan permission.' });
+//     }
+
+//     const { qrData, ticketId, bookingRef, checkInAll } = req.body;
+//     const Booking = require('../models/Booking');
+
+//     let payload = null;
+//     if (qrData) {
+//       try { payload = typeof qrData === 'string' ? JSON.parse(qrData) : qrData; } catch { }
+//     }
+
+//     const lookupRef = payload?.b || bookingRef || null;
+//     const lookupTicketId = payload?.t || ticketId || null;
+
+//     if (!lookupRef && !lookupTicketId) {
+//       return res.json({ success: false, status: 'invalid', message: 'No ticket data provided.' });
+//     }
+
+//     let booking = null;
+//     if (lookupRef) {
+//       booking = await Booking.findOne({ bookingRef: lookupRef, paymentStatus: 'paid' }).populate('event', 'name date venue');
+//     }
+//     if (!booking && lookupTicketId) {
+//       booking = await Booking.findOne({ 'tickets.ticketId': lookupTicketId, paymentStatus: 'paid' }).populate('event', 'name date venue');
+//     }
+//     if (!booking) {
+//       return res.json({ success: false, status: 'invalid', message: 'Booking not found or payment not confirmed.' });
+//     }
+
+// // ── Gate/category enforcement ──
+// if (u.canScanQR && u.assignedCategory) {
+//   const ticketCat = (booking.ticketType || '').toLowerCase();
+//   if (ticketCat !== u.assignedCategory.toLowerCase()) {
+//     return res.json({
+//       success: false,
+//       status: 'wrong_gate',
+//       ticketCategory: booking.ticketType,
+//       message: `❌ Wrong gate. This ${booking.ticketType} ticket is not valid at ${u.gateNo || 'your gate'}.`,
+//     });
+//   }
+// }
+
+//     if (checkInAll) {
+//       const alreadyAllUsed = booking.tickets.every(t => t.isUsed);
+//       if (alreadyAllUsed) {
+//         return res.json({
+//           success: false,
+//           status: 'used',
+//           message: `All ${booking.tickets.length} attendees already checked in.`,
+//           booking: _buildBookingResponse(booking, u),
+//         });
+//       }
+
+//       const now = new Date();
+//       let checkedInCount = 0;
+// booking.tickets.forEach(t => {
+//   if (!t.isUsed) {
+//     t.isUsed = true;
+//     t.usedAt = now;
+//     t.usedBy = u.username;
+//     t.usedByDevice = 'web';
+//     t.scannedById = u.id || '';
+//     t.scannedBy = u.name || u.username;
+//     checkedInCount++;
+//   }
+// });
+//       await booking.save();
+
+//       try {
+//         const ScanLog = require('../models/ScanLog');
+//         for (const t of booking.tickets) {
+//           if (t.usedAt?.getTime() === now.getTime()) {
+
+//             await ScanLog.create({
+//         bookingId:    booking._id,
+//         bookingRef:   booking.bookingRef,
+//         ticketId:     t.ticketId,
+//         eventId:      booking.event._id,
+//         userId:       booking.user || null,
+//         attendeeName: t.attendee?.name || '',
+//         attendeeGender: t.attendee?.gender || '',
+//         scannedAt:    new Date(),
+//         scannedBy: {
+//           staffId:   u.id,
+//           staffName: u.name || u.username,
+//         },
+//         platform: 'web',
+//         location: {
+//           gate: u.gateNo   || '',
+//           zone: booking.zone || '',
+//         },
+//         qrSnapshot: {
+//           bookingRef: booking.bookingRef,
+//           ticketId:   t.ticketId,
+//         },
+//             });
+
+//           }
+//         }
+//       } catch (e) { console.error('ScanLog error:', e.message); }
+
+//       return res.json({
+//         success: true,
+//         status: 'valid',
+//         message: `✓ All ${checkedInCount} attendee(s) checked in`,
+//         booking: _buildBookingResponse(booking, u),
+//         scannedBy: u.name,
+//       });
+//     }
+
+//     const usedCount = booking.tickets.filter(t => t.isUsed).length;
+//     const allUsed = usedCount === booking.tickets.length;
+
+//     return res.json({
+//       success: true,
+//       status: allUsed ? 'used' : 'valid',
+//       message: allUsed
+//         ? `All ${booking.tickets.length} attendees already checked in`
+//         : `${booking.tickets.length - usedCount} of ${booking.tickets.length} pending check-in`,
+//       booking: _buildBookingResponse(booking, u),
+//       scannedBy: u.name,
+//     });
+
+//   } catch (err) {
+//     console.error('Scan error:', err);
+//     res.json({ success: false, status: 'error', message: 'Server error. Try again.' });
+//   }
+// });
+
+
 router.post('/api/scan', staffAuth, async (req, res) => {
   try {
     const u = req.session.staffUser;
@@ -486,51 +620,200 @@ router.post('/api/scan', staffAuth, async (req, res) => {
       return res.json({ success: false, message: 'No scan permission.' });
     }
 
-    const { qrData, ticketId, bookingRef, checkInAll } = req.body;
-    const Booking = require('../models/Booking');
-
-    let payload = null;
-    if (qrData) {
-      try { payload = typeof qrData === 'string' ? JSON.parse(qrData) : qrData; } catch { }
+    const { qrData } = req.body;
+    if (!qrData) {
+      return res.json({ success: false, status: 'invalid', message: 'No QR data.' });
     }
 
-    const lookupRef = payload?.b || bookingRef || null;
-    const lookupTicketId = payload?.t || ticketId || null;
+    // Parse payload
+    let payload = {};
+    try {
+      payload = typeof qrData === 'string' ? JSON.parse(qrData) : qrData;
+    } catch {
+      return res.json({ success: false, status: 'invalid', message: 'Invalid QR format.' });
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // ROUTE A — Bulk ticket (type: 'bulk' in QR payload)
+    // Find by ticketId in BulkTicket collection
+    // ─────────────────────────────────────────────────────────
+    if (payload.type === 'bulk') {
+      const BulkTicket = require('../models/BulkTicket');
+
+const ticket = await BulkTicket.findOne({ ticketId: payload.ticketId })
+  .populate('bulkEvent', 'name date venue doorsOpen');
+
+      if (!ticket) {
+        return res.json({ success: false, status: 'invalid', message: 'Bulk ticket not found or not yet issued.' });
+      }
+
+      // Gate / category enforcement
+      if (u.canScanQR && u.assignedCategory) {
+        if (ticket.ticketType !== u.assignedCategory.toLowerCase()) {
+          return res.json({
+            success: false,
+            status: 'wrong_gate',
+            message: `❌ Wrong gate. This ${ticket.categoryName} ticket is not valid at ${u.gateNo || 'your gate'}.`,
+          });
+        }
+      }
+
+      // Already scanned?
+      if (ticket.isScanned) {
+        return res.json({
+          success: false,
+          status: 'used',
+          message: `❌ Already scanned at ${ticket.scannedAt?.toLocaleTimeString('en-IN')} by ${ticket.scannedBy}`,
+          ticket: _buildBulkTicketResponse(ticket),
+        });
+      }
+
+      // Mark scanned
+      ticket.isScanned       = true;
+      ticket.scannedAt       = new Date();
+      ticket.scannedBy       = u.name || u.username;
+      ticket.scannedByDevice = 'web';
+      await ticket.save();
+
+
+      try {
+  const ScanLog = require('../models/ScanLog');
+  await ScanLog.create({
+    bookingRef:     ticket.bookingRef,
+    ticketId:       ticket.ticketId,
+    eventId:        ticket.bulkEvent?._id || ticket.bulkEvent,
+    attendeeName:   ticket.attendeeName   || ticket.holderName || '',
+    attendeeGender: ticket.attendeeGender || '',
+    scannedAt:      ticket.scannedAt,
+    scannedBy: {
+      staffId:   u.id   || '',
+      staffName: u.name || u.username,
+    },
+    platform: 'web',
+    location: {
+      gate: u.gateNo        || ticket.gateNumber || '',
+      zone: ticket.zone     || '',
+    },
+    qrSnapshot: {
+      bookingRef: ticket.bookingRef,
+      ticketId:   ticket.ticketId,
+    },
+    // ticketType:   ticket.ticketType     || ticket.categoryName || '',
+    // seatNumber:   ticket.seatNumber     || '',
+    // categoryName: ticket.categoryName   || '',
+    // isBulk:       true,
+  });
+} catch (e) { console.warn('ScanLog error:', e.message); }
+
+
+      // ScanLog
+      // try {
+      //   const ScanLog = require('../models/ScanLog');
+      //   await ScanLog.create({
+      //     bookingRef: ticket.bookingRef,
+      //     ticketId:   ticket.ticketId,
+      //     eventId:    ticket.bulkEvent,
+      //     scannedAt:  ticket.scannedAt,
+      //     scannedBy:  { staffId: u.id, staffName: u.name || u.username },
+      //     platform:   'web',
+      //     location:   { gate: u.gateNo || ticket.gateNumber || '' },
+      //     qrSnapshot: { bookingRef: ticket.bookingRef, ticketId: ticket.ticketId },
+      //   });
+      // } catch (e) { console.warn('ScanLog error:', e.message); }
+
+      // console.log(`✅ Bulk scan: ${ticket.ticketId} | ${ticket.categoryName} | by ${u.username}`);
+
+      // return res.json({
+      //   success:   true,
+      //   status:    'valid',
+      //   message:   `✅ Valid — ${ticket.categoryName}${ticket.seatNumber && ticket.seatNumber !== 'N/A' ? ' · Seat ' + ticket.seatNumber : ''}`,
+      //   ticket:    _buildBulkTicketResponse(ticket),
+      //   scannedBy: u.name || u.username,
+      // });
+   
+      return res.json({
+  success:   true,
+  status:    'valid',
+  message:   `✅ Valid — ${ticket.categoryName}${ticket.seatNumber && ticket.seatNumber !== 'N/A' ? ' · Seat ' + ticket.seatNumber : ''}`,
+  ticket:    _buildBulkTicketResponse(ticket),
+  scannedBy: u.name || u.username,
+  // Expose a booking-shaped object so the scanner UI can render the same
+  // info panel it shows for regular bookings
+  booking: {
+    bookingRef:  ticket.bookingRef,
+    ticketType:  ticket.categoryName,
+    quantity:    1,
+    gateNumber:  ticket.gateNumber || null,
+    event: ticket.bulkEvent ? {
+      name:  ticket.bulkEvent.name,
+      date:  ticket.bulkEvent.date,
+      venue: ticket.bulkEvent.venue,
+      doorsOpen: ticket.bulkEvent.doorsOpen,
+    } : null,
+    tickets: [{
+      ticketId:   ticket.ticketId,
+      seatNumber: (ticket.seatNumber && ticket.seatNumber !== 'N/A') ? ticket.seatNumber : null,
+      isStanding: !ticket.seatNumber || ticket.seatNumber === 'N/A',
+      isUsed:     ticket.isScanned,
+      usedAt:     ticket.scannedAt  || null,
+      usedBy:     ticket.scannedBy  || null,
+      attendee: {
+        name:   ticket.attendeeName   || ticket.holderName || 'Guest',
+        age:    ticket.attendeeAge    || 0,
+        gender: ticket.attendeeGender || '',
+      },
+    }],
+  },
+});
+   
+   
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // ROUTE B — Regular online booking (no type:'bulk' in QR)
+    // Find by bookingRef or ticketId in Booking collection
+    // ─────────────────────────────────────────────────────────
+    const { qrData: _unused, ticketId, bookingRef, checkInAll } = req.body;
+    const Booking = require('../models/Booking');
+
+    const lookupRef      = payload?.b || bookingRef || null;
+    const lookupTicketId = payload?.t || ticketId   || null;
 
     if (!lookupRef && !lookupTicketId) {
-      return res.json({ success: false, status: 'invalid', message: 'No ticket data provided.' });
+      return res.json({ success: false, status: 'invalid', message: 'No ticket data found in QR.' });
     }
 
     let booking = null;
     if (lookupRef) {
-      booking = await Booking.findOne({ bookingRef: lookupRef, paymentStatus: 'paid' }).populate('event', 'name date venue');
+      booking = await Booking.findOne({ bookingRef: lookupRef, paymentStatus: 'paid' })
+        .populate('event', 'name date venue');
     }
     if (!booking && lookupTicketId) {
-      booking = await Booking.findOne({ 'tickets.ticketId': lookupTicketId, paymentStatus: 'paid' }).populate('event', 'name date venue');
+      booking = await Booking.findOne({ 'tickets.ticketId': lookupTicketId, paymentStatus: 'paid' })
+        .populate('event', 'name date venue');
     }
     if (!booking) {
       return res.json({ success: false, status: 'invalid', message: 'Booking not found or payment not confirmed.' });
     }
 
-// ── Gate/category enforcement ──
-if (u.canScanQR && u.assignedCategory) {
-  const ticketCat = (booking.ticketType || '').toLowerCase();
-  if (ticketCat !== u.assignedCategory.toLowerCase()) {
-    return res.json({
-      success: false,
-      status: 'wrong_gate',
-      ticketCategory: booking.ticketType,
-      message: `❌ Wrong gate. This ${booking.ticketType} ticket is not valid at ${u.gateNo || 'your gate'}.`,
-    });
-  }
-}
+    // Gate / category enforcement
+    if (u.canScanQR && u.assignedCategory) {
+      const ticketCat = (booking.ticketType || '').toLowerCase();
+      if (ticketCat !== u.assignedCategory.toLowerCase()) {
+        return res.json({
+          success: false,
+          status:  'wrong_gate',
+          message: `❌ Wrong gate. This ${booking.ticketType} ticket is not valid at ${u.gateNo || 'your gate'}.`,
+        });
+      }
+    }
 
     if (checkInAll) {
       const alreadyAllUsed = booking.tickets.every(t => t.isUsed);
       if (alreadyAllUsed) {
         return res.json({
           success: false,
-          status: 'used',
+          status:  'used',
           message: `All ${booking.tickets.length} attendees already checked in.`,
           booking: _buildBookingResponse(booking, u),
         });
@@ -538,71 +821,61 @@ if (u.canScanQR && u.assignedCategory) {
 
       const now = new Date();
       let checkedInCount = 0;
-booking.tickets.forEach(t => {
-  if (!t.isUsed) {
-    t.isUsed = true;
-    t.usedAt = now;
-    t.usedBy = u.username;
-    t.usedByDevice = 'web';
-    t.scannedById = u.id || '';
-    t.scannedBy = u.name || u.username;
-    checkedInCount++;
-  }
-});
+      booking.tickets.forEach(t => {
+        if (!t.isUsed) {
+          t.isUsed        = true;
+          t.usedAt        = now;
+          t.usedBy        = u.username;
+          t.usedByDevice  = 'web';
+          t.scannedById   = u.id || '';
+          t.scannedBy     = u.name || u.username;
+          checkedInCount++;
+        }
+      });
       await booking.save();
 
       try {
         const ScanLog = require('../models/ScanLog');
         for (const t of booking.tickets) {
           if (t.usedAt?.getTime() === now.getTime()) {
-
             await ScanLog.create({
-        bookingId:    booking._id,
-        bookingRef:   booking.bookingRef,
-        ticketId:     t.ticketId,
-        eventId:      booking.event._id,
-        userId:       booking.user || null,
-        attendeeName: t.attendee?.name || '',
-        attendeeGender: t.attendee?.gender || '',
-        scannedAt:    new Date(),
-        scannedBy: {
-          staffId:   u.id,
-          staffName: u.name || u.username,
-        },
-        platform: 'web',
-        location: {
-          gate: u.gateNo   || '',
-          zone: booking.zone || '',
-        },
-        qrSnapshot: {
-          bookingRef: booking.bookingRef,
-          ticketId:   t.ticketId,
-        },
+              bookingId:      booking._id,
+              bookingRef:     booking.bookingRef,
+              ticketId:       t.ticketId,
+              eventId:        booking.event._id,
+              userId:         booking.user || null,
+              attendeeName:   t.attendee?.name   || '',
+              attendeeGender: t.attendee?.gender || '',
+              scannedAt:      new Date(),
+              scannedBy:      { staffId: u.id, staffName: u.name || u.username },
+              platform:       'web',
+              location:       { gate: u.gateNo || '', zone: booking.zone || '' },
+              qrSnapshot:     { bookingRef: booking.bookingRef, ticketId: t.ticketId },
             });
-
           }
         }
       } catch (e) { console.error('ScanLog error:', e.message); }
 
       return res.json({
-        success: true,
-        status: 'valid',
-        message: `✓ All ${checkedInCount} attendee(s) checked in`,
-        booking: _buildBookingResponse(booking, u),
+        success:   true,
+        status:    'valid',
+        message:   `✓ All ${checkedInCount} attendee(s) checked in`,
+        booking:   _buildBookingResponse(booking, u),
         scannedBy: u.name,
       });
     }
 
+    // Single ticket check-in status (no checkInAll)
     const usedCount = booking.tickets.filter(t => t.isUsed).length;
-    const allUsed = usedCount === booking.tickets.length;
+    const allUsed   = usedCount === booking.tickets.length;
 
     return res.json({
       success: true,
-      status: allUsed ? 'used' : 'valid',
+      status:  allUsed ? 'used' : 'valid',
       message: allUsed
         ? `All ${booking.tickets.length} attendees already checked in`
         : `${booking.tickets.length - usedCount} of ${booking.tickets.length} pending check-in`,
-      booking: _buildBookingResponse(booking, u),
+      booking:   _buildBookingResponse(booking, u),
       scannedBy: u.name,
     });
 
@@ -611,6 +884,25 @@ booking.tickets.forEach(t => {
     res.json({ success: false, status: 'error', message: 'Server error. Try again.' });
   }
 });
+
+// ── Bulk ticket response shape ────────────────────────────────
+function _buildBulkTicketResponse(ticket) {
+  return {
+    ticketId:     ticket.ticketId,
+    bookingRef:   ticket.bookingRef,
+    categoryName: ticket.categoryName,
+    categoryColor:ticket.categoryColor,
+    seatNumber:   ticket.seatNumber,
+    gateNumber:   ticket.gateNumber,
+    serialNo:     ticket.serialNo,
+    isScanned:    ticket.isScanned,
+    scannedAt:    ticket.scannedAt  || null,
+    scannedBy:    ticket.scannedBy  || null,
+  };
+}
+
+
+
 
 // ─────────────────────────────────────────────────────────────
 // API: Check in a SINGLE attendee

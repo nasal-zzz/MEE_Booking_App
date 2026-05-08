@@ -10,6 +10,8 @@
   const Banner  = require('../models/Banner');
   const Review  = require('../models/Review');
   const Sponsor = require('../models/Sponsor');
+  const bcrypt = require('bcryptjs');
+
 
  const Razorpay   = require('razorpay');
     const WebhookLog = require('../models/WebhookLog');
@@ -628,9 +630,14 @@ router.post('/staff', async (req, res) => {
       }
     }
 
-    const member = await Staff.create({
-      firstName, lastName: lastName || '', email, phone: phone || '',
-      username, password, plainPassword: password,
+const hashedPassword = await bcrypt.hash(password, 10);
+
+const member = await Staff.create({
+  firstName, lastName: lastName || '', email, phone: phone || '',
+  username,
+  password: hashedPassword,      // ← hashed for auth
+  plainPassword: password,       // ← plain for admin display
+      
       role: role || 'staff',
       canScanQR:       isStaffRole ? wantsQR   : (canScanQR === 'on'),
       canSellTickets:  isStaffRole ? wantsSell : (canSellTickets === 'on'),

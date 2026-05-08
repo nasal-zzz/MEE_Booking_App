@@ -137,6 +137,11 @@ function _isActive(page) { return _active === page ? ' active' : ''; }
   <a href="/mee-admin" class="s-link" onclick="closeSidebar()"><i class="bi bi-grid-fill"></i> Admin Panel</a>
   <a href="/" class="s-link" target="_blank" rel="noopener"><i class="bi bi-box-arrow-up-right"></i> View Site</a>
 
+      <a href="/superadmin/bulk-events"
+       class="s-link <%= activePage === 'bulk-events' ? 'active' : '' %>">
+      <i class="bi bi-ticket-perforated-fill"></i> Bulk Tickets
+    </a>
+
   <a href="/superadmin/logout" class="s-logout">
     <i class="bi bi-box-arrow-right"></i> Logout
   </a>

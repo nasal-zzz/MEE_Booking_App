@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <title><% var isEdit = !!(event && event._id); %><%= isEdit ? 'Edit Bulk Event' : 'New Bulk Event' %> — Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&family=Outfit:wght@400;600;700&family=Space+Mono&display=swap" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet"/>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{background:#0B0B0F;color:#FFFFFF;font-family:'Outfit',sans-serif;min-height:100vh;}
+    .admin-layout{display:grid;grid-template-columns:220px 1fr;min-height:100vh;}
+    .sidebar{background:#14141C;border-right:1px solid rgba(255,255,255,0.08);padding:1.5rem 1rem;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:0.3rem;z-index:10;overflow-y:auto;}
+    .s-logo{font-family:'Poppins',sans-serif;font-size:1.3rem;letter-spacing:3px;color:#fff;text-decoration:none;display:block;padding:0 0.5rem 1.2rem;border-bottom:1px solid rgba(255,255,255,0.08);margin-bottom:0.8rem;}
+    .s-logo span{color:#9500ff;}
+    .s-section{font-family:'Space Mono',monospace;font-size:0.52rem;letter-spacing:2px;color:#B3B3B3;text-transform:uppercase;padding:0.5rem;margin-top:0.5rem;}
+    .s-link{display:flex;align-items:center;gap:0.7rem;padding:0.7rem 0.8rem;color:#B3B3B3;text-decoration:none;border-radius:6px;font-size:0.85rem;transition:all 0.15s;border:1px solid transparent;}
+    .s-link:hover,.s-link.active{background:rgba(106,13,173,0.07);border-color:rgba(106,13,173,0.15);color:#fff;}
+    .s-link i{color:#9500ff;width:18px;}
+    .s-logout{margin-top:auto;display:flex;align-items:center;gap:0.7rem;padding:0.7rem 0.8rem;color:#FF4444;text-decoration:none;border-radius:6px;font-size:0.85rem;border:1px solid transparent;transition:all 0.15s;}
+    .s-logout:hover{background:rgba(255,92,92,0.08);border-color:rgba(255,92,92,0.2);}
+    .main-content{min-width:0;}
+    .container{max-width:960px;margin:0 auto;padding:2.5rem 1.5rem;}
+    .page-title{font-family:'Poppins',sans-serif;font-size:2rem;letter-spacing:2px;margin-bottom:0.4rem;}
+    .page-sub{color:#B3B3B3;font-size:0.88rem;margin-bottom:2.5rem;}
+    .section{background:#14141C;border:1px solid rgba(255,255,255,0.08);border-radius:12px;overflow:hidden;margin-bottom:1.5rem;}
+    .section-head{padding:1rem 1.5rem;border-bottom:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;gap:0.8rem;}
+    .section-num{width:28px;height:28px;border-radius:50%;background:#9500ff;color:#fff;font-family:'Poppins',sans-serif;font-size:0.8rem;display:flex;align-items:center;justify-content:center;}
+    .section-title{font-weight:700;font-size:1rem;}
+    .section-body{padding:1.5rem;}
+    .field-row{display:grid;gap:1rem;margin-bottom:1rem;}
+    .field-row.cols-2{grid-template-columns:1fr 1fr;}
+    .field-row.cols-3{grid-template-columns:1fr 1fr 1fr;}
+    .field-group{display:flex;flex-direction:column;gap:0.4rem;}
+    .field-label{font-family:'Space Mono',monospace;font-size:0.58rem;letter-spacing:2px;color:#B3B3B3;text-transform:uppercase;}
+    .field-input{background:#0B0B0F;border:1.5px solid rgba(255,255,255,0.08);border-radius:8px;color:#FFFFFF;font-size:0.92rem;padding:0.75rem 1rem;font-family:'Outfit',sans-serif;outline:none;transition:border-color 0.2s;width:100%;}
+    .field-input:focus{border-color:#9500ff;}
+    textarea.field-input{resize:vertical;min-height:80px;}
+    select.field-input{cursor:pointer;}
+    /* Category cards — identical to event-form */
+    .cat-card{border-radius:12px;overflow:hidden;border:1.5px solid rgba(255,255,255,0.08);margin-bottom:1rem;}
+    .cat-card-head{padding:0.9rem 1.2rem;display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;}
+    .cat-card-body{padding:1.2rem;background:#0B0B0F;display:none;}
+    .cat-card-body.open{display:block;}
+    .cat-badge-pill{font-family:'Space Mono',monospace;font-size:0.6rem;letter-spacing:2px;padding:0.2rem 0.7rem;border-radius:10px;font-weight:700;}
+    .toggle-sw{width:38px;height:20px;background:rgba(255,255,255,0.1);border-radius:10px;position:relative;transition:background 0.2s;cursor:pointer;flex-shrink:0;}
+    .toggle-sw.on{background:#9500ff;}
+    .toggle-sw::after{content:'';position:absolute;top:3px;left:3px;width:14px;height:14px;border-radius:50%;background:#fff;transition:left 0.2s;}
+    .toggle-sw.on::after{left:21px;}
+    .seat-preview{background:rgba(106,13,173,0.06);border:1px solid rgba(106,13,173,0.15);border-radius:8px;padding:0.7rem 1rem;font-family:'Space Mono',monospace;font-size:0.7rem;color:#9D4EDD;margin-top:0.6rem;line-height:2;word-break:break-all;}
+    .seat-sub-section{border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:1rem;margin-bottom:1rem;background:rgba(255,255,255,0.02);}
+    .btn-add{display:flex;align-items:center;gap:0.5rem;padding:0.65rem 1.2rem;background:rgba(106,13,173,0.12);border:1px solid rgba(106,13,173,0.3);border-radius:8px;color:#9D4EDD;font-size:0.85rem;font-weight:600;cursor:pointer;transition:all 0.2s;font-family:'Outfit',sans-serif;}
+    .btn-add:hover{background:rgba(106,13,173,0.2);}
+    .btn-remove{background:rgba(255,68,68,0.1);border:1px solid rgba(255,68,68,0.2);border-radius:6px;padding:0.4rem 0.6rem;color:#FF4444;cursor:pointer;font-size:0.85rem;transition:all 0.2s;}
+    .btn-remove:hover{background:rgba(255,68,68,0.2);}
+    .save-bar{background:#14141C;border-top:1px solid rgba(255,255,255,0.08);padding:1.5rem;display:flex;align-items:center;justify-content:flex-end;gap:1rem;position:sticky;bottom:0;z-index:50;}
+    .btn-save{padding:0.9rem 2.5rem;background:#9500ff;color:#fff;border:none;border-radius:8px;font-family:'Outfit',sans-serif;font-weight:700;font-size:0.95rem;cursor:pointer;letter-spacing:1px;}
+    .btn-save:hover{box-shadow:0 0 30px rgba(106,13,173,0.5);}
+    .btn-cancel{padding:0.9rem 1.5rem;background:transparent;color:#B3B3B3;border:1px solid rgba(255,255,255,0.12);border-radius:8px;text-decoration:none;font-size:0.9rem;font-family:'Outfit',sans-serif;}
+    .toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:#14141C;border:1px solid rgba(106,13,173,0.4);border-radius:8px;padding:0.8rem 1.5rem;font-size:0.88rem;z-index:9998;display:none;}
+    .toast.ok{border-color:rgba(0,255,136,0.4);color:#00FF88;}
+    .toast.err{border-color:rgba(255,68,68,0.4);color:#FF4444;}
+    .info-box{background:rgba(106,13,173,0.06);border:1px solid rgba(106,13,173,0.15);border-radius:8px;padding:0.7rem 1rem;font-size:0.75rem;color:#9D4EDD;line-height:1.8;margin-bottom:1rem;}
+    @media(max-width:900px){.admin-layout{grid-template-columns:1fr;}.sidebar{display:none;}}
+    @media(max-width:640px){.field-row.cols-2,.field-row.cols-3{grid-template-columns:1fr;}}
+    @keyframes spin{to{transform:rotate(360deg)}}
+  </style>
+</head>
+<body>
+<div class="admin-layout">
+  <%- include('../partials/superadmin-sidebar', { activePage: 'bulk-events' }) %>
+  <div class="main-content">
+    <div class="container">
+      <div class="page-title"><%= event ? 'EDIT BULK EVENT' : 'NEW BULK EVENT' %></div>
+      <div class="page-sub">
+        <%= event ? 'Update bulk event details and ticket categories.' : 'Create a bulk ticket event — no banners or artist profiles needed.' %>
+      </div>
+
+      <% if (locals.error && error) { %>
+      <div style="background:rgba(255,68,68,0.1);border:1px solid rgba(255,68,68,0.3);border-radius:8px;padding:1rem 1.2rem;margin-bottom:1.5rem;color:#FF4444;font-size:0.88rem;display:flex;align-items:center;gap:0.6rem;">
+        <i class="bi bi-exclamation-circle-fill"></i> <span><%= error %></span>
+      </div>
+      <% } %>
+
+      <!-- 1. BASIC INFO -->
+      <div class="section">
+        <div class="section-head"><div class="section-num">1</div><div class="section-title">Basic Information</div></div>
+        <div class="section-body">
+          <div class="field-row"><div class="field-group">
+            <label class="field-label">Event Name *</label>
+            <input class="field-input" id="f-name" placeholder="e.g. ANNUAL SPORTS MEET 2025" value="<%= event ? event.name : '' %>"/>
+          </div></div>
+          <div class="field-row"><div class="field-group">
+            <label class="field-label">Short Description</label>
+            <input class="field-input" id="f-shortDesc" placeholder="One-line description..." value="<%= event ? event.shortDescription : '' %>"/>
+          </div></div>
+        </div>
+      </div>
+
+      <!-- 2. DATE & TIME -->
+      <div class="section">
+        <div class="section-head"><div class="section-num">2</div><div class="section-title">Date & Time</div></div>
+        <div class="section-body">
+          <div class="field-row cols-3">
+            <div class="field-group">
+              <label class="field-label">Event Date *</label>
+              <input class="field-input" type="date" id="f-date" value="<%= event ? new Date(event.date).toISOString().split('T')[0] : '' %>"/>
+            </div>
+            <div class="field-group">
+              <label class="field-label">Doors Open</label>
+              <input class="field-input" id="f-doorsOpen" placeholder="8:00 PM" value="<%= event ? event.doorsOpen : '8:00 PM' %>"/>
+            </div>
+            <div class="field-group">
+              <label class="field-label">End Time</label>
+              <input class="field-input" id="f-endTime" placeholder="4:00 AM" value="<%= event ? event.endTime : '4:00 AM' %>"/>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. LOCATION -->
+      <div class="section">
+        <div class="section-head"><div class="section-num">3</div><div class="section-title">Location</div></div>
+        <div class="section-body">
+          <div class="field-row cols-2">
+            <div class="field-group">
+              <label class="field-label">Venue Name *</label>
+              <input class="field-input" id="f-venue" placeholder="e.g. City Sports Complex" value="<%= event ? event.venue : '' %>"/>
+            </div>
+            <div class="field-group">
+              <label class="field-label">Venue Address</label>
+              <input class="field-input" id="f-venueAddress" placeholder="Full address..." value="<%= event ? event.venueAddress : '' %>"/>
+            </div>
+          </div>
+          <div class="field-row"><div class="field-group">
+            <label class="field-label">Google Maps Link</label>
+            <input class="field-input" id="f-googleMapLink" type="url" placeholder="https://maps.google.com/..." value="<%= event ? event.googleMapLink : '' %>"/>
+          </div></div>
+        </div>
+      </div>
+
+      <!-- 4. TICKET CATEGORIES -->
+      <div class="section">
+        <div class="section-head"><div class="section-num">4</div><div class="section-title">Ticket Categories</div></div>
+        <div class="section-body">
+          <div class="info-box">
+            <i class="bi bi-info-circle-fill"></i>&nbsp;
+            Each category defines a pool of seats. You generate batches of tickets from each category later.
+            <strong>Max Per Batch</strong> limits how many tickets you can generate in one run (default 500, max 5000).
+          </div>
+          <div id="catList"></div>
+          <button type="button" class="btn-add" onclick="addCategory()">
+            <i class="bi bi-plus-circle"></i> Add Category
+          </button>
+        </div>
+      </div>
+
+      <!-- 5. SETTINGS -->
+      <div class="section">
+        <div class="section-head"><div class="section-num">5</div><div class="section-title">Settings</div></div>
+        <div class="section-body">
+          <div class="field-row cols-2">
+            <label style="display:flex;align-items:center;gap:0.8rem;cursor:pointer;">
+              <input type="checkbox" id="f-isActive" <%= event && event.isActive !== false ? 'checked' : '' %> style="width:18px;height:18px;accent-color:#9500ff;"/>
+              <span>Event is Active</span>
+            </label>
+            <label style="display:flex;align-items:center;gap:0.8rem;cursor:pointer;">
+              <input type="checkbox" id="f-isFeatured" <%= event && event.isFeatured ? 'checked' : '' %> style="width:18px;height:18px;accent-color:#9500ff;"/>
+              <span>Featured</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="save-bar">
+        <a href="/superadmin/bulk-events" class="btn-cancel">Cancel</a>
+        <button type="button" class="btn-save" id="saveBtn" onclick="doSubmit()">
+          <i class="bi bi-check-circle-fill"></i> <%= event ? 'Update Event' : 'Create Event' %>
+        </button>
+      </div>
+    </div><!-- /container -->
+  </div><!-- /main-content -->
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Data ─────────────────────────────────────────────────────────────────────
+const EXISTING_CATS = <%- JSON.stringify(event && event.ticketTypes ? event.ticketTypes : []) %>;
+const PRESET_COLORS = ['#9500ff','#f5c842','#c0c8d8','#00FF88','#FF6B6B','#00B4D8','#FF9F1C','#E63946'];
+
+let categories = EXISTING_CATS.length ? EXISTING_CATS.map((t, i) => ({
+  id:          i,
+  name:        t.name || t.category || '',
+  color:       t.color || '#9500ff',
+  price:       t.price || 0,
+  totalSeats:  t.totalSeats || 0,
+  bookedSeats: t.bookedSeats || 0,
+  seatType:    t.seatType || 'standing',
+  seatPrefix:  t.seatPrefix || '',
+  seatStart:   t.seatStart || 1,
+  gateNumber:  t.gateNumber || '',
+  maxPerBatch: t.maxPerBatch || 500,
+  discountTiers: Array.isArray(t.discountTiers) ? t.discountTiers : [],
+  terms:       t.terms || '',
+  isActive:    t.isActive !== false,
+})) : [];
+let catIdCtr = categories.length;
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+}
+function seatPreviewHtml(cat) {
+  if (!cat.seatPrefix || !cat.totalSeats) return '';
+  const start = cat.seatStart || 1, end = start + cat.totalSeats - 1;
+  const items = [];
+  for (let n = start; n <= Math.min(start + 5, end); n++) items.push(`${cat.seatPrefix}_${n}`);
+  if (end > start + 5) items.push(`… ${cat.seatPrefix}_${end}`);
+  return `<b style="color:#fff;letter-spacing:1px;">SEATS (${cat.totalSeats} total):</b><br/>` + items.join(' &nbsp;·&nbsp; ');
+}
+function renderTiersHtml(cat) {
+  if (!cat.discountTiers || !cat.discountTiers.length) {
+    return '<div style="color:#555;font-size:0.8rem;padding:0.2rem 0;">No tiers yet.</div>';
+  }
+  return cat.discountTiers.map((tier, ti) => `
+    <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:0.6rem;align-items:center;margin-bottom:0.5rem;">
+      <div class="field-group">
+        <label class="field-label">Min Tickets</label>
+        <input class="field-input" type="number" min="1" value="${tier.minQty||''}"
+          oninput="updateTier(${cat.id},${ti},'minQty',+this.value)"
+          style="padding:0.5rem 0.75rem;font-size:0.85rem;"/>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Discount (₹)</label>
+        <input class="field-input" type="number" min="1" value="${tier.discount||''}"
+          oninput="updateTier(${cat.id},${ti},'discount',+this.value)"
+          style="padding:0.5rem 0.75rem;font-size:0.85rem;"/>
+      </div>
+      <button type="button" class="btn-remove" onclick="removeTier(${cat.id},${ti})" style="margin-top:1.4rem;padding:0.4rem 0.6rem;">
+        <i class="bi bi-trash"></i>
+      </button>
+    </div>
+  `).join('');
+}
+
+// ── Render categories ─────────────────────────────────────────────────────────
+function renderCategories() {
+  const list = document.getElementById('catList');
+  list.innerHTML = '';
+  if (!categories.length) {
+    list.innerHTML = '<div style="color:#B3B3B3;font-size:0.85rem;padding:0.5rem 0 1rem;">No categories yet — click Add Category.</div>';
+    return;
+  }
+  categories.forEach(cat => {
+    const div = document.createElement('div');
+    div.className = 'cat-card';
+    div.id = 'catcard-' + cat.id;
+    div.style.borderColor = cat.color + '55';
+
+    const swatches = PRESET_COLORS.map(c =>
+      `<div onclick="updateCat(${cat.id},'color','${c}')"
+        style="width:22px;height:22px;border-radius:50%;background:${c};cursor:pointer;border:2.5px solid ${cat.color===c?'#fff':'transparent'};flex-shrink:0;transition:border 0.15s;"
+        id="sw-${cat.id}-${c.replace('#','')}"></div>`
+    ).join('');
+
+    const seatPreview = seatPreviewHtml(cat);
+    const seatEndVal  = (cat.seatPrefix && cat.totalSeats)
+      ? `${cat.seatPrefix}_${(cat.seatStart||1)+cat.totalSeats-1}` : '—';
+
+    div.innerHTML = `
+      <div class="cat-card-head" id="cathead-${cat.id}" style="background:${cat.color}14;" onclick="toggleCatCard(${cat.id})">
+        <div style="display:flex;align-items:center;gap:0.8rem;flex:1;min-width:0;">
+          <div style="width:12px;height:12px;border-radius:50%;background:${cat.color};flex-shrink:0;box-shadow:0 0 8px ${cat.color};"></div>
+          <span style="font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" id="catname-${cat.id}">
+            ${escHtml(cat.name) || '<span style="color:#555;font-style:italic;">Unnamed Category</span>'}
+          </span>
+          <span class="cat-badge-pill" id="catbadge-${cat.id}"
+            style="background:${cat.color}22;color:${cat.color};border:1px solid ${cat.color}44;">
+            ${cat.isActive ? 'ACTIVE' : 'OFF'}
+          </span>
+        </div>
+        <div style="display:flex;align-items:center;gap:1rem;flex-shrink:0;">
+          ${cat.price ? `<span style="font-family:'Space Mono',monospace;font-size:0.75rem;color:${cat.color};">₹${cat.price}</span>` : ''}
+          <button type="button" class="btn-remove" onclick="event.stopPropagation();removeCategory(${cat.id})" style="padding:0.3rem 0.5rem;">
+            <i class="bi bi-trash"></i>
+          </button>
+          <i class="bi bi-chevron-down" id="chev-${cat.id}" style="color:#B3B3B3;transition:transform 0.2s;"></i>
+        </div>
+      </div>
+
+      <div class="cat-card-body" id="catbody-${cat.id}">
+
+        <!-- Name + Color -->
+        <div class="field-row cols-2" style="margin-bottom:1rem;">
+          <div class="field-group">
+            <label class="field-label">Category Name *</label>
+            <input class="field-input" placeholder="e.g. VIP, Gold, General..." value="${escHtml(cat.name)}"
+              oninput="updateCat(${cat.id},'name',this.value)"/>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Color</label>
+            <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;margin-top:0.3rem;">
+              ${swatches}
+              <input type="color" value="${cat.color}"
+                oninput="updateCat(${cat.id},'color',this.value)"
+                style="width:22px;height:22px;padding:0;border:none;border-radius:50%;cursor:pointer;background:none;flex-shrink:0;"/>
+            </div>
+          </div>
+        </div>
+
+        <!-- Price / Seats / Max Per Batch -->
+        <div class="field-row cols-3" style="margin-bottom:1rem;">
+          <div class="field-group">
+            <label class="field-label">Price (₹) *</label>
+            <input class="field-input" type="number" placeholder="0" value="${cat.price||''}"
+              oninput="updateCat(${cat.id},'price',+this.value)"/>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Total Seats *</label>
+            <input class="field-input" type="number" placeholder="500" value="${cat.totalSeats||''}"
+              oninput="updateCat(${cat.id},'totalSeats',+this.value)"/>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Max Per Batch <span style="font-size:0.55rem;color:#555;">(max 5000)</span></label>
+            <input class="field-input" type="number" placeholder="500" min="1" max="5000" value="${cat.maxPerBatch||500}"
+              oninput="updateCat(${cat.id},'maxPerBatch',+this.value)"/>
+          </div>
+        </div>
+
+        <!-- Booked seats (read-only if editing) -->
+        <div class="field-row cols-2" style="margin-bottom:1rem;">
+          <div class="field-group">
+            <label class="field-label">Booked Seats (generated so far)</label>
+            <input class="field-input" type="number" value="${cat.bookedSeats||0}" min="0"
+              oninput="updateCat(${cat.id},'bookedSeats',+this.value)"
+              style="${cat.bookedSeats > 0 ? 'opacity:0.6;' : ''}"/>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Gate Number</label>
+            <input class="field-input" placeholder="e.g. Gate 1, Gate A" value="${escHtml(cat.gateNumber||'')}"
+              oninput="updateCat(${cat.id},'gateNumber',this.value)"/>
+          </div>
+        </div>
+
+        <!-- SEAT CONFIGURATION -->
+        <div class="seat-sub-section">
+          <div style="font-family:'Space Mono',monospace;font-size:0.6rem;letter-spacing:2px;color:#B3B3B3;margin-bottom:0.8rem;">💺 SEAT CONFIGURATION</div>
+          <div class="field-row cols-2" style="margin-bottom:0.8rem;">
+            <div class="field-group">
+              <label class="field-label">Seating Type</label>
+              <select class="field-input" onchange="updateCat(${cat.id},'seatType',this.value)">
+                <option value="standing" ${cat.seatType==='standing'?'selected':''}>🏃 Standing — General Admission</option>
+                <option value="sitting"  ${cat.seatType==='sitting' ?'selected':''}>💺 Sitting — Numbered Seats</option>
+              </select>
+            </div>
+          </div>
+          <div id="seatfields-${cat.id}" style="display:${cat.seatType==='sitting'?'block':'none'}">
+            <div class="field-row cols-3" style="margin-bottom:0.4rem;">
+              <div class="field-group">
+                <label class="field-label">Seat Prefix</label>
+                <input class="field-input" placeholder="e.g. vip, gold, a"
+                  value="${escHtml(cat.seatPrefix)}"
+                  oninput="updateCat(${cat.id},'seatPrefix',this.value.toLowerCase().replace(/\\s+/g,''))"/>
+              </div>
+              <div class="field-group">
+                <label class="field-label">Start Number</label>
+                <input class="field-input" type="number" placeholder="1" min="1" value="${cat.seatStart||1}"
+                  oninput="updateCat(${cat.id},'seatStart',+this.value)"/>
+              </div>
+              <div class="field-group">
+                <label class="field-label">End (auto)</label>
+                <input class="field-input" disabled id="seatend-${cat.id}" value="${seatEndVal}" style="opacity:0.5;"/>
+              </div>
+            </div>
+            <div class="seat-preview" id="seatprev-${cat.id}">
+              ${seatPreview || 'Enter a prefix and total seats to preview seat numbers.'}
+            </div>
+          </div>
+        </div>
+
+        <!-- Bulk Discount Tiers -->
+        <div class="seat-sub-section" style="margin-bottom:1rem;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.8rem;">
+            <div style="font-family:'Space Mono',monospace;font-size:0.6rem;letter-spacing:2px;color:#B3B3B3;">🎯 DISCOUNT TIERS</div>
+            <button type="button" class="btn-add" style="padding:0.35rem 0.8rem;font-size:0.75rem;" onclick="addTier(${cat.id})">
+              <i class="bi bi-plus"></i> Add Tier
+            </button>
+          </div>
+          <div id="tiers-${cat.id}">${renderTiersHtml(cat)}</div>
+          <div style="font-size:0.75rem;color:#555;margin-top:0.5rem;">Applied automatically during bulk pricing calculations.</div>
+        </div>
+
+        <!-- Terms -->
+        <div class="field-row" style="margin-bottom:1rem;">
+          <div class="field-group">
+            <label class="field-label">Terms & Conditions <span style="font-size:0.55rem;color:#555;">(printed on each ticket)</span></label>
+            <textarea class="field-input" placeholder="Entry conditions, refund policy..." style="min-height:70px;"
+              oninput="updateCat(${cat.id},'terms',this.value)">${escHtml(cat.terms||'')}</textarea>
+          </div>
+        </div>
+
+        <!-- Toggle active -->
+        <div style="display:flex;align-items:center;gap:0.8rem;">
+          <div class="toggle-sw ${cat.isActive?'on':''}" id="cattog-${cat.id}"
+            onclick="updateCat(${cat.id},'isActive',!categories.find(c=>c.id===${cat.id}).isActive)"></div>
+          <span style="font-size:0.85rem;color:#B3B3B3;" id="cattoglbl-${cat.id}">
+            ${cat.isActive ? 'Category Enabled' : 'Category Disabled'}
+          </span>
+        </div>
+      </div><!-- /cat-card-body -->
+    `;
+    list.appendChild(div);
+  });
+}
+
+function toggleCatCard(id) {
+  const body = document.getElementById('catbody-' + id);
+  const chev = document.getElementById('chev-' + id);
+  body.classList.toggle('open');
+  chev.style.transform = body.classList.contains('open') ? 'rotate(180deg)' : '';
+}
+
+function addCategory() {
+  const id = catIdCtr++;
+  categories.push({
+    id, name: '', color: PRESET_COLORS[categories.length % PRESET_COLORS.length],
+    price: 0, totalSeats: 0, bookedSeats: 0,
+    seatType: 'standing', seatPrefix: '', seatStart: 1,
+    gateNumber: '', maxPerBatch: 500,
+    discountTiers: [], terms: '', isActive: true,
+  });
+  renderCategories();
+  setTimeout(() => {
+    const body = document.getElementById('catbody-' + id);
+    const chev = document.getElementById('chev-' + id);
+    if (body) { body.classList.add('open'); if (chev) chev.style.transform = 'rotate(180deg)'; }
+    document.getElementById('catcard-' + id)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, 50);
+}
+
+function removeCategory(id) {
+  categories = categories.filter(c => c.id !== id);
+  renderCategories();
+}
+
+function updateCat(id, field, value) {
+  const cat = categories.find(c => c.id === id);
+  if (!cat) return;
+  cat[field] = value;
+
+  if (field === 'name') {
+    const el = document.getElementById('catname-' + id);
+    if (el) el.innerHTML = escHtml(value) || '<span style="color:#555;font-style:italic;">Unnamed Category</span>';
+  }
+  if (field === 'color') {
+    const card = document.getElementById('catcard-' + id);
+    const head = document.getElementById('cathead-' + id);
+    if (card) card.style.borderColor = value + '55';
+    if (head) head.style.background  = value + '14';
+    const dot = head?.querySelector('div[style*="border-radius:50%"]');
+    if (dot) { dot.style.background = value; dot.style.boxShadow = `0 0 8px ${value}`; }
+    PRESET_COLORS.forEach(c => {
+      const sw = document.getElementById(`sw-${id}-${c.replace('#','')}`);
+      if (sw) sw.style.border = `2.5px solid ${c === value ? '#fff' : 'transparent'}`;
+    });
+    const badge = document.getElementById('catbadge-' + id);
+    if (badge) { badge.style.background = value+'22'; badge.style.color = value; badge.style.border = `1px solid ${value}44`; }
+  }
+  if (field === 'isActive') {
+    const tog = document.getElementById('cattog-' + id);
+    const lbl = document.getElementById('cattoglbl-' + id);
+    if (tog) tog.classList.toggle('on', value);
+    if (lbl) lbl.textContent = value ? 'Category Enabled' : 'Category Disabled';
+    const badge = document.getElementById('catbadge-' + id);
+    if (badge) badge.textContent = value ? 'ACTIVE' : 'OFF';
+  }
+  if (field === 'seatType') {
+    const sf = document.getElementById('seatfields-' + id);
+    if (sf) sf.style.display = value === 'sitting' ? 'block' : 'none';
+  }
+  if (['seatPrefix', 'seatStart', 'totalSeats'].includes(field)) {
+    const endEl  = document.getElementById('seatend-' + id);
+    const prevEl = document.getElementById('seatprev-' + id);
+    const s = cat.seatStart || 1, e = s + cat.totalSeats - 1;
+    if (endEl) endEl.value = (cat.seatPrefix && cat.totalSeats) ? `${cat.seatPrefix}_${e}` : '—';
+    if (prevEl) prevEl.innerHTML = seatPreviewHtml(cat) || 'Enter a prefix and total seats to preview seat numbers.';
+  }
+}
+
+// ── Discount tiers ────────────────────────────────────────────────────────────
+function addTier(catId) {
+  const cat = categories.find(c => c.id === catId);
+  if (!cat) return;
+  if (!cat.discountTiers) cat.discountTiers = [];
+  cat.discountTiers.push({ minQty: 0, discount: 0 });
+  document.getElementById('tiers-' + catId).innerHTML = renderTiersHtml(cat);
+}
+function removeTier(catId, ti) {
+  const cat = categories.find(c => c.id === catId);
+  if (!cat) return;
+  cat.discountTiers.splice(ti, 1);
+  document.getElementById('tiers-' + catId).innerHTML = renderTiersHtml(cat);
+}
+function updateTier(catId, ti, field, value) {
+  const cat = categories.find(c => c.id === catId);
+  if (!cat) return;
+  cat.discountTiers[ti][field] = value;
+}
+
+// ── Submit ────────────────────────────────────────────────────────────────────
+async function doSubmit() {
+  const name  = document.getElementById('f-name')?.value.trim();
+  const date  = document.getElementById('f-date')?.value;
+  const venue = document.getElementById('f-venue')?.value.trim();
+
+  if (!name)  { showToast('Event name is required.', 'err'); return; }
+  if (!date)  { showToast('Event date is required.', 'err'); return; }
+  if (!venue) { showToast('Venue name is required.', 'err'); return; }
+  if (!categories.length) { showToast('Add at least one ticket category.', 'err'); return; }
+  const noName  = categories.find(c => !c.name.trim());
+  if (noName)  { showToast('All categories need a name.', 'err'); return; }
+  const noPrice = categories.find(c => !c.price || !c.totalSeats);
+  if (noPrice) { showToast(`"${noPrice.name || 'A category'}" needs price and total seats.`, 'err'); return; }
+
+  const payload = {
+    name,
+    shortDescription: document.getElementById('f-shortDesc')?.value.trim() || '',
+    date,
+    doorsOpen:    document.getElementById('f-doorsOpen')?.value || '8:00 PM',
+    endTime:      document.getElementById('f-endTime')?.value   || '4:00 AM',
+    venue,
+    venueAddress: document.getElementById('f-venueAddress')?.value.trim() || '',
+    googleMapLink:document.getElementById('f-googleMapLink')?.value.trim() || '',
+    isActive:     document.getElementById('f-isActive')?.checked  ? 'true' : '',
+    isFeatured:   document.getElementById('f-isFeatured')?.checked ? 'true' : '',
+    ticketTypesJson: JSON.stringify(
+      categories.map(c => ({
+        category:     c.name.toLowerCase().replace(/\s+/g,'_'),
+        name:         c.name,
+        color:        c.color,
+        price:        c.price,
+        totalSeats:   c.totalSeats,
+        bookedSeats:  c.bookedSeats,
+        seatType:     c.seatType,
+        seatPrefix:   c.seatPrefix,
+        seatStart:    c.seatStart,
+        gateNumber:   c.gateNumber || '',
+        maxPerBatch:  c.maxPerBatch || 500,
+        discountTiers:(c.discountTiers||[]).filter(d=>d.minQty>0&&d.discount>0).sort((a,b)=>a.minQty-b.minQty),
+        terms:        c.terms,
+        isActive:     c.isActive,
+      }))
+    ),
+  };
+
+  const btn = document.getElementById('saveBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span style="width:16px;height:16px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite;display:inline-block;margin-right:6px;vertical-align:middle;"></span> Saving…';
+
+  const isEdit = !!('<%= event ? event._id : "" %>'.trim());
+  const url    = isEdit
+    ? '/superadmin/bulk-events/<%= event ? event._id : "" %>'
+    : '/superadmin/bulk-events';
+
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (res.redirected) { window.location.href = res.url; return; }
+    if (res.ok) {
+      const ct = res.headers.get('content-type') || '';
+      if (ct.includes('application/json')) {
+        const d = await res.json();
+        if (d.success) { window.location.href = '/superadmin/bulk-events?success=Event+saved'; return; }
+        showToast(d.message || 'Save failed.', 'err');
+      } else {
+        window.location.href = '/superadmin/bulk-events?success=Event+saved';
+      }
+    } else {
+      showToast('Server error ' + res.status, 'err');
+    }
+  } catch (e) {
+    showToast('Network error: ' + e.message, 'err');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-check-circle-fill"></i> <%= event ? "Update Event" : "Create Event" %>';
+  }
+}
+
+function showToast(msg, type='ok') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'toast ' + type; t.style.display = 'block';
+  setTimeout(() => { t.style.display = 'none'; }, 3500);
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+renderCategories();
+categories.forEach(c => {
+  if (c.price || c.totalSeats) {
+    const body = document.getElementById('catbody-' + c.id);
+    const chev = document.getElementById('chev-' + c.id);
+    if (body) { body.classList.add('open'); if (chev) chev.style.transform = 'rotate(180deg)'; }
+  }
+});
+</script>
+</body>
+</html>

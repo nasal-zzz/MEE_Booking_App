@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Bulk Ticket Events — Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&family=Outfit:wght@400;600;700&family=Space+Mono&display=swap" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet"/>
+  <style>
+    :root{--bg:#0B0B0F;--surface:#14141C;--border:rgba(255,255,255,0.08);--accent:#9500ff;--accent2:#9D4EDD;--text:#fff;--muted:#B3B3B3;--error:#FF4444;--success:#00FF88;--warn:#f5c842;}
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;min-height:100vh;}
+    .layout{display:grid;grid-template-columns:220px 1fr;min-height:100vh;}
+    .sidebar{background:var(--surface);border-right:1px solid var(--border);padding:1.5rem 1rem;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:0.3rem;overflow-y:auto;}
+    .s-logo{font-family:'Poppins',sans-serif;font-size:1.3rem;letter-spacing:3px;color:#fff;text-decoration:none;display:block;padding:0 0.5rem 1.2rem;border-bottom:1px solid var(--border);margin-bottom:0.8rem;}
+    .s-logo span{color:var(--accent);}
+    .s-link{display:flex;align-items:center;gap:0.7rem;padding:0.7rem 0.8rem;color:var(--muted);text-decoration:none;border-radius:6px;font-size:0.85rem;transition:all 0.15s;border:1px solid transparent;}
+    .s-link:hover,.s-link.active{background:rgba(106,13,173,0.07);border-color:rgba(106,13,173,0.15);color:#fff;}
+    .s-link i{color:var(--accent);width:18px;}
+    .s-section{font-family:'Space Mono',monospace;font-size:0.52rem;letter-spacing:2px;color:var(--muted);text-transform:uppercase;padding:0.5rem;margin-top:0.5rem;}
+    .s-logout{margin-top:auto;display:flex;align-items:center;gap:0.7rem;padding:0.7rem 0.8rem;color:var(--error);text-decoration:none;border-radius:6px;font-size:0.85rem;border:1px solid transparent;transition:all 0.15s;}
+    .s-logout:hover{background:rgba(255,68,68,0.08);border-color:rgba(255,68,68,0.2);}
+    .main{padding:2rem;overflow-x:hidden;min-width:0;}
+
+    /* Header */
+    .page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:2rem;gap:1rem;flex-wrap:wrap;}
+    .page-title{font-family:'Poppins',sans-serif;font-size:1.8rem;letter-spacing:2px;}
+    .page-sub{font-size:0.82rem;color:var(--muted);margin-top:0.3rem;}
+    .btn-new{display:inline-flex;align-items:center;gap:0.5rem;padding:0.7rem 1.4rem;background:var(--accent);color:#fff;border:none;border-radius:8px;font-family:'Outfit',sans-serif;font-weight:700;font-size:0.88rem;cursor:pointer;text-decoration:none;letter-spacing:0.5px;transition:all 0.2s;}
+    .btn-new:hover{box-shadow:0 0 22px rgba(149,0,255,0.45);}
+
+    /* Stats row */
+    .stats-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:1rem;margin-bottom:2rem;}
+    .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1.1rem 1.2rem;}
+    .stat-val{font-family:'Poppins',sans-serif;font-size:1.6rem;color:var(--accent2);}
+    .stat-lbl{font-size:0.62rem;color:var(--muted);letter-spacing:1.5px;font-family:'Space Mono',monospace;margin-top:0.2rem;text-transform:uppercase;}
+
+    /* Success banner */
+    .success-banner{background:rgba(0,255,136,0.07);border:1px solid rgba(0,255,136,0.2);border-radius:8px;padding:0.8rem 1.2rem;color:var(--success);font-size:0.85rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:0.6rem;}
+
+    /* Events grid */
+    .events-grid{display:grid;gap:1rem;}
+    .event-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;transition:border-color 0.2s;}
+    .event-card:hover{border-color:rgba(149,0,255,0.3);}
+    .event-card-inner{display:grid;grid-template-columns:1fr auto;gap:1rem;padding:1.4rem 1.6rem;align-items:center;}
+    .event-name{font-family:'Poppins',sans-serif;font-size:1rem;letter-spacing:1px;margin-bottom:0.3rem;}
+    .event-meta{font-size:0.78rem;color:var(--muted);display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap;}
+    .event-meta i{color:var(--accent2);}
+    .event-cats{display:flex;gap:0.4rem;flex-wrap:wrap;margin-top:0.6rem;}
+    .cat-dot{display:inline-flex;align-items:center;gap:0.3rem;padding:0.15rem 0.55rem;border-radius:8px;font-size:0.65rem;font-family:'Space Mono',monospace;letter-spacing:1px;}
+    .badge{display:inline-flex;align-items:center;gap:0.3rem;padding:0.2rem 0.6rem;border-radius:10px;font-size:0.62rem;font-family:'Space Mono',monospace;letter-spacing:1px;font-weight:700;}
+    .badge-active{background:rgba(0,255,136,0.1);color:var(--success);border:1px solid rgba(0,255,136,0.25);}
+    .badge-inactive{background:rgba(255,68,68,0.1);color:var(--error);border:1px solid rgba(255,68,68,0.25);}
+    .event-stats{display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;}
+    .stat-pill{background:#0B0B0F;border:1px solid var(--border);border-radius:7px;padding:0.4rem 0.75rem;font-size:0.72rem;font-family:'Space Mono',monospace;}
+    .stat-pill span{color:var(--accent2);font-size:0.85rem;font-weight:700;display:block;}
+    .action-col{display:flex;flex-direction:column;gap:0.5rem;align-items:flex-end;}
+    .btn-sm{display:inline-flex;align-items:center;gap:0.3rem;padding:0.42rem 0.9rem;border-radius:6px;font-size:0.78rem;font-family:'Outfit',sans-serif;cursor:pointer;transition:all 0.15s;white-space:nowrap;text-decoration:none;border:1px solid;}
+    .btn-view{background:rgba(106,13,173,0.12);border-color:rgba(106,13,173,0.25);color:var(--accent2);}
+    .btn-view:hover{background:rgba(106,13,173,0.22);color:#fff;}
+    .btn-edit{background:transparent;border-color:var(--border);color:var(--muted);}
+    .btn-edit:hover{border-color:rgba(255,255,255,0.25);color:#fff;}
+
+    /* Empty state */
+    .empty-state{text-align:center;padding:4rem 2rem;color:var(--muted);}
+    .empty-state i{font-size:3rem;display:block;margin-bottom:1rem;color:#222;}
+    .empty-state p{font-size:0.88rem;margin-bottom:1.5rem;}
+
+    /* Progress bar */
+    .progress-bar{height:3px;border-radius:2px;background:rgba(255,255,255,0.06);margin-top:0.6rem;overflow:hidden;}
+    .progress-fill{height:100%;border-radius:2px;background:var(--accent);}
+
+    .toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:var(--surface);border-radius:8px;padding:0.8rem 1.5rem;font-size:0.88rem;z-index:9999;display:none;min-width:220px;text-align:center;}
+    .toast.ok{border:1px solid rgba(0,255,136,0.35);color:var(--success);}
+    .toast.err{border:1px solid rgba(255,68,68,0.35);color:var(--error);}
+
+    @media(max-width:900px){.layout{grid-template-columns:1fr;}.sidebar{display:none;}}
+    @media(max-width:640px){.event-card-inner{grid-template-columns:1fr;}.action-col{flex-direction:row;align-items:flex-start;}}
+  </style>
+</head>
+<body>
+<div class="layout">
+  <%- include('../partials/superadmin-sidebar', { activePage: 'bulk-events' }) %>
+  <main class="main">
+
+    <!-- Header -->
+    <div class="page-header">
+      <div>
+        <div class="page-title">BULK TICKETS</div>
+        <div class="page-sub">Generate and manage large batches of event tickets with QR codes</div>
+      </div>
+      <a href="/superadmin/bulk-events/new" class="btn-new">
+        <i class="bi bi-plus-circle-fill"></i> New Bulk Event
+      </a>
+    </div>
+
+    <% if (locals.success && success) { %>
+    <div class="success-banner"><i class="bi bi-check-circle-fill"></i> <%= success %></div>
+    <% } %>
+
+    <!-- Aggregate stats -->
+    <%
+      const totalEvents  = events.length;
+      const activeEvents = events.filter(e => e.isActive).length;
+      const totalTickets = events.reduce((s,e) => s + (e.ticketCount||0), 0);
+      const totalBatches = events.reduce((s,e) => s + (e.batchCount||0), 0);
+      const totalCap     = events.reduce((s,e) => s + (e.ticketTypes||[]).reduce((ss,t) => ss+(t.totalSeats||0),0), 0);
+    %>
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-val"><%= totalEvents %></div>
+        <div class="stat-lbl">Total Events</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val" style="color:var(--success);"><%= activeEvents %></div>
+        <div class="stat-lbl">Active Events</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val" style="color:var(--warn);"><%= totalBatches %></div>
+        <div class="stat-lbl">Total Batches</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val" style="color:var(--accent2);"><%= totalTickets.toLocaleString('en-IN') %></div>
+        <div class="stat-lbl">Tickets Generated</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val" style="color:var(--muted);font-size:1.3rem;"><%= totalCap.toLocaleString('en-IN') %></div>
+        <div class="stat-lbl">Total Capacity</div>
+      </div>
+    </div>
+
+    <!-- Events list -->
+    <% if (!events || !events.length) { %>
+    <div class="empty-state">
+      <i class="bi bi-ticket-perforated"></i>
+      <p>No bulk ticket events created yet.</p>
+      <a href="/superadmin/bulk-events/new" class="btn-new">
+        <i class="bi bi-plus-circle-fill"></i> Create Your First Bulk Event
+      </a>
+    </div>
+    <% } else { %>
+    <div class="events-grid">
+      <% events.forEach(ev => {
+        const totalSeats  = (ev.ticketTypes||[]).reduce((s,t) => s+(t.totalSeats||0),0);
+        const bookedSeats = (ev.ticketTypes||[]).reduce((s,t) => s+(t.bookedSeats||0),0);
+        const pct = totalSeats > 0 ? Math.round((bookedSeats/totalSeats)*100) : 0;
+        const dateStr = new Date(ev.date).toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+      %>
+      <div class="event-card">
+        <div class="event-card-inner">
+          <div>
+            <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.3rem;">
+              <div class="event-name"><%= ev.name %></div>
+              <span class="badge <%= ev.isActive ? 'badge-active' : 'badge-inactive' %>">
+                <%= ev.isActive ? 'ACTIVE' : 'INACTIVE' %>
+              </span>
+            </div>
+            <div class="event-meta">
+              <span><i class="bi bi-calendar3"></i> <%= dateStr %></span>
+              <span><i class="bi bi-geo-alt-fill"></i> <%= ev.venue %></span>
+              <% if (ev.doorsOpen) { %><span><i class="bi bi-clock-fill"></i> Doors <%= ev.doorsOpen %></span><% } %>
+            </div>
+            <% if (ev.shortDescription) { %>
+            <div style="font-size:0.78rem;color:var(--muted);margin-top:0.4rem;"><%= ev.shortDescription %></div>
+            <% } %>
+            <!-- Category dots -->
+            <div class="event-cats">
+              <% (ev.ticketTypes||[]).forEach(t => { %>
+              <span class="cat-dot" style="background:<%= t.color||'#9500ff' %>18;color:<%= t.color||'#9500ff' %>;border:1px solid <%= t.color||'#9500ff' %>33;">
+                <span style="width:5px;height:5px;border-radius:50%;background:<%= t.color||'#9500ff' %>;display:inline-block;"></span>
+                <%= t.name||t.category %> · ₹<%= t.price %>
+              </span>
+              <% }); %>
+            </div>
+            <!-- Progress -->
+            <% if (totalSeats > 0) { %>
+            <div style="margin-top:0.7rem;max-width:320px;">
+              <div style="display:flex;justify-content:space-between;font-size:0.65rem;color:var(--muted);margin-bottom:3px;font-family:'Space Mono',monospace;">
+                <span><%= bookedSeats.toLocaleString('en-IN') %> generated</span>
+                <span><%= totalSeats.toLocaleString('en-IN') %> capacity · <%= pct %>%</span>
+              </div>
+              <div class="progress-bar"><div class="progress-fill" style="width:<%= pct %>%;"></div></div>
+            </div>
+            <% } %>
+          </div>
+          <div class="action-col">
+            <div class="event-stats">
+              <div class="stat-pill">
+                <span><%= ev.batchCount||0 %></span>
+                batches
+              </div>
+              <div class="stat-pill">
+                <span><%= (ev.ticketCount||0).toLocaleString('en-IN') %></span>
+                tickets
+              </div>
+            </div>
+            <a href="/superadmin/bulk-events/<%= ev._id %>" class="btn-sm btn-view">
+              <i class="bi bi-lightning-charge-fill"></i> Manage
+            </a>
+            <a href="/superadmin/bulk-events/<%= ev._id %>/edit" class="btn-sm btn-edit">
+              <i class="bi bi-pencil-fill"></i> Edit
+            </a>
+          </div>
+        </div>
+      </div>
+      <% }); %>
+    </div>
+    <% } %>
+
+  </main>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+function showToast(msg, type='ok') {
+  const t = document.getElementById('toast');
+  t.textContent=msg; t.className='toast '+type; t.style.display='block';
+  setTimeout(()=>{ t.style.display='none'; },3500);
+}
+</script>
+</body>
+</html>

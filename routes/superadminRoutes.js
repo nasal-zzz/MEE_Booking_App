@@ -6,6 +6,8 @@ const Booking = require('../models/Booking');
 const Event = require('../models/Event');
 const ScanLog = require('../models/ScanLog');
 const User = require('../models/User');
+const bcrypt = require('bcryptjs');
+const bulkController = require('../controllers/bulkController');
 
  const Razorpay   = require('razorpay');
     const WebhookLog = require('../models/WebhookLog');
@@ -469,9 +471,15 @@ router.post('/staff', async (req, res) => {
       }
     }
 
-    const member = await Staff.create({
-      firstName, lastName: lastName || '', email, phone: phone || '',
-      username, password, plainPassword: password,
+const hashedPassword = await bcrypt.hash(password, 10);
+
+const member = await Staff.create({
+  firstName, lastName: lastName || '', email, phone: phone || '',
+  username,
+  password: hashedPassword,      // ← hashed for auth
+  plainPassword: password,       // ← plain for admin display
+
+
       role: role || 'staff',
       canScanQR:       isStaffRole ? wantsQR   : (canScanQR === 'on'),
       canSellTickets:  isStaffRole ? wantsSell : (canSellTickets === 'on'),
@@ -564,10 +572,12 @@ router.post('/staff/:id/credentials', async (req, res) => {
     const conflict = await Staff.findOne({ username, _id: { $ne: req.params.id } });
     if (conflict) return res.json({ success: false, message: `Username "${username}" is already taken.` });
 
+    const hashedPassword = await bcrypt.hash(newPassword.trim(), 10);
+
     await Staff.findByIdAndUpdate(req.params.id, {
       username,
-      password:      newPassword.trim(),
-      plainPassword: newPassword.trim(),
+      password:      hashedPassword,        // ← hashed
+      plainPassword: newPassword.trim(),    // ← plain for display
     });
     res.json({ success: true, username });
   } catch (err) {
@@ -1503,6 +1513,98 @@ router.get('/api/transaction/:id', async (req, res) => {
     res.json({ success: false, message: err.message });
   }
 });
+
+
+
+ 
+// List all bulk events
+router.get(
+  '/bulk-events',
+  superAuth,
+  bulkController.listBulkEvents
+);
+ 
+// New event form  ← must be BEFORE /:id so 'new' isn't treated as an id
+router.get(
+  '/bulk-events/new',
+  superAuth,
+  bulkController.newBulkEventForm
+);
+ 
+// Create event
+router.post(
+  '/bulk-events',
+  superAuth,
+  bulkController.createBulkEvent
+);
+ 
+// View event + its batches
+router.get(
+  '/bulk-events/:id',
+  superAuth,
+  bulkController.viewBulkEvent
+);
+ 
+// Edit event form
+router.get(
+  '/bulk-events/:id/edit',
+  superAuth,
+  bulkController.editBulkEventForm
+);
+ 
+// Update event
+router.post(
+  '/bulk-events/:id',
+  superAuth,
+  bulkController.updateBulkEvent
+);
+ 
+// Toggle active/inactive  (called via fetch from bulk-event-view.ejs)
+router.post(
+  '/bulk-events/:id/deactivate',
+  superAuth,
+  bulkController.toggleBulkEventActive
+);
+ 
+// Generate a ticket batch  (called via fetch — returns JSON)
+router.post(
+  '/bulk-events/:id/generate',
+  superAuth,
+  bulkController.generateTickets
+);
+ 
+// ─────────────────────────────────────────────────────────────────
+// BULK BOOKINGS  — /mee-admin/bulk-bookings
+// ─────────────────────────────────────────────────────────────────
+ 
+// View a single batch (bulk-batch-view.ejs)
+router.get(
+  '/bulk-bookings/:batchId',
+  superAuth,
+  bulkController.viewBatch
+);
+ 
+// Download full PDF bundle for a batch
+router.get(
+  '/bulk-bookings/:batchId/download-bundle',
+  superAuth,
+  bulkController.downloadBundle
+);
+ 
+// Download a single ticket PDF from a batch
+router.get(
+  '/bulk-bookings/:batchId/download-ticket/:serialNo',
+  superAuth,
+  bulkController.downloadSingleTicket
+);
+ 
+// Delete a batch + release seats  (called via fetch — returns JSON)
+router.delete(
+  '/bulk-bookings/:batchId',
+  superAuth,
+  bulkController.deleteBatch
+);
+ 
 
 
 module.exports = router;

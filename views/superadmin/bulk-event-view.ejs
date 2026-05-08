@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title><%= title %></title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Outfit:wght@400;500;600;700&family=Space+Mono&display=swap" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet"/>
+  <style>
+    :root{--bg:#0B0B0F;--surface:#14141C;--border:rgba(255,255,255,0.08);--accent:#9500ff;--text:#fff;--muted:#B3B3B3;--success:#00FF88;--error:#FF4444;--warn:#f5c842;}
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;min-height:100vh;}
+    .layout{display:grid;grid-template-columns:220px 1fr;min-height:100vh;}
+    .sidebar{background:var(--surface);border-right:1px solid var(--border);padding:1.5rem 1rem;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:.3rem;overflow-y:auto;}
+    .s-logo{font-family:'Poppins',sans-serif;font-size:1.3rem;letter-spacing:3px;color:#fff;text-decoration:none;display:block;padding:0 .5rem 1.2rem;border-bottom:1px solid var(--border);margin-bottom:.8rem;}
+    .s-logo span{color:var(--accent);}
+    .s-link{display:flex;align-items:center;gap:.7rem;padding:.7rem .8rem;color:var(--muted);text-decoration:none;border-radius:6px;font-size:.85rem;transition:all .15s;border:1px solid transparent;}
+    .s-link:hover,.s-link.active{background:rgba(106,13,173,.07);border-color:rgba(106,13,173,.15);color:#fff;}
+    .s-link i{color:var(--accent);width:18px;}
+    .main{padding:2rem;min-width:0;}
+    .back-link{display:inline-flex;align-items:center;gap:.4rem;color:var(--muted);text-decoration:none;font-size:.82rem;margin-bottom:.8rem;transition:color .15s;}
+    .back-link:hover{color:#fff;}
+    .page-header{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:2rem;}
+    .page-title{font-family:'Poppins',sans-serif;font-size:1.7rem;letter-spacing:2px;}
+    .page-sub{font-size:.8rem;color:var(--muted);margin-top:.3rem;}
+    .btn-edit{display:inline-flex;align-items:center;gap:.4rem;padding:.6rem 1.2rem;background:transparent;border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:.85rem;text-decoration:none;transition:all .15s;font-family:'Outfit',sans-serif;}
+    .btn-edit:hover{border-color:rgba(255,255,255,.25);color:#fff;}
+    .success-banner{background:rgba(0,255,136,.07);border:1px solid rgba(0,255,136,.2);border-radius:8px;padding:.8rem 1.2rem;color:var(--success);font-size:.85rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:.6rem;}
+    .stats-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:1rem;margin-bottom:2rem;}
+    .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1rem 1.2rem;}
+    .stat-val{font-family:'Poppins',sans-serif;font-size:1.5rem;color:#9D4EDD;}
+    .stat-lbl{font-size:.62rem;color:var(--muted);letter-spacing:1.5px;font-family:'Space Mono',monospace;margin-top:.2rem;text-transform:uppercase;}
+    .panel{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:1.5rem;}
+    .panel-header{padding:1rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.6rem;}
+    .panel-title{font-family:'Poppins',sans-serif;font-size:.95rem;letter-spacing:1px;}
+
+    /* Generate form */
+    .gen-form{padding:1.5rem;display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:1rem;align-items:flex-end;}
+    .field-group{display:flex;flex-direction:column;gap:.4rem;}
+    .field-label{font-family:'Space Mono',monospace;font-size:.55rem;letter-spacing:2px;color:var(--muted);text-transform:uppercase;}
+    .field-input{background:#0B0B0F;border:1.5px solid var(--border);border-radius:8px;color:#fff;font-size:.9rem;padding:.65rem .9rem;font-family:'Outfit',sans-serif;outline:none;transition:border-color .2s;width:100%;}
+    .field-input:focus{border-color:var(--accent);}
+    select.field-input{cursor:pointer;}
+    .btn-gen{display:inline-flex;align-items:center;gap:.4rem;padding:.68rem 1.4rem;background:var(--accent);color:#fff;border:none;border-radius:8px;font-family:'Outfit',sans-serif;font-weight:700;font-size:.88rem;cursor:pointer;white-space:nowrap;transition:all .2s;}
+    .btn-gen:hover{box-shadow:0 0 20px rgba(149,0,255,.4);}
+    .btn-gen:disabled{opacity:.5;cursor:not-allowed;}
+
+    /* Category pills in form */
+    .cat-pills{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:1rem;padding:0 1.5rem;}
+    .cat-pill{padding:.25rem .7rem;border-radius:10px;font-size:.65rem;font-family:'Space Mono',monospace;letter-spacing:1px;cursor:pointer;transition:all .15s;border:1px solid;}
+    .cat-pill.selected{font-weight:700;}
+
+    /* Batches table */
+    .table-scroll{overflow-x:auto;}
+    table{width:100%;border-collapse:collapse;}
+    th{font-family:'Space Mono',monospace;font-size:.52rem;letter-spacing:2px;color:var(--muted);text-transform:uppercase;padding:.8rem 1.2rem;text-align:left;border-bottom:1px solid var(--border);}
+    td{padding:.85rem 1.2rem;border-bottom:1px solid rgba(255,255,255,.04);font-size:.84rem;vertical-align:middle;}
+    tr:last-child td{border-bottom:none;}
+    tr:hover td{background:rgba(255,255,255,.015);}
+    .mono{font-family:'Space Mono',monospace;font-size:.72rem;}
+    .badge-ok{display:inline-flex;align-items:center;gap:.3rem;padding:.18rem .55rem;border-radius:8px;font-size:.62rem;font-family:'Space Mono',monospace;background:rgba(0,255,136,.1);color:var(--success);border:1px solid rgba(0,255,136,.22);}
+    .btn-sm{display:inline-flex;align-items:center;gap:.3rem;padding:.35rem .7rem;border-radius:6px;font-size:.73rem;font-family:'Outfit',sans-serif;cursor:pointer;transition:all .15s;white-space:nowrap;text-decoration:none;border:1px solid;}
+    .btn-view{background:rgba(106,13,173,.12);border-color:rgba(106,13,173,.25);color:#9D4EDD;}
+    .btn-view:hover{background:rgba(106,13,173,.22);}
+    .btn-del{background:rgba(255,68,68,.08);border-color:rgba(255,68,68,.2);color:var(--error);}
+    .btn-del:hover{background:rgba(255,68,68,.18);}
+    .btn-dl{background:rgba(0,255,136,.07);border-color:rgba(0,255,136,.2);color:var(--success);}
+    .btn-dl:hover{background:rgba(0,255,136,.14);}
+
+    /* Ticket categories overview */
+    .cats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem;padding:1.5rem;}
+    .cat-card{border-radius:10px;padding:1rem 1.2rem;border:1px solid;}
+    .cat-name{font-weight:700;font-size:.9rem;margin-bottom:.3rem;}
+    .cat-stat{font-size:.75rem;color:var(--muted);margin-top:.2rem;}
+    .progress-bar{height:3px;border-radius:2px;background:rgba(255,255,255,.06);margin-top:.7rem;overflow:hidden;}
+    .progress-fill{height:100%;border-radius:2px;}
+
+    .empty-batches{text-align:center;padding:3rem 2rem;color:var(--muted);font-size:.88rem;}
+    .empty-batches i{font-size:2.5rem;display:block;margin-bottom:.8rem;color:#222;}
+
+    .toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:var(--surface);border-radius:8px;padding:.8rem 1.5rem;font-size:.88rem;z-index:9999;display:none;min-width:240px;text-align:center;}
+    .toast.ok{border:1px solid rgba(0,255,136,.35);color:var(--success);}
+    .toast.err{border:1px solid rgba(255,68,68,.35);color:var(--error);}
+
+    @media(max-width:900px){.layout{grid-template-columns:1fr;}.sidebar{display:none;}}
+    @media(max-width:640px){.gen-form{grid-template-columns:1fr 1fr;}}
+    @keyframes spin{to{transform:rotate(360deg)}}
+  </style>
+</head>
+<body>
+<div class="layout">
+  <%- include('../partials/superadmin-sidebar', { activePage: 'bulk-events' }) %>
+  <main class="main">
+
+    <a href="/superadmin/bulk-events" class="back-link">
+      <i class="bi bi-arrow-left"></i> All Bulk Events
+    </a>
+
+    <div class="page-header">
+      <div>
+        <div class="page-title"><%= event.name %></div>
+        <div class="page-sub">
+          <i class="bi bi-calendar3" style="color:#9D4EDD;"></i>
+          <%= new Date(event.date).toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short',year:'numeric'}) %>
+          &nbsp;·&nbsp;
+          <i class="bi bi-geo-alt-fill" style="color:#9D4EDD;"></i> <%= event.venue %>
+          <% if (event.doorsOpen) { %> &nbsp;·&nbsp; Doors: <%= event.doorsOpen %><% } %>
+        </div>
+      </div>
+      <div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;">
+        <span style="padding:.25rem .75rem;border-radius:10px;font-size:.65rem;font-family:'Space Mono',monospace;font-weight:700;
+          background:<%= event.isActive ? 'rgba(0,255,136,.1)' : 'rgba(255,68,68,.1)' %>;
+          color:<%= event.isActive ? 'var(--success)' : 'var(--error)' %>;
+          border:1px solid <%= event.isActive ? 'rgba(0,255,136,.25)' : 'rgba(255,68,68,.25)' %>;">
+          <%= event.isActive ? 'ACTIVE' : 'INACTIVE' %>
+        </span>
+        <a href="/superadmin/bulk-events/<%= event._id %>/edit" class="btn-edit">
+          <i class="bi bi-pencil-fill"></i> Edit Event
+        </a>
+      </div>
+    </div>
+
+    <% if (locals.success && success) { %>
+    <div class="success-banner"><i class="bi bi-check-circle-fill"></i> <%= success %></div>
+    <% } %>
+
+    <%
+      const totalSeats  = (event.ticketTypes||[]).reduce((s,t)=>s+(t.totalSeats||0),0);
+      const bookedSeats = (event.ticketTypes||[]).reduce((s,t)=>s+(t.bookedSeats||0),0);
+      const totalValue  = (event.ticketTypes||[]).reduce((s,t)=>s+(t.price||0)*(t.bookedSeats||0),0);
+    %>
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-val"><%= batches.length %></div>
+        <div class="stat-lbl">Batches</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val" style="color:var(--success);"><%= bookedSeats.toLocaleString('en-IN') %></div>
+        <div class="stat-lbl">Tickets Generated</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val" style="color:var(--muted);font-size:1.2rem;"><%= totalSeats.toLocaleString('en-IN') %></div>
+        <div class="stat-lbl">Total Capacity</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val" style="font-size:1.1rem;">₹<%= totalValue.toLocaleString('en-IN') %></div>
+        <div class="stat-lbl">Value Generated</div>
+      </div>
+    </div>
+
+    <!-- Ticket Categories Overview -->
+    <div class="panel" style="margin-bottom:1.5rem;">
+      <div class="panel-header">
+        <div class="panel-title">🎨 TICKET CATEGORIES</div>
+      </div>
+      <div class="cats-grid">
+        <% (event.ticketTypes||[]).forEach(t => {
+          const pct = t.totalSeats > 0 ? Math.round((t.bookedSeats/t.totalSeats)*100) : 0;
+        %>
+        <div class="cat-card" style="background:<%= t.color %>0f;border-color:<%= t.color %>33;">
+          <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.3rem;">
+            <div style="width:10px;height:10px;border-radius:50%;background:<%= t.color %>;box-shadow:0 0 6px <%= t.color %>;flex-shrink:0;"></div>
+            <div class="cat-name" style="color:<%= t.color %>;"><%= t.name %></div>
+          </div>
+          <div class="cat-stat">₹<%= t.price %> &nbsp;·&nbsp; <%= t.seatType %><% if(t.gateNumber){%> &nbsp;·&nbsp; <%= t.gateNumber %><% } %></div>
+          <div class="cat-stat"><%= (t.bookedSeats||0).toLocaleString('en-IN') %> / <%= (t.totalSeats||0).toLocaleString('en-IN') %> seats · <%= pct %>%</div>
+          <div class="progress-bar"><div class="progress-fill" style="width:<%= pct %>%;background:<%= t.color %>;"></div></div>
+          <% if(!t.isActive){ %>
+          <div style="font-size:.6rem;color:var(--error);font-family:'Space Mono',monospace;margin-top:.4rem;letter-spacing:1px;">DISABLED</div>
+          <% } %>
+        </div>
+        <% }); %>
+      </div>
+    </div>
+
+    <!-- Generate Tickets -->
+    <% if (event.isActive) { %>
+    <div class="panel" style="margin-bottom:1.5rem;">
+      <div class="panel-header">
+        <div class="panel-title">⚡ GENERATE TICKETS</div>
+      </div>
+      <!-- Category selector pills -->
+      <div class="cat-pills" id="catPills">
+        <% (event.ticketTypes||[]).filter(t=>t.isActive).forEach((t,i) => { %>
+        <div class="cat-pill <%= i===0?'selected':'' %>"
+          id="pill-<%= t.category %>"
+          style="background:<%= t.color %><%= i===0?'22':'0d' %>;color:<%= t.color %>;border-color:<%= t.color %><%= i===0?'55':'22' %>;"
+          onclick="selectCat('<%= t.category %>','<%= t.color %>')">
+          <%= t.name %> — ₹<%= t.price %> (<%= (t.totalSeats - t.bookedSeats).toLocaleString('en-IN') %> left)
+        </div>
+        <% }); %>
+      </div>
+      <div class="gen-form">
+        <input type="hidden" id="g-ticketType" value="<%= (event.ticketTypes||[]).find(t=>t.isActive)?.category || '' %>"/>
+        <div class="field-group">
+          <label class="field-label">Quantity *</label>
+          <input class="field-input" type="number" id="g-qty" placeholder="e.g. 200" min="1" max="5000"/>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Notes (optional)</label>
+          <input class="field-input" id="g-notes" placeholder="e.g. VIP section A"/>
+        </div>
+        <div class="field-group" style="grid-column:span 1;">
+          <label class="field-label">&nbsp;</label>
+          <button type="button" class="btn-gen" id="genBtn" onclick="generateTickets()">
+            <i class="bi bi-lightning-charge-fill"></i> Generate
+          </button>
+        </div>
+      </div>
+    </div>
+    <% } %>
+
+    <!-- Batches list -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">📦 GENERATED BATCHES</div>
+        <span style="font-size:.75rem;color:var(--muted);font-family:'Space Mono',monospace;"><%= batches.length %> batch<%= batches.length!==1?'es':'' %></span>
+      </div>
+      <% if (!batches || !batches.length) { %>
+      <div class="empty-batches">
+        <i class="bi bi-inbox"></i>
+        No batches generated yet. Use the form above to generate your first batch of tickets.
+      </div>
+      <% } else { %>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Booking Ref</th>
+              <th>Category</th>
+              <th>Qty</th>
+              <th>Seat Type</th>
+              <th>Value</th>
+              <th>Generated</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% batches.forEach(b => { %>
+            <tr>
+              <td class="mono" style="color:#9D4EDD;"><%= b.bookingRef %></td>
+              <td>
+                <div style="display:flex;align-items:center;gap:.4rem;">
+                  <div style="width:8px;height:8px;border-radius:50%;background:<%= b.categoryColor %>;flex-shrink:0;"></div>
+                  <span><%= b.categoryName %></span>
+                </div>
+              </td>
+              <td><span class="mono"><%= b.quantity %></span></td>
+              <td style="color:var(--muted);font-size:.78rem;text-transform:capitalize;"><%= b.seatType %></td>
+              <td class="mono">₹<%= (b.totalAmount||0).toLocaleString('en-IN') %></td>
+              <td style="color:var(--muted);font-size:.75rem;">
+                <%= b.generatedAt ? new Date(b.generatedAt).toLocaleString('en-IN',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}) : '—' %>
+              </td>
+              <td>
+                <div style="display:flex;gap:.4rem;flex-wrap:wrap;">
+                  <a href="/superadmin/bulk-bookings/<%= b._id %>" class="btn-sm btn-view">
+                    <i class="bi bi-eye-fill"></i> View
+                  </a>
+                  <a href="/superadmin/bulk-bookings/<%= b._id %>/download-bundle" class="btn-sm btn-dl">
+                    <i class="bi bi-file-earmark-pdf-fill"></i> PDF
+                  </a>
+                  <button type="button" class="btn-sm btn-del" onclick="deleteBatch('<%= b._id %>','<%= b.bookingRef %>')">
+                    <i class="bi bi-trash-fill"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+      <% } %>
+    </div>
+
+  </main>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const EVENT_ID = '<%= event._id %>';
+
+// ── Category pill selection ────────────────────────────────────────────────
+const cats = <%- JSON.stringify((event.ticketTypes||[]).filter(t=>t.isActive).map(t=>({category:t.category,color:t.color}))) %>;
+let selectedCat = cats[0]?.category || '';
+
+function selectCat(cat, color) {
+  selectedCat = cat;
+  document.getElementById('g-ticketType').value = cat;
+  cats.forEach(c => {
+    const pill = document.getElementById('pill-' + c.category);
+    if (!pill) return;
+    const isSel = c.category === cat;
+    pill.classList.toggle('selected', isSel);
+    pill.style.background = isSel ? c.color + '22' : c.color + '0d';
+    pill.style.borderColor = isSel ? c.color + '55' : c.color + '22';
+  });
+}
+
+// ── Generate ──────────────────────────────────────────────────────────────
+async function generateTickets() {
+  const ticketType = selectedCat;
+  const qty   = document.getElementById('g-qty')?.value;
+  const notes = document.getElementById('g-notes')?.value || '';
+
+  if (!ticketType) { showToast('Select a ticket category.', 'err'); return; }
+  if (!qty || +qty < 1) { showToast('Enter a valid quantity.', 'err'); return; }
+
+  const btn = document.getElementById('genBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span style="width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:inline-block;margin-right:6px;vertical-align:middle;"></span> Generating…';
+
+  try {
+    const res = await fetch(`/superadmin/bulk-events/${EVENT_ID}/generate`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ticketType, quantity: qty, notes }),
+    });
+    const d = await res.json();
+    if (d.success) {
+      showToast(`✅ ${d.quantity} tickets generated! Ref: ${d.bookingRef}`, 'ok');
+      setTimeout(() => location.reload(), 1800);
+    } else {
+      showToast(d.message || 'Generation failed.', 'err');
+    }
+  } catch(e) {
+    showToast('Network error: ' + e.message, 'err');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-lightning-charge-fill"></i> Generate';
+  }
+}
+
+// ── Delete batch ──────────────────────────────────────────────────────────
+async function deleteBatch(batchId, ref) {
+  if (!confirm(`Delete batch ${ref}? This will release all seats back to the pool.`)) return;
+  try {
+    const res = await fetch(`/superadmin/bulk-bookings/${batchId}`, {
+      method: 'DELETE', credentials: 'include',
+    });
+    const d = await res.json();
+    if (d.success) {
+      showToast('Batch deleted and seats released.', 'ok');
+      setTimeout(() => location.reload(), 1200);
+    } else {
+      showToast(d.message || 'Delete failed.', 'err');
+    }
+  } catch(e) {
+    showToast('Network error: ' + e.message, 'err');
+  }
+}
+
+function showToast(msg, type='ok') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'toast ' + type; t.style.display = 'block';
+  setTimeout(() => { t.style.display = 'none'; }, 3500);
+}
+</script>
+</body>
+</html>
