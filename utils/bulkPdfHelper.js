@@ -133,7 +133,7 @@ function buildTicketStrip(ticket, meta) {
     <div class="rp-grid">
       <div class="rp-cell">
         <div class="rp-lbl">CATEGORY</div>
-        <div class="rp-big rp-pink">${esc((meta.categoryName || '').toUpperCase())}</div>
+        <div class="rp-big rp-green">${esc((meta.categoryName || '').toUpperCase())}</div>
       </div>
       ${seatNum ? `<div class="rp-cell">
         <div class="rp-lbl">SEAT NO.</div>
@@ -145,7 +145,7 @@ function buildTicketStrip(ticket, meta) {
       </div>` : ''}
       <div class="rp-cell">
         <div class="rp-lbl">AMOUNT</div>
-        <div class="rp-val rp-white">&#8377;&nbsp;${(meta.pricePerTicket || 0).toLocaleString('en-IN')}/-</div>
+        <div class="rp-val rp-green">&#8377;&nbsp;${(meta.pricePerTicket || 0).toLocaleString('en-IN')}/-</div>
       </div>
     </div>
 
@@ -284,10 +284,10 @@ body{
 
 /* Date / Time / Venue — vertically centred in artist area */
 .evmeta{
-  left:3%;
+  left:40%;
   right:28%;
-  top:50%;
-  transform:translateY(-65%);
+  top:59%;
+  transform:translateY(-75%);
 }
 .em-item{
   display:flex;
