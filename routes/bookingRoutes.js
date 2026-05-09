@@ -1,4 +1,4 @@
-  const express    = require('express');
+const express    = require('express');
   const router     = express.Router();
   const bc         = require('../controllers/bookingController');
   const { requireAuth } = require('../middleware/auth');
@@ -7,17 +7,39 @@
 
 
   const guardBookingEvent = async (req, res, next) => {
-    try {
-      const event = await Event.findById(req.params.eventId);
-      if (!event)                            return res.redirect('/coming-soon?reason=no-event');
-      if (!event.isActive)                   return res.redirect('/coming-soon?reason=inactive');
-      if (new Date(event.date) < new Date()) return res.redirect('/coming-soon?reason=expired');
-      req.event = event;
-      next();
-    } catch (err) {
-      res.redirect('/coming-soon?reason=no-event');
-    }
-  };
+  try {
+    const event = await Event.findById(req.params.eventId);
+    if (!event)       return res.redirect('/coming-soon?reason=no-event');
+    if (!event.isActive) return res.redirect('/coming-soon?reason=inactive');
+    
+    // FIX — expire only after end of event day
+    const eventEnd = new Date(event.date);
+    eventEnd.setHours(23, 59, 59, 999);
+    if (eventEnd < new Date()) return res.redirect('/coming-soon?reason=expired');
+    
+    req.event = event;
+    next();
+  } catch (err) {
+    res.redirect('/coming-soon?reason=no-event');
+  }
+};
+
+  // const guardBookingEvent = async (req, res, next) => {
+  //   try {
+  //     const event = await Event.findById(req.params.eventId);
+  //     if (!event)                            return res.redirect('/coming-soon?reason=no-event');
+  //     if (!event.isActive)                   return res.redirect('/coming-soon?reason=inactive');
+
+  //     // if (new Date(event.date) < new Date()) return res.redirect('/coming-soon?reason=expired');
+
+
+
+  //     req.event = event;
+  //     next();
+  //   } catch (err) {
+  //     res.redirect('/coming-soon?reason=no-event');
+  //   }
+  // };
 
   // ── NAMED ROUTES — must come BEFORE wildcard /:eventId ──────────────────────
 

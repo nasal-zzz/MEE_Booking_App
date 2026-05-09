@@ -1,4 +1,4 @@
-  const express = require('express');
+const express = require('express');
   const router = express.Router();
   const Event = require('../models/Event');
   const Banner = require('../models/Banner');
@@ -25,8 +25,24 @@
   router.get('/', noCache, optionalAuth, async (req, res) => {
     try {
       const allEvents = await Event.find().sort({ date: -1 });
-      const events = allEvents.filter(ev => ev.isActive && new Date(ev.date) >= new Date());
-      const pastEvents = allEvents.filter(ev => new Date(ev.date) < new Date());
+      // const events = allEvents.filter(ev => ev.isActive && new Date(ev.date) >= new Date());
+
+// FIX — expire only after the event date (end of that day)
+const events = allEvents.filter(ev => {
+  if (!ev.isActive) return false;
+  const eventEnd = new Date(ev.date);
+  eventEnd.setHours(23, 59, 59, 999);
+  return eventEnd >= new Date();
+});
+
+
+const pastEvents = allEvents.filter(ev => {
+  const eventEnd = new Date(ev.date);
+  eventEnd.setHours(23, 59, 59, 999);
+  return eventEnd < new Date();
+});
+
+      // const pastEvents = allEvents.filter(ev => new Date(ev.date) < new Date());
       const banners = await Banner.find({ isVisible: true }).sort({ order: 1 }).lean();
   const featuredEvent = events[0] || null;
   if (!featuredEvent) return renderComingSoon(res, req.user);
@@ -59,7 +75,11 @@
   
       if (!event)                                    return res.redirect('/coming-soon?reason=no-event');
       if (!event.isActive)                           return res.redirect('/coming-soon?reason=inactive');
-      if (new Date(event.date) < new Date())         return res.redirect('/coming-soon?reason=expired');
+      // if (new Date(event.date) < new Date())         return res.redirect('/coming-soon?reason=expired');
+
+      const eventEnd = new Date(event.date);
+eventEnd.setHours(23, 59, 59, 999);
+if (eventEnd < new Date()) return res.redirect('/coming-soon?reason=expired');
 
       // Also fetch all active events so the detail page can show the hero slider
       const events = await Event.find({ isActive: true }).sort({ isFeatured: -1, date: 1 });
