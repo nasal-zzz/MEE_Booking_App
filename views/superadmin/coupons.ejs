@@ -144,10 +144,16 @@
   <%- include('../partials/superadmin-sidebar', { activePage: 'coupons' }) %>
   <main class="main">
 
-    <div class="page-hd">
-      <div class="page-title">COUPONS</div>
-      <button class="btn-new" onclick="openCreate()"><i class="bi bi-plus-lg"></i> New Coupon</button>
-    </div>
+<div class="page-hd">
+  <div class="page-title">COUPONS</div>
+  <div style="display:flex;gap:0.6rem;align-items:center;flex-wrap:wrap;">
+    <button class="export-btn" onclick="openCouponExport()" style="display:inline-flex;align-items:center;gap:0.5rem;padding:0.6rem 1.2rem;background:rgba(0,255,136,0.07);border:1px solid rgba(0,255,136,0.28);border-radius:7px;color:#00FF88;font-family:'Space Mono',monospace;font-size:0.72rem;font-weight:700;cursor:pointer;letter-spacing:0.5px;white-space:nowrap;">
+      <i class="bi bi-file-earmark-spreadsheet-fill"></i> Export Excel
+    </button>
+    <button class="btn-new" onclick="openCreate()"><i class="bi bi-plus-lg"></i> New Coupon</button>
+  </div>
+</div>
+
 
     <%
       const now2 = new Date();
@@ -375,6 +381,58 @@
     </div>
 
   </main>
+
+  <!-- ══════ COUPON EXPORT MODAL ══════ -->
+<div style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);z-index:9000;align-items:center;justify-content:center;padding:1rem;" id="couponExportModal" onclick="if(event.target===this)closeCouponExport()">
+  <div style="background:#14141C;border:1px solid rgba(255,255,255,0.08);border-radius:14px;width:100%;max-width:620px;max-height:90vh;display:flex;flex-direction:column;position:relative;overflow:hidden;">
+    
+    <!-- Header -->
+    <div style="padding:1.4rem 1.6rem 1rem;border-bottom:1px solid rgba(255,255,255,0.07);flex-shrink:0;">
+      <div style="font-family:'Poppins',sans-serif;font-size:1rem;letter-spacing:1px;margin-bottom:0.2rem;">
+        <i class="bi bi-file-earmark-spreadsheet-fill" style="color:#00FF88;margin-right:6px;"></i>EXPORT COUPON USAGE
+      </div>
+      <p style="font-size:0.72rem;color:#666;font-family:'Space Mono',monospace;">Select coupons to export their full redemption details</p>
+      <button onclick="closeCouponExport()" style="position:absolute;top:1rem;right:1rem;background:none;border:none;color:#666;cursor:pointer;font-size:1rem;"><i class="bi bi-x-lg"></i></button>
+    </div>
+
+    <!-- Toolbar -->
+    <div style="display:flex;align-items:center;gap:0.7rem;padding:0.8rem 1.6rem;border-bottom:1px solid rgba(255,255,255,0.05);flex-shrink:0;flex-wrap:wrap;">
+      <input id="cexSearch" placeholder="Search coupon code or description…" oninput="cexFilter()" style="flex:1;min-width:140px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:6px;color:#fff;padding:0.45rem 0.8rem;font-family:'Outfit',sans-serif;font-size:0.82rem;outline:none;"/>
+      <button onclick="cexSelAll(true)"  style="background:none;border:none;color:#9D4EDD;font-size:0.68rem;font-family:'Space Mono',monospace;cursor:pointer;text-decoration:underline;padding:0;white-space:nowrap;">Select all</button>
+      <span style="color:#333;font-size:0.7rem;">·</span>
+      <button onclick="cexSelAll(false)" style="background:none;border:none;color:#9D4EDD;font-size:0.68rem;font-family:'Space Mono',monospace;cursor:pointer;text-decoration:underline;padding:0;white-space:nowrap;">Clear all</button>
+      <button onclick="cexSelUsed()"     style="background:none;border:none;color:#00FF88;font-size:0.68rem;font-family:'Space Mono',monospace;cursor:pointer;text-decoration:underline;padding:0;white-space:nowrap;">Used only</button>
+    </div>
+
+    <!-- Coupon List -->
+    <div style="overflow-y:auto;flex:1;padding:0.4rem 0;" id="cexBody"></div>
+
+    <!-- Sheet options -->
+    <div style="padding:0.8rem 1.6rem;border-top:1px solid rgba(255,255,255,0.05);flex-shrink:0;">
+      <div style="font-family:'Space Mono',monospace;font-size:0.52rem;letter-spacing:2px;color:#555;margin-bottom:0.5rem;text-transform:uppercase;">Sheets to include</div>
+      <div style="display:flex;gap:0.8rem;flex-wrap:wrap;">
+        <label style="display:flex;align-items:center;gap:0.4rem;cursor:pointer;font-size:0.78rem;color:#ccc;">
+          <input type="checkbox" id="cex-sheet-summary" checked style="accent-color:#9D4EDD;width:13px;height:13px;">
+          Coupon Summary
+        </label>
+        <label style="display:flex;align-items:center;gap:0.4rem;cursor:pointer;font-size:0.78rem;color:#ccc;">
+          <input type="checkbox" id="cex-sheet-redemptions" checked style="accent-color:#9D4EDD;width:13px;height:13px;">
+          Redemption Details
+        </label>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div style="padding:1rem 1.6rem;border-top:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;justify-content:space-between;gap:0.8rem;flex-shrink:0;flex-wrap:wrap;">
+      <span id="cexFootInfo" style="font-family:'Space Mono',monospace;font-size:0.68rem;color:#555;">—</span>
+      <button id="cexDownBtn" onclick="doCouponExport()" disabled style="display:inline-flex;align-items:center;gap:0.45rem;padding:0.55rem 1.3rem;background:rgba(0,255,136,0.09);border:1px solid rgba(0,255,136,0.38);border-radius:7px;color:#00FF88;font-family:'Space Mono',monospace;font-size:0.75rem;font-weight:700;cursor:pointer;opacity:0.4;">
+        <i class="bi bi-download"></i> Download Excel
+      </button>
+    </div>
+
+  </div>
+</div>
+
 </div>
 
 <!-- ══════ CREATE / EDIT MODAL ══════ -->
@@ -653,6 +711,305 @@ function confDel(id,code){
 
 document.getElementById('cpnMo').addEventListener('click',function(e){ if(e.target===this)closeMo(); });
 document.getElementById('dcMo').addEventListener('click',function(e){ if(e.target===this)this.classList.remove('open'); });
+
+// ── Coupon Export ──
+var cexScope = 'visible';
+
+function openCouponExport() {
+  cexScope = 'visible';
+  document.getElementById('cex-scope-visible').style.cssText += ';border-color:rgba(157,78,221,0.45);background:rgba(157,78,221,0.12);color:#c084fc;';
+  document.getElementById('cex-scope-all').style.cssText += ';border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:#B3B3B3;';
+  updateCexCount();
+  document.getElementById('couponExportModal').style.display = 'flex';
+}
+
+function closeCouponExport() {
+  document.getElementById('couponExportModal').style.display = 'none';
+}
+
+function setCexScope(scope, el) {
+  cexScope = scope;
+  ['visible','all'].forEach(function(s) {
+    var el2 = document.getElementById('cex-scope-' + s);
+    if (s === scope) {
+      el2.style.borderColor = 'rgba(157,78,221,0.45)';
+      el2.style.background  = 'rgba(157,78,221,0.12)';
+      el2.style.color       = '#c084fc';
+    } else {
+      el2.style.border     = '1px solid rgba(255,255,255,0.1)';
+      el2.style.background = 'rgba(255,255,255,0.04)';
+      el2.style.color      = '#B3B3B3';
+    }
+  });
+  updateCexCount();
+}
+
+function getCexRows() {
+  var rows = Array.from(document.querySelectorAll('#cpnBody .cr'));
+  return cexScope === 'all' ? rows : rows.filter(function(r) { return r.style.display !== 'none'; });
+}
+
+function updateCexCount() {
+  var rows = getCexRows();
+  document.getElementById('cexCount').textContent = rows.length + ' coupons';
+}
+
+
+
+// ── Coupon Export ──
+var COUPON_DATA = <%- JSON.stringify(coupons.map(function(c) {
+  return {
+    code:        c.code,
+    type:        c.type || 'fixed',
+    value:       c.value || 0,
+    description: c.description || '',
+    isActive:    c.isActive,
+    isFeatured:  c.isFeatured || false,
+    maxUses:     c.maxUses || 0,
+    usedCount:   c.usedCount || 0,
+    minOrder:    c.minOrder || 0,
+    minTickets:  c.minTickets || 0,
+    validFrom:   c.validFrom  ? new Date(c.validFrom).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}) : '',
+    validUntil:  c.validUntil ? new Date(c.validUntil).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}) : '',
+    categories:  (c.applicableCategories||[]).join(', ') || 'All',
+    totalSaved:  (c.usages||[]).reduce(function(s,b){return s+(b.discount||0);},0),
+    totalTickets:(c.usages||[]).reduce(function(s,b){return s+(b.quantity||0);},0),
+    usages: (c.usages||[]).map(function(u){
+      return {
+        couponCode: c.code,
+        bookingRef: u.bookingRef || '',
+        customer:   u.user ? (u.user.firstName+' '+(u.user.lastName||'')).trim() : 'Unknown',
+        phone:      u.user ? (u.user.phone||'') : '',
+        email:      u.user ? (u.user.email||'') : '',
+        event:      u.event ? u.event.name : 'Unknown Event',
+        eventDate:  u.event ? new Date(u.event.date).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}) : '',
+        ticketType: u.ticketType || '',
+        quantity:   u.quantity   || 0,
+        subtotal:   u.subtotal   || 0,
+        discount:   u.discount   || 0,
+        totalPaid:  u.totalAmount|| 0,
+        date:       new Date(u.createdAt).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}),
+      };
+    }),
+  };
+})) %>;
+
+var cexFiltered = COUPON_DATA.slice();
+
+function openCouponExport() {
+  document.getElementById('cexSearch').value = '';
+  cexFiltered = COUPON_DATA.slice();
+  renderCexList();
+  document.getElementById('couponExportModal').style.display = 'flex';
+}
+
+function closeCouponExport() {
+  document.getElementById('couponExportModal').style.display = 'none';
+}
+
+function renderCexList() {
+  var html = '';
+  cexFiltered.forEach(function(c) {
+    var usageHtml = c.usedCount > 0
+      ? '<span style="font-family:Space Mono,monospace;font-size:0.56px;padding:0.15rem 0.5rem;border-radius:8px;background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.22);color:#00FF88;font-size:0.58rem;">'
+        + '<i class="bi bi-receipt"></i> ' + c.usedCount + ' use' + (c.usedCount > 1 ? 's' : '')
+        + ' · ₹' + c.totalSaved.toLocaleString('en-IN') + ' saved'
+        + '</span>'
+      : '<span style="font-family:Space Mono,monospace;font-size:0.58rem;padding:0.15rem 0.5rem;border-radius:8px;background:rgba(179,179,179,0.06);border:1px solid rgba(179,179,179,0.15);color:#555;">No uses</span>';
+
+    var typeHtml = c.type === 'percent'
+      ? '<span style="font-family:Space Mono,monospace;font-size:0.56rem;padding:0.12rem 0.45rem;border-radius:8px;background:rgba(157,78,221,0.1);border:1px solid rgba(157,78,221,0.25);color:#c084fc;">' + c.value + '% OFF</span>'
+      : '<span style="font-family:Space Mono,monospace;font-size:0.56rem;padding:0.12rem 0.45rem;border-radius:8px;background:rgba(0,200,255,0.08);border:1px solid rgba(0,200,255,0.22);color:#00c8ff;">₹' + c.value + ' OFF</span>';
+
+    html += '<div class="cex-row" onclick="cexToggle(\'' + c.code + '\',this)" style="display:flex;align-items:center;gap:0.8rem;padding:0.75rem 1.6rem;border-bottom:1px solid rgba(255,255,255,0.03);cursor:pointer;transition:background 0.12s;" onmouseover="this.style.background=\'rgba(255,255,255,0.02)\'" onmouseout="this.style.background=this._sel?\'rgba(157,78,221,0.06)\':\'\'">'
+      + '<input type="checkbox" class="cex-cb" data-code="' + c.code + '" onclick="event.stopPropagation();cexToggle(\'' + c.code + '\',this.closest(\'.cex-row\'))" style="width:16px;height:16px;accent-color:#9D4EDD;cursor:pointer;flex-shrink:0;">'
+      + '<div style="flex:1;min-width:0;">'
+      +   '<div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">'
+      +     '<span style="font-family:Space Mono,monospace;font-size:0.8rem;letter-spacing:2px;color:#d8b4fe;font-weight:700;">' + c.code + '</span>'
+      +     typeHtml
+      +   '</div>'
+      +   '<div style="font-size:0.7rem;color:#555;margin-top:3px;font-family:Space Mono,monospace;">' + (c.description || '&nbsp;') + '</div>'
+      + '</div>'
+      + '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:0.3rem;flex-shrink:0;">'
+      +   usageHtml
+      +   (c.validUntil ? '<span style="font-size:0.6rem;color:#555;font-family:Space Mono,monospace;">Until ' + c.validUntil + '</span>' : '')
+      + '</div>'
+      + '</div>';
+  });
+
+  if (!html) {
+    html = '<div style="text-align:center;padding:2.5rem;color:#444;font-size:0.82rem;font-family:Space Mono,monospace;"><i class="bi bi-inbox" style="font-size:1.8rem;display:block;margin-bottom:0.7rem;opacity:0.3;"></i>No coupons found.</div>';
+  }
+  document.getElementById('cexBody').innerHTML = html;
+  updateCexFoot();
+}
+
+function cexToggle(code, row) {
+  var cb = row.querySelector('.cex-cb');
+  cb.checked = !cb.checked;
+  row._sel = cb.checked;
+  row.style.background = cb.checked ? 'rgba(157,78,221,0.06)' : '';
+  updateCexFoot();
+}
+
+function cexSelAll(val) {
+  document.querySelectorAll('.cex-cb').forEach(function(cb) {
+    cb.checked = val;
+    var row = cb.closest('.cex-row');
+    row._sel = val;
+    row.style.background = val ? 'rgba(157,78,221,0.06)' : '';
+  });
+  updateCexFoot();
+}
+
+function cexSelUsed() {
+  document.querySelectorAll('.cex-cb').forEach(function(cb) {
+    var code = cb.dataset.code;
+    var c = COUPON_DATA.find(function(x) { return x.code === code; });
+    var sel = c && c.usedCount > 0;
+    cb.checked = sel;
+    var row = cb.closest('.cex-row');
+    row._sel = sel;
+    row.style.background = sel ? 'rgba(157,78,221,0.06)' : '';
+  });
+  updateCexFoot();
+}
+
+function cexFilter() {
+  var q = document.getElementById('cexSearch').value.toLowerCase().trim();
+  cexFiltered = !q ? COUPON_DATA.slice() : COUPON_DATA.filter(function(c) {
+    return c.code.toLowerCase().includes(q) || c.description.toLowerCase().includes(q);
+  });
+  renderCexList();
+}
+
+function updateCexFoot() {
+  var checked = document.querySelectorAll('.cex-cb:checked').length;
+  var total   = document.querySelectorAll('.cex-cb').length;
+  var totalUsages = 0;
+  document.querySelectorAll('.cex-cb:checked').forEach(function(cb) {
+    var c = COUPON_DATA.find(function(x) { return x.code === cb.dataset.code; });
+    if (c) totalUsages += c.usages.length;
+  });
+  document.getElementById('cexFootInfo').textContent =
+    checked + ' of ' + total + ' selected · ' + totalUsages + ' redemption' + (totalUsages !== 1 ? 's' : '');
+  var btn = document.getElementById('cexDownBtn');
+  btn.disabled = checked === 0;
+  btn.style.opacity = checked === 0 ? '0.4' : '1';
+  btn.style.cursor  = checked === 0 ? 'not-allowed' : 'pointer';
+}
+
+function doCouponExport() {
+  var selectedCodes = Array.from(document.querySelectorAll('.cex-cb:checked')).map(function(cb) { return cb.dataset.code; });
+  if (!selectedCodes.length) return;
+
+  var selectedData = COUPON_DATA.filter(function(c) { return selectedCodes.indexOf(c.code) !== -1; });
+  var doSummary     = document.getElementById('cex-sheet-summary').checked;
+  var doRedemptions = document.getElementById('cex-sheet-redemptions').checked;
+  if (!doSummary && !doRedemptions) { alert('Select at least one sheet.'); return; }
+
+  function write() {
+    var wb = XLSX.utils.book_new();
+
+    // ── Sheet 1: Coupon Summary ──
+    if (doSummary) {
+      var sh = ['Code','Type','Value','Description','Status','Featured',
+                'Max Uses','Used','Remaining','Min Order (₹)','Min Tickets',
+                'Valid From','Valid Until','Categories',
+                'Total Orders','Total Tickets','Total Discounted (₹)'];
+      var sr = selectedData.map(function(c) {
+        return [
+          c.code,
+          c.type === 'percent' ? 'Percentage' : 'Fixed',
+          c.type === 'percent' ? c.value + '%' : c.value,
+          c.description,
+          c.isActive ? 'Active' : 'Inactive',
+          c.isFeatured ? 'Yes' : 'No',
+          c.maxUses || 'Unlimited',
+          c.usedCount,
+          c.maxUses ? Math.max(0, c.maxUses - c.usedCount) : 'Unlimited',
+          c.minOrder   || 0,
+          c.minTickets || 0,
+          c.validFrom  || 'No limit',
+          c.validUntil || 'No limit',
+          c.categories,
+          c.usages.length,
+          c.totalTickets,
+          c.totalSaved,
+        ];
+      });
+      var ws1 = XLSX.utils.aoa_to_sheet([sh].concat(sr));
+      ws1['!cols'] = sh.map(function(h, i) {
+        var maxLen = Math.max(h.length, Math.max.apply(null, sr.map(function(r) { return String(r[i]||'').length; })));
+        return { wch: Math.max(14, maxLen) };
+      });
+      XLSX.utils.book_append_sheet(wb, ws1, 'Coupon Summary');
+    }
+
+    // ── Sheet 2: Redemption Details ──
+    if (doRedemptions) {
+      var allUsages = [];
+      selectedData.forEach(function(c) { allUsages = allUsages.concat(c.usages); });
+
+      if (!allUsages.length) {
+        var wsE = XLSX.utils.aoa_to_sheet([['No redemptions for selected coupons.']]);
+        XLSX.utils.book_append_sheet(wb, wsE, 'Redemptions');
+      } else {
+        var rh = ['Coupon Code','Booking Ref','Customer Name','Phone','Email',
+                  'Event','Event Date','Ticket Type','Quantity',
+                  'Subtotal (₹)','Discount (₹)','Total Paid (₹)','Booking Date'];
+        var rr = allUsages.map(function(u) {
+          return [
+            u.couponCode, u.bookingRef, u.customer, u.phone, u.email,
+            u.event, u.eventDate, u.ticketType, u.quantity,
+            u.subtotal, u.discount, u.totalPaid, u.date,
+          ];
+        });
+        var ws2 = XLSX.utils.aoa_to_sheet([rh].concat(rr));
+        ws2['!cols'] = rh.map(function(h, i) {
+          var maxLen = Math.max(h.length, Math.max.apply(null, rr.map(function(r) { return String(r[i]||'').length; })));
+          return { wch: Math.max(14, maxLen) };
+        });
+        XLSX.utils.book_append_sheet(wb, ws2, 'Redemptions');
+      }
+    }
+
+    // ── Sheet 3: One sheet per selected coupon (if it has usages) ──
+    selectedData.forEach(function(c) {
+      if (!c.usages.length) return;
+      var ch = ['Booking Ref','Customer','Phone','Email',
+                'Event','Event Date','Ticket Type','Qty',
+                'Subtotal (₹)','Discount (₹)','Paid (₹)','Date'];
+      var cr = c.usages.map(function(u) {
+        return [u.bookingRef, u.customer, u.phone, u.email,
+                u.event, u.eventDate, u.ticketType, u.quantity,
+                u.subtotal, u.discount, u.totalPaid, u.date];
+      });
+      var wsc = XLSX.utils.aoa_to_sheet([ch].concat(cr));
+      wsc['!cols'] = ch.map(function(h, i) {
+        var maxLen = Math.max(h.length, Math.max.apply(null, cr.map(function(r) { return String(r[i]||'').length; })));
+        return { wch: Math.max(12, maxLen) };
+      });
+      // Sheet name max 31 chars, Excel doesn't allow special chars
+      var sheetName = c.code.replace(/[:\\\/\?\*\[\]]/g, '').slice(0, 31);
+      XLSX.utils.book_append_sheet(wb, wsc, sheetName);
+    });
+
+    XLSX.writeFile(wb, 'coupons-export-' + new Date().toISOString().slice(0,10) + '.xlsx');
+    closeCouponExport();
+  }
+
+  if (typeof XLSX === 'undefined') {
+    var s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    s.onload = write;
+    document.head.appendChild(s);
+  } else {
+    write();
+  }
+}
+
+
 
 // Init
 renderCatBadges();

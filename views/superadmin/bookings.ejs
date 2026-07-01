@@ -271,6 +271,7 @@
                 <th>Ticket</th>
                 <th style="text-align:center;">Qty</th>
                 <th>Amount</th>
+                <th>Discount</th>
                 <th>Payment</th>
                 <th>Status</th>
                 <th>Reminder</th>
@@ -306,6 +307,11 @@
                 <td style="font-family:'Space Mono',monospace;font-weight:700;">₹<%= (b.totalAmount||0).toLocaleString('en-IN') %>
                   <% if(b.couponCode){ %><div style="font-size:0.65rem;color:var(--success);">Coupon: <%= b.couponCode %></div><% } %>
                 </td>
+                <td>
+              <% if(b.discount>0){ %><span style="color:#00FF88;font-size:0.78rem;">-₹<%= b.discount.toLocaleString('en-IN') %></span><% if(b.couponCode){ %><div style="font-family:'Space Mono',monospace;font-size:0.58rem;color:#555;margin-top:1px;"><%= b.couponCode %></div><% } %>
+              <% }else{ %><span style="color:#333;">—</span><% } %>
+            </td>
+
                 <td>
                   <% if(b.paymentMethod==='cash'){ %>
                     <span class="b-cash">CASH</span>
@@ -493,12 +499,15 @@
       { key:'ticket',   label:'Ticket Type',    get:function(r){ var el=r.querySelector('td:nth-child(4)'); return el?el.textContent.trim():''; } },
       { key:'qty',      label:'Quantity',       get:function(r){ var el=r.querySelector('td:nth-child(5)'); return el?el.textContent.trim():''; } },
       { key:'amount',   label:'Amount (₹)',     get:function(r){ return r.dataset.amount||''; } },
+      { key:'discount', label:'Discount (₹)',   get:function(r){ var el=r.querySelector('td:nth-child(7) span'); return el?el.textContent.replace(/[₹\-]/g,'').trim():''; } },
+      { key:'coupon',   label:'Coupon Code',    get:function(r){ var el=r.querySelector('td:nth-child(7) div'); return el?el.textContent.trim():''; } },
+
       { key:'method',   label:'Payment Method', get:function(r){ return r.dataset.method||''; } },
       { key:'status',   label:'Payment Status', get:function(r){ return r.dataset.status||''; } },
       { key:'seller',   label:'Sold By',        get:function(r){ return r.dataset.seller||''; } },
       { key:'date',     label:'Booking Date',   get:function(r){ var el=r.querySelector('td:last-child'); return el?el.textContent.replace(/\s+/g,' ').trim():''; } },
     ];
-    var exDefaultOn = ['ref','customer','phone','event','ticket','qty','amount','method','status','date'];
+    var exDefaultOn = ['ref','customer','phone','event','ticket','qty','amount','method','status','coupon','date'];
     var exScope = 'filtered';
 
     function openExportModal(){
