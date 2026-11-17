@@ -24,24 +24,7 @@ const express    = require('express');
   }
 };
 
-  // const guardBookingEvent = async (req, res, next) => {
-  //   try {
-  //     const event = await Event.findById(req.params.eventId);
-  //     if (!event)                            return res.redirect('/coming-soon?reason=no-event');
-  //     if (!event.isActive)                   return res.redirect('/coming-soon?reason=inactive');
-
-  //     // if (new Date(event.date) < new Date()) return res.redirect('/coming-soon?reason=expired');
-
-
-
-  //     req.event = event;
-  //     next();
-  //   } catch (err) {
-  //     res.redirect('/coming-soon?reason=no-event');
-  //   }
-  // };
-
-  // ── NAMED ROUTES — must come BEFORE wildcard /:eventId ──────────────────────
+  
 
   router.get('/my-bookings',            requireAuth, bc.getMyBookings);
   router.get('/ticket/:bookingId',      requireAuth, bc.getTicket);          // legacy → redirects to /success/
@@ -195,8 +178,6 @@ router.post(
     }
   });
 
-  // ── WILDCARD — legacy entry points (from home / event detail "Book Now" button)
-  // These redirect to the proper step 1 or step 2 based on whether a seatmap exists
   router.get('/',           requireAuth, bc.getBookingPage);
   router.get('/:eventId',   requireAuth, bc.getBookingPage);
 

@@ -1,6 +1,5 @@
 const Staff = require('../models/Staff');
 
-// Re-usable DB check — returns null if account is gone/blocked
 const verifyStaffSession = async (req) => {
   const staffId = req.session.staffUser?.id;
   if (!staffId) return 'hardcoded'; // hardcoded superadmin — no DB record needed

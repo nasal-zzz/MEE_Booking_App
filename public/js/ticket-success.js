@@ -1,4 +1,3 @@
-/* ticket-success.js  —  place in /public/js/ticket-success.js */
 
 var BOOKING_REF = window.BOOKING_REF || '';
 

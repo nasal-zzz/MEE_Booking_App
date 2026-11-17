@@ -113,9 +113,6 @@ exports.createOrder = async (req, res) => {
     if (effectiveQty > maxAllowed)
       return res.json({ success: false, message: `Max ${maxAllowed} tickets per order for ${ttype.name || ttype.category}.` });
 
-    // Cancel old PENDING bookings and release their seats back to the pool.
-    // CRITICAL: Re-check each booking from DB before releasing — the webhook
-    // may have already paid it while the user navigated back to this page.
     const prevPending = await Booking.find({
       user: req.user._id,
       event: event._id,
@@ -123,7 +120,6 @@ exports.createOrder = async (req, res) => {
     }).populate('event');
 
     for (const prev of prevPending) {
-      // Re-fetch from DB right now — if webhook paid it in the meantime, skip
       const freshCheck = await Booking.findOne({
         _id: prev._id,
         paymentStatus: 'pending',
@@ -145,8 +141,6 @@ exports.createOrder = async (req, res) => {
       console.log(`🔓 createOrder: released ${prev.quantity} seats back to pool for ${prev.ticketType}`);
     }
 
-    // Only mark pending→failed for bookings still in pending/failed state
-    // (never touch already-paid bookings)
     await Booking.updateMany(
       { user: req.user._id, event: event._id, paymentStatus: { $in: ['pending', 'failed'] } },
       { paymentStatus: 'failed' }
@@ -410,14 +404,6 @@ exports.checkExistingBooking = async (req, res) => {
   }
 };
 
-// ─────────────────────────────────────────────────────────────
-// POST /booking/save-failed
-//
-// FIX: Don't wipe session or release seats if booking is very
-// recent (< 90s). Razorpay sometimes sends payment.failed before
-// payment.captured — giving it time to correct itself prevents
-// the "money taken but no ticket" scenario.
-// ─────────────────────────────────────────────────────────────
 
 exports.saveFailed = async (req, res) => {
   try {
@@ -452,7 +438,6 @@ try {
   const eventDoc = failedBooking?.event;
 
   if (phone && eventDoc && failedBooking) {
-    // Atomically set failedNotified=true — only the first call wins
     const notifyResult = await Booking.findOneAndUpdate(
       { _id: failedBooking._id, failedNotified: { $ne: true } },
       { $set: { failedNotified: true } },
@@ -481,7 +466,6 @@ try {
       return res.json({ success: true });
     }
 
-    // ── Old enough — flip status + release seats ──
     const wasActuallyPending = failedBooking?.paymentStatus === 'pending';
 
     await Booking.updateOne(
@@ -560,13 +544,6 @@ exports.getBookingStatus = async (req, res) => {
 
 // ─────────────────────────────────────────────────────────────
 // POST /booking/verify-payment
-//
-// FIXES:
-//  1. Don't bail on missing session — recover from DB via orderId
-//  2. Check for webhook-already-paid booking early (before pending lookup)
-//  3. If recovered booking was failed (seats released), re-reserve atomically
-//  4. Promote recovered failed booking back to pending before processing
-// ─────────────────────────────────────────────────────────────
 exports.verifyPayment = async (req, res) => {
   try {
     const { razorpay_payment_id, razorpay_order_id, razorpay_signature } = req.body;
@@ -589,8 +566,6 @@ exports.verifyPayment = async (req, res) => {
       return res.json({ success: true, bookingId: alreadyPaid._id, bookingRef: alreadyPaid.bookingRef });
     }
 
-    // ── FIX 1: Check if webhook already paid this order (race condition where
-    //    payment.failed fired first, wiped session, then payment.captured came) ──
     const webhookAlreadyPaid = await Booking.findOne({
       orderId: razorpay_order_id,
       paymentStatus: 'paid',
@@ -603,8 +578,6 @@ exports.verifyPayment = async (req, res) => {
       return res.json({ success: true, bookingId: webhookAlreadyPaid._id, bookingRef: webhookAlreadyPaid.bookingRef });
     }
 
-    // ── FIX 2: Session recovery — happens when save-failed wiped the session
-    //    during a Razorpay retry (user retried inside same modal after failure) ──
     if (!pending) {
       console.warn('⚠ verifyPayment: session missing — attempting DB recovery via orderId:', razorpay_order_id);
 
@@ -651,12 +624,9 @@ exports.verifyPayment = async (req, res) => {
         isStanding:      isStandingCategory(ttypeForRecovery),
       };
 
-// In verifyPayment session recovery:
 if (recoveredBooking.paymentStatus === 'failed') {
   if (recoveredBooking.seatsReleased === true) {
-    // Only re-reserve if seats were actually released
     console.log(`↩️  verifyPayment: re-reserving seats for ${pending.ticketType} (seatsReleased=true)`);
-    // ... re-reserve logic ...
   } else {
     console.log(`ℹ️  verifyPayment: booking is failed but seatsReleased=false — seats still held, no re-reserve`);
   }
@@ -671,7 +641,6 @@ if (recoveredBooking.paymentStatus === 'failed') {
 
     }
 
-    // ── From here, `pending` is guaranteed to be populated ──
 
     const existingBooking =
       (pending.bookingId ? await Booking.findOne({ _id: pending.bookingId, paymentStatus: { $in: ['pending', 'failed'] } }) : null)
@@ -705,7 +674,6 @@ if (recoveredBooking.paymentStatus === 'failed') {
       );
 
       if (!atomicUpdate) {
-        // Webhook won the race — re-fetch the now-paid booking from DB
         console.log('verifyPayment: lost atomic race to webhook — re-fetching paid booking');
         const paidByWebhook = await Booking.findOne({
           _id: existingBooking._id,
@@ -730,13 +698,11 @@ await generateSharedQR(atomicUpdate.tickets, {
   gateNumber,
 });
 
-// Save tickets with seat numbers back to DB
 await Booking.updateOne(
   { _id: existingBooking._id },
   { $set: { tickets: atomicUpdate.tickets } }
 );
 
-      // SeatMap update inside atomicUpdate success — prevents double increment
       if (pending.zone || existingBooking.zone) {
         const zoneName = pending.zone || existingBooking.zone;
         await SeatMap.updateOne(
@@ -773,7 +739,6 @@ await Booking.updateOne(
       return res.json({ success: true, bookingId: existingBooking._id, bookingRef: existingBooking.bookingRef });
     }
 
-    // ── Fallback: no pending/failed booking found — check for orphan ──
     console.warn('⚠ verifyPayment: no pending booking found — checking for existing orderId before fallback create');
 
     const orphanedBooking = await Booking.findOne({ orderId: razorpay_order_id }).catch(() => null);
@@ -902,10 +867,7 @@ await Booking.updateOne(
 
 // ─────────────────────────────────────────────────────────────
 // GET /booking/success/:bookingId
-//
-// FIX: Poll up to 5s for webhook race condition where booking
-// is paid by webhook but verifyPayment arrives first.
-// ─────────────────────────────────────────────────────────────
+
 exports.getSuccessPage = async (req, res) => {
   try {
     let booking = null;
@@ -925,7 +887,6 @@ exports.getSuccessPage = async (req, res) => {
 
     if (!booking) return res.redirect('/booking/my-bookings');
 
-    // After polling, if still not paid, show a processing page with auto-refresh
     if (booking.paymentStatus !== 'paid') {
       return res.render('pages/payment-processing', {
         title: 'Confirming Payment — MEE',
@@ -1035,8 +996,6 @@ exports.retryPaymentApi = async (req, res) => {
     const ttype = booking.event?.ticketTypes?.find(t => t.category === booking.ticketType);
     let postIncBookedSeats = null;
 
-    // Always re-reserve seats (both pending and failed statuses need this
-    // because savePending may have released them)
     const maxAllowed = ttype ? (ttype.totalSeats - booking.quantity) : 0;
 
     const reReserved = await Event.findOneAndUpdate(
@@ -1292,8 +1251,6 @@ if (evtType === 'payment.captured' || evtType === 'order.paid') {
     return t?.gateNumber || '';
   })();
 
-  // ── STEP 1: Atomic flip FIRST — only ONE webhook wins ──
-  // This is the single gate that prevents all double-processing.
   const webhookFlipped = await Booking.findOneAndUpdate(
     { _id: booking._id, paymentStatus: { $in: ['pending', 'failed'] } },
     {
@@ -1307,7 +1264,6 @@ if (evtType === 'payment.captured' || evtType === 'order.paid') {
     { new: true }
   );
 
-  // ── STEP 2: If we lost the race, exit — no re-reserve, no seat assignment ──
   if (!webhookFlipped) {
     console.log(`ℹ️  Webhook: lost atomic race for ${booking.bookingRef} — skipping`);
     await finalise('already_processed_by_verify', {
@@ -1319,8 +1275,6 @@ if (evtType === 'payment.captured' || evtType === 'order.paid') {
   }
 
 
-// STEP 3: Re-reserve ONLY if seats were actually released
-// Check seatsReleased flag — if false, seats are still held, no re-reserve needed
 if (booking.paymentStatus === 'failed') {
   if (booking.seatsReleased === true) {
     // Seats were genuinely released — need to re-reserve
@@ -1351,8 +1305,6 @@ if (booking.paymentStatus === 'failed') {
       console.warn(`⚠️  Webhook: re-reserve failed — completing booking anyway (money received)`);
     }
   } else {
-    // Status is 'failed' but seats were NOT released (90s guard fired)
-    // Seats are still held in bookedSeats — no re-reserve needed
     console.log(`ℹ️  Webhook: booking ${booking.bookingRef} status=failed but seatsReleased=false — skipping re-reserve, seats still held`);
   }
 }
@@ -1371,13 +1323,11 @@ if (booking.paymentStatus === 'failed') {
     ticketType: booking.ticketType,
   });
 
-  // ── STEP 6: Save tickets (with seat numbers + QR) back to DB ──
   await Booking.updateOne(
     { _id: booking._id },
     { $set: { tickets: webhookFlipped.tickets } }
   );
 
-  // SeatMap, coupon, user bookings array
   if (booking.zone) {
     await SeatMap.updateOne(
       { event: eventDoc._id, 'sections.name': booking.zone },

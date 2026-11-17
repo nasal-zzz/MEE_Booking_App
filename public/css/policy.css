@@ -1,7 +1,3 @@
-/* ============================================================
-   POLICY PAGES — Terms & Conditions, Privacy & Policy
-   /public/css/policy.css
-   ============================================================ */
 
 /* ── CSS Custom Properties ── */
 :root {
@@ -19,11 +15,6 @@
   --white-04:  rgb(255 255 255 / 0.04);
 }
 
-/* ============================================================
-   PAGE BACKGROUND — gradient from primary/20 → secondary/20
-   Matches the Tailwind pattern:
-     bg-gradient-to-br from-primary/20 via-black to-secondary/20
-   ============================================================ */
 
 .policy-bg {
   /* Base black layer */

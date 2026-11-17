@@ -24,13 +24,13 @@
     releasedSeats: { type: [Number], default: [] },
 
     
-    paidSeatCount: { type: Number, default: 0, min: 0 }, // Tracks how many seats have been paid for (vs just booked)
+    paidSeatCount: { type: Number, default: 0, min: 0 }, 
 
     maxPerOrder: { type: Number, default: 10 },
     seatType:    { type: String, enum: ['standing','sitting'], default: 'standing' },
     seatPrefix:  { type: String, default: '' },
     seatStart:   { type: Number, default: 1 },
-    gateNumber:  { type: String, default: '' },   // ✅ Gate number for this category
+    gateNumber:  { type: String, default: '' },   
     discountTiers: [{ minQty: { type: Number }, discount: { type: Number } }],
     terms:       { type: String, default: '' },
     isActive:    { type: Boolean, default: true },

@@ -1,7 +1,4 @@
-/* ============================================================
-   TYPOGRAPHY.CSS — Fonts, sizes, weights, letter-spacing
-   Change font families and size scale here globally.
-   ============================================================ */
+
 
 /* ── FONT IMPORTS ── */
 @import url('https://fonts.googleapis.com/css2?family=Anton&family=Outfit:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
@@ -22,10 +19,7 @@
   --font-display: 'Poppins', 'MiravaSans', sans-serif;  /* headings, titles */
   --font-body:    'Outfit', sans-serif;                /* body text */
   --font-mono:    'Space Mono', monospace;             /* labels, refs, codes */
-
-  /* ── SIZE SCALE ──
-     Adjust --scale to make everything proportionally bigger/smaller.
-     1 = default, 1.1 = 10% larger, 0.9 = 10% smaller              */
+           
   --scale: 1;
 
   --text-xs:   calc(0.65rem  * var(--scale));   /* 10.4px — micro labels */

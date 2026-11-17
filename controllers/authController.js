@@ -114,10 +114,6 @@
   // SIGNUP
   // ───────────────────────
 
-  // Key change: accepts emailVerified flag from client — if true, saves email
-// and sets emailVerified=true on the new User doc directly (no second OTP step).
-// ─────────────────────────────────────────────────────────────────────────────
- 
 exports.postSignup = async (req, res) => {
   try {
     const { firstName, email, emailVerified: clientEmailVerified, phone, whatsapp, gender, place, district, next } = req.body;
@@ -129,8 +125,6 @@ exports.postSignup = async (req, res) => {
     if (!/^[6-9]\d{9}$/.test(phone))
       return res.json({ success: false, message: 'Enter a valid 10-digit Indian mobile number.' });
  
-    // If email provided, it must have been verified via OTP modal
-    // (clientEmailVerified is a hint, but we also trust the OTP model on server)
     if (email && !clientEmailVerified)
       return res.json({ success: false, message: 'Please verify your email address before signing up.' });
  
@@ -155,7 +149,7 @@ exports.postSignup = async (req, res) => {
     req.session.pendingUser = {
       firstName,
       email:         emailLower,
-      emailVerified: emailLower ? true : false,   // ← mark verified if present (OTP was done on client)
+      emailVerified: emailLower ? true : false,  
       phone:         fullPhone,
       whatsapp:      fullWhatsapp,
       gender, place, district,
@@ -220,17 +214,6 @@ exports.postSignup = async (req, res) => {
         if (!pending) return res.json({ success: false, message: 'Session expired.', redirect: '/auth/signup' });
 
         const refCode = req.session.referralCode || '';
-        // const user = await User.create({
-        //   firstName:    pending.firstName,
-        //   email:        pending.email,
-        //   phone:        pending.phone,
-        //   whatsapp:     pending.whatsapp || '',
-        //   gender:       pending.gender   || '',
-        //   place:        pending.place    || '',
-        //   district:     pending.district || '',
-        //   isVerified:   true,
-        //   referralCode: refCode,
-        // });
 
             const user = await User.create({
         firstName:     pending.firstName,
@@ -255,9 +238,6 @@ exports.postSignup = async (req, res) => {
         delete req.session.pendingUser;
         delete req.session.otpPhone;
         delete req.session.otpMode;
-
-        // ✅ FIX: capture redirectAfterLogin BEFORE email verify flow
-        // so it survives into email verify and is used by skip/verify
         const finalRedirect = req.session.redirectAfterLogin || '/';
 
         
@@ -306,7 +286,6 @@ exports.postSignup = async (req, res) => {
       await User.findByIdAndUpdate(pending.userId, { emailVerified: true });
       delete req.session.pendingEmailVerify;
 
-      // ✅ FIX: consume redirectAfterLogin here (the correct final destination)
       const redirectTo = req.session.redirectAfterLogin || '/';
       delete req.session.redirectAfterLogin;
       await new Promise(r => req.session.save(r));
@@ -425,17 +404,11 @@ exports.postSignup = async (req, res) => {
     }
   };
 
-  // ─────────────────────────────────────────────
-  // LOGOUT
-  // ✅ FIX: clear 'mee.sid' (the actual session cookie name set in server.js)
-  // The old code cleared 'connect.sid' which was wrong — session never actually died,
-  // causing back-button to still show protected pages.
-  // ─────────────────────────────────────────────
   exports.logout = (req, res) => {
     const clearAndRedirect = () => {
-      res.clearCookie('mee.sid');        // ✅ matches name: 'mee.sid' in server.js
-      res.clearCookie('np_token');       // JWT cookie cleanup
-      res.clearCookie('connect.sid');    // belt-and-suspenders for any old sessions
+      res.clearCookie('mee.sid');       
+      res.clearCookie('np_token');      
+      res.clearCookie('connect.sid');    
       res.redirect('/');
     };
 
@@ -470,16 +443,6 @@ exports.postSignup = async (req, res) => {
   };
 
 
-  // ─────────────────────────────────────────────────────────────────────────────
-// ADD THESE TWO HANDLERS to authController.js
-// These are INLINE email OTP endpoints — no session-redirect flow needed.
-// They work standalone on signup, booking-details, and profile pages.
-// ─────────────────────────────────────────────────────────────────────────────
-
-// POST /auth/send-email-otp
-// Body: { email }
-// Sends an OTP to the given email address.
-// No auth required — caller just needs a valid email.
 exports.sendEmailOTPInline = async (req, res) => {
   try {
     const { email } = req.body;
@@ -510,11 +473,6 @@ exports.sendEmailOTPInline = async (req, res) => {
   }
 };
 
-// POST /auth/verify-email-otp
-// Body: { email, otp }
-// Verifies the OTP.
-// If user is logged in → also marks emailVerified=true and saves email in DB.
-// If not logged in (signup flow) → just returns success; caller saves on signup.
 exports.verifyEmailOTPInline = async (req, res) => {
   try {
     const { email, otp } = req.body;
@@ -526,7 +484,6 @@ exports.verifyEmailOTPInline = async (req, res) => {
     if (!result.success)
       return res.json({ success: false, message: result.message });
 
-    // If a logged-in user is verifying (profile / booking flow) → update DB now
     if (req.session?.userId) {
       const User = require('../models/User');
 

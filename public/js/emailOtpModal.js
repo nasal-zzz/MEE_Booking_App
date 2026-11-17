@@ -1,21 +1,4 @@
-/**
- * emailOtpModal.js
- * ─────────────────────────────────────────────────────────────────────────────
- * Drop this ONCE into a shared partial (e.g. partials/scripts.ejs) or load it
- * on every page that needs email-OTP verification.
- *
- * Usage:
- *   EmailOTPModal.open({
- *     email      : 'user@example.com',
- *     purpose    : 'signup' | 'booking' | 'profile',   // cosmetic only
- *     onVerified : (email) => { /* do your thing *\/ },
- *   });
- *
- * Backend endpoints consumed:
- *   POST /auth/send-email-otp    { email }
- *   POST /auth/verify-email-otp  { email, otp }
- * ─────────────────────────────────────────────────────────────────────────────
- */
+
 ;(function (global) {
   'use strict';
 

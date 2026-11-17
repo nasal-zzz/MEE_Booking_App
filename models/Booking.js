@@ -47,13 +47,7 @@ const bookingSchema = new mongoose.Schema({
   tickets: [ticketSchema],
   gateNumber: { type: String, default: '' },
   zone: { type: String, default: '' },
-
-  // ── FIX #3: QR failure tracking ──────────────────────────────────────────
-  // Set to true when generateSharedQR throws. The booking is still valid and
-  // paid — the user just needs the QR regenerated. Use this flag to find and
-  // retry failed QR jobs without touching payment status.
   qrFailed: { type: Boolean, default: false },
-  // ─────────────────────────────────────────────────────────────────────────
 
   paymentStatus: { type: String, enum: ['pending', 'paid', 'failed', 'refunded'], default: 'pending' },
   paymentId: { type: String, default: null },
@@ -75,7 +69,6 @@ const bookingSchema = new mongoose.Schema({
   confirmationResentAt: { type: Date, default: null },
 }, { timestamps: true });
 
-// ── Index for QR retry jobs: find all paid bookings where QR generation failed ──
 bookingSchema.index({ qrFailed: 1, paymentStatus: 1 });
 
 module.exports = mongoose.model('Booking', bookingSchema);

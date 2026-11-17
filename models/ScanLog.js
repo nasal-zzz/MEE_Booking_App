@@ -7,7 +7,7 @@ const scanLogSchema = new mongoose.Schema({
   eventId:        { type: mongoose.Schema.Types.ObjectId, ref: 'Event', required: true },
   userId:         { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: false },
   attendeeName:   { type: String, default: '' },
-  attendeeGender: { type: String, default: '' },   // ← added back
+  attendeeGender: { type: String, default: '' },   
   scannedAt:      { type: Date, default: Date.now },
   scannedBy: {
     staffId:   { type: mongoose.Schema.Types.ObjectId, ref: 'Staff' },

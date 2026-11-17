@@ -1,8 +1,4 @@
-/* ============================================================
-   UI.JS — Global UI utilities
-   Toast notifications, admin form validation, helpers
-   Auto-loaded on every page.
-   ============================================================ */
+
 
 // ── TOAST SYSTEM ──
 (function() {

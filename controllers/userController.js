@@ -38,10 +38,6 @@
 
   // ── POST /user/profile/update ──
 
-
-  // Key change: email is no longer accepted here — it is managed exclusively via
-// the /auth/send-email-otp + /auth/verify-email-otp modal flow.
-// ─────────────────────────────────────────────────────────────────────────────
  
 exports.updateProfile = async (req, res) => {
   try {
@@ -193,7 +189,6 @@ exports.updateProfile = async (req, res) => {
       const user = await User.findByIdAndDelete(req.params.id);
       if (!user) return res.json({ success: false, message: 'User not found.' });
 
-      // Soft-orphan bookings — keeps revenue history intact
       await Booking.updateMany({ user: req.params.id }, { $unset: { user: '' } });
 
       res.json({ success: true, message: 'User permanently deleted.' });

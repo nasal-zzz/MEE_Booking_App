@@ -18,12 +18,12 @@ const staffSchema = new mongoose.Schema({
   canSellTickets:  { type: Boolean, default: false },
 
   // Gate assignment — only used when canScanQR is true
-  gateNo:           { type: String, default: '' },   // e.g. "GATE 2"
-  assignedCategory: { type: String, default: '' },   // e.g. "familia"
+  gateNo:           { type: String, default: '' },   
+  assignedCategory: { type: String, default: '' },  
   assignedEventId:  { type: mongoose.Schema.Types.ObjectId, ref: 'Event', default: null },
 
 createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Staff', default: null },
-createdByEmail: { type: String, default: null },  // remove required: true
+createdByEmail: { type: String, default: null }, 
 createdByName:  { type: String, default: null },
 
 }, { timestamps: true });
@@ -32,7 +32,6 @@ staffSchema.virtual('fullName').get(function () {
   return (this.firstName + ' ' + this.lastName).trim();
 });
 
-// Auto-sync plainPassword when a plain-text password is saved
 staffSchema.pre('save', function (next) {
   if (this.isModified('password') && !this.password.startsWith('$2')) {
     this.plainPassword = this.password;

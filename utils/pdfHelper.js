@@ -113,29 +113,6 @@ const generateTicketPDF = async ({ booking, event, sponsors = [] }) => {
   // ── One page per ticket / attendee ──
   const pages = booking.tickets.map((t, i) => {
 
-//     const rawSeat = (t.seatNumber || '').trim().toLowerCase();
-//     // const isStanding = categorySeatType === 'standing'
-//     //   || rawSeat === 'standing'
-//     //   || rawSeat === 'general';
-//     const hasRealSeat = rawSeat && rawSeat !== 'standing' && rawSeat !== 'general' && rawSeat !== 'N/A' && rawSeat !== '';
-// const isStanding = !hasRealSeat && (categorySeatType === 'standing' || !categorySeatType);
-
-
-//     const isSitting = !isStanding && rawSeat && rawSeat !== 'n/a';
-//     const seatDisp = isStanding ? 'N/A' : isSitting ? esc(t.seatNumber.toUpperCase()) : 'N/A';
-
-// const rawSeat = (t.seatNumber || '').trim();
-// const rawSeatLower = rawSeat.toLowerCase();
-
-// A "real" seat is any non-empty value that isn't a placeholder
-// const hasRealSeat = rawSeat !== '' 
-//   && rawSeatLower !== 'standing' 
-//   && rawSeatLower !== 'general' 
-//   && rawSeatLower !== 'n/a'
-//   && rawSeatLower !== 'null';
-
-// const seatDisp = hasRealSeat ? esc(rawSeat.toUpperCase()) : 'N/A';
-
 
 // NEW — simple and reliable:
 const rawSeat = (t.seatNumber || '').trim();

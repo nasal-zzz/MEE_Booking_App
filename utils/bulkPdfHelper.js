@@ -471,19 +471,6 @@ ${pagesHtml}
 </html>`;
 }
 
-// ─────────────────────────────────────────────────────────────
-// PUPPETEER RENDER
-//
-// WHY NOT networkidle0:
-//   Large base64 strings embedded in HTML confuse Puppeteer's
-//   network tracker — it never reaches "idle" and times out.
-//
-// FIX:
-//   1. waitUntil:'domcontentloaded' — fires as soon as DOM is parsed.
-//   2. waitForFunction — polls until every <img> is decoded.
-//      QR code <img> tags are the only real images now (bg is CSS).
-//   3. Small 300ms settle before PDF capture.
-// ─────────────────────────────────────────────────────────────
 async function renderHtmlToPdf(html) {
   const puppeteer = require('puppeteer');
   const browser   = await puppeteer.launch({

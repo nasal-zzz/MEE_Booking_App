@@ -558,8 +558,6 @@ router.get('/staff/:id/credentials', async (req, res) => {
   }
 });
 
-// POST /superadmin/staff/:id/credentials — superadmin-only credential edit
-// POST /superadmin/staff/:id/credentials — update creds + plainPassword
 router.post('/staff/:id/credentials', async (req, res) => {
   try {
     const { newUsername, newPassword } = req.body;
@@ -591,10 +589,6 @@ function parseCouponBody(body) {
           validFrom, validUntil, description, isActive, isFeatured,
           applicableCategories } = body;
  
-  // applicableCategories arrives as:
-  //   undefined  → no checkboxes ticked → all categories allowed
-  //   string     → single checkbox
-  //   string[]   → multiple checkboxes
   let cats = [];
   if (applicableCategories) {
     cats = Array.isArray(applicableCategories)
@@ -866,9 +860,6 @@ logs = await ScanLog.find({
 
 
 
-// ── GET /bookings/reminder-stats
-// Returns per-phone reminder data for paid bookings whose event is tomorrow.
-// Powers the bulk-reminder popup. No body needed.
 router.get('/bookings/reminder-stats', async (req, res) => {
   try {
     const now = new Date();
@@ -924,10 +915,6 @@ router.get('/bookings/reminder-stats', async (req, res) => {
 });
  
 
-// ── POST /bookings/send-bulk-reminder
-// Body: { phones: ['91XXXXXXXXXX', ...] }   — array of normalised phone numbers
-// Sends one WhatsApp reminder per phone, skips already-notified ones (unless forced).
-// Marks all bookings for that phone with reminder24SentAt.
 router.post('/bookings/send-bulk-reminder', async (req, res) => {
   try {
     const { sendWhatsAppEventReminder } = require('../utils/whatsappHelper');

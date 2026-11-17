@@ -1,7 +1,3 @@
-/* ============================================================
-   USER.CSS — Public-facing / user side specific styles
-   Auth pages, booking flow, my tickets, event pages
-   ============================================================ */
 
 /* ── AUTH CARDS ── */
 .auth-wrapper { flex:1; display:flex; align-items:center; justify-content:center; padding:3rem 1rem; position:relative; z-index:1; min-height:calc(100vh - 70px); }

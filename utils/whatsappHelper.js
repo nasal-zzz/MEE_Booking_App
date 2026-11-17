@@ -25,32 +25,6 @@ const fmtDate = (date) => {
   } catch (e) { return String(date); }
 };
 
-// const saveTicketFile = (buffer, bookingRef) => {
-//   try {
-//     const dir = path.join(__dirname, '..', 'public', 'ticket');
-//     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-//     const filename = `${bookingRef}_ticket.pdf`;
-//     const filePath = path.join(dir, filename);
-//     fs.writeFileSync(filePath, buffer);
-
-//     // ✅ Auto-delete after 10 minutes (enough time for MSG91 to fetch it)
-//     setTimeout(() => {
-//       try {
-//         if (fs.existsSync(filePath)) {
-//           fs.unlinkSync(filePath);
-//           console.log(`🗑 Deleted temp ticket PDF: ${filename}`);
-//         }
-//       } catch (e) {
-//         console.warn('PDF cleanup error:', e.message);
-//       }
-//     }, 5 * 60 * 1000); // 5 minutes
-
-//     return `${APP_URL()}/ticket/${filename}`;
-//   } catch (e) {
-//     console.error('saveTicketFile error:', e.message);
-//     return null;
-//   }
-// };
 
 
 const saveTicketFile = (buffer, bookingRef) => {

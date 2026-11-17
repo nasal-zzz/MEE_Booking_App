@@ -26,9 +26,6 @@ function generateTicketId(idx = 0) {
   return id;
 }
 
-// Ensure every ticket going into the PDF has its own unique bookingRef.
-// New batches: ticket.bookingRef is already unique (not equal to batchBookingRef).
-// Old batches: subdocs have no bookingRef — generate one fresh.
 function normalizeTickets(ticketDocs, batchBookingRef) {
   return ticketDocs.map(t => ({
     ...t,
@@ -443,9 +440,6 @@ if (!rawTickets.length) return res.status(404).send('No tickets found for this b
 const ticketDocs = normalizeTickets(rawTickets, batch.bookingRef);
 
 
-    // ── Guarantee every ticket has its own unique bookingRef before PDF ──
-    // const ticketDocs = normalizeTickets(rawTickets, batch.bookingRef);
-
     console.log(`📄 Bundle PDF: ${batch.bookingRef} (${ticketDocs.length} tickets)…`);
     const pdfBuffer = await generateBundlePdf(ticketDocs, meta);
     const filename  = `bulk_${batch.bookingRef}_bundle.pdf`;
@@ -519,8 +513,6 @@ exports.deleteBatch = async (req, res) => {
       { $inc: { 'ticketTypes.$.bookedSeats': -batch.quantity } }
     ).catch(() => {});
 
-    // Also clean up BulkTicket docs for this batch
-    // await BulkTicket.deleteMany({ bulkBooking: batch._id }).catch(() => {});
 
     await BulkBooking.findByIdAndDelete(batch._id);
     console.log(`🗑️  Deleted batch ${batch.bookingRef} — released ${batch.quantity} seats`);

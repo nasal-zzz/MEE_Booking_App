@@ -1,7 +1,6 @@
 'use strict';
 const mongoose = require('mongoose');
 
-// ── Individual ticket sub-document (kept for PDF/bundle generation only) ──
 const bulkTicketSchema = new mongoose.Schema({
   ticketId:   { type: String, required: true },
   serialNo:   { type: Number, required: true },
@@ -15,7 +14,6 @@ const bulkTicketSchema = new mongoose.Schema({
   scannedBy: { type: String, default: null },
 }, { _id: false });
 
-// ── BulkBooking — one document per generation batch ──
 const bulkBookingSchema = new mongoose.Schema({
   bulkEvent:     { type: mongoose.Schema.Types.ObjectId, ref: 'BulkEvent', required: true },
   ticketType:    { type: String, required: true },
@@ -27,7 +25,7 @@ const bulkBookingSchema = new mongoose.Schema({
   bookingRef:    { type: String, unique: true },
   quantity:      { type: Number, required: true },
   totalAmount:   { type: Number, default: 0 },
-  tickets:       [bulkTicketSchema],   // ← kept only for PDF bundle generation
+  tickets:       [bulkTicketSchema],   
   generationStatus: {
     type: String,
     enum: ['pending', 'generating', 'completed', 'failed'],
@@ -43,11 +41,6 @@ const bulkBookingSchema = new mongoose.Schema({
   toObject:{ virtuals: true },
 });
 
-// ── Auto-generate bookingRef ──────────────────────────────────
-// Format: MEE-P-YYYYMMDD-XXXXX
-// Ticket IDs will be: BT-MEEP{YYYYMMDD}{XXXXX}-{serialNo padded 3}
-// e.g. bookingRef  = MEE-P-20250507-00001
-//      ticketId    = BT-MEEP2025050700001-001
 bulkBookingSchema.pre('save', async function (next) {
   if (this.bookingRef) return next();
   try {
@@ -70,6 +63,5 @@ bulkBookingSchema.pre('save', async function (next) {
 
 bulkBookingSchema.index({ bulkEvent: 1, ticketType: 1 });
 bulkBookingSchema.index({ bookingRef: 1 }, { unique: true });
-// Remove the tickets.ticketId index — scanning uses BulkTicket collection now
 
 module.exports = mongoose.model('BulkBooking', bulkBookingSchema);

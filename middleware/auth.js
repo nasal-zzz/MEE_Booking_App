@@ -2,7 +2,6 @@
   const jwt  = require('jsonwebtoken');
   const User = require('../models/User');
 
-  // ── Core: resolve user from session (passport OR jwt) ──
   const resolveUser = async (req) => {
     if (req.user) return req.user;
     const token = req.session.token || req.cookies.np_token;
@@ -15,13 +14,11 @@
     return null;
   };
 
-  // ── Protect routes — redirect to login if not authenticated ──
   const requireAuth = async (req, res, next) => {
     try {
       const user = await resolveUser(req);
       if (!user) {
         req.session.redirectAfterLogin = req.originalUrl;
-        // Save session BEFORE redirecting so redirectAfterLogin persists
         req.session.save(() => res.redirect('/auth/login'));
         return;
       }

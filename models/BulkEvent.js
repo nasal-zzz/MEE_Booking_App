@@ -1,19 +1,18 @@
 'use strict';
 const mongoose = require('mongoose');
 
-// ── Ticket Category Schema (mirrors Event ticketTypeSchema) ──
 const bulkTicketTypeSchema = new mongoose.Schema({
-  category:    { type: String, required: true },   // lowercased key e.g. "vip"
-  name:        { type: String, default: '' },       // display name e.g. "VIP"
+  category:    { type: String, required: true },   
+  name:        { type: String, default: '' },       
   color:       { type: String, default: '#9500ff' },
   price:       { type: Number, required: true },
   totalSeats:  { type: Number, required: true, min: 1 },
-  bookedSeats: { type: Number, default: 0, min: 0 }, // tracks how many bulk tickets generated
+  bookedSeats: { type: Number, default: 0, min: 0 },
   seatType:    { type: String, enum: ['standing', 'sitting'], default: 'standing' },
-  seatPrefix:  { type: String, default: '' },        // e.g. "vip", used for seat numbering
+  seatPrefix:  { type: String, default: '' },      
   seatStart:   { type: Number, default: 1 },
   gateNumber:  { type: String, default: '' },
-  maxPerBatch: { type: Number, default: 500 },       // max tickets per generation run
+  maxPerBatch: { type: Number, default: 500 },       
   discountTiers: [{ minQty: { type: Number }, discount: { type: Number } }],
   terms:       { type: String, default: '' },
   isActive:    { type: Boolean, default: true },
@@ -26,7 +25,6 @@ bulkTicketTypeSchema.virtual('isSoldOut').get(function () {
   return this.bookedSeats >= this.totalSeats;
 });
 
-// ── Main BulkEvent Schema ──
 const bulkEventSchema = new mongoose.Schema({
   name:         { type: String, required: true },
   shortDescription: { type: String, default: '' },

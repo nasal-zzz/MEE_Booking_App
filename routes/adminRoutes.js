@@ -34,8 +34,6 @@
   // Hardcoded admin + support for .env override
   const ADMINS = [
     { username: 'admin-melatturpattu', password: 'mainAdminMelatturPattu' },
-    // Extra admins can be added here or via env:
-    // { username: process.env.ADMIN_USER, password: process.env.ADMIN_PASSWORD }
   ];
 
   const checkAdmin = (username, password) =>
@@ -291,9 +289,6 @@ router.post('/users/send-bulk-promo', async (req, res) => {
   });
 
   
-// ── GET /bookings/reminder-stats
-// Returns per-phone reminder data for paid bookings whose event is tomorrow.
-// Powers the bulk-reminder popup. No body needed.
 router.get('/bookings/reminder-stats', async (req, res) => {
   try {
     const now = new Date();
@@ -349,10 +344,6 @@ router.get('/bookings/reminder-stats', async (req, res) => {
 });
 
 
-// ── POST /bookings/send-bulk-reminder
-// Body: { phones: ['91XXXXXXXXXX', ...] }   — array of normalised phone numbers
-// Sends one WhatsApp reminder per phone, skips already-notified ones (unless forced).
-// Marks all bookings for that phone with reminder24SentAt.
 router.post('/bookings/send-bulk-reminder', async (req, res) => {
   try {
     const { sendWhatsAppEventReminder } = require('../utils/whatsappHelper');
@@ -717,10 +708,6 @@ function parseCouponBody(body) {
           validFrom, validUntil, description, isActive, isFeatured,
           applicableCategories } = body;
  
-  // applicableCategories arrives as:
-  //   undefined  → no checkboxes ticked → all categories allowed
-  //   string     → single checkbox
-  //   string[]   → multiple checkboxes
   let cats = [];
   if (applicableCategories) {
     cats = Array.isArray(applicableCategories)
@@ -989,9 +976,6 @@ router.get('/users-by-event', async (req, res) => {
       if (selectedEventId) {
         selectedEvent = await Event.findById(selectedEventId).lean();
         
-        // logs = await ScanLog.find({ eventId: selectedEventId })  // ← FIXED
-        //   .sort({ scannedAt: -1 })
-        //   .lean();
 
         const mongoose = require('mongoose');
 

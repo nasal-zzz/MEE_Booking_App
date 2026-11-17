@@ -9,10 +9,8 @@ const staffAuth = async (req, res, next) => {
   }
 
   try {
-    // Always re-fetch from DB — never trust the session-cached object alone
     const staffId = req.session.staffUser?.id;
 
-    // Hardcoded superadmin has no DB id — let them through directly
     if (!staffId) {
       req.staffUser = req.session.staffUser;
       res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
@@ -24,7 +22,6 @@ const staffAuth = async (req, res, next) => {
     const member = await Staff.findById(staffId).select('-__v').lean();
 
     if (!member) {
-      // Deleted — kill session
       return req.session.destroy(() => {
         res.clearCookie('mee.sid', { path: '/' });
         const isJson = req.headers['accept']?.includes('application/json') || req.xhr;
@@ -34,7 +31,6 @@ const staffAuth = async (req, res, next) => {
     }
 
     if (!member.isActive) {
-      // Blocked — kill session
       return req.session.destroy(() => {
         res.clearCookie('mee.sid', { path: '/' });
         const isJson = req.headers['accept']?.includes('application/json') || req.xhr;
@@ -43,7 +39,6 @@ const staffAuth = async (req, res, next) => {
       });
     }
 
-    // Sync session with fresh DB values (role/permissions may have changed)
     req.session.staffUser = {
       id:              member._id.toString(),
       username:        member.username,

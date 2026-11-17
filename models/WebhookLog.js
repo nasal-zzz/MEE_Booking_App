@@ -1,30 +1,25 @@
-// models/WebhookLog.js
-// Permanent audit log for every Razorpay webhook event received.
-// Never deletes. Cross-referenced with Booking collection.
-
 const mongoose = require('mongoose');
 
 const webhookLogSchema = new mongoose.Schema(
   {
     // ── Razorpay Event ──
     razorpayEventId:  { type: String, index: true, default: '' },
-    eventType:        { type: String, required: true, index: true }, // payment.captured / payment.failed / order.paid / etc.
-
+    eventType:        { type: String, required: true, index: true }, 
     // ── Payment identifiers ──
     orderId:          { type: String, index: true, default: '' },
     paymentId:        { type: String, index: true, default: '' },
 
     // ── Financial ──
-    amount:           { type: Number, default: 0 },        // in paise (as Razorpay sends)
-    amountInRupees:   { type: Number, default: 0 },        // convenience
+    amount:           { type: Number, default: 0 },        
+    amountInRupees:   { type: Number, default: 0 },        
     currency:         { type: String, default: 'INR' },
-    razorpayStatus:   { type: String, default: '' },       // captured / failed / refunded
+    razorpayStatus:   { type: String, default: '' },       
 
     // ── Payment method ──
-    method:           { type: String, default: '' },       // upi / card / netbanking / wallet
+    method:           { type: String, default: '' },      
     bank:             { type: String, default: '' },
     wallet:           { type: String, default: '' },
-    vpa:              { type: String, default: '' },        // UPI VPA
+    vpa:              { type: String, default: '' },        
 
     // ── Customer ──
     contact:          { type: String, default: '' },
@@ -38,13 +33,10 @@ const webhookLogSchema = new mongoose.Schema(
     errorSource:         { type: String, default: '' },
     errorStep:           { type: String, default: '' },
 
-    // ── Booking cross-reference (populated during webhook processing) ──
     bookingRef:       { type: String, default: '', index: true },
     bookingId:        { type: mongoose.Schema.Types.ObjectId, ref: 'Booking', default: null },
-    bookingStatus:    { type: String, default: '' },       // paid / pending / failed / not_found
+    bookingStatus:    { type: String, default: '' },      
 
-    // ── Razorpay live API enrichment ──
-    // Set when admin visits the transactions page and we fetch fresh data
     liveEnrichedAt:   { type: Date, default: null },
     liveMethod:       { type: String, default: '' },
     liveStatus:       { type: String, default: '' },
@@ -70,7 +62,6 @@ const webhookLogSchema = new mongoose.Schema(
     // ── Signature ──
     signatureValid:   { type: Boolean, default: false },
 
-    // ── Full raw payload for complete auditability ──
     rawPayload:       { type: mongoose.Schema.Types.Mixed },
 
     // ── Razorpay's own timestamp ──

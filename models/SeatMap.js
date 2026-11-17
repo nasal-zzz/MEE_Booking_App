@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
 
-// ── Individual seat (kept for backward compat, not used in zone-builder) ──
 const seatSchema = new mongoose.Schema({
   seatId:      { type: String },
   row:         { type: String },
@@ -12,7 +11,6 @@ const seatSchema = new mongoose.Schema({
   y:           { type: Number, default: 0 },
 }, { _id: false });
 
-// ── Zone / Section ──
 const sectionSchema = new mongoose.Schema({
   name:        { type: String, required: true },
   category:    { type: String, required: true },

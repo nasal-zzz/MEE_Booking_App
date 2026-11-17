@@ -1,8 +1,3 @@
-/* ============================================================
-   THEME.CSS — Central design token file
-   Change colors, accents, backgrounds here to retheme the
-   entire site. Every other CSS file reads from these variables.
-   ============================================================ */
 
 :root {
   /* ── Brand Colors ── */
@@ -62,28 +57,3 @@
   --z-toast:        9999;
 }
 
-/* ── ALTERNATE THEMES ──
-   Uncomment one block below to switch the entire site theme.
-
-   [NEON GREEN THEME]
-:root {
-  --accent: #00FF88; --accent-hover: #00e07a; --accent-dim: rgba(0,255,136,0.12);
-  --accent-border: rgba(0,255,136,0.3); --accent-glow: rgba(0,255,136,0.35);
-  --bg: #060D08; --surface: #0d1a10; --surface2: #142016;
-}
-
-   [ELECTRIC BLUE THEME]
-:root {
-  --accent: #0D6EFD; --accent-hover: #1a7aff; --accent-dim: rgba(13,110,253,0.15);
-  --accent-border: rgba(13,110,253,0.35); --accent-glow: rgba(13,110,253,0.4);
-  --bg: #08090F; --surface: #0f1020; --surface2: #151630;
-}
-
-   [GOLD THEME]
-:root {
-  --accent: #F5C842; --accent-hover: #f0bc30; --accent-dim: rgba(245,200,66,0.12);
-  --accent-border: rgba(245,200,66,0.35); --accent-glow: rgba(245,200,66,0.4);
-  --bg: #0C0900; --surface: #181200; --surface2: #201800;
-  --text: #fff; --muted: #BBA96E;
-}
-── */

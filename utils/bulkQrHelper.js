@@ -2,22 +2,6 @@
 
 const QRCode = require('qrcode');
 
-/**
- * Bulk QR payload format (matches online ticket scanner format):
- * {
- *   v:  1,
- *   t:  "MEE-PT-XXXX-XXXX-T1",   ticketId
- *   b:  "MEE-PB-XXXXXXXX",        bookingRef (unique per ticket)
- *   e:  "6819abc...",             eventId
- *   ty: "familia",                ticketType
- *   sn: "FAM_867",                seatNumber (null if N/A)
- *   g:  "GATE 2",                 gateNumber
- *   sr: 1,                        serialNo
- *   bk: "bulk",                   type flag for scanner
- *   ts: 1716000000000             timestamp
- * }
- */
-
 async function generateBulkQR(data) {
   const qrString = JSON.stringify(data);
   const dataUrl  = await QRCode.toDataURL(qrString, {
